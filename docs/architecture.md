@@ -132,7 +132,7 @@ Represents aggregated listening events.
 Fields include:
 - `user_id`
 - `recording_id`
-- `listen_date`
+- `date`
 - `listen_count`
 - `total_duration_ms`
 
