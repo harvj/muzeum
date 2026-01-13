@@ -21,7 +21,7 @@ class CreateArtists < ActiveRecord::Migration[8.1]
     add_index :artists, :name
 
     #
-    # recordingS
+    # RECORDINGS
     #
     create_table :recordings do |t|
       t.string :title, null: false
@@ -33,7 +33,7 @@ class CreateArtists < ActiveRecord::Migration[8.1]
     add_index :recordings, :title
 
     #
-    # recording_ARTISTS (many-to-many, ordered, role-aware)
+    # RECORDING_ARTISTS (many-to-many, ordered, role-aware)
     #
     create_table :recording_artists do |t|
       t.references :recording, null: false, foreign_key: true

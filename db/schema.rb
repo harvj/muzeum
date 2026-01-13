@@ -10,16 +10,21 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_12_213929) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_13_142421) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   create_table "artists", force: :cascade do |t|
+    t.float "confidence"
     t.datetime "created_at", null: false
-    t.string "musicbrainz_id"
+    t.string "mbid"
+    t.bigint "merged_into_id"
     t.string "name", null: false
+    t.string "source", default: "lastfm", null: false
+    t.integer "status", default: 0, null: false
     t.datetime "updated_at", null: false
-    t.index ["musicbrainz_id"], name: "index_artists_on_musicbrainz_id", unique: true
+    t.index ["mbid"], name: "index_artists_on_mbid", unique: true
+    t.index ["merged_into_id"], name: "index_artists_on_merged_into_id"
     t.index ["name"], name: "index_artists_on_name"
   end
 
@@ -59,12 +64,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_12_213929) do
 
   create_table "recording_artists", force: :cascade do |t|
     t.bigint "artist_id", null: false
-    t.float "confidence_score"
     t.datetime "created_at", null: false
     t.integer "position"
     t.bigint "recording_id", null: false
     t.string "role", default: "primary", null: false
-    t.string "source", default: "inferred", null: false
     t.datetime "updated_at", null: false
     t.float "weight", default: 1.0, null: false
     t.index ["artist_id"], name: "index_recording_artists_on_artist_id"
@@ -73,12 +76,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_12_213929) do
   end
 
   create_table "recordings", force: :cascade do |t|
+    t.float "confidence"
     t.datetime "created_at", null: false
     t.integer "duration_ms"
-    t.string "musicbrainz_id"
+    t.string "mbid"
+    t.bigint "merged_into_id"
+    t.string "source", default: "lastfm", null: false
+    t.integer "status", default: 0, null: false
     t.string "title", null: false
     t.datetime "updated_at", null: false
-    t.index ["musicbrainz_id"], name: "index_recordings_on_musicbrainz_id", unique: true
+    t.index ["mbid"], name: "index_recordings_on_mbid", unique: true
+    t.index ["merged_into_id"], name: "index_recordings_on_merged_into_id"
     t.index ["title"], name: "index_recordings_on_title"
   end
 

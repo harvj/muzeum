@@ -10,12 +10,5 @@ class RecordingArtist < ApplicationRecord
     remixer
   ].freeze
 
-  VALID_SOURCES = %w[
-    inferred
-    musicbrainz
-    user_override
-  ].freeze
-
   validates :role, inclusion: { in: VALID_ROLES }
-  validates :source, inclusion: { in: VALID_SOURCES }
 end
