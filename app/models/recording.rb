@@ -8,7 +8,7 @@ class Recording < ApplicationRecord
   validates :title, presence: true
   validates :source, inclusion: { in: VALID_SOURCES }
 
-  enum status: {
+  enum :status, {
     provisional: 0,
     resolved: 1,
     canonical: 2,
