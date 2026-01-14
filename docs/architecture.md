@@ -164,12 +164,8 @@ validation, consolidation, or replacement during canonical enrichment.**
 
 ### Cursor Model
 
-Each user maintains a `last_imported_at` timestamp.
-
-A scrobble is considered “unstored” if its timestamp is strictly greater than the
-cursor.
-
-The importer is idempotent and safe to re-run.
+Import progress is tracked exclusively via ImportRun range boundaries.
+No per-user “last imported” timestamp exists by design.
 
 ---
 

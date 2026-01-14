@@ -1,62 +1,72 @@
 module Lastfm
   class Importer
-    def initialize(user, client: Lastfm::Client.new(user))
+    PER_PAGE = 200
+    MAX_PAGES = 10
+
+    def initialize(user, client:)
       @user = user
       @client = client
     end
 
     def run
-      scrobbles = client.recent_scrobbles(since: user.last_imported_at)
+      import_run = user.import_runs.create!(status: "running")
 
-      scrobbles.each do |scrobble|
-        process_scrobble(scrobble)
+      page = 1
+      total_inserted = 0
+      range_start = nil
+      range_end = nil
+
+      while page <= MAX_PAGES
+        xml = client.recent_tracks(page: page, limit: PER_PAGE)
+        parsed = RecentTracksParser.parse(xml)
+
+        break if parsed.empty?
+
+        inserted = insert_scrobbles(parsed)
+        total_inserted += inserted
+
+        times = parsed.map { |t| t[:played_at] }.compact
+        range_start ||= times.min
+        range_end = times.max if times.any?
+
+        break if parsed.size < PER_PAGE
+        page += 1
       end
 
-      update_cursor(scrobbles)
+      import_run.update!(
+        status: "completed",
+        scrobbles_processed: total_inserted,
+        range_start_at: range_start,
+        range_end_at: range_end
+      )
+    rescue => e
+      import_run.update!(status: "failed", notes: { error: e.message })
+      raise
     end
 
     private
 
     attr_reader :user, :client
 
-    def process_scrobble(scrobble)
-      date = scrobble[:played_at].to_date
+    def insert_scrobbles(tracks)
+      rows = tracks.filter_map do |track|
+        next unless track[:played_at]
 
-      artist = Artist.find_or_create_by!(name: scrobble[:artist]) do |a|
-        a.mbid = scrobble[:artist_mbid]
-        a.source = "lastfm"
-        a.status = :provisional
-        a.confidence = 0.3
+        {
+          user_id: user.id,
+          played_at: track[:played_at],
+          payload: track,
+          created_at: Time.current,
+          updated_at: Time.current
+        }
       end
 
-      recording = Recording.find_or_create_by!(title: scrobble[:name]) do |r|
-        r.mbid = scrobble[:mbid]
-        r.source = "lastfm"
-        r.status = :provisional
-        r.confidence = 0.3
-      end
-
-      RecordingArtist.find_or_create_by!(
-        artist: artist,
-        recording: recording
+      result = Scrobble.insert_all(
+        rows,
+        unique_by: :index_scrobbles_on_user_and_played_at
       )
 
-      daily = DailyListen.find_or_initialize_by(
-        user: user,
-        recording: recording,
-        date: date,
-        year: date.year
-      )
-
-      daily.listen_count += 1
-      daily.save!
-    end
-
-    def update_cursor(scrobbles)
-      return if scrobbles.empty?
-
-      latest = scrobbles.map { |s| s[:played_at] }.max
-      user.update!(last_imported_at: latest)
+      result.rows.count
     end
   end
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_13_152343) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_14_024325) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -48,17 +48,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_13_152343) do
   create_table "import_runs", force: :cascade do |t|
     t.integer "artists_created"
     t.datetime "created_at", null: false
-    t.date "end_date"
     t.jsonb "notes"
+    t.datetime "range_end_at"
+    t.datetime "range_start_at"
     t.integer "recordings_created"
     t.integer "scrobbles_processed"
-    t.date "start_date"
-    t.string "status", default: "pending", null: false
+    t.integer "status", default: 0, null: false
     t.integer "unmapped_recordings"
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.index ["created_at"], name: "index_import_runs_on_created_at"
-    t.index ["status"], name: "index_import_runs_on_status"
+    t.index ["range_end_at"], name: "index_import_runs_on_range_end_at"
+    t.index ["user_id", "range_start_at", "range_end_at"], name: "index_import_runs_on_user_and_range"
     t.index ["user_id"], name: "index_import_runs_on_user_id"
   end
 
@@ -90,9 +91,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_13_152343) do
     t.index ["title"], name: "index_recordings_on_title"
   end
 
+  create_table "scrobbles", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.jsonb "payload", null: false
+    t.datetime "played_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["played_at"], name: "index_scrobbles_on_played_at"
+    t.index ["user_id", "played_at"], name: "index_scrobbles_on_user_and_played_at", unique: true
+    t.index ["user_id"], name: "index_scrobbles_on_user_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.datetime "created_at", null: false
-    t.datetime "last_imported_at"
     t.string "lastfm_username", null: false
     t.datetime "updated_at", null: false
     t.index ["lastfm_username"], name: "index_users_on_lastfm_username", unique: true

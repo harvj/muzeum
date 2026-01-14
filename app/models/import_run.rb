@@ -1,12 +1,10 @@
 class ImportRun < ApplicationRecord
   belongs_to :user
 
-  STATUSES = %w[
-    pending
-    running
-    completed
-    failed
-  ].freeze
-
-  validates :status, inclusion: { in: STATUSES }
+  enum :status, {
+    pending: 0,
+    running: 1,
+    completed: 2,
+    failed: 3
+  }
 end
