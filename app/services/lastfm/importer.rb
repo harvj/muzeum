@@ -1,7 +1,7 @@
 module Lastfm
   class Importer
     PER_PAGE = 200
-    MAX_PAGES = 10
+    MAX_PAGES = 1
 
     def initialize(user, client:)
       @user = user
@@ -15,21 +15,24 @@ module Lastfm
       total_inserted = 0
       range_start = nil
       range_end = nil
+      from_ts = user.scrobbles.maximum(:played_at)&.to_i
 
       while page <= MAX_PAGES
-        xml = client.recent_tracks(page: page, limit: PER_PAGE)
-        parsed = RecentTracksParser.parse(xml)
+        meta = client.recent_tracks(page: page, limit: PER_PAGE)
+        total_pages = RecentTracksParser.parse_meta(meta)[:total_pages]
 
-        break if parsed.empty?
+        xml = client.recent_tracks(page: total_pages, limit: PER_PAGE)
+        tracks = RecentTracksParser.parse_tracks(xml)
 
-        inserted = insert_scrobbles(parsed)
+        break if tracks.empty?
+
+        inserted = insert_scrobbles(tracks)
         total_inserted += inserted
 
-        times = parsed.map { |t| t[:played_at] }.compact
+        times = tracks.map { |t| t[:played_at] }.compact
         range_start ||= times.min
         range_end = times.max if times.any?
 
-        break if parsed.size < PER_PAGE
         page += 1
       end
 
