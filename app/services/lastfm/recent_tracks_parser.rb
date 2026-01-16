@@ -2,27 +2,24 @@ require "nokogiri"
 
 module Lastfm
   class RecentTracksParser
-    def self.parse_meta(xml)
+    def self.parse(xml, parse_full_tracks: false)
       doc = Nokogiri::XML(xml)
       doc.remove_namespaces!
 
       root = doc.at("//recenttracks")
-
-      {
+      meta = {
         page: root["page"]&.to_i,
         per_page: root["perPage"]&.to_i,
         total_pages: root["totalPages"]&.to_i,
+        total_tracks: root["total"]&.to_i,
         user: root["user"]
       }
-    end
+      return { meta: meta } unless parse_full_tracks
 
-    def self.parse_tracks(xml)
-      doc = Nokogiri::XML(xml)
-      doc.remove_namespaces!
-
-      doc.xpath("//recenttracks/track").map do |node|
-        parse_track(node)
-      end
+      {
+        meta: meta,
+        tracks: doc.xpath("//recenttracks/track").map { |n| parse_track(n) }
+      }
     end
 
     def self.parse_track(node)

@@ -1,33 +1,66 @@
 module Lastfm
   class Importer
     PER_PAGE = 200
-    MAX_PAGES = 1
+    MAX_PAGES = 3
 
-    def initialize(user, client:)
+    def initialize(user, client: nil)
       @user = user
-      @client = client
+      @client = client || Lastfm::Client.new(username: user.lastfm_username)
     end
 
     def run
-      import_run = user.import_runs.create!(status: "running")
+      @import_run = user.import_runs.create!(status: "running")
 
       page = 1
       total_inserted = 0
       range_start = nil
       range_end = nil
-      from_ts = user.scrobbles.maximum(:played_at)&.to_i
 
       while page <= MAX_PAGES
-        meta = client.recent_tracks(page: page, limit: PER_PAGE)
-        total_pages = RecentTracksParser.parse_meta(meta)[:total_pages]
+        # --- get "from" timestamp param based on oldest stored scrobble time
+        # from_ts = user.scrobbles.maximum(:played_at)&.to_i
 
-        xml = client.recent_tracks(page: total_pages, limit: PER_PAGE)
-        tracks = RecentTracksParser.parse_tracks(xml)
+        # --- OR, use range_end from previous page
+        from_ts = range_end
+
+        from_ts += 1 if from_ts
+
+        # --- fetch first page to get total pages count
+        raw_meta = client.recent_tracks(
+          from: from_ts,
+          limit: PER_PAGE
+        )
+        meta = RecentTracksParser.parse(raw_meta)[:meta]
+        record_notes(:meta, meta)
+
+        # --- fetch oldest unstored page
+        raw_tracks = client.recent_tracks(
+          page: meta[:total_pages],
+          from: from_ts,
+          limit: PER_PAGE
+        )
+        parsed = RecentTracksParser.parse(raw_tracks, parse_full_tracks: true)
+        meta = parsed[:meta]
+        tracks = parsed[:tracks]
 
         break if tracks.empty?
 
+        # --- insert page of scrobbles into db
         inserted = insert_scrobbles(tracks)
         total_inserted += inserted
+        skipped = tracks.size - inserted
+
+        record_notes(:pages, {
+          page: page,
+          lastfm_page: meta[:page],
+          lastfm_total_pages:  meta[:total_pages],
+          lastfm_total: meta[:total_tracks],
+          returned: tracks.size,
+          inserted: inserted,
+          skipped: skipped
+        })
+
+        Rails.logger.info("[Lastfm::Importer] page=#{meta[:page]} returned=#{tracks.size} inserted=#{inserted} skipped=#{skipped}")
 
         times = tracks.map { |t| t[:played_at] }.compact
         range_start ||= times.min
@@ -43,13 +76,21 @@ module Lastfm
         range_end_at: range_end
       )
     rescue => e
-      import_run.update!(status: "failed", notes: { error: e.message })
+      record_notes(:errors, e.message)
+      import_run.failed!
       raise
     end
 
     private
 
-    attr_reader :user, :client
+    attr_reader :user, :client, :import_run
+
+    def record_notes(key, data)
+      import_run.notes ||= {}
+      import_run.notes[key.to_s] ||= []
+      import_run.notes[key.to_s] << data
+      import_run.save!
+    end
 
     def insert_scrobbles(tracks)
       rows = tracks.filter_map do |track|

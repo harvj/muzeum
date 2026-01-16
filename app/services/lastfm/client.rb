@@ -19,10 +19,10 @@ module Lastfm
         user: username,
         api_key: api_key,
         format: "xml",
-        page: page,
         limit: limit
       }
 
+      params[:page] = page if page.present?
       params[:from] = from if from.present?
 
       uri.query = URI.encode_www_form(params)
