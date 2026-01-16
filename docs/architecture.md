@@ -13,6 +13,7 @@ clarity, correctness, and long-term maintainability.
 - Canonical enrichment is required but non-blocking.
 - The system favors forward motion over premature correctness.
 - All background work is explicit, bounded, and inspectable.
+- Raw input is preserved whenever lossless capture is possible.
 
 ---
 
@@ -20,20 +21,32 @@ clarity, correctness, and long-term maintainability.
 
 The system is explicitly two-phase:
 
-### Phase 1: Event Capture (Importer)
+### Phase 0: Raw Event Capture (Importer)
 
-The importer records what the user experienced, using the identifiers visible
-at the time of listening.
+The system stores raw listening events (Scrobbles) exactly as received from Last.fm.
 
-**Canonical enrichment is a first-class system component and is guaranteed to run;
-it is intentionally decoupled from ingestion to preserve data integrity and
-forward motion.**
+This layer exists to:
 
-The importer answers:
+- Preserve lossless input
+- Prevent double-counting
+- Allow re-aggregation and re-interpretation
+- Enable debugging and user trust
 
-> “What happened?”
+The raw layer answers:
+
+> “What data did the upstream system actually give us?”
 
 ---
+
+### Phase 1: Event Interpretation (Aggregator)
+
+The aggregator interprets raw scrobbles into structured, queryable facts (DailyListens).
+
+Aggregation is a first-class system component and is guaranteed to run; it is intentionally decoupled from ingestion to preserve data integrity and forward motion.
+
+The aggregator answers:
+
+> “What happened, as experienced by the user?”
 
 ### Phase 2: Canonical Enrichment (Resolver)
 
@@ -51,13 +64,24 @@ never discards or rewrites listening events.
 
 ## Data Model Overview
 
-### Listening Events
+### Raw Listening Events (Scrobbles)
 
-Listening events are aggregated into daily facts and never mutated.
+Scrobbles represent immutable upstream facts.
 
-**Listening events never change. Identity pointers may.**
+#### Fields include:
 
----
+- user_id
+- played_at (UTC timestamp, unique per user)
+- payload (raw parsed Last.fm data)
+- timestamps
+
+#### Invariants:
+
+Scrobbles are immutable once written
+
+- A user cannot have two scrobbles at the same timestamp
+- Raw payload is never rewritten
+- Scrobbles exist to preserve truth, not convenience.
 
 ### Core Entities
 
@@ -239,6 +263,8 @@ The system intentionally does not:
 
 ## Summary
 
-This system treats listening history as lived experience first and discographic
-classification second. It records facts as they occur, admits uncertainty, and
-allows identity to converge over time without rewriting history.
+This system treats listening history as lived experience first, raw input second, and discographic classification third.
+
+It preserves truth at the boundaries, admits uncertainty in the middle, and allows identity to converge over time without rewriting history.
+
+Nothing is lost. Nothing is rushed. Nothing pretends to be more certain than it is.

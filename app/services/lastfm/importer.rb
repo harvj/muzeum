@@ -15,14 +15,9 @@ module Lastfm
       total_inserted = 0
       range_start = nil
       range_end = nil
+      from_ts = user.scrobbles.maximum(:played_at)&.to_i # get "from" timestamp param based on oldest stored scrobble time
 
       while page <= MAX_PAGES
-        # --- get "from" timestamp param based on oldest stored scrobble time
-        # from_ts = user.scrobbles.maximum(:played_at)&.to_i
-
-        # --- OR, use range_end from previous page
-        from_ts = range_end
-
         from_ts += 1 if from_ts
 
         # --- fetch first page to get total pages count
@@ -67,6 +62,7 @@ module Lastfm
         range_end = times.max if times.any?
 
         page += 1
+        from_ts = range_end.to_i # use current page range_end to set next "from" param
       end
 
       import_run.update!(

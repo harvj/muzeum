@@ -11,7 +11,7 @@ module Lastfm
       @base_url = base_url
     end
 
-    def recent_tracks(page:, from:, limit: DEFAULT_LIMIT)
+    def recent_tracks(page: nil, from:, limit: DEFAULT_LIMIT)
       uri = URI(base_url)
 
       params = {
@@ -26,6 +26,8 @@ module Lastfm
       params[:from] = from if from.present?
 
       uri.query = URI.encode_www_form(params)
+
+      Rails.logger.info("[Lastfm::Client] #{uri.query}")
 
       response = Net::HTTP.get_response(uri)
 
