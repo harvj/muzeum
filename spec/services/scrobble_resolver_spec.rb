@@ -47,7 +47,7 @@ RSpec.describe ScrobbleResolver do
         expect(surface.track_mbid).to eq("3d42c2ec-8554-402f-890d-3d9a77fc1e13")
         expect(surface.album_mbid).to eq("2ab8c444-ec29-4d18-99f2-85331899aa0c")
 
-        expect(surface.normalized_key).to eq("tristeza||golden hill")
+        expect(surface.normalized_key).to eq("tristeza||spine and sensory||golden hill")
         expect(surface.observed_count).to eq(1)
         expect(surface.confidence).to be > 0.5
       end

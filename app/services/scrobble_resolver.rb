@@ -10,13 +10,13 @@ class ScrobbleResolver
 
     artist_name = payload.fetch("artist_name")
     track_name  = payload.fetch("track_name")
-    album_name  = payload["album_name"]
+    album_name  = payload.fetch("album_name")
 
     artist_mbid = payload["artist_mbid"]
     track_mbid  = payload["track_mbid"]
     album_mbid  = payload["album_mbid"]
 
-    normalized_key = RecordingSurface.normalize(artist_name, track_name)
+    normalized_key = RecordingSurface.normalize(artist_name, album_name, track_name)
 
     surface = RecordingSurface.find_by(normalized_key: normalized_key)
 
