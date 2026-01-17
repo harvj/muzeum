@@ -45,7 +45,7 @@ class CreateArtists < ActiveRecord::Migration[8.1]
       t.float :confidence_score
       t.timestamps
     end
-    add_index :recording_artists, [:recording_id, :artist_id], unique: true
+    add_index :recording_artists, [ :recording_id, :artist_id ], unique: true
 
     #
     # DAILY_LISTENS (aggregated fact table)
@@ -59,9 +59,9 @@ class CreateArtists < ActiveRecord::Migration[8.1]
       t.integer :year, null: false, limit: 2
       t.timestamps
     end
-    add_index :daily_listens, [:user_id, :date]
-    add_index :daily_listens, [:user_id, :recording_id]
-    add_index :daily_listens, [:user_id, :recording_id, :date], unique: true
+    add_index :daily_listens, [ :user_id, :date ]
+    add_index :daily_listens, [ :user_id, :recording_id ]
+    add_index :daily_listens, [ :user_id, :recording_id, :date ], unique: true
     add_index :daily_listens, :year
 
     #

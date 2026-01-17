@@ -5,4 +5,3 @@ RSpec.describe Recording, type: :model do
     expect(Recording).to be_a Class
   end
 end
-

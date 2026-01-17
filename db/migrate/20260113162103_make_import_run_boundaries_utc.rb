@@ -6,7 +6,7 @@ class MakeImportRunBoundariesUtc < ActiveRecord::Migration[8.1]
     remove_column :import_runs, :start_date, :date
     remove_column :import_runs, :end_date, :date
 
-    add_index :import_runs, [:user_id, :range_start_at, :range_end_at], name: "index_import_runs_on_user_and_range"
+    add_index :import_runs, [ :user_id, :range_start_at, :range_end_at ], name: "index_import_runs_on_user_and_range"
     add_index :import_runs, :range_end_at
 
     remove_column :users, :last_imported_at, :datetime
