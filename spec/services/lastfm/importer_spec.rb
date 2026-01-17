@@ -6,30 +6,43 @@ RSpec.describe Lastfm::Importer do
 
   let(:xml_page_1) do
     <<~XML
-      <recenttracks>
-        <track>
-          <artist mbid="a1">Artist</artist>
-          <name>Track One</name>
-          <date uts="1000">date</date>
-        </track>
-        <track>
-          <artist mbid="a1">Artist</artist>
-          <name>Track Two</name>
-          <date uts="2000">date</date>
-        </track>
-      </recenttracks>
+      <lfm status="ok">
+        <recenttracks user="foo" page="1" perPage="200" totalPages="1" total="2">
+          <track>
+            <artist mbid="a1">Artist</artist>
+            <name>Track One</name>
+            <date uts="1000">date</date>
+          </track>
+          <track>
+            <artist mbid="a1">Artist</artist>
+            <name>Track Two</name>
+            <date uts="2000">date</date>
+          </track>
+        </recenttracks>
+      </lfm>
     XML
   end
 
-  let(:xml_page_2) { "<recenttracks></recenttracks>" }
+  let(:xml_page_2) do
+    <<~XML
+      <lfm status="ok">
+        <recenttracks user="foo" page="1" perPage="200" totalPages="0" total="0">>
+        </recenttracks>
+      </lfm>
+    XML
+  end
 
   it "imports scrobbles and creates an import run" do
     allow(client).to receive(:recent_tracks)
-      .with(page: 1, limit: 200)
+      .with(from: nil, limit: 200)
       .and_return(xml_page_1)
 
     allow(client).to receive(:recent_tracks)
-      .with(page: 2, limit: 200)
+      .with(page: 1, from: nil, limit: 200)
+      .and_return(xml_page_1)
+
+    allow(client).to receive(:recent_tracks)
+      .with(from: 2001, limit: 200)
       .and_return(xml_page_2)
 
     importer = described_class.new(user, client: client)
@@ -49,7 +62,7 @@ RSpec.describe Lastfm::Importer do
 
   it "does not duplicate scrobbles on re-run" do
     allow(client).to receive(:recent_tracks)
-      .and_return(xml_page_1, xml_page_2)
+      .and_return(xml_page_1, xml_page_1, xml_page_2)
 
     importer = described_class.new(user, client: client)
 

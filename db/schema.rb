@@ -10,12 +10,12 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_14_024325) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_16_164231) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   create_table "artists", force: :cascade do |t|
-    t.float "confidence"
+    t.float "confidence", default: 0.0, null: false
     t.datetime "created_at", null: false
     t.string "mbid"
     t.bigint "merged_into_id"
@@ -77,7 +77,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_14_024325) do
   end
 
   create_table "recordings", force: :cascade do |t|
-    t.float "confidence"
+    t.float "confidence", default: 0.0, null: false
     t.datetime "created_at", null: false
     t.integer "duration_ms"
     t.string "mbid"
@@ -100,6 +100,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_14_024325) do
     t.index ["played_at"], name: "index_scrobbles_on_played_at"
     t.index ["user_id", "played_at"], name: "index_scrobbles_on_user_and_played_at", unique: true
     t.index ["user_id"], name: "index_scrobbles_on_user_id"
+  end
+
+  create_table "user_timezones", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "effective_from", null: false
+    t.string "timezone", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id"], name: "index_user_timezones_on_user_id"
   end
 
   create_table "users", force: :cascade do |t|

@@ -25,8 +25,10 @@ module Lastfm
           from: from_ts,
           limit: PER_PAGE
         )
-        meta = RecentTracksParser.parse(raw_meta)[:meta]
+        meta = RecentTracksParser.parse(raw_meta, no_tracks: true)
         record_notes(:meta, meta)
+
+        break if meta[:total].to_i == 0
 
         # --- fetch oldest unstored page
         raw_tracks = client.recent_tracks(
@@ -34,7 +36,7 @@ module Lastfm
           from: from_ts,
           limit: PER_PAGE
         )
-        parsed = RecentTracksParser.parse(raw_tracks, parse_full_tracks: true)
+        parsed = RecentTracksParser.parse(raw_tracks)
         meta = parsed[:meta]
         tracks = parsed[:tracks]
 
@@ -49,7 +51,7 @@ module Lastfm
           page: page,
           lastfm_page: meta[:page],
           lastfm_total_pages:  meta[:total_pages],
-          lastfm_total: meta[:total_tracks],
+          lastfm_total: meta[:total],
           returned: tracks.size,
           inserted: inserted,
           skipped: skipped
