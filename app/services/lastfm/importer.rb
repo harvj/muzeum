@@ -3,12 +3,21 @@ module Lastfm
     PER_PAGE = 200
     MAX_PAGES = 3
 
-    def initialize(user, client: nil)
-      @user = user
-      @client = client || Lastfm::Client.new(username: user.lastfm_username)
+    def self.run!(username:, page_limit: MAX_PAGES)
+      raise ArgumentError, "lastfm username required" if username.blank?
+
+      user   = User.find_by!(lastfm_username: username)
+      client = Lastfm::Client.new(username: user.lastfm_username)
+
+      new(user, client: client).run(page_limit: page_limit)
     end
 
-    def run
+    def initialize(user, client:)
+      @user = user
+      @client = client
+    end
+
+    def run(page_limit: MAX_PAGES)
       @import_run = user.import_runs.create!(status: "running")
 
       page = 1
@@ -17,7 +26,7 @@ module Lastfm
       range_end = nil
       from_ts = user.scrobbles.maximum(:played_at)&.to_i # get "from" timestamp param based on oldest stored scrobble time
 
-      while page <= MAX_PAGES
+      while page <= page_limit
         from_ts += 1 if from_ts
 
         # --- fetch first page to get total pages count
