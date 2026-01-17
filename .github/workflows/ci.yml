@@ -23,6 +23,9 @@ jobs:
       
       - name: Scan for known security vulnerabilities in gems used
         run: bin/bundler-audit
+
+      - name: Run RSpec
+        run: bin/rspec
       
   lint:
     runs-on: ubuntu-latest
