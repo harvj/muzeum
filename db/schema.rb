@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_16_164231) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_17_205410) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -76,6 +76,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_16_164231) do
     t.index ["recording_id"], name: "index_recording_artists_on_recording_id"
   end
 
+  create_table "recording_surfaces", force: :cascade do |t|
+    t.string "album_mbid"
+    t.string "album_name"
+    t.string "artist_mbid"
+    t.string "artist_name", null: false
+    t.float "confidence", default: 0.5, null: false
+    t.datetime "created_at", null: false
+    t.string "normalized_key", null: false
+    t.integer "observed_count", default: 1, null: false
+    t.bigint "recording_id", null: false
+    t.string "source", default: "lastfm", null: false
+    t.string "track_mbid"
+    t.string "track_name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["artist_mbid"], name: "index_recording_surfaces_on_artist_mbid"
+    t.index ["normalized_key"], name: "index_recording_surfaces_on_normalized_key", unique: true
+    t.index ["recording_id"], name: "index_recording_surfaces_on_recording_id"
+    t.index ["track_mbid"], name: "index_recording_surfaces_on_track_mbid"
+  end
+
   create_table "recordings", force: :cascade do |t|
     t.float "confidence", default: 0.0, null: false
     t.datetime "created_at", null: false
@@ -95,9 +115,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_16_164231) do
     t.datetime "created_at", null: false
     t.jsonb "payload", null: false
     t.datetime "played_at", null: false
+    t.bigint "recording_id"
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.index ["played_at"], name: "index_scrobbles_on_played_at"
+    t.index ["recording_id"], name: "index_scrobbles_on_recording_id"
     t.index ["user_id", "played_at"], name: "index_scrobbles_on_user_and_played_at", unique: true
     t.index ["user_id"], name: "index_scrobbles_on_user_id"
   end
@@ -123,4 +145,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_16_164231) do
   add_foreign_key "import_runs", "users"
   add_foreign_key "recording_artists", "artists"
   add_foreign_key "recording_artists", "recordings"
+  add_foreign_key "recording_surfaces", "recordings"
+  add_foreign_key "scrobbles", "recordings"
 end
