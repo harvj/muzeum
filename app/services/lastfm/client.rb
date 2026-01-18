@@ -3,6 +3,8 @@ require "uri"
 
 module Lastfm
   class Client
+    include SimpleLogger
+
     DEFAULT_LIMIT = 200
 
     def initialize(username:, api_key: ENV["LASTFM_API_KEY"], base_url: ENV["LASTFM_API_BASE"])
@@ -27,7 +29,7 @@ module Lastfm
 
       uri.query = URI.encode_www_form(params)
 
-      Rails.logger.info("[Lastfm::Client] #{uri.query}")
+      log("Requesting #{redact(uri.query, :api_key)}")
 
       response = Net::HTTP.get_response(uri)
 

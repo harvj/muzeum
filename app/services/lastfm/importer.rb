@@ -1,5 +1,7 @@
 module Lastfm
   class Importer
+    include SimpleLogger
+
     PER_PAGE = 200
     MAX_PAGES = 3
 
@@ -18,6 +20,7 @@ module Lastfm
     end
 
     def run(page_limit: MAX_PAGES)
+      log "Starting import for #{user.lastfm_username} (#{page_limit} pages)"
       @import_run = user.import_runs.create!(status: "running")
 
       page = 1
@@ -66,7 +69,7 @@ module Lastfm
           skipped: skipped
         })
 
-        Rails.logger.info("[Lastfm::Importer] page=#{meta[:page]} returned=#{tracks.size} inserted=#{inserted} skipped=#{skipped}")
+        log("page=#{meta[:page]} returned=#{tracks.size} inserted=#{inserted} skipped=#{skipped}")
 
         times = tracks.map { |t| t[:played_at] }.compact
         range_start ||= times.min
