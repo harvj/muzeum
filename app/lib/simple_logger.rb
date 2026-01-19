@@ -32,7 +32,7 @@ module SimpleLogger
   end
 
   def cli_execution?
-    $PROGRAM_NAME.include?("bin/")
+    $PROGRAM_NAME.start_with?("bin/")
   end
 
   def cli_logger

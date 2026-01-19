@@ -85,6 +85,7 @@ module Lastfm
         range_start_at: range_start,
         range_end_at: range_end
       )
+      log("Import complete for #{user.lastfm_username} (#{page_limit} pages)")
     rescue => e
       record_notes(:errors, e.message)
       import_run.failed!

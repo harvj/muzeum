@@ -6,6 +6,7 @@ Fields:
 - `user_id`
 - `played_at` (UTC)
 - `payload` (raw Last.fm data)
+- `recording_id` (may change, begins NULL until Resolver runs)
 
 Invariants:
 - Scrobbles are never rewritten.
@@ -14,3 +15,6 @@ Invariants:
 
 Scrobbles answer:
 > “What data did the upstream system give us?”
+
+
+
