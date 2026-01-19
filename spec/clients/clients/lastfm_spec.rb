@@ -16,6 +16,12 @@ RSpec.describe Clients::Lastfm do
   end
 
   before do
+    allow(ENV).to receive(:fetch)
+      .with("LASTFM_API_KEY")
+      .and_return("test_api_key")
+  end
+
+  before do
     stub_request(:get, "https://ws.audioscrobbler.com/2.0/")
       .with(
         query: hash_including(
