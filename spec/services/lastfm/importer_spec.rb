@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe Lastfm::Importer do
   let(:user)   { User.create!(lastfm_username: "foo") }
-  let(:client) { double("Lastfm::Client") }
+  let(:client) { double("Clients::Lastfm") }
 
   let(:xml_page_1) do
     <<~XML

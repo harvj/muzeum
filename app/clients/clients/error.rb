@@ -1,4 +1,4 @@
-module Lastfm
+module Clients
   class Error < StandardError
     attr_reader :status, :body
 
@@ -8,4 +8,9 @@ module Lastfm
       @body = body
     end
   end
+
+  class NetworkError < Error; end
+  class RateLimited < Error; end
+  class Unauthorized < Error; end
+  class InvalidResponse < Error; end
 end

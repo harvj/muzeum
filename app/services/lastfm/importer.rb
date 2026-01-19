@@ -9,7 +9,7 @@ module Lastfm
       raise ArgumentError, "lastfm username required" if username.blank?
 
       user   = User.find_by!(lastfm_username: username)
-      client = Lastfm::Client.new(username: user.lastfm_username)
+      client = Clients::Lastfm.new(username: user.lastfm_username)
 
       new(user, client: client).run(page_limit: page_limit)
     end
