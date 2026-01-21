@@ -10,21 +10,16 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_17_205410) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_21_151132) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   create_table "artists", force: :cascade do |t|
-    t.float "confidence", default: 0.0, null: false
     t.datetime "created_at", null: false
     t.string "mbid"
-    t.bigint "merged_into_id"
     t.string "name", null: false
-    t.string "source", default: "lastfm", null: false
-    t.integer "status", default: 0, null: false
     t.datetime "updated_at", null: false
     t.index ["mbid"], name: "index_artists_on_mbid", unique: true
-    t.index ["merged_into_id"], name: "index_artists_on_merged_into_id"
     t.index ["name"], name: "index_artists_on_name"
   end
 
@@ -111,6 +106,42 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_17_205410) do
     t.index ["title"], name: "index_recordings_on_title"
   end
 
+  create_table "release_artists", force: :cascade do |t|
+    t.bigint "artist_id", null: false
+    t.datetime "created_at", null: false
+    t.integer "position"
+    t.bigint "release_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["artist_id"], name: "index_release_artists_on_artist_id"
+    t.index ["release_id", "artist_id"], name: "index_release_artists_on_release_id_and_artist_id", unique: true
+    t.index ["release_id"], name: "index_release_artists_on_release_id"
+  end
+
+  create_table "release_recordings", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "position", null: false
+    t.bigint "recording_id", null: false
+    t.bigint "release_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["recording_id"], name: "index_release_recordings_on_recording_id"
+    t.index ["release_id", "position"], name: "index_release_recordings_on_release_id_and_position", unique: true
+    t.index ["release_id", "recording_id"], name: "index_release_recordings_on_release_id_and_recording_id", unique: true
+    t.index ["release_id"], name: "index_release_recordings_on_release_id"
+  end
+
+  create_table "releases", force: :cascade do |t|
+    t.string "mbid"
+    t.string "primary_type"
+    t.integer "release_day"
+    t.string "release_group_mbid"
+    t.integer "release_month"
+    t.integer "release_year"
+    t.string "source", default: "musicbrainz", null: false
+    t.string "title", null: false
+    t.index ["mbid"], name: "index_releases_on_mbid", unique: true
+    t.index ["release_group_mbid"], name: "index_releases_on_release_group_mbid"
+  end
+
   create_table "scrobbles", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.jsonb "payload", null: false
@@ -146,5 +177,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_17_205410) do
   add_foreign_key "recording_artists", "artists"
   add_foreign_key "recording_artists", "recordings"
   add_foreign_key "recording_surfaces", "recordings"
+  add_foreign_key "release_artists", "artists"
+  add_foreign_key "release_artists", "releases"
+  add_foreign_key "release_recordings", "recordings"
+  add_foreign_key "release_recordings", "releases"
   add_foreign_key "scrobbles", "recordings"
 end
