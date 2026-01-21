@@ -1,0 +1,68 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require_relative "../config/environment"
+require "optparse"
+require "pp"
+
+options = {
+  raw: false
+}
+
+OptionParser.new do |opts|
+  opts.banner = "Usage: bin/mb:search sid:<id> [--raw]"
+
+  opts.on("--raw", "Print raw MusicBrainz search results") do
+    options[:raw] = true
+  end
+end.parse!
+
+sid_arg = ARGV.find { |arg| arg.start_with?("sid:") }
+
+unless sid_arg
+  abort "usage: bin/mb:search sid:<id> [--raw]"
+end
+
+surface_id = sid_arg.split(":").last
+surface = RecordingSurface.find(surface_id)
+
+puts "\n== RecordingSurface =="
+pp(
+  artist: surface.artist_name,
+  recording: surface.track_name,
+  release: surface.album_name
+)
+
+results = Musicbrainz::RecordingSearch.call(
+  artist: surface.artist_name,
+  recording: surface.track_name,
+  release: surface.album_name
+)
+
+if options[:raw]
+  puts "\n== Raw MusicBrainz Results =="
+  pp results
+  exit 0
+end
+
+candidates = Musicbrainz::ReleaseCandidateExtractor.call(results)
+
+puts "\n== Release Candidates (#{candidates.size}) =="
+
+candidates.each_with_index do |candidate, idx|
+  puts "\n[#{idx + 1}]"
+  pp(
+    release_title: candidate.release_title,
+    release_date: candidate.release_date,
+    release_group: {
+      mbid: candidate.release_group_mbid,
+      type: candidate.release_group_primary_type,
+      secondary: candidate.release_group_secondary_types
+    },
+    country: candidate.country,
+    formats: candidate.formats,
+    recording_title: candidate.recording_title,
+    recording_mbid: candidate.recording_mbid,
+    release_mbid: candidate.release_mbid
+  )
+end

@@ -10,7 +10,7 @@ RSpec.describe Clients::Musicbrainz do
       "recordings" => [
         {
           "id" => "mbid-123",
-          "title" => "Test Track",
+          "title" => "Test Recording",
           "length" => 217000,
           "artist-credit" => [
             { "name" => "Test Artist", "artist" => { "id" => "artist-mbid" } }
@@ -39,7 +39,7 @@ RSpec.describe Clients::Musicbrainz do
     it "returns recordings from MusicBrainz" do
       results = client.search_recordings(
         artist: "Test Artist",
-        track:  "Test Track"
+        recording:  "Test Recording"
       )
 
       expect(results).to be_an(Array)
@@ -49,11 +49,11 @@ RSpec.describe Clients::Musicbrainz do
 
     it "raises ArgumentError when artist is missing" do
       expect {
-        client.search_recordings(track: "Test Track")
+        client.search_recordings(recording: "Test Recording")
       }.to raise_error(ArgumentError)
     end
 
-    it "raises ArgumentError when track is missing" do
+    it "raises ArgumentError when recording is missing" do
       expect {
         client.search_recordings(artist: "Test Artist")
       }.to raise_error(ArgumentError)
@@ -66,7 +66,7 @@ RSpec.describe Clients::Musicbrainz do
         .with(query: { "fmt" => "json" })
         .to_return(
           status: 200,
-          body: { "id" => "mbid-123", "title" => "Test Track" }.to_json,
+          body: { "id" => "mbid-123", "title" => "Test Recording" }.to_json,
           headers: { "Content-Type" => "application/json" }
         )
     end
@@ -75,7 +75,7 @@ RSpec.describe Clients::Musicbrainz do
       result = client.fetch_recording("mbid-123")
 
       expect(result["id"]).to eq("mbid-123")
-      expect(result["title"]).to eq("Test Track")
+      expect(result["title"]).to eq("Test Recording")
     end
   end
 
@@ -88,7 +88,7 @@ RSpec.describe Clients::Musicbrainz do
       expect {
         client.search_recordings(
           artist: "Test Artist",
-          track:  "Test Track"
+          recording:  "Test Recording"
         )
       }.to raise_error(Clients::RateLimited)
     end
@@ -101,7 +101,7 @@ RSpec.describe Clients::Musicbrainz do
       expect {
         client.search_recordings(
           artist: "Test Artist",
-          track:  "Test Track"
+          recording:  "Test Recording"
         )
       }.to raise_error(Clients::Unauthorized)
     end
@@ -114,7 +114,7 @@ RSpec.describe Clients::Musicbrainz do
       expect {
         client.search_recordings(
           artist: "Test Artist",
-          track:  "Test Track"
+          recording:  "Test Recording"
         )
       }.to raise_error(Clients::InvalidResponse)
     end

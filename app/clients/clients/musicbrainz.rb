@@ -16,14 +16,14 @@ module Clients
 
     # --- Public API -------------------------------------------------
 
-    def search_recordings(artist:, track:, album: nil, limit: 10)
+    def search_recordings(artist:, recording:, release: nil, limit: 10)
       raise ArgumentError, "artist required" if artist.blank?
-      raise ArgumentError, "track required"  if track.blank?
+      raise ArgumentError, "recording required"  if recording.blank?
 
       query = build_recording_query(
         artist: artist,
-        track: track,
-        album: album
+        recording: recording,
+        release: release
       )
 
       response = get(
@@ -54,11 +54,11 @@ module Clients
 
     private
 
-    def build_recording_query(artist:, track:, album:)
+    def build_recording_query(artist:, recording:, release:)
       parts = []
       parts << %(artist:"#{artist}")
-      parts << %(recording:"#{track}")
-      parts << %(release:"#{album}") if album.present?
+      parts << %(recording:"#{recording}")
+      parts << %(release:"#{release}") if release.present?
       parts.join(" AND ")
     end
 
