@@ -15,4 +15,8 @@ class Recording < ApplicationRecord
     canonical: 2,
     merged: 3
   }
+
+  def canonical
+    merged_into_id ? Recording.find(merged_into_id) : self
+  end
 end
