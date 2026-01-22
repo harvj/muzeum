@@ -1,0 +1,32 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require_relative "../config/environment"
+
+unless ARGV.size == 1
+  warn "Usage: bin/mb:fetch-release RELEASE_MBID"
+  exit 1
+end
+
+release_mbid = ARGV.first
+
+client = Clients::Musicbrainz.new
+
+begin
+  release = client.fetch_release(release_mbid)
+
+  # Pretty-print deterministic JSON for fixtures
+  puts JSON.pretty_generate(release)
+rescue Clients::RateLimited => e
+  warn "MusicBrainz rate limited: #{e.message}"
+  exit 2
+rescue Clients::Unauthorized => e
+  warn "Unauthorized MusicBrainz request: #{e.message}"
+  exit 3
+rescue Clients::InvalidResponse => e
+  warn "Invalid MusicBrainz response: #{e.message}"
+  exit 4
+rescue Clients::NetworkError => e
+  warn "Network error contacting MusicBrainz: #{e.message}"
+  exit 5
+end

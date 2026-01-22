@@ -2,6 +2,8 @@ require "http"
 require "json"
 
 module Clients
+  require_relative "error"
+
   class Musicbrainz
     include SimpleLogger
 
@@ -39,15 +41,52 @@ module Clients
     end
 
     def fetch_recording(mbid)
-      get("/recording/#{mbid}", query: { fmt: "json" })
+      get(
+        "/recording/#{mbid}",
+        query: {
+          fmt: "json",
+          inc: [
+            "artists",
+            "artist-credits",
+            "releases",
+            "release-groups",
+            "isrcs",
+            "tags"
+          ].join("+")
+        }
+      )
     end
 
     def fetch_release(mbid)
-      get("/release/#{mbid}", query: { fmt: "json" })
+      get(
+        "/release/#{mbid}",
+        query: {
+          fmt: "json",
+          inc: [
+            "artists",
+            "artist-credits",
+            "labels",
+            "recordings",
+            "media",
+            "release-groups",
+            "tags"
+          ].join("+")
+        }
+      )
     end
 
     def fetch_artist(mbid)
-      get("/artist/#{mbid}", query: { fmt: "json" })
+      get(
+        "/artist/#{mbid}",
+        query: {
+          fmt: "json",
+          inc: [
+            "aliases",
+            "tags",
+            "genres"
+          ].join("+")
+        }
+      )
     end
 
     # --- Private ----------------------------------------------------

@@ -68,6 +68,6 @@ RSpec.describe Lastfm::Importer do
 
     importer.run
     expect(Scrobble.count).to eq 2
-    expect { importer.run }.not_to change { Scrobble.count }
+    expect { importer.run }.to change { Scrobble.count }.by(0)
   end
 end

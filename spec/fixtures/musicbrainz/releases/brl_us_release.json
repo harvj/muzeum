@@ -1,0 +1,1249 @@
+{
+  "quality": "normal",
+  "cover-art-archive": {
+    "darkened": false,
+    "count": 1,
+    "front": true,
+    "artwork": true,
+    "back": false
+  },
+  "packaging-id": "f7101ce3-0384-39ce-9fde-fbbd0044d35f",
+  "tags": [],
+  "barcode": "012414158710",
+  "text-representation": {
+    "language": "eng",
+    "script": "Latn"
+  },
+  "release-events": [
+    {
+      "date": "1996-07-30",
+      "area": {
+        "id": "489ce91b-6658-3307-9877-795b68554c98",
+        "iso-3166-1-codes": [
+          "US"
+        ],
+        "sort-name": "United States",
+        "name": "United States",
+        "type": null,
+        "type-id": null,
+        "disambiguation": ""
+      }
+    }
+  ],
+  "title": "Beats, Rhymes and Life",
+  "packaging": "Cardboard/Paper Sleeve",
+  "release-group": {
+    "title": "Beats, Rhymes and Life",
+    "secondary-type-ids": [],
+    "disambiguation": "",
+    "first-release-date": "1996-07-29",
+    "secondary-types": [],
+    "tags": [
+      {
+        "name": "alternative hip hop",
+        "count": 1
+      },
+      {
+        "name": "atmospheric",
+        "count": 1
+      },
+      {
+        "name": "boastful",
+        "count": 1
+      },
+      {
+        "name": "boom bap",
+        "count": 1
+      },
+      {
+        "name": "conscious",
+        "count": 1
+      },
+      {
+        "count": 1,
+        "name": "dark"
+      },
+      {
+        "count": 1,
+        "name": "east coast hip hop"
+      },
+      {
+        "name": "hip hop",
+        "count": 5
+      },
+      {
+        "name": "hip hop rap",
+        "count": 1
+      },
+      {
+        "count": 4,
+        "name": "jazz rap"
+      },
+      {
+        "count": 1,
+        "name": "male vocalist"
+      },
+      {
+        "count": 1,
+        "name": "mellow"
+      },
+      {
+        "count": 1,
+        "name": "minimalistic"
+      },
+      {
+        "name": "nocturnal",
+        "count": 1
+      },
+      {
+        "count": 1,
+        "name": "psychedelic"
+      },
+      {
+        "count": 1,
+        "name": "rhythmic"
+      },
+      {
+        "count": 1,
+        "name": "sampling"
+      },
+      {
+        "name": "sarcastic",
+        "count": 1
+      },
+      {
+        "name": "serious",
+        "count": 1
+      },
+      {
+        "count": 1,
+        "name": "suspenseful"
+      },
+      {
+        "count": 1,
+        "name": "urban"
+      }
+    ],
+    "id": "af2a22ae-15c9-3c73-9a35-7b4f503d8f7c",
+    "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+    "artist-credit": [
+      {
+        "artist": {
+          "type": "Group",
+          "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+          "disambiguation": "",
+          "country": "US",
+          "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+          "name": "A Tribe Called Quest",
+          "sort-name": "Tribe Called Quest, A"
+        },
+        "joinphrase": "",
+        "name": "A Tribe Called Quest"
+      }
+    ],
+    "primary-type": "Album"
+  },
+  "id": "f906d3fd-7832-4018-a435-287cd9c50339",
+  "artist-credit": [
+    {
+      "name": "A Tribe Called Quest",
+      "artist": {
+        "country": "US",
+        "sort-name": "Tribe Called Quest, A",
+        "name": "A Tribe Called Quest",
+        "tags": [
+          {
+            "name": "alternative hip hop",
+            "count": 5
+          },
+          {
+            "name": "boom bap",
+            "count": 2
+          },
+          {
+            "name": "conscious hip hop",
+            "count": 4
+          },
+          {
+            "count": 8,
+            "name": "east coast hip hop"
+          },
+          {
+            "name": "hip hop",
+            "count": 14
+          },
+          {
+            "name": "jazz rap",
+            "count": 8
+          }
+        ],
+        "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+        "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+        "type": "Group",
+        "disambiguation": ""
+      },
+      "joinphrase": ""
+    }
+  ],
+  "status": "Official",
+  "country": "US",
+  "date": "1996-07-30",
+  "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+  "label-info": [
+    {
+      "label": {
+        "label-code": 7925,
+        "disambiguation": "Jive Records imprint",
+        "type-id": "a2426aab-2dd4-339c-b47d-b4923a241678",
+        "type": "Production",
+        "tags": [
+          {
+            "name": "american",
+            "count": 1
+          },
+          {
+            "count": 1,
+            "name": "américain"
+          },
+          {
+            "name": "dance-pop",
+            "count": 2
+          },
+          {
+            "name": "dirty south",
+            "count": 1
+          },
+          {
+            "count": 1,
+            "name": "east coast hip hop"
+          },
+          {
+            "name": "electropop",
+            "count": 2
+          },
+          {
+            "count": 1,
+            "name": "hip hop"
+          },
+          {
+            "count": 2,
+            "name": "pop"
+          },
+          {
+            "name": "southern hip hop",
+            "count": 1
+          },
+          {
+            "name": "usa",
+            "count": 1
+          },
+          {
+            "count": 1,
+            "name": "west coast hip hop"
+          }
+        ],
+        "id": "79245298-c0ba-4eba-aecc-3dfe8eeb689f",
+        "name": "Jive",
+        "sort-name": "Jive"
+      },
+      "catalog-number": "01241-41587-1"
+    }
+  ],
+  "disambiguation": "",
+  "media": [
+    {
+      "track-count": 7,
+      "tracks": [
+        {
+          "title": "Phony Rappers",
+          "number": "A1",
+          "position": 1,
+          "length": 215000,
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "artist": {
+                "country": "US",
+                "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+                "name": "A Tribe Called Quest",
+                "sort-name": "Tribe Called Quest, A",
+                "type": "Group",
+                "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                "disambiguation": ""
+              },
+              "name": "A Tribe Called Quest"
+            }
+          ],
+          "id": "185da80f-3ccc-4966-992b-12f6af969807",
+          "recording": {
+            "first-release-date": "1996-07-29",
+            "disambiguation": "",
+            "title": "Phony Rappers",
+            "video": false,
+            "artist-credit": [
+              {
+                "name": "A Tribe Called Quest",
+                "joinphrase": "",
+                "artist": {
+                  "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                  "type": "Group",
+                  "disambiguation": "",
+                  "country": "US",
+                  "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+                  "sort-name": "Tribe Called Quest, A",
+                  "name": "A Tribe Called Quest"
+                }
+              }
+            ],
+            "tags": [
+              {
+                "name": "hip hop",
+                "count": 6
+              },
+              {
+                "count": 1,
+                "name": "hip hop rap"
+              },
+              {
+                "count": 1,
+                "name": "jazz rap"
+              },
+              {
+                "count": 1,
+                "name": "rap"
+              }
+            ],
+            "id": "6eaef093-ae7d-48e7-8a8d-400b04d3427c",
+            "length": 216000
+          }
+        },
+        {
+          "position": 2,
+          "number": "A2",
+          "title": "Get a Hold",
+          "recording": {
+            "disambiguation": "",
+            "first-release-date": "1996-07-29",
+            "video": false,
+            "title": "Get a Hold",
+            "length": 215000,
+            "artist-credit": [
+              {
+                "name": "A Tribe Called Quest",
+                "artist": {
+                  "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                  "disambiguation": "",
+                  "type": "Group",
+                  "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+                  "sort-name": "Tribe Called Quest, A",
+                  "name": "A Tribe Called Quest",
+                  "country": "US"
+                },
+                "joinphrase": ""
+              }
+            ],
+            "tags": [
+              {
+                "name": "conscious hip hop",
+                "count": 1
+              },
+              {
+                "name": "east coast hip hop",
+                "count": 1
+              },
+              {
+                "count": 6,
+                "name": "hip hop"
+              },
+              {
+                "name": "hip-hop",
+                "count": 1
+              },
+              {
+                "count": 1,
+                "name": "rap"
+              }
+            ],
+            "id": "898ac821-5d54-4bff-9eda-158d7e30f0f4"
+          },
+          "artist-credit": [
+            {
+              "name": "A Tribe Called Quest",
+              "artist": {
+                "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+                "sort-name": "Tribe Called Quest, A",
+                "name": "A Tribe Called Quest",
+                "country": "US",
+                "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                "type": "Group",
+                "disambiguation": ""
+              },
+              "joinphrase": ""
+            }
+          ],
+          "id": "0a6a4c37-3efc-4693-99dd-f64686bfa328",
+          "length": 215000
+        },
+        {
+          "length": 200000,
+          "id": "417ad54f-98bd-4c12-8eb2-e9ab84698475",
+          "artist-credit": [
+            {
+              "artist": {
+                "country": "US",
+                "name": "A Tribe Called Quest",
+                "sort-name": "Tribe Called Quest, A",
+                "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+                "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                "type": "Group",
+                "disambiguation": ""
+              },
+              "joinphrase": "",
+              "name": "A Tribe Called Quest"
+            }
+          ],
+          "recording": {
+            "video": false,
+            "title": "Motivators",
+            "disambiguation": "",
+            "first-release-date": "1996-07-29",
+            "length": 200000,
+            "artist-credit": [
+              {
+                "name": "A Tribe Called Quest",
+                "joinphrase": "",
+                "artist": {
+                  "type": "Group",
+                  "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                  "disambiguation": "",
+                  "country": "US",
+                  "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+                  "name": "A Tribe Called Quest",
+                  "sort-name": "Tribe Called Quest, A"
+                }
+              }
+            ],
+            "tags": [
+              {
+                "count": 6,
+                "name": "hip hop"
+              },
+              {
+                "count": 1,
+                "name": "hip hop rap"
+              },
+              {
+                "count": 1,
+                "name": "jazz rap"
+              },
+              {
+                "name": "rap",
+                "count": 1
+              }
+            ],
+            "id": "1abbfb23-a471-46b7-8ea9-187930a28a1f"
+          },
+          "title": "Motivators",
+          "number": "A3",
+          "position": 3
+        },
+        {
+          "title": "Jam",
+          "number": "B1",
+          "position": 4,
+          "artist-credit": [
+            {
+              "name": "A Tribe Called Quest",
+              "joinphrase": "",
+              "artist": {
+                "sort-name": "Tribe Called Quest, A",
+                "name": "A Tribe Called Quest",
+                "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+                "country": "US",
+                "type": "Group",
+                "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                "disambiguation": ""
+              }
+            }
+          ],
+          "id": "78ce2909-8051-4f5d-b1b1-361e979c1e70",
+          "length": 278000,
+          "recording": {
+            "artist-credit": [
+              {
+                "joinphrase": "",
+                "artist": {
+                  "country": "US",
+                  "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+                  "name": "A Tribe Called Quest",
+                  "sort-name": "Tribe Called Quest, A",
+                  "disambiguation": "",
+                  "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                  "type": "Group"
+                },
+                "name": "A Tribe Called Quest"
+              }
+            ],
+            "tags": [
+              {
+                "name": "hip hop",
+                "count": 6
+              },
+              {
+                "count": 1,
+                "name": "hip hop rap"
+              },
+              {
+                "name": "jazz rap",
+                "count": 1
+              },
+              {
+                "name": "rap",
+                "count": 1
+              }
+            ],
+            "id": "b4d385fa-7fac-40cf-88cd-15d5b20c5bc0",
+            "length": 278000,
+            "first-release-date": "1996-07-29",
+            "disambiguation": "",
+            "video": false,
+            "title": "Jam"
+          }
+        },
+        {
+          "position": 5,
+          "number": "B2",
+          "title": "Crew",
+          "recording": {
+            "length": 118000,
+            "tags": [
+              {
+                "count": 1,
+                "name": "east coast hip hop"
+              },
+              {
+                "count": 6,
+                "name": "hip hop"
+              },
+              {
+                "name": "hip hop rap",
+                "count": 1
+              },
+              {
+                "name": "rap",
+                "count": 1
+              }
+            ],
+            "id": "903bd644-6f1f-4624-a883-59dcc67c25f6",
+            "artist-credit": [
+              {
+                "joinphrase": "",
+                "artist": {
+                  "country": "US",
+                  "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+                  "sort-name": "Tribe Called Quest, A",
+                  "name": "A Tribe Called Quest",
+                  "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                  "type": "Group",
+                  "disambiguation": ""
+                },
+                "name": "A Tribe Called Quest"
+              }
+            ],
+            "disambiguation": "",
+            "first-release-date": "1996-07-29",
+            "video": false,
+            "title": "Crew"
+          },
+          "id": "dca781ba-f68d-44a2-a723-5562b32f2ac7",
+          "artist-credit": [
+            {
+              "name": "A Tribe Called Quest",
+              "artist": {
+                "country": "US",
+                "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+                "sort-name": "Tribe Called Quest, A",
+                "name": "A Tribe Called Quest",
+                "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                "type": "Group",
+                "disambiguation": ""
+              },
+              "joinphrase": ""
+            }
+          ],
+          "length": 118000
+        },
+        {
+          "position": 6,
+          "number": "B3",
+          "title": "The Pressure",
+          "recording": {
+            "disambiguation": "",
+            "first-release-date": "1996-07-29",
+            "title": "The Pressure",
+            "video": false,
+            "length": 182507,
+            "id": "7d1c3140-ed77-498b-bfc7-8beccf2ab20e",
+            "tags": [
+              {
+                "count": 5,
+                "name": "hip hop"
+              },
+              {
+                "name": "hip hop rap",
+                "count": 1
+              },
+              {
+                "name": "jazz rap",
+                "count": 1
+              },
+              {
+                "count": 1,
+                "name": "rap"
+              }
+            ],
+            "artist-credit": [
+              {
+                "name": "A Tribe Called Quest",
+                "joinphrase": "",
+                "artist": {
+                  "country": "US",
+                  "sort-name": "Tribe Called Quest, A",
+                  "name": "A Tribe Called Quest",
+                  "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+                  "disambiguation": "",
+                  "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                  "type": "Group"
+                }
+              }
+            ]
+          },
+          "id": "91eebd96-3664-4804-a89a-099cc1814ac3",
+          "artist-credit": [
+            {
+              "artist": {
+                "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                "type": "Group",
+                "disambiguation": "",
+                "country": "US",
+                "sort-name": "Tribe Called Quest, A",
+                "name": "A Tribe Called Quest",
+                "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f"
+              },
+              "joinphrase": "",
+              "name": "A Tribe Called Quest"
+            }
+          ],
+          "length": 182000
+        },
+        {
+          "recording": {
+            "video": false,
+            "title": "1nce Again",
+            "disambiguation": "",
+            "first-release-date": "1996-06",
+            "length": 229227,
+            "artist-credit": [
+              {
+                "name": "A Tribe Called Quest",
+                "artist": {
+                  "type": "Group",
+                  "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                  "disambiguation": "",
+                  "country": "US",
+                  "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+                  "sort-name": "Tribe Called Quest, A",
+                  "name": "A Tribe Called Quest"
+                },
+                "joinphrase": " feat. "
+              },
+              {
+                "artist": {
+                  "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+                  "disambiguation": "",
+                  "type": "Person",
+                  "name": "Tammy Lucas",
+                  "sort-name": "Lucas, Tammy",
+                  "id": "f99cbf01-6c99-43b8-850c-8526d4e33492",
+                  "tags": [],
+                  "country": null
+                },
+                "joinphrase": "",
+                "name": "Tammy Lucas"
+              }
+            ],
+            "tags": [
+              {
+                "count": 1,
+                "name": "alternative rap"
+              },
+              {
+                "name": "hip hop",
+                "count": 6
+              },
+              {
+                "count": 1,
+                "name": "hip hop rap"
+              },
+              {
+                "name": "jazz rap",
+                "count": 1
+              },
+              {
+                "name": "rap",
+                "count": 1
+              },
+              {
+                "name": "underground hip hop",
+                "count": 1
+              }
+            ],
+            "id": "6d3ee51f-beac-4858-b7c5-078597ee9e38"
+          },
+          "length": 229000,
+          "id": "05e06034-3f56-42fb-8885-8c140ef4b685",
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "artist": {
+                "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+                "name": "A Tribe Called Quest",
+                "sort-name": "Tribe Called Quest, A",
+                "country": "US",
+                "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                "type": "Group",
+                "disambiguation": ""
+              },
+              "name": "A Tribe Called Quest"
+            }
+          ],
+          "position": 7,
+          "title": "1nce Again",
+          "number": "B4"
+        }
+      ],
+      "id": "e749a424-a76c-38bd-8e0d-703895c90507",
+      "track-offset": 0,
+      "position": 1,
+      "format": "12\" Vinyl",
+      "format-id": "3e9080b0-5e6c-34ab-bd15-f526b6306a64",
+      "title": ""
+    },
+    {
+      "format": "12\" Vinyl",
+      "position": 2,
+      "format-id": "3e9080b0-5e6c-34ab-bd15-f526b6306a64",
+      "title": "",
+      "track-count": 8,
+      "track-offset": 0,
+      "id": "9fe0ebe4-1e7b-3716-82ea-621c8b5af590",
+      "tracks": [
+        {
+          "recording": {
+            "id": "6a258ee9-6e2e-4c99-94a2-03e418b942cd",
+            "tags": [
+              {
+                "count": 6,
+                "name": "hip hop"
+              },
+              {
+                "name": "hip hop rap",
+                "count": 1
+              },
+              {
+                "count": 1,
+                "name": "rap"
+              },
+              {
+                "count": 1,
+                "name": "turntablism"
+              }
+            ],
+            "artist-credit": [
+              {
+                "name": "A Tribe Called Quest",
+                "artist": {
+                  "sort-name": "Tribe Called Quest, A",
+                  "name": "A Tribe Called Quest",
+                  "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+                  "country": "US",
+                  "type": "Group",
+                  "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                  "disambiguation": ""
+                },
+                "joinphrase": ""
+              }
+            ],
+            "length": 235707,
+            "first-release-date": "1996-07-29",
+            "disambiguation": "",
+            "video": false,
+            "title": "Mind Power"
+          },
+          "id": "4e7e97be-23de-4118-bcf9-312d68e737af",
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "artist": {
+                "country": "US",
+                "sort-name": "Tribe Called Quest, A",
+                "name": "A Tribe Called Quest",
+                "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+                "type": "Group",
+                "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                "disambiguation": ""
+              },
+              "name": "A Tribe Called Quest"
+            }
+          ],
+          "length": 235000,
+          "position": 1,
+          "number": "C1",
+          "title": "Mind Power"
+        },
+        {
+          "position": 2,
+          "number": "C2",
+          "title": "The Hop",
+          "recording": {
+            "title": "The Hop",
+            "video": false,
+            "disambiguation": "",
+            "first-release-date": "1996-07-29",
+            "length": 207000,
+            "tags": [
+              {
+                "name": "hip hop",
+                "count": 6
+              },
+              {
+                "count": 1,
+                "name": "hip hop rap"
+              },
+              {
+                "count": 1,
+                "name": "jazz rap"
+              },
+              {
+                "name": "rap",
+                "count": 1
+              }
+            ],
+            "artist-credit": [
+              {
+                "name": "A Tribe Called Quest",
+                "joinphrase": "",
+                "artist": {
+                  "country": "US",
+                  "sort-name": "Tribe Called Quest, A",
+                  "name": "A Tribe Called Quest",
+                  "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+                  "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                  "disambiguation": "",
+                  "type": "Group"
+                }
+              }
+            ],
+            "id": "2e83c377-32fb-4b6b-941f-3ca7e84130fd"
+          },
+          "length": 207000,
+          "id": "694cc8fb-9cc0-4ffd-a089-5244f2c42f23",
+          "artist-credit": [
+            {
+              "artist": {
+                "country": "US",
+                "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+                "sort-name": "Tribe Called Quest, A",
+                "name": "A Tribe Called Quest",
+                "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                "type": "Group",
+                "disambiguation": ""
+              },
+              "joinphrase": "",
+              "name": "A Tribe Called Quest"
+            }
+          ]
+        },
+        {
+          "id": "00a9508d-04a7-4cea-8127-4b2c9c71f94b",
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "artist": {
+                "type": "Group",
+                "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                "disambiguation": "",
+                "country": "US",
+                "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+                "name": "A Tribe Called Quest",
+                "sort-name": "Tribe Called Quest, A"
+              },
+              "name": "A Tribe Called Quest"
+            }
+          ],
+          "length": 218000,
+          "recording": {
+            "length": 218533,
+            "artist-credit": [
+              {
+                "artist": {
+                  "country": "US",
+                  "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+                  "sort-name": "Tribe Called Quest, A",
+                  "name": "A Tribe Called Quest",
+                  "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                  "type": "Group",
+                  "disambiguation": ""
+                },
+                "joinphrase": "",
+                "name": "A Tribe Called Quest"
+              }
+            ],
+            "tags": [
+              {
+                "count": 5,
+                "name": "hip hop"
+              },
+              {
+                "name": "hip hop rap",
+                "count": 1
+              },
+              {
+                "name": "jazz rap",
+                "count": 1
+              },
+              {
+                "name": "rap",
+                "count": 1
+              }
+            ],
+            "id": "7531dfd5-e996-4a3e-96e1-49166617b33f",
+            "video": false,
+            "title": "Keeping It Moving",
+            "disambiguation": "",
+            "first-release-date": "1996-07-29"
+          },
+          "number": "C3",
+          "title": "Keeping It Moving",
+          "position": 3
+        },
+        {
+          "position": 4,
+          "number": "C4",
+          "title": "Baby Phife's Return",
+          "recording": {
+            "artist-credit": [
+              {
+                "name": "A Tribe Called Quest",
+                "joinphrase": "",
+                "artist": {
+                  "type": "Group",
+                  "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                  "disambiguation": "",
+                  "sort-name": "Tribe Called Quest, A",
+                  "name": "A Tribe Called Quest",
+                  "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+                  "country": "US"
+                }
+              }
+            ],
+            "tags": [
+              {
+                "name": "hip hop",
+                "count": 5
+              },
+              {
+                "count": 1,
+                "name": "hip hop rap"
+              },
+              {
+                "name": "jazz rap",
+                "count": 1
+              },
+              {
+                "name": "rap",
+                "count": 1
+              }
+            ],
+            "id": "51a357ff-89ad-4c24-8e6e-a9e061613383",
+            "length": 198667,
+            "video": false,
+            "title": "Baby Phife's Return",
+            "first-release-date": "1996-07-29",
+            "disambiguation": ""
+          },
+          "artist-credit": [
+            {
+              "name": "A Tribe Called Quest",
+              "joinphrase": "",
+              "artist": {
+                "type": "Group",
+                "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                "disambiguation": "",
+                "sort-name": "Tribe Called Quest, A",
+                "name": "A Tribe Called Quest",
+                "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+                "country": "US"
+              }
+            }
+          ],
+          "id": "8bcc5826-5070-4aba-a87c-a5f3d74d8068",
+          "length": 198000
+        },
+        {
+          "title": "Separate / Together",
+          "number": "D1",
+          "position": 5,
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "artist": {
+                "type": "Group",
+                "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                "disambiguation": "",
+                "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+                "name": "A Tribe Called Quest",
+                "sort-name": "Tribe Called Quest, A",
+                "country": "US"
+              },
+              "name": "A Tribe Called Quest"
+            }
+          ],
+          "id": "96b673aa-ec17-423c-be13-5caecab80952",
+          "length": 98000,
+          "recording": {
+            "length": 98000,
+            "artist-credit": [
+              {
+                "name": "A Tribe Called Quest",
+                "joinphrase": "",
+                "artist": {
+                  "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                  "type": "Group",
+                  "disambiguation": "",
+                  "sort-name": "Tribe Called Quest, A",
+                  "name": "A Tribe Called Quest",
+                  "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+                  "country": "US"
+                }
+              }
+            ],
+            "tags": [
+              {
+                "count": 1,
+                "name": "alternative hip hop"
+              },
+              {
+                "count": 5,
+                "name": "hip hop"
+              },
+              {
+                "name": "hip-hop",
+                "count": 1
+              },
+              {
+                "count": 1,
+                "name": "rap"
+              }
+            ],
+            "id": "9dac4a0c-2996-4eb6-842c-3b841a5887c2",
+            "video": false,
+            "title": "Separate / Together",
+            "disambiguation": "",
+            "first-release-date": "1996-07-29"
+          }
+        },
+        {
+          "position": 6,
+          "number": "D2",
+          "title": "What Really Goes On",
+          "recording": {
+            "length": 203386,
+            "tags": [
+              {
+                "name": "hip hop",
+                "count": 5
+              },
+              {
+                "count": 1,
+                "name": "hip hop rap"
+              },
+              {
+                "count": 1,
+                "name": "jazz rap"
+              },
+              {
+                "count": 1,
+                "name": "rap"
+              }
+            ],
+            "id": "4a0e9f4d-3afd-4950-ae32-517d81308d8e",
+            "artist-credit": [
+              {
+                "name": "A Tribe Called Quest",
+                "joinphrase": "",
+                "artist": {
+                  "disambiguation": "",
+                  "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                  "type": "Group",
+                  "sort-name": "Tribe Called Quest, A",
+                  "name": "A Tribe Called Quest",
+                  "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+                  "country": "US"
+                }
+              }
+            ],
+            "video": false,
+            "title": "What Really Goes On",
+            "disambiguation": "",
+            "first-release-date": "1996-07-29"
+          },
+          "artist-credit": [
+            {
+              "name": "A Tribe Called Quest",
+              "joinphrase": "",
+              "artist": {
+                "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                "type": "Group",
+                "disambiguation": "",
+                "sort-name": "Tribe Called Quest, A",
+                "name": "A Tribe Called Quest",
+                "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+                "country": "US"
+              }
+            }
+          ],
+          "id": "5793fb00-4244-484f-a94f-4411a1aa54d4",
+          "length": 203000
+        },
+        {
+          "recording": {
+            "disambiguation": "",
+            "first-release-date": "1996-07-29",
+            "title": "Word Play",
+            "video": false,
+            "length": 179626,
+            "tags": [
+              {
+                "name": "hip hop",
+                "count": 6
+              },
+              {
+                "name": "hip-hop",
+                "count": 1
+              },
+              {
+                "name": "rap",
+                "count": 1
+              },
+              {
+                "name": "underground hip hop",
+                "count": 1
+              }
+            ],
+            "id": "410a90cb-47d3-4f96-86f3-5eb873775c86",
+            "artist-credit": [
+              {
+                "joinphrase": "",
+                "artist": {
+                  "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                  "type": "Group",
+                  "disambiguation": "",
+                  "country": "US",
+                  "name": "A Tribe Called Quest",
+                  "sort-name": "Tribe Called Quest, A",
+                  "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f"
+                },
+                "name": "A Tribe Called Quest"
+              }
+            ]
+          },
+          "id": "2bf4c61d-ca28-430b-8954-0f159d1ce1b1",
+          "artist-credit": [
+            {
+              "name": "A Tribe Called Quest",
+              "artist": {
+                "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                "type": "Group",
+                "disambiguation": "",
+                "country": "US",
+                "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+                "sort-name": "Tribe Called Quest, A",
+                "name": "A Tribe Called Quest"
+              },
+              "joinphrase": ""
+            }
+          ],
+          "length": 179000,
+          "position": 7,
+          "title": "Word Play",
+          "number": "D3"
+        },
+        {
+          "position": 8,
+          "title": "Stressed Out",
+          "number": "D4",
+          "recording": {
+            "tags": [
+              {
+                "count": 8,
+                "name": "hip hop"
+              },
+              {
+                "name": "hip-hop",
+                "count": 1
+              },
+              {
+                "count": 1,
+                "name": "rap hip hop"
+              },
+              {
+                "count": 1,
+                "name": "underground hip hop"
+              }
+            ],
+            "artist-credit": [
+              {
+                "name": "A Tribe Called Quest",
+                "artist": {
+                  "type": "Group",
+                  "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                  "disambiguation": "",
+                  "country": "US",
+                  "name": "A Tribe Called Quest",
+                  "sort-name": "Tribe Called Quest, A",
+                  "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f"
+                },
+                "joinphrase": ""
+              }
+            ],
+            "id": "733b8dbc-88fc-4086-9b99-d64938bdc3b4",
+            "length": 297000,
+            "video": false,
+            "title": "Stressed Out",
+            "first-release-date": "1996-07-29",
+            "disambiguation": ""
+          },
+          "length": 297000,
+          "id": "06efa56a-ad5b-48a6-b3da-df75a68cb54c",
+          "artist-credit": [
+            {
+              "name": "A Tribe Called Quest",
+              "artist": {
+                "country": "US",
+                "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+                "name": "A Tribe Called Quest",
+                "sort-name": "Tribe Called Quest, A",
+                "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                "type": "Group",
+                "disambiguation": ""
+              },
+              "joinphrase": ""
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "asin": null
+}

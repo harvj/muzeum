@@ -41,7 +41,8 @@ results = Musicbrainz::RecordingSearch.call(
 
 if options[:raw]
   puts "\n== Raw MusicBrainz Results =="
-  pp results
+  pp JSON.pretty_generate(JSON.parse(results.to_json))
+  # pp results
   exit 0
 end
 
@@ -52,17 +53,12 @@ puts "\n== Release Candidates (#{candidates.size}) =="
 candidates.each_with_index do |candidate, idx|
   puts "\n[#{idx + 1}]"
   pp(
-    release_title: candidate.release_title,
-    release_date: candidate.release_date,
-    release_group: {
-      mbid: candidate.release_group_mbid,
-      type: candidate.release_group_primary_type,
-      secondary: candidate.release_group_secondary_types
-    },
+    release_group_title: candidate.release_group_title,
+    release_date: candidate.release_date_label,
+    release_group_mbid: candidate.release_group_mbid,
     country: candidate.country,
     formats: candidate.formats,
-    recording_title: candidate.recording_title,
-    recording_mbid: candidate.recording_mbid,
-    release_mbid: candidate.release_mbid
+    representative_release_mbid: candidate.representative_release_mbid,
+    track_count: candidate.track_count
   )
 end

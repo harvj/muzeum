@@ -1,0 +1,892 @@
+[
+    {
+        "id": "2e83c377-32fb-4b6b-941f-3ca7e84130fd",
+        "score": 100,
+        "artist-credit-id": "de820dc7-6a51-3fbc-90ff-a921b5c0def6",
+        "title": "The Hop",
+        "length": 207000,
+        "video": null,
+        "artist-credit":
+        [
+            {
+                "name": "A Tribe Called Quest",
+                "artist":
+                {
+                    "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+                    "name": "A Tribe Called Quest",
+                    "sort-name": "Tribe Called Quest, A",
+                    "aliases":
+                    [
+                        {
+                            "sort-name": "A Tribe Calle Quest",
+                            "name": "A Tribe Calle Quest",
+                            "locale": null,
+                            "type": null,
+                            "primary": null,
+                            "begin-date": null,
+                            "end-date": null
+                        },
+                        {
+                            "sort-name": "Tribe Called Quest",
+                            "name": "Tribe Called Quest",
+                            "locale": null,
+                            "type": null,
+                            "primary": null,
+                            "begin-date": null,
+                            "end-date": null
+                        },
+                        {
+                            "sort-name": "ATCQ",
+                            "name": "ATCQ",
+                            "locale": null,
+                            "type": null,
+                            "primary": null,
+                            "begin-date": null,
+                            "end-date": null
+                        }
+                    ]
+                }
+            }
+        ],
+        "first-release-date": "1996-07-29",
+        "releases":
+        [
+            {
+                "id": "d9f7dcc8-f35f-4837-bfb6-0c98f2260948",
+                "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+                "artist-credit-id": "de820dc7-6a51-3fbc-90ff-a921b5c0def6",
+                "count": 1,
+                "title": "Beats, Rhymes and Life",
+                "status": "Official",
+                "artist-credit":
+                [
+                    {
+                        "name": "A Tribe Called Quest",
+                        "artist":
+                        {
+                            "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+                            "name": "A Tribe Called Quest",
+                            "sort-name": "Tribe Called Quest, A"
+                        }
+                    }
+                ],
+                "release-group":
+                {
+                    "id": "af2a22ae-15c9-3c73-9a35-7b4f503d8f7c",
+                    "type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+                    "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+                    "title": "Beats, Rhymes and Life",
+                    "primary-type": "Album"
+                },
+                "date": "2007-01-24",
+                "country": "JP",
+                "release-events":
+                [
+                    {
+                        "date": "2007-01-24",
+                        "area":
+                        {
+                            "id": "2db42837-c832-3c27-b4a3-08198f75693c",
+                            "name": "Japan",
+                            "sort-name": "Japan",
+                            "iso-3166-1-codes":
+                            [
+                                "JP"
+                            ]
+                        }
+                    }
+                ],
+                "track-count": 16,
+                "media":
+                [
+                    {
+                        "id": "e3e3670f-af68-3c40-9cea-a6537ed5fc5f",
+                        "position": 1,
+                        "format": "CD",
+                        "track":
+                        [
+                            {
+                                "id": "afae6c55-7470-3c3f-bf4c-08fbea2d962c",
+                                "number": "9",
+                                "title": "The Hop",
+                                "length": 207480
+                            }
+                        ],
+                        "track-count": 16,
+                        "track-offset": 8
+                    }
+                ]
+            },
+            {
+                "id": "54cfed7e-818d-415e-afaf-c6b7c621e870",
+                "artist-credit-id": "de820dc7-6a51-3fbc-90ff-a921b5c0def6",
+                "count": 1,
+                "title": "Beats, Rhymes and Life",
+                "artist-credit":
+                [
+                    {
+                        "name": "A Tribe Called Quest",
+                        "artist":
+                        {
+                            "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+                            "name": "A Tribe Called Quest",
+                            "sort-name": "Tribe Called Quest, A"
+                        }
+                    }
+                ],
+                "release-group":
+                {
+                    "id": "af2a22ae-15c9-3c73-9a35-7b4f503d8f7c",
+                    "type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+                    "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+                    "title": "Beats, Rhymes and Life",
+                    "primary-type": "Album"
+                },
+                "date": "2009-03-11",
+                "country": "JP",
+                "release-events":
+                [
+                    {
+                        "date": "2009-03-11",
+                        "area":
+                        {
+                            "id": "2db42837-c832-3c27-b4a3-08198f75693c",
+                            "name": "Japan",
+                            "sort-name": "Japan",
+                            "iso-3166-1-codes":
+                            [
+                                "JP"
+                            ]
+                        }
+                    }
+                ],
+                "track-count": 16,
+                "media":
+                [
+                    {
+                        "id": "9fad85a7-89c1-3c60-a45a-47801386bb0a",
+                        "position": 1,
+                        "format": "CD",
+                        "track":
+                        [
+                            {
+                                "id": "9b30ae03-1c14-4498-aa83-880517ea1970",
+                                "number": "9",
+                                "title": "The Hop"
+                            }
+                        ],
+                        "track-count": 16,
+                        "track-offset": 8
+                    }
+                ]
+            },
+            {
+                "id": "2aeedafe-275a-4175-bdac-f9343d98bc7a",
+                "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+                "artist-credit-id": "de820dc7-6a51-3fbc-90ff-a921b5c0def6",
+                "count": 1,
+                "title": "Beats, Rhymes And Life",
+                "status": "Official",
+                "artist-credit":
+                [
+                    {
+                        "name": "A Tribe Called Quest",
+                        "artist":
+                        {
+                            "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+                            "name": "A Tribe Called Quest",
+                            "sort-name": "Tribe Called Quest, A"
+                        }
+                    }
+                ],
+                "release-group":
+                {
+                    "id": "af2a22ae-15c9-3c73-9a35-7b4f503d8f7c",
+                    "type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+                    "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+                    "title": "Beats, Rhymes and Life",
+                    "primary-type": "Album"
+                },
+                "date": "1997-04-23",
+                "country": "JP",
+                "release-events":
+                [
+                    {
+                        "date": "1997-04-23",
+                        "area":
+                        {
+                            "id": "2db42837-c832-3c27-b4a3-08198f75693c",
+                            "name": "Japan",
+                            "sort-name": "Japan",
+                            "iso-3166-1-codes":
+                            [
+                                "JP"
+                            ]
+                        }
+                    }
+                ],
+                "track-count": 16,
+                "media":
+                [
+                    {
+                        "id": "1daf880b-6bb6-37f6-b542-77a0e0f9ed0a",
+                        "position": 1,
+                        "format": "CD",
+                        "track":
+                        [
+                            {
+                                "id": "09fea046-f8fd-4e69-b9b9-244f8eaa2628",
+                                "number": "9",
+                                "title": "The Hop",
+                                "length": 208000
+                            }
+                        ],
+                        "track-count": 16,
+                        "track-offset": 8
+                    }
+                ]
+            },
+            {
+                "id": "3804c7ce-1a42-4d12-b47e-cbb8017c621c",
+                "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+                "artist-credit-id": "de820dc7-6a51-3fbc-90ff-a921b5c0def6",
+                "count": 1,
+                "title": "Beats, Rhymes and Life",
+                "status": "Official",
+                "artist-credit":
+                [
+                    {
+                        "name": "A Tribe Called Quest",
+                        "artist":
+                        {
+                            "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+                            "name": "A Tribe Called Quest",
+                            "sort-name": "Tribe Called Quest, A"
+                        }
+                    }
+                ],
+                "release-group":
+                {
+                    "id": "af2a22ae-15c9-3c73-9a35-7b4f503d8f7c",
+                    "type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+                    "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+                    "title": "Beats, Rhymes and Life",
+                    "primary-type": "Album"
+                },
+                "date": "1996",
+                "country": "US",
+                "release-events":
+                [
+                    {
+                        "date": "1996",
+                        "area":
+                        {
+                            "id": "489ce91b-6658-3307-9877-795b68554c98",
+                            "name": "United States",
+                            "sort-name": "United States",
+                            "iso-3166-1-codes":
+                            [
+                                "US"
+                            ]
+                        }
+                    }
+                ],
+                "track-count": 15,
+                "media":
+                [
+                    {
+                        "id": "2f1ec608-7ddb-330b-9a13-001b8ca08db1",
+                        "position": 1,
+                        "format": "CD",
+                        "track":
+                        [
+                            {
+                                "id": "ed3d6871-5b2a-3f50-93b9-3d1344747ce9",
+                                "number": "9",
+                                "title": "The Hop",
+                                "length": 207000
+                            }
+                        ],
+                        "track-count": 15,
+                        "track-offset": 8
+                    }
+                ]
+            },
+            {
+                "id": "f906d3fd-7832-4018-a435-287cd9c50339",
+                "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+                "artist-credit-id": "de820dc7-6a51-3fbc-90ff-a921b5c0def6",
+                "count": 2,
+                "title": "Beats, Rhymes and Life",
+                "status": "Official",
+                "artist-credit":
+                [
+                    {
+                        "name": "A Tribe Called Quest",
+                        "artist":
+                        {
+                            "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+                            "name": "A Tribe Called Quest",
+                            "sort-name": "Tribe Called Quest, A"
+                        }
+                    }
+                ],
+                "release-group":
+                {
+                    "id": "af2a22ae-15c9-3c73-9a35-7b4f503d8f7c",
+                    "type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+                    "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+                    "title": "Beats, Rhymes and Life",
+                    "primary-type": "Album"
+                },
+                "date": "1996-07-30",
+                "country": "US",
+                "release-events":
+                [
+                    {
+                        "date": "1996-07-30",
+                        "area":
+                        {
+                            "id": "489ce91b-6658-3307-9877-795b68554c98",
+                            "name": "United States",
+                            "sort-name": "United States",
+                            "iso-3166-1-codes":
+                            [
+                                "US"
+                            ]
+                        }
+                    }
+                ],
+                "track-count": 15,
+                "media":
+                [
+                    {
+                        "id": "9fe0ebe4-1e7b-3716-82ea-621c8b5af590",
+                        "position": 2,
+                        "format": "12\" Vinyl",
+                        "track":
+                        [
+                            {
+                                "id": "694cc8fb-9cc0-4ffd-a089-5244f2c42f23",
+                                "number": "C2",
+                                "title": "The Hop",
+                                "length": 207000
+                            }
+                        ],
+                        "track-count": 8,
+                        "track-offset": 1
+                    }
+                ]
+            },
+            {
+                "id": "ca95ea1e-9968-4c5b-a8f1-d863d076944c",
+                "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+                "artist-credit-id": "de820dc7-6a51-3fbc-90ff-a921b5c0def6",
+                "count": 1,
+                "title": "Beats, Rhymes and Life",
+                "status": "Official",
+                "artist-credit":
+                [
+                    {
+                        "name": "A Tribe Called Quest",
+                        "artist":
+                        {
+                            "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+                            "name": "A Tribe Called Quest",
+                            "sort-name": "Tribe Called Quest, A"
+                        }
+                    }
+                ],
+                "release-group":
+                {
+                    "id": "af2a22ae-15c9-3c73-9a35-7b4f503d8f7c",
+                    "type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+                    "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+                    "title": "Beats, Rhymes and Life",
+                    "primary-type": "Album"
+                },
+                "date": "",
+                "country": "XW",
+                "release-events":
+                [
+                    {
+                        "date": "",
+                        "area":
+                        {
+                            "id": "525d4e18-3d00-31b9-a58b-a146a916de8f",
+                            "name": "[Worldwide]",
+                            "sort-name": "[Worldwide]",
+                            "iso-3166-1-codes":
+                            [
+                                "XW"
+                            ]
+                        }
+                    }
+                ],
+                "track-count": 15,
+                "media":
+                [
+                    {
+                        "id": "961de88c-e84b-3d04-bf90-e61a47c09604",
+                        "position": 1,
+                        "format": "Digital Media",
+                        "track":
+                        [
+                            {
+                                "id": "875da6ba-bfb7-45c3-b84f-f4b90810227a",
+                                "number": "9",
+                                "title": "The Hop",
+                                "length": 207467
+                            }
+                        ],
+                        "track-count": 15,
+                        "track-offset": 8
+                    }
+                ]
+            },
+            {
+                "id": "c468c577-d087-4f6e-925e-180b0dddf269",
+                "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+                "artist-credit-id": "de820dc7-6a51-3fbc-90ff-a921b5c0def6",
+                "count": 1,
+                "title": "Beats, Rhymes and Life",
+                "status": "Official",
+                "artist-credit":
+                [
+                    {
+                        "name": "A Tribe Called Quest",
+                        "artist":
+                        {
+                            "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+                            "name": "A Tribe Called Quest",
+                            "sort-name": "Tribe Called Quest, A"
+                        }
+                    }
+                ],
+                "release-group":
+                {
+                    "id": "af2a22ae-15c9-3c73-9a35-7b4f503d8f7c",
+                    "type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+                    "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+                    "title": "Beats, Rhymes and Life",
+                    "primary-type": "Album"
+                },
+                "date": "1996-07-30",
+                "country": "US",
+                "release-events":
+                [
+                    {
+                        "date": "1996-07-30",
+                        "area":
+                        {
+                            "id": "489ce91b-6658-3307-9877-795b68554c98",
+                            "name": "United States",
+                            "sort-name": "United States",
+                            "iso-3166-1-codes":
+                            [
+                                "US"
+                            ]
+                        }
+                    }
+                ],
+                "track-count": 15,
+                "media":
+                [
+                    {
+                        "id": "4edf9f4b-fefc-3a91-b74e-85c6bf5dd988",
+                        "position": 1,
+                        "format": "CD",
+                        "track":
+                        [
+                            {
+                                "id": "da66aa8b-fc6f-3994-8343-4fe9c5bce605",
+                                "number": "9",
+                                "title": "The Hop",
+                                "length": 207000
+                            }
+                        ],
+                        "track-count": 15,
+                        "track-offset": 8
+                    }
+                ]
+            },
+            {
+                "id": "a28ae1a5-577f-3324-95bf-e8cdb1595e3e",
+                "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+                "artist-credit-id": "de820dc7-6a51-3fbc-90ff-a921b5c0def6",
+                "count": 1,
+                "title": "Beats, Rhymes and Life",
+                "status": "Official",
+                "artist-credit":
+                [
+                    {
+                        "name": "A Tribe Called Quest",
+                        "artist":
+                        {
+                            "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+                            "name": "A Tribe Called Quest",
+                            "sort-name": "Tribe Called Quest, A"
+                        }
+                    }
+                ],
+                "release-group":
+                {
+                    "id": "af2a22ae-15c9-3c73-9a35-7b4f503d8f7c",
+                    "type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+                    "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+                    "title": "Beats, Rhymes and Life",
+                    "primary-type": "Album"
+                },
+                "date": "1996-07-29",
+                "country": "GB",
+                "release-events":
+                [
+                    {
+                        "date": "1996-07-29",
+                        "area":
+                        {
+                            "id": "8a754a16-0027-3a29-b6d7-2b40ea0481ed",
+                            "name": "United Kingdom",
+                            "sort-name": "United Kingdom",
+                            "iso-3166-1-codes":
+                            [
+                                "GB"
+                            ]
+                        }
+                    }
+                ],
+                "track-count": 15,
+                "media":
+                [
+                    {
+                        "id": "edfd54b0-5f4c-3ae4-baef-63e866af9b10",
+                        "position": 1,
+                        "format": "CD",
+                        "track":
+                        [
+                            {
+                                "id": "15abe426-f464-3b82-8891-e824fc39d855",
+                                "number": "9",
+                                "title": "The Hop",
+                                "length": 207000
+                            }
+                        ],
+                        "track-count": 15,
+                        "track-offset": 8
+                    }
+                ]
+            },
+            {
+                "id": "672322cd-fb9c-387d-8137-1aa554de1bd3",
+                "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+                "artist-credit-id": "de820dc7-6a51-3fbc-90ff-a921b5c0def6",
+                "count": 1,
+                "title": "Beats, Rhymes and Life",
+                "status": "Official",
+                "artist-credit":
+                [
+                    {
+                        "name": "A Tribe Called Quest",
+                        "artist":
+                        {
+                            "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+                            "name": "A Tribe Called Quest",
+                            "sort-name": "Tribe Called Quest, A"
+                        }
+                    }
+                ],
+                "release-group":
+                {
+                    "id": "af2a22ae-15c9-3c73-9a35-7b4f503d8f7c",
+                    "type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+                    "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+                    "title": "Beats, Rhymes and Life",
+                    "primary-type": "Album"
+                },
+                "date": "1996",
+                "country": "XE",
+                "release-events":
+                [
+                    {
+                        "date": "1996",
+                        "area":
+                        {
+                            "id": "89a675c2-3e37-3518-b83c-418bad59a85a",
+                            "name": "Europe",
+                            "sort-name": "Europe",
+                            "iso-3166-1-codes":
+                            [
+                                "XE"
+                            ]
+                        }
+                    }
+                ],
+                "track-count": 15,
+                "media":
+                [
+                    {
+                        "id": "f8bfb02e-5f83-322d-96fd-70d9130fdfce",
+                        "position": 1,
+                        "format": "CD",
+                        "track":
+                        [
+                            {
+                                "id": "b23457d8-2872-3ff0-81a0-3aed4d351929",
+                                "number": "9",
+                                "title": "The Hop",
+                                "length": 207000
+                            }
+                        ],
+                        "track-count": 15,
+                        "track-offset": 8
+                    }
+                ]
+            },
+            {
+                "id": "50994635-8fac-4f42-a2c5-3b363bb1e81e",
+                "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+                "artist-credit-id": "949a7fd5-fe73-3e8f-922e-01ff4ca958f7",
+                "count": 2,
+                "title": "MTV Raps, Volume 3",
+                "status": "Official",
+                "artist-credit":
+                [
+                    {
+                        "name": "Various Artists",
+                        "artist":
+                        {
+                            "id": "89ad4ac3-39f7-470e-963a-56509c546377",
+                            "name": "Various Artists",
+                            "sort-name": "Various Artists",
+                            "disambiguation": "add compilations to this artist"
+                        }
+                    }
+                ],
+                "release-group":
+                {
+                    "id": "883b9526-eb45-3a83-ba8e-f1252e562cab",
+                    "type-id": "dd2a21e1-0c00-3729-a7a0-de60b84eb5d1",
+                    "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+                    "title": "MTV Raps, Volume 3",
+                    "primary-type": "Album",
+                    "secondary-types":
+                    [
+                        "Compilation"
+                    ],
+                    "secondary-type-ids":
+                    [
+                        "dd2a21e1-0c00-3729-a7a0-de60b84eb5d1"
+                    ]
+                },
+                "date": "1997-10-13",
+                "country": "DE",
+                "release-events":
+                [
+                    {
+                        "date": "1997-10-13",
+                        "area":
+                        {
+                            "id": "85752fda-13c4-31a3-bee5-0e5cb1f51dad",
+                            "name": "Germany",
+                            "sort-name": "Germany",
+                            "iso-3166-1-codes":
+                            [
+                                "DE"
+                            ]
+                        }
+                    }
+                ],
+                "track-count": 36,
+                "media":
+                [
+                    {
+                        "id": "3decaa39-b836-3809-8c01-e2305d1d3f60",
+                        "position": 2,
+                        "format": "CD",
+                        "track":
+                        [
+                            {
+                                "id": "7a3366e2-acb6-3ad7-8930-41fa6ccc5a04",
+                                "number": "13",
+                                "title": "The Hop",
+                                "length": 209360
+                            }
+                        ],
+                        "track-count": 18,
+                        "track-offset": 12
+                    }
+                ]
+            },
+            {
+                "id": "c4e9b011-bf5e-4d7a-8d4b-5263e1770dcd",
+                "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+                "artist-credit-id": "de820dc7-6a51-3fbc-90ff-a921b5c0def6",
+                "count": 2,
+                "title": "Beats, Rhymes and Life",
+                "status": "Official",
+                "disambiguation": "with 4 track bonus disc 1nce again",
+                "artist-credit":
+                [
+                    {
+                        "name": "A Tribe Called Quest",
+                        "artist":
+                        {
+                            "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+                            "name": "A Tribe Called Quest",
+                            "sort-name": "Tribe Called Quest, A"
+                        }
+                    }
+                ],
+                "release-group":
+                {
+                    "id": "af2a22ae-15c9-3c73-9a35-7b4f503d8f7c",
+                    "type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+                    "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+                    "title": "Beats, Rhymes and Life",
+                    "primary-type": "Album"
+                },
+                "date": "1996",
+                "country": "AU",
+                "release-events":
+                [
+                    {
+                        "date": "1996",
+                        "area":
+                        {
+                            "id": "106e0bec-b638-3b37-b731-f53d507dc00e",
+                            "name": "Australia",
+                            "sort-name": "Australia",
+                            "iso-3166-1-codes":
+                            [
+                                "AU"
+                            ]
+                        }
+                    }
+                ],
+                "track-count": 19,
+                "media":
+                [
+                    {
+                        "id": "428d0d9c-d769-3930-ac9e-7c024ed8aca5",
+                        "position": 1,
+                        "format": "CD",
+                        "track":
+                        [
+                            {
+                                "id": "7e9250d9-83e1-42a0-b72d-7e49e6c35d84",
+                                "number": "9",
+                                "title": "The Hop",
+                                "length": 207000
+                            }
+                        ],
+                        "track-count": 15,
+                        "track-offset": 8
+                    }
+                ]
+            },
+            {
+                "id": "76f8b1d4-286e-49a5-926e-1df8face3b21",
+                "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+                "artist-credit-id": "de820dc7-6a51-3fbc-90ff-a921b5c0def6",
+                "count": 2,
+                "title": "Beats, Rhymes and Life",
+                "status": "Official",
+                "disambiguation": "with 5-track bonus disc \"1nce Again\"",
+                "artist-credit":
+                [
+                    {
+                        "name": "A Tribe Called Quest",
+                        "artist":
+                        {
+                            "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+                            "name": "A Tribe Called Quest",
+                            "sort-name": "Tribe Called Quest, A"
+                        }
+                    }
+                ],
+                "release-group":
+                {
+                    "id": "af2a22ae-15c9-3c73-9a35-7b4f503d8f7c",
+                    "type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+                    "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+                    "title": "Beats, Rhymes and Life",
+                    "primary-type": "Album"
+                },
+                "date": "1996",
+                "country": "AU",
+                "release-events":
+                [
+                    {
+                        "date": "1996",
+                        "area":
+                        {
+                            "id": "106e0bec-b638-3b37-b731-f53d507dc00e",
+                            "name": "Australia",
+                            "sort-name": "Australia",
+                            "iso-3166-1-codes":
+                            [
+                                "AU"
+                            ]
+                        }
+                    },
+                    {
+                        "date": "1996",
+                        "area":
+                        {
+                            "id": "8524c7d9-f472-3890-a458-f28d5081d9c4",
+                            "name": "New Zealand",
+                            "sort-name": "New Zealand",
+                            "iso-3166-1-codes":
+                            [
+                                "NZ"
+                            ]
+                        }
+                    }
+                ],
+                "track-count": 20,
+                "media":
+                [
+                    {
+                        "id": "97b4baa6-0271-3f73-955b-a997e05f1144",
+                        "position": 1,
+                        "format": "CD",
+                        "track":
+                        [
+                            {
+                                "id": "9307142d-802f-412f-91d6-50704af0a5c7",
+                                "number": "9",
+                                "title": "The Hop",
+                                "length": 207373
+                            }
+                        ],
+                        "track-count": 15,
+                        "track-offset": 8
+                    }
+                ]
+            }
+        ],
+        "isrcs":
+        [
+            "GBAHK9600111"
+        ],
+        "tags":
+        [
+            {
+                "count": 1,
+                "name": "rap"
+            },
+            {
+                "count": 6,
+                "name": "hip hop"
+            },
+            {
+                "count": 1,
+                "name": "hip hop rap"
+            },
+            {
+                "count": 1,
+                "name": "jazz rap"
+            }
+        ]
+    }
+]

@@ -63,7 +63,7 @@ RSpec.describe Clients::Musicbrainz do
   describe "#fetch_recording" do
     before do
       stub_request(:get, "#{base_url}/recording/mbid-123")
-        .with(query: { "fmt" => "json" })
+        .with(query: hash_including("fmt" => "json"))
         .to_return(
           status: 200,
           body: { "id" => "mbid-123", "title" => "Test Recording" }.to_json,
