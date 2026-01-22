@@ -4,7 +4,7 @@
 require_relative "../config/environment"
 
 unless ARGV.size == 1
-  warn "Usage: bin/mb:fetch-release RELEASE_MBID"
+  warn "Usage: bin/mb-release RELEASE_MBID"
   exit 1
 end
 

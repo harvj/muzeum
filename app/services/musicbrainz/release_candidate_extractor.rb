@@ -12,7 +12,7 @@ module Musicbrainz
       recordings
         .flat_map { |recording| recording["releases"] || [] }
         .group_by { |release| release.dig("release-group", "id") }
-        .map { |_, releases| build_candidate(releases) }
+        .map { |release_group_mbid, releases| build_candidate(release_group_mbid, releases) }
         .compact
     end
 
@@ -24,10 +24,16 @@ module Musicbrainz
     # Core
     # --------------------------------------------------
 
-    def build_candidate(releases)
+    def build_candidate(release_group_mbid, releases)
       return nil if releases.empty?
 
-      chosen = choose_release(releases)
+      db_info = db_release_for_group(release_group_mbid)
+
+      chosen = if db_info
+        find_db_matching_release(releases, db_info[:ingested_from_release_mbid])
+      end
+
+      chosen ||= choose_representative_release(releases)
 
       ReleaseCandidate.new(
         source: :musicbrainz,
@@ -41,7 +47,13 @@ module Musicbrainz
         representative_release_mbid: chosen["id"],
         formats: formats_from(chosen),
         country: chosen["country"],
-        track_count: chosen["track-count"]
+        track_count: chosen["track-count"],
+        db_match:
+          if db_info && chosen["id"] == db_info[:ingested_from_release_mbid]
+            db_info.merge(
+              ingested_from_release_mbid: chosen["id"]
+            )
+          end
       )
     end
 
@@ -49,7 +61,7 @@ module Musicbrainz
     # Selection logic
     # --------------------------------------------------
 
-    def choose_release(releases)
+    def choose_representative_release(releases)
       releases_with_dates = releases.select { |r| r["date"].present? }
       releases_with_dates = releases if releases_with_dates.empty?
 
@@ -89,6 +101,24 @@ module Musicbrainz
     # --------------------------------------------------
     # Helpers
     # --------------------------------------------------
+
+    def db_release_for_group(release_group_mbid)
+      row = Release
+        .where(release_group_mbid: release_group_mbid)
+        .pick(:id, :ingested_from_release_mbid)
+
+      return nil unless row
+
+      {
+        release_id: row[0],
+        ingested_from_release_mbid: row[1]
+      }
+    end
+
+    def find_db_matching_release(releases, ingested_mbid)
+      return nil unless ingested_mbid
+      releases.find { |r| r["id"] == ingested_mbid }
+    end
 
     def date_sort_key(date)
       y, m, d = parse_date(date)

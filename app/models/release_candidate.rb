@@ -1,5 +1,5 @@
 class ReleaseCandidate
-  attr_reader \
+  ATTRS = [
     :source,
     :release_group_mbid,
     :release_group_title,
@@ -12,36 +12,18 @@ class ReleaseCandidate
     :artist_names,
     :track_count,
     :country,
-    :formats
+    :formats,
+    :db_match
+  ]
 
-  def initialize(
-    source:,
-    release_group_mbid: nil,
-    release_group_title:,
-    primary_type:,
-    secondary_types: [],
-    release_year: nil,
-    release_month: nil,
-    release_day: nil,
-    representative_release_mbid: nil,
-    artist_names: [],
-    track_count: nil,
-    country: nil,
-    formats: []
-  )
-    @source                      = source
-    @release_group_mbid          = release_group_mbid
-    @release_group_title         = release_group_title
-    @primary_type                = primary_type
-    @secondary_types             = secondary_types
-    @release_year                = release_year
-    @release_month               = release_month
-    @release_day                 = release_day
-    @representative_release_mbid = representative_release_mbid
-    @artist_names                = artist_names
-    @track_count                 = track_count
-    @country                     = country
-    @formats                     = formats
+  attr_accessor(*ATTRS)
+
+  def initialize(**attrs)
+    attrs.each { |k, v| public_send("#{k}=", v) }
+  end
+
+  def to_h
+    ATTRS.index_with { |a| public_send(a) }
   end
 
   def source_label
@@ -62,13 +44,5 @@ class ReleaseCandidate
     parts << "[#{primary_type}]" if primary_type
     parts << "— #{artist_names.join(", ")}" if artist_names.any?
     parts.join(" ")
-  end
-
-  def from_database?
-    source == :database
-  end
-
-  def from_musicbrainz?
-    source == :musicbrainz
   end
 end

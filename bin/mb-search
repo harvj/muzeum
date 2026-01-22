@@ -41,24 +41,19 @@ results = Musicbrainz::RecordingSearch.call(
 
 if options[:raw]
   puts "\n== Raw MusicBrainz Results =="
-  pp JSON.pretty_generate(JSON.parse(results.to_json))
-  # pp results
+  pp results
   exit 0
 end
 
 candidates = Musicbrainz::ReleaseCandidateExtractor.call(results)
 
-puts "\n== Release Candidates (#{candidates.size}) =="
+surface.update!(
+  release_candidates: candidates.map(&:to_h),
+  chosen_release_candidate_index: nil
+)
 
-candidates.each_with_index do |candidate, idx|
-  puts "\n[#{idx + 1}]"
-  pp(
-    release_group_title: candidate.release_group_title,
-    release_date: candidate.release_date_label,
-    release_group_mbid: candidate.release_group_mbid,
-    country: candidate.country,
-    formats: candidate.formats,
-    representative_release_mbid: candidate.representative_release_mbid,
-    track_count: candidate.track_count
-  )
+puts "\n== Release Candidates (#{candidates.size}) =="
+candidates.each_with_index do |c, idx|
+  puts "\n[#{idx}]"
+  pp c.to_h
 end

@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 require_relative "../config/environment"
 
-username = ARGV[0] or abort("Usage: bin/resolve_scrobbles LASTFM_USERNAME [LIMIT]")
+username = ARGV[0] or abort("Usage: bin/resolve-scrobbles LASTFM_USERNAME [LIMIT]")
 limit    = ARGV[1]&.to_i
 
 ScrobbleResolver::Runner.run!(

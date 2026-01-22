@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_21_151132) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_22_195903) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -76,11 +76,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_21_151132) do
     t.string "album_name"
     t.string "artist_mbid"
     t.string "artist_name", null: false
+    t.integer "chosen_release_candidate_index"
     t.float "confidence", default: 0.5, null: false
     t.datetime "created_at", null: false
     t.string "normalized_key", null: false
     t.integer "observed_count", default: 1, null: false
     t.bigint "recording_id", null: false
+    t.jsonb "release_candidates", default: []
     t.string "source", default: "lastfm", null: false
     t.string "track_mbid"
     t.string "track_name", null: false
@@ -130,15 +132,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_21_151132) do
   end
 
   create_table "releases", force: :cascade do |t|
-    t.string "mbid"
-    t.string "primary_type"
+    t.string "ingested_from_release_mbid"
+    t.integer "primary_type", default: 0, null: false
     t.integer "release_day"
     t.string "release_group_mbid"
     t.integer "release_month"
     t.integer "release_year"
+    t.integer "secondary_type", default: 0, null: false
     t.string "source", default: "musicbrainz", null: false
     t.string "title", null: false
-    t.index ["mbid"], name: "index_releases_on_mbid", unique: true
+    t.index ["ingested_from_release_mbid"], name: "index_releases_on_ingested_from_release_mbid", unique: true
     t.index ["release_group_mbid"], name: "index_releases_on_release_group_mbid"
   end
 

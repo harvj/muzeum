@@ -111,4 +111,43 @@ RSpec.describe Musicbrainz::ReleaseCandidateExtractor do
       expect(compilation_candidate.release_day).to eq(13)
     end
   end
+
+  context "when no release group exists in the database" do
+    it "does not set db_match on any candidate" do
+      candidates.each do |candidate|
+        expect(candidate.db_match).to be_nil
+      end
+    end
+  end
+
+  context "when a release group already exists in the database" do
+    let!(:existing_release) do
+      Release.create!(
+        release_group_mbid: "af2a22ae-15c9-3c73-9a35-7b4f503d8f7c",
+        ingested_from_release_mbid: "f906d3fd-7832-4018-a435-287cd9c50339",
+        title: "Beats, Rhymes and Life"
+      )
+    end
+
+    it "marks the matching candidate with db_match metadata" do
+      candidate = candidates.find do |c|
+        c.release_group_mbid == existing_release.release_group_mbid
+      end
+
+      expect(candidate).not_to be_nil
+      expect(candidate.db_match).to eq(
+        release_id: existing_release.id,
+        ingested_from_release_mbid: "f906d3fd-7832-4018-a435-287cd9c50339"
+      )
+    end
+
+    it "selects the previously ingested release mbid as representative if present in raw data" do
+      candidate = candidates.find do |c|
+        c.release_group_mbid == existing_release.release_group_mbid
+      end
+
+      expect(candidate.representative_release_mbid)
+        .to eq("f906d3fd-7832-4018-a435-287cd9c50339")
+    end
+  end
 end

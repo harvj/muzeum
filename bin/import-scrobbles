@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 require_relative "../config/environment"
 
-username   = ARGV[0] or abort("Usage: bin/import_scrobbles LASTFM_USERNAME [PAGE_LIMIT]")
+username   = ARGV[0] or abort("Usage: bin/import-scrobbles LASTFM_USERNAME [PAGE_LIMIT]")
 page_limit = (ARGV[1] || 1).to_i
 
 Lastfm::Importer.run!(
