@@ -1,6 +1,8 @@
 # app/services/releases/release_ingestor.rb
 module Releases
   class ReleaseIngestor
+    include SimpleLogger
+
     def self.call(recording_surface)
       new(recording_surface).call
     end
@@ -23,12 +25,12 @@ module Releases
 
     def ready?
       surface.release_candidates.present? &&
-        surface.chosen_release_candidate_index.present?
+        surface.chosen_release_candidate.present?
     end
 
     def candidate
       @candidate ||= begin
-        raw = surface.release_candidates[surface.chosen_release_candidate_index]
+        raw = surface.chosen_release_candidate
         ReleaseCandidate.new(**raw)
       end
     end
@@ -44,7 +46,8 @@ module Releases
         ingested_release_id: release.id,
         recording_id: recording.id
       )
-      Scrobble.where(recording_surface_id: surface.id).update_all(recording_id: recording.id)
+      count = Scrobble.where(recording_surface_id: surface.id).update_all(recording_id: recording.id)
+      log("Updated recording on #{count} scrobble(s)")
     end
 
     # ------------------------------------------------------------------
@@ -59,6 +62,7 @@ module Releases
                           .find { |rr| rr.recording.title.casecmp?(surface.track_name) }
                           &.recording
 
+      log("Assigning EXISTING release id=#{release.id}, #{release.title} | recording id=#{canonical.id}, #{canonical.title}")
       [ release, canonical ]
     end
 
@@ -83,6 +87,7 @@ module Releases
           recording.title.casecmp?(surface.track_name)
         end
 
+      log("Assigning CREATED release id=#{release.id}, #{release.title} | recording id=#{canonical.id}, #{canonical.title}")
       [ release, canonical ]
     end
 
@@ -94,25 +99,34 @@ module Releases
       Array(payload["artist-credit"]).map do |credit|
         artist_data = credit["artist"]
 
-        Artist.find_or_create_by!(mbid: artist_data["id"]) do |a|
+        created = false
+        artist = Artist.find_or_create_by!(mbid: artist_data["id"]) do |a|
+          created = true
           a.name = artist_data["name"]
         end
+        log_ingest(artist, created, :name)
+
+        artist
       end
     end
 
     def ingest_release!(payload)
       year, month, day = release_date_parts(payload)
 
-      Release.create!(
-        title: payload["title"],
-        ingested_from_release_mbid: payload["id"],
-        release_group_mbid: payload.dig("release-group", "id"),
-        release_year: year,
-        release_month: month,
-        release_day: day,
-        primary_type: map_primary_type(payload),
-        secondary_type: map_secondary_type(payload)
-      )
+      created = false
+      release = Release.find_or_create_by!(ingested_from_release_mbid: payload["id"]) do |r|
+        created = true
+        r.title              = payload["title"]
+        r.release_group_mbid = payload.dig("release-group", "id")
+        r.release_year       = year
+        r.release_month      = month
+        r.release_day        = day
+        r.primary_type       = map_primary_type(payload)
+        r.secondary_type     = map_secondary_type(payload)
+      end
+      log_ingest(release, created, :title)
+
+      release
     end
 
     def link_release_artists!(release, artists)
@@ -142,10 +156,13 @@ module Releases
             end
 
           tracks.each do |track|
+            created = false
             rec = Recording.find_or_create_by!(mbid: track.dig("recording", "id")) do |r|
+              created = true
               r.title       = track["title"]
               r.duration_ms = track["length"]
             end
+            log_ingest(rec, created, :title)
 
             ReleaseRecording.create!(
               release: release,
@@ -193,6 +210,16 @@ module Releases
       return :live if secondary.include?("Live")
       return :soundtrack if secondary.include?("Soundtrack")
       :official
+    end
+
+    def log_ingest(record, created, *attrs)
+      action = created ? "CREATED" : "FOUND"
+
+      attr_string = attrs.map do |a|
+        "#{a}=#{record.public_send(a)}"
+      end.join(" ")
+
+      log("#{action} #{record.class.name} id=#{record.id} #{attr_string}")
     end
   end
 end

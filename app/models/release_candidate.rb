@@ -13,6 +13,7 @@ class ReleaseCandidate
     :track_count,
     :country,
     :formats,
+    :matched_tracks,
     :db_match
   ]
 

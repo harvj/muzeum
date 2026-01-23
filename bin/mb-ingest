@@ -1,0 +1,13 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require_relative "lib/cli_helpers"
+require_relative "../config/environment"
+
+USAGE = "usage: mb-ingest sid:<surface_id>".freeze
+
+surface_id = parse_surface_id!(ARGV.find { |arg| arg.start_with?("sid:") })
+
+surface = RecordingSurface.find(surface_id)
+
+Releases::ReleaseIngestor.(surface)

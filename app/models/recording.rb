@@ -8,6 +8,8 @@ class Recording < ApplicationRecord
   has_many :daily_listens, dependent: :destroy
   has_many :recording_surfaces, dependent: :destroy
 
+  has_many :scrobbles
+
   validates :title, presence: true
   validates :mbid, presence: true
 end

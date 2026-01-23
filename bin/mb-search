@@ -1,29 +1,27 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
+require_relative "lib/cli_helpers"
 require_relative "../config/environment"
 require "optparse"
 require "pp"
+
+USAGE = "usage: mb-select sid:<surface_id> <index>".freeze
 
 options = {
   raw: false
 }
 
 OptionParser.new do |opts|
-  opts.banner = "Usage: bin/mb:search sid:<id> [--raw]"
+  opts.banner = USAGE
 
   opts.on("--raw", "Print raw MusicBrainz search results") do
     options[:raw] = true
   end
 end.parse!
 
-sid_arg = ARGV.find { |arg| arg.start_with?("sid:") }
+surface_id = parse_surface_id!(ARGV.find { |arg| arg.start_with?("sid:") })
 
-unless sid_arg
-  abort "usage: bin/mb:search sid:<id> [--raw]"
-end
-
-surface_id = sid_arg.split(":").last
 surface = RecordingSurface.find(surface_id)
 
 puts "\n== RecordingSurface =="

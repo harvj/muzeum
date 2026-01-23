@@ -1,0 +1,29 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require_relative "lib/cli_helpers"
+require_relative "../config/environment"
+
+USAGE = "usage: mb-select sid:<surface_id> <index>".freeze
+
+sid_arg, index_arg = ARGV
+usage! unless sid_arg && index_arg
+
+surface_id = parse_surface_id!(sid_arg)
+
+index = Integer(index_arg) rescue nil
+usage! unless surface_id.positive? && index
+
+surface = RecordingSurface.find(surface_id)
+
+surface.choose_release_candidate!(index)
+
+puts "== RecordingSurface =="
+pp surface.attributes.slice(
+  "id",
+  "chosen_release_candidate_index"
+)
+
+puts
+puts "== Chosen Release Candidate =="
+pp surface.chosen_release_candidate

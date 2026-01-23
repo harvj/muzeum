@@ -108,6 +108,7 @@ module Clients
     end
 
     def get(path, query:)
+      log("Requesting #{[ path, query.to_query ].join("?")}")
       response = http.get("#{BASE_URL}#{path}", params: query)
       handle_response(response)
     rescue HTTP::TimeoutError, HTTP::ConnectionError => e

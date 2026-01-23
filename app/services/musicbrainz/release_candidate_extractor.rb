@@ -48,6 +48,7 @@ module Musicbrainz
         formats: formats_from(chosen),
         country: chosen["country"],
         track_count: chosen["track-count"],
+        matched_tracks: chosen["media"].map { |m| m["track"] },
         db_match:
           if db_info && chosen["id"] == db_info[:ingested_from_release_mbid]
             db_info.merge(
