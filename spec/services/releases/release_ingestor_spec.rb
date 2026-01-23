@@ -62,7 +62,7 @@ RSpec.describe Releases::ReleaseIngestor do
   end
 
   it "creates artists from MB data" do
-    expect { ingest! }.to change(Artist, :count).by(1)
+    expect { ingest! }.to change(Artist, :count).by(2) # ATCQ plus Tammy Lucas as featured artist on one track
   end
 
   it "creates a release with correct MBIDs" do

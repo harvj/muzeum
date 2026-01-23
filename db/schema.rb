@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_23_044632) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_23_172731) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -59,12 +59,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_23_044632) do
     t.index ["user_id"], name: "index_import_runs_on_user_id"
   end
 
+  create_table "ingest_events", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.jsonb "data"
+    t.string "event_type", null: false
+    t.bigint "recording_surface_id", null: false
+    t.integer "subject_id"
+    t.string "subject_type"
+    t.datetime "updated_at", null: false
+    t.index ["recording_surface_id"], name: "index_ingest_events_on_recording_surface_id"
+  end
+
   create_table "recording_artists", force: :cascade do |t|
     t.bigint "artist_id", null: false
     t.datetime "created_at", null: false
     t.integer "position"
     t.bigint "recording_id", null: false
-    t.string "role", default: "primary", null: false
+    t.integer "role", default: 0, null: false
     t.datetime "updated_at", null: false
     t.float "weight", default: 1.0, null: false
     t.index ["artist_id"], name: "index_recording_artists_on_artist_id"

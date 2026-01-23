@@ -1,5 +1,6 @@
 class RecordingSurface < ApplicationRecord
   belongs_to :recording, optional: true
+  has_many :ingest_events, dependent: :destroy
 
   def self.normalize(artist_name, album_name, track_name)
     [

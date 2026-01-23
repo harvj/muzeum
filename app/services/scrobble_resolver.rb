@@ -31,7 +31,7 @@ class ScrobbleResolver
 
     if surface
       reinforce_surface!(surface)
-      scrobble.update!(recording: surface.recording)
+      scrobble.update!(recording: surface.recording, recording_surface: surface)
       return scrobble
     end
 

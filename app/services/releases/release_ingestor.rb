@@ -1,4 +1,3 @@
-# app/services/releases/release_ingestor.rb
 module Releases
   class ReleaseIngestor
     include SimpleLogger
@@ -21,7 +20,7 @@ module Releases
 
     private
 
-    attr_reader :surface
+    attr_reader :surface, :main_artists
 
     def ready?
       surface.release_candidates.present? &&
@@ -55,14 +54,14 @@ module Releases
     # ------------------------------------------------------------------
 
     def ingest_existing_release!
-      release = Release.find(candidate.db_match[:release_id])
+      release = Release.find(candidate.db_match["release_id"])
 
       canonical = release.release_recordings
                           .includes(:recording)
                           .find { |rr| rr.recording.title.casecmp?(surface.track_name) }
                           &.recording
 
-      log("Assigning EXISTING release id=#{release.id}, #{release.title} | recording id=#{canonical.id}, #{canonical.title}")
+      log("Assigning EXISTING release id=#{release.id} title=#{release.title} | recording id=#{canonical.id} title=#{canonical.title}")
       [ release, canonical ]
     end
 
@@ -75,9 +74,9 @@ module Releases
         .new
         .fetch_release(candidate.representative_release_mbid)
 
-      artists = ingest_artists!(payload)
+      @main_artists = ingest_artists!(payload)
       release = ingest_release!(payload)
-      link_release_artists!(release, artists)
+      link_release_artists!(release, main_artists)
 
       canonical_recordings =
         ingest_release_recordings!(release, payload)
@@ -87,7 +86,7 @@ module Releases
           recording.title.casecmp?(surface.track_name)
         end
 
-      log("Assigning CREATED release id=#{release.id}, #{release.title} | recording id=#{canonical.id}, #{canonical.title}")
+      log("Assigning CREATED release id=#{release.id} title=#{release.title} | recording id=#{canonical.id} title=#{canonical.title}")
       [ release, canonical ]
     end
 
@@ -130,13 +129,23 @@ module Releases
     end
 
     def link_release_artists!(release, artists)
+      release_artists = []
+
       artists.each_with_index do |artist, index|
-        ReleaseArtist.create!(
+        created = false
+        ra = ReleaseArtist.find_or_create_by!(
           release: release,
-          artist: artist,
-          position: index
-        )
+          artist: artist
+        ) do |i|
+          created = true
+          i.position = index
+        end
+
+        release_artists << ra
+        log_ingest(ra, created, "artist-name", "release-title")
       end
+
+      release_artists
     end
 
     # ------------------------------------------------------------------
@@ -156,6 +165,11 @@ module Releases
             end
 
           tracks.each do |track|
+            if video_track?(track["recording"])
+              log_skipped_video!(track, release)
+              next
+            end
+
             created = false
             rec = Recording.find_or_create_by!(mbid: track.dig("recording", "id")) do |r|
               created = true
@@ -170,12 +184,34 @@ module Releases
               position: global_position
             )
 
+            ingest_recording_artists!(rec, track)
+
             global_position += 1
             recordings << rec
           end
         end
 
       recordings
+    end
+
+    def ingest_recording_artists!(recording, track)
+      Array(track.dig("recording", "artist-credit")).each_with_index do |credit, index|
+        artist_data = credit["artist"]
+
+        artist_created = false
+        artist = Artist.find_or_create_by!(mbid: artist_data["id"]) do |a|
+          artist_created = true
+          a.name = artist_data["name"]
+        end
+
+        RecordingArtist.create!(
+          recording: recording,
+          artist: artist,
+          position: index
+        )
+
+        log_ingest(artist, artist_created, :name) unless main_artists.map(&:id).include?(artist.id)
+      end
     end
 
     # ------------------------------------------------------------------
@@ -212,14 +248,57 @@ module Releases
       :official
     end
 
+    def video_track?(recording_data)
+      recording_data["video"]
+    end
+
+    def log_skipped_video!(track, release)
+      surface.ingest_events.create!(
+        event_type: "skipped_video_track",
+        subject: release,
+        data: {
+          title: track["title"],
+          position: track["position"]
+        }
+      )
+    end
+
     def log_ingest(record, created, *attrs)
       action = created ? "CREATED" : "FOUND"
+      event_type ||= action.downcase
 
-      attr_string = attrs.map do |a|
-        "#{a}=#{record.public_send(a)}"
-      end.join(" ")
+      data = attrs.to_h do |a|
+        [ a, resolve_attr_path(record, a) ]
+      end
 
-      log("#{action} #{record.class.name} id=#{record.id} #{attr_string}")
+      message =
+        "#{action} #{record.class.name} id=#{record.id} " +
+        data.map { |k, v| "#{k}=#{v}" }.join(" ")
+
+      log message.strip
+
+      surface.ingest_events.create!(
+        event_type: event_type,
+        subject: record,
+        data: data
+      )
+    end
+
+    def resolve_attr_path(record, attr)
+      path =
+        case attr
+        when Symbol
+          [ attr ]
+        when String
+          attr.split("-").map(&:to_sym)
+        else
+          raise ArgumentError, "Invalid attr #{attr.inspect}"
+        end
+
+      path.reduce(record) do |obj, method|
+        return nil unless obj.respond_to?(method)
+        obj.public_send(method)
+      end
     end
   end
 end

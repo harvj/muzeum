@@ -76,6 +76,7 @@ module Musicbrainz
     def choose_country(by_country)
       countries = by_country.keys.compact
 
+      return nil if countries.blank?
       return countries.first if countries.size == 1
       return "JP" if countries == [ "JP" ]
 
