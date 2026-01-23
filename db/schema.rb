@@ -10,11 +10,12 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_22_195903) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_23_044632) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   create_table "artists", force: :cascade do |t|
+    t.string "country"
     t.datetime "created_at", null: false
     t.string "mbid"
     t.string "name", null: false
@@ -77,13 +78,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_22_195903) do
     t.string "artist_mbid"
     t.string "artist_name", null: false
     t.integer "chosen_release_candidate_index"
-    t.float "confidence", default: 0.5, null: false
     t.datetime "created_at", null: false
+    t.bigint "ingested_release_id"
     t.string "normalized_key", null: false
     t.integer "observed_count", default: 1, null: false
-    t.bigint "recording_id", null: false
+    t.bigint "recording_id"
     t.jsonb "release_candidates", default: []
-    t.string "source", default: "lastfm", null: false
     t.string "track_mbid"
     t.string "track_name", null: false
     t.datetime "updated_at", null: false
@@ -94,17 +94,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_22_195903) do
   end
 
   create_table "recordings", force: :cascade do |t|
-    t.float "confidence", default: 0.0, null: false
     t.datetime "created_at", null: false
     t.integer "duration_ms"
     t.string "mbid"
-    t.bigint "merged_into_id"
-    t.string "source", default: "lastfm", null: false
-    t.integer "status", default: 0, null: false
     t.string "title", null: false
     t.datetime "updated_at", null: false
     t.index ["mbid"], name: "index_recordings_on_mbid", unique: true
-    t.index ["merged_into_id"], name: "index_recordings_on_merged_into_id"
     t.index ["title"], name: "index_recordings_on_title"
   end
 
@@ -150,10 +145,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_22_195903) do
     t.jsonb "payload", null: false
     t.datetime "played_at", null: false
     t.bigint "recording_id"
+    t.bigint "recording_surface_id"
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.index ["played_at"], name: "index_scrobbles_on_played_at"
     t.index ["recording_id"], name: "index_scrobbles_on_recording_id"
+    t.index ["recording_surface_id"], name: "index_scrobbles_on_recording_surface_id"
     t.index ["user_id", "played_at"], name: "index_scrobbles_on_user_and_played_at", unique: true
     t.index ["user_id"], name: "index_scrobbles_on_user_id"
   end
@@ -184,5 +181,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_22_195903) do
   add_foreign_key "release_artists", "releases"
   add_foreign_key "release_recordings", "recordings"
   add_foreign_key "release_recordings", "releases"
+  add_foreign_key "scrobbles", "recording_surfaces"
   add_foreign_key "scrobbles", "recordings"
 end

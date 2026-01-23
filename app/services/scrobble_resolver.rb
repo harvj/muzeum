@@ -1,9 +1,6 @@
 class ScrobbleResolver
   include SimpleLogger
 
-  DEFAULT_CONFIDENCE = 0.6
-  SOURCE = "lastfm"
-
   def self.resolve!(scrobble)
     new(scrobble).resolve!
   end
@@ -38,14 +35,7 @@ class ScrobbleResolver
       return scrobble
     end
 
-    recording = Recording.create!(
-      title: track_name,
-      status: "provisional",
-      confidence: DEFAULT_CONFIDENCE
-    )
-
-    RecordingSurface.create!(
-      recording: recording,
+    surface = RecordingSurface.create!(
       artist_name: artist_name,
       track_name: track_name,
       album_name: album_name,
@@ -55,12 +45,10 @@ class ScrobbleResolver
       album_mbid: album_mbid,
 
       normalized_key: normalized_key,
-      observed_count: 1,
-      confidence: DEFAULT_CONFIDENCE,
-      source: SOURCE
+      observed_count: 1
     )
 
-    scrobble.update!(recording: recording)
+    scrobble.update!(recording_surface: surface)
     scrobble
   end
 
@@ -69,14 +57,5 @@ class ScrobbleResolver
   def reinforce_surface!(surface)
     log("reinforce: Surface [#{surface.normalized_key}] matches Recording id: #{surface.recording_id}")
     surface.increment!(:observed_count)
-
-    # simple confidence reinforcement for now
-    # later this can be replaced with a smarter model
-    new_confidence = [
-      surface.confidence + 0.01,
-      0.95
-    ].min
-
-    surface.update!(confidence: new_confidence)
   end
 end

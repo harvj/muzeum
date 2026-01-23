@@ -24,21 +24,14 @@ RSpec.describe ScrobbleResolver do
     end
 
     context "when no matching recording surface exists" do
-      it "creates a provisional recording and surface and links the scrobble" do
+      it "creates a recording surface and links the scrobble" do
         expect {
           described_class.resolve!(scrobble)
-        }.to change(Recording, :count).by(1)
-         .and change(RecordingSurface, :count).by(1)
+        }.to change(RecordingSurface, :count).by(1)
 
         scrobble.reload
-        recording = scrobble.recording
-        surface   = RecordingSurface.first
+        surface = scrobble.recording_surface
 
-        expect(recording).to be_present
-        expect(recording.status).to eq("provisional")
-        expect(recording.title).to eq("Golden Hill")
-
-        expect(surface.recording).to eq(recording)
         expect(surface.artist_name).to eq("Tristeza")
         expect(surface.track_name).to eq("Golden Hill")
         expect(surface.album_name).to eq("Spine and Sensory")
@@ -49,7 +42,6 @@ RSpec.describe ScrobbleResolver do
 
         expect(surface.normalized_key).to eq("tristeza||spine and sensory||golden hill")
         expect(surface.observed_count).to eq(1)
-        expect(surface.confidence).to be > 0.5
       end
     end
 
@@ -72,7 +64,6 @@ RSpec.describe ScrobbleResolver do
         surface = RecordingSurface.first
 
         expect(surface.observed_count).to eq(2)
-        expect(surface.confidence).to be > 0.6
 
         new_scrobble.reload
         expect(new_scrobble.recording).to eq(scrobble.recording)

@@ -1,5 +1,5 @@
 class RecordingSurface < ApplicationRecord
-  belongs_to :recording
+  belongs_to :recording, optional: true
 
   def self.normalize(artist_name, album_name, track_name)
     [

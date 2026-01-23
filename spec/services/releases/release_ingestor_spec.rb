@@ -3,22 +3,12 @@ require "rails_helper"
 RSpec.describe Releases::ReleaseIngestor do
   let(:client) { instance_double(Clients::Musicbrainz) }
 
-  let!(:provisional) do
-    Recording.create!(
-      title: "The Hop",
-      mbid: nil,
-      status: :provisional,
-      confidence: 0.6,
-      source: "lastfm"
-    )
-  end
-
   let!(:scrobble) do
     Scrobble.create!(
-      recording: provisional,
       played_at: Time.current,
       user: User.create!(lastfm_username: "foo"),
-      payload: { track_name: "The Hop" }
+      payload: { track_name: "The Hop" },
+      recording_surface: recording_surface
     )
   end
 
@@ -28,7 +18,8 @@ RSpec.describe Releases::ReleaseIngestor do
       track_name: "The Hop",
       album_name: "Beats, Rhymes and Life",
       normalized_key: "a tribe called quest||beats, rhymes, and life||the hop",
-      recording: provisional
+      release_candidates: [ candidate.to_h ],
+      chosen_release_candidate_index: 0
     )
   end
 
@@ -44,7 +35,8 @@ RSpec.describe Releases::ReleaseIngestor do
       release_day: nil,
       country: "US",
       formats: [ "CD" ],
-      track_count: 15
+      track_count: 15,
+      representative_release_mbid: "f906d3fd-7832-4018-a435-287cd9c50339"
     )
   end
 
@@ -66,43 +58,38 @@ RSpec.describe Releases::ReleaseIngestor do
   end
 
   subject(:ingest!) do
-    described_class.call(
-      recording_surface: recording_surface,
-      release_candidate: candidate
-    )
+    described_class.call(recording_surface)
   end
 
-  # it "creates artists from MB data" do
-  #   expect { ingest! }.to change(Artist, :count).by(1)
-  # end
+  it "creates artists from MB data" do
+    expect { ingest! }.to change(Artist, :count).by(1)
+  end
 
-  # it "creates a release with correct MBIDs" do
-  #   ingest!
+  it "creates a release with correct MBIDs" do
+    ingest!
 
-  #   release = Release.last
+    release = Release.last
 
-  #   expect(release.mbid).to eq(candidate.representative_release_mbid)
-  #   expect(release.release_group_mbid).to eq(candidate.release_group_mbid)
-  # end
+    expect(release.ingested_from_release_mbid).to eq(candidate.representative_release_mbid)
+    expect(release.release_group_mbid).to eq(candidate.release_group_mbid)
+  end
 
-  # it "creates a full release tracklist" do
-  #   ingest!
+  it "creates a full release tracklist" do
+    ingest!
 
-  #   release = Release.last
+    release = Release.last
 
-  #   expect(release.release_recordings.count).to eq(15)
-  # end
+    expect(release.release_recordings.count).to eq(15)
+  end
 
-  # it "merges provisional recordings and repoints scrobbles" do
-  #   ingest!
+  it "assigns recording id to scrobble and surface" do
+    ingest!
 
-  #   expect(
-  #     Scrobble.where(recording: provisional)
-  #   ).to be_empty
-  # end
+    expect(scrobble.reload.recording).to eq recording_surface.recording
+  end
 
-  # it "is idempotent" do
-  #   ingest!
-  #   expect { ingest! }.to change { Release.count }.by(0)
-  # end
+  it "is idempotent" do
+    ingest!
+    expect { ingest! }.to change { Release.count }.by(0)
+  end
 end

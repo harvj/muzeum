@@ -1,4 +1,10 @@
 class Release < ApplicationRecord
+  has_many :release_artists, dependent: :destroy
+  has_many :artists, through: :release_artists
+
+  has_many :release_recordings, dependent: :destroy
+  has_many :recordings, dependent: :destroy
+
   enum :primary_type, {
     album: 0,
     ep: 1,
