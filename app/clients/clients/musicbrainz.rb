@@ -48,6 +48,7 @@ module Clients
           inc: [
             "artists",
             "artist-credits",
+            "media",
             "releases",
             "release-groups",
             "isrcs",

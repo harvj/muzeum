@@ -14,6 +14,7 @@ class ReleaseCandidate
     :country,
     :formats,
     :matched_tracks,
+    :matched_recordings,
     :db_match
   ]
 

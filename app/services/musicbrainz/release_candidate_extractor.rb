@@ -10,9 +10,17 @@ module Musicbrainz
 
     def call
       recordings
-        .flat_map { |recording| recording["releases"] || [] }
-        .group_by { |release| release.dig("release-group", "id") }
-        .map { |release_group_mbid, releases| build_candidate(release_group_mbid, releases) }
+        .flat_map do |recording|
+          Array(recording["releases"]).map do |release|
+            {
+              "recording_mbid" => recording["id"],
+              "recording_title" => recording["title"],
+              "release" => release
+            }
+          end
+        end
+        .group_by { |h| h.dig("release", "release-group", "id") }
+        .map { |release_group_mbid, entries| build_candidate(release_group_mbid, entries) }
         .compact
     end
 
@@ -24,8 +32,10 @@ module Musicbrainz
     # Core
     # --------------------------------------------------
 
-    def build_candidate(release_group_mbid, releases)
-      return nil if releases.empty?
+    def build_candidate(release_group_mbid, entries)
+      return nil if entries.empty?
+
+      releases = entries.map { |e| e["release"] }
 
       db_info = db_release_for_group(release_group_mbid)
 
@@ -34,6 +44,16 @@ module Musicbrainz
       end
 
       chosen ||= choose_representative_release(releases)
+
+      matched_recordings =
+        entries
+          .select { |e| e["release"]["id"] == chosen["id"] }
+          .map do |e|
+            {
+              "mbid" => e["recording_mbid"],
+              "title" => e["recording_title"]
+            }
+          end
 
       ReleaseCandidate.new(
         source: :musicbrainz,
@@ -45,10 +65,12 @@ module Musicbrainz
         release_month: month_from(chosen["date"]),
         release_day: day_from(chosen["date"]),
         representative_release_mbid: chosen["id"],
-        formats: formats_from(chosen),
-        country: chosen["country"],
+        artist_names: chosen["artist-credit"].map { |a| a["name"] },
         track_count: chosen["track-count"],
-        matched_tracks: chosen["media"].map { |m| m["track"] },
+        country: chosen["country"],
+        formats: formats_from(chosen),
+        matched_tracks: matched_tracks_from(chosen["media"]),
+        matched_recordings: matched_recordings,
         db_match:
           if db_info && chosen["id"] == db_info[:ingested_from_release_mbid]
             db_info.merge(
@@ -159,6 +181,13 @@ module Musicbrainz
 
     def secondary_types(release_group)
       Array(release_group["secondary-types"]).compact
+    end
+
+    def matched_tracks_from(chosen_media)
+      media = Array(chosen_media)
+      media.flat_map do |m|
+        m["tracks"] || m["track"] || []
+      end
     end
   end
 end

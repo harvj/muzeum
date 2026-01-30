@@ -81,10 +81,11 @@ module Releases
       canonical_recordings =
         ingest_release_recordings!(release, payload)
 
+      matched_mbids =
+        candidate.matched_recordings.map { |r| r["mbid"] }
+
       canonical =
-        canonical_recordings.find do |recording|
-          recording.title.casecmp?(surface.track_name)
-        end
+        canonical_recordings.find { |r| matched_mbids.include?(r.mbid) }
 
       log("Assigning CREATED release id=#{release.id} title=#{release.title} | recording id=#{canonical.id} title=#{canonical.title}")
       [ release, canonical ]

@@ -11,12 +11,17 @@ USAGE = "usage: mb-select sid:<surface_id> <index>".freeze
 options = {
   raw: false
 }
+force_recording_mbid = nil
 
 OptionParser.new do |opts|
   opts.banner = USAGE
 
   opts.on("--raw", "Print raw MusicBrainz search results") do
     options[:raw] = true
+  end
+
+  opts.on("--force-recording MBID", "Use an explicit recording MBID") do |mbid|
+    force_recording_mbid = mbid
   end
 end.parse!
 
@@ -31,11 +36,15 @@ pp(
   release: surface.album_name
 )
 
-results = Musicbrainz::RecordingSearch.call(
-  artist: surface.artist_name,
-  recording: surface.track_name,
-  release: surface.album_name
-)
+results = if force_recording_mbid
+  [Clients::Musicbrainz.new.fetch_recording(force_recording_mbid)]
+else
+  Musicbrainz::RecordingSearch.call(
+    artist: surface.artist_name,
+    recording: surface.track_name,
+    release: surface.album_name
+  )
+end
 
 if options[:raw]
   puts "\n== Raw MusicBrainz Results =="
