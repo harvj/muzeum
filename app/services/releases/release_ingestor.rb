@@ -166,7 +166,7 @@ module Releases
 
           tracks.each do |track|
             if video_track?(track["recording"])
-              log_skipped_video!(track, release)
+              store_log("Skipping video track > title=#{track["title"]} position=#{track["position"]}")
               next
             end
 
@@ -252,15 +252,16 @@ module Releases
       recording_data["video"]
     end
 
-    def log_skipped_video!(track, release)
-      surface.ingest_events.create!(
-        event_type: "skipped_video_track",
-        subject: release,
-        data: {
-          title: track["title"],
-          position: track["position"]
-        }
-      )
+    def store_log(message)
+      message.strip!
+
+      surface.ingest_log << {
+        at: Time.current.iso8601,
+        message: message
+      }
+      surface.save!
+
+      log message
     end
 
     def log_ingest(record, created, *attrs)
@@ -275,13 +276,7 @@ module Releases
         "#{action} #{record.class.name} id=#{record.id} " +
         data.map { |k, v| "#{k}=#{v}" }.join(" ")
 
-      log message.strip
-
-      surface.ingest_events.create!(
-        event_type: event_type,
-        subject: record,
-        data: data
-      )
+      store_log(message)
     end
 
     def resolve_attr_path(record, attr)

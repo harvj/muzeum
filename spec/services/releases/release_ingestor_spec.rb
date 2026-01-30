@@ -8,11 +8,11 @@ RSpec.describe Releases::ReleaseIngestor do
       played_at: Time.current,
       user: User.create!(lastfm_username: "foo"),
       payload: { track_name: "The Hop" },
-      recording_surface: recording_surface
+      recording_surface: surface
     )
   end
 
-  let!(:recording_surface) do
+  let!(:surface) do
     RecordingSurface.create!(
       artist_name: "A Tribe Called Quest",
       track_name: "The Hop",
@@ -58,7 +58,7 @@ RSpec.describe Releases::ReleaseIngestor do
   end
 
   subject(:ingest!) do
-    described_class.call(recording_surface)
+    described_class.call(surface)
   end
 
   it "creates artists from MB data" do
@@ -85,11 +85,69 @@ RSpec.describe Releases::ReleaseIngestor do
   it "assigns recording id to scrobble and surface" do
     ingest!
 
-    expect(scrobble.reload.recording).to eq recording_surface.recording
+    expect(scrobble.reload.recording).to eq surface.recording
   end
 
-  it "is idempotent" do
+  context "when ingesting the same release twice" do
+    it "does not create duplicate records" do
+      ingest!
+
+      expect {
+        ingest!
+      }.to change(Release, :count).by(0)
+       .and change(Recording, :count).by(0)
+       .and change(Artist, :count).by(0)
+       .and change(ReleaseRecording, :count).by(0)
+       .and change(RecordingArtist, :count).by(0)
+    end
+  end
+
+  it "creates recording artists for featured performers" do
     ingest!
-    expect { ingest! }.to change { Release.count }.by(0)
+
+    recording = Recording.find_by!(title: "1nce Again")
+    artist_names = recording.artists.pluck(:name)
+
+    expect(artist_names).to include("Tammy Lucas")
+  end
+
+  it "preserves artist credit order on recordings" do
+    ingest!
+
+    recording = Recording.find_by!(title: "1nce Again")
+    credits = recording.recording_artists.order(:position)
+
+    expect(credits.first.artist.name).to eq("A Tribe Called Quest")
+    expect(credits.second.artist.name).to eq("Tammy Lucas")
+  end
+
+  it "assigns sequential release recording positions across media" do
+    ingest!
+
+    positions = ReleaseRecording.order(:position).pluck(:position)
+    expect(positions).to eq((1..positions.size).to_a)
+  end
+
+  it "skips video tracks and logs the skip" do
+    allow_any_instance_of(Releases::ReleaseIngestor)
+      .to receive(:video_track?) do |_, recording_data|
+        recording_data["title"] == "Phony Rappers"
+      end
+
+    ingest!
+
+    expect(Recording.where(title: "Phony Rappers")).to be_empty
+    expect(Recording.count).to be > 0
+    expect(surface.ingest_log.map { |l| l["message"] })
+      .to include(/Skipping video track.*Phony Rappers/)
+  end
+
+  it "appends ingest log entries to the recording surface" do
+    expect {
+      ingest!
+    }.to change { surface.reload.ingest_log.size }.by_at_least(1)
+
+    messages = surface.ingest_log.map { |l| l["message"] }
+    expect(messages.any? { |m| m =~ /CREATED Recording/ }).to be(true)
   end
 end
