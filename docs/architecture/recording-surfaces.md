@@ -6,10 +6,12 @@ A surface captures:
 - Artist name string
 - Album name string
 - Track name string
+- Normalized key
 - Observed MBIDs (artist / album / track)
-- Source (e.g. `lastfm`)
 - Observation frequency
-- Confidence
+- Release candidates (JSON - set by MB search)
+- Chosen release candidate index
+- Ingested release id (set by ReleaseIngestor)
 
 Surfaces are immutable historical observations.
 

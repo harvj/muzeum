@@ -6,7 +6,8 @@ Fields:
 - `user_id`
 - `played_at` (UTC)
 - `payload` (raw Last.fm data)
-- `recording_id` (may change, begins NULL until Resolver runs)
+- `recording_id` (begins null - set ReleaseIngestor)
+- `recording_surface_id` (begins null - set by ScrobbleResolver)
 
 Invariants:
 - Scrobbles are never rewritten.
