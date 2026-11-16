@@ -1,0 +1,87 @@
+
+Clients::Lastfm
+  returns raw XML
+
+Clients::Musicbrainz
+  #search_recordings
+    returns recordings from MusicBrainz
+    raises ArgumentError when artist is missing
+    raises ArgumentError when recording is missing
+  #fetch_recording
+    fetches a recording by mbid
+  error handling
+    raises RateLimited on 429
+    raises Unauthorized on 401
+    raises InvalidResponse on non-200 responses
+
+SimpleLogger
+  #redact
+    redacts the specified key from a query string
+    leaves other keys untouched
+    supports multiple sensitive keys
+
+Recording
+  exists
+
+RecordingSurface
+  .normalize
+    downcases artist and track names
+    collapses excess whitespace
+    preserves punctuation and parentheses
+
+Lastfm::Importer
+  imports scrobbles and creates an import run
+  does not duplicate scrobbles on re-run
+
+Lastfm::RecentTracksParser
+  parses metadata without tracks
+  parses tracks into normalized hashes
+
+Musicbrainz::ReleaseCandidateExtractor
+  basic extraction
+    returns one candidate per release group
+    returns the expected number of release candidates
+  Beats, Rhymes and Life (album)
+    exists
+    uses the album release group mbid as identity
+    selects a US release as the representative source
+    selects the 1996-07-30 release as canonical
+    selects the correct representative release mbid
+    does not select a Japanese release when non-JP releases exist
+    exposes track count from the representative release
+    exposes formats from the representative release
+  MTV Raps, Volume 3 (compilation)
+    exists as a separate candidate
+    has a different release group mbid than the album
+    is marked as a compilation via secondary types
+    selects the German release dated 1997-10-13
+  when no release group exists in the database
+    does not set db_match on any candidate
+  when a release group already exists in the database
+    marks the matching candidate with db_match metadata
+    selects the previously ingested release mbid as representative if present in raw data
+
+Releases::ReleaseIngestor
+  creates artists from MB data
+  creates a release with correct MBIDs
+  creates a full release tracklist
+  assigns recording id to scrobble and surface
+  creates recording artists for featured performers
+  preserves artist credit order on recordings
+  assigns sequential release recording positions across media
+  skips video tracks and logs the skip
+  appends ingest log entries to the recording surface
+  when ingesting the same release twice
+    does not create duplicate records
+
+ScrobbleResolver
+  .resolve!
+    when no matching recording surface exists
+      creates a recording surface and links the scrobble
+    when a matching recording surface already exists
+      reuses the existing recording and reinforces the surface
+    when the scrobble is already resolved
+      does nothing
+
+Finished in 0.55994 seconds (files took 0.63485 seconds to load)
+49 examples, 0 failures

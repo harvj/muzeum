@@ -1,0 +1,22 @@
+{
+  "same_event_surface_count": {
+    "before": 1,
+    "after": 2
+  },
+  "Artist": {
+    "through": null,
+    "foreign_key": "artist_id"
+  },
+  "Recording": {
+    "through": null,
+    "foreign_key": "recording_id"
+  },
+  "Release": {
+    "through": null,
+    "foreign_key": "release_id"
+  },
+  "actual_second_ingest": {
+    "error": "ActiveRecord::RecordNotUnique",
+    "detail": "PG::UniqueViolation: ERROR:  duplicate key value violates unique constraint \"index_release_recordings_on_release_id_and_position\""
+  }
+}

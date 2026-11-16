@@ -1,3 +1,5 @@
+> Historical implementation sketch. Direct global scrobble relinking below is superseded by the [P1.0 scoped, versioned interpretation proposal](../p1.0/foundation-and-data-contract.md). Aggregation must consume a user's effective interpretation and remain rebuildable; no aggregator or new ledger is implemented yet.
+
 ## DailyListens are derived state
 
 They never own truth

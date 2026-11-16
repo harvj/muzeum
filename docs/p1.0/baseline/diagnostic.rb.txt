@@ -1,0 +1,30 @@
+require 'json'
+report = {}
+ActiveRecord::Base.transaction do
+  u = User.create!(lastfm_username: 'p10_disposable_probe')
+  s = Scrobble.create!(user: u, played_at: Time.utc(2006,1,1), payload: {artist_name:'A', album_name:'B', track_name:'C'})
+  ScrobbleResolver.resolve!(s)
+  before = s.reload.recording_surface.observed_count
+  ScrobbleResolver.resolve!(s)
+  report[:same_event_surface_count] = {before: before, after: s.reload.recording_surface.observed_count}
+  %w[Artist Recording Release].each do |name|
+    klass = name.constantize
+    assoc = klass.reflect_on_association(name == 'Release' ? :recordings : :releases)
+    report[name] = {through: assoc.options[:through], foreign_key: assoc.foreign_key}
+  end
+  raw = JSON.parse(File.read('spec/fixtures/musicbrainz/recording_search/the_hop.json'))
+  candidate = Musicbrainz::ReleaseCandidateExtractor.call(raw).first
+  surface = RecordingSurface.create!(artist_name:'A Tribe Called Quest',album_name:'Beats, Rhymes and Life',track_name:'The Hop',normalized_key:'p10-probe',release_candidates:[candidate.to_h],chosen_release_candidate_index:0)
+  payload = JSON.parse(File.read('spec/fixtures/musicbrainz/releases/brl_us_release.json'))
+  # Local fixture substitution only; no provider calls and no repository edits.
+  Clients::Musicbrainz.define_method(:fetch_release) { |_| payload }
+  Releases::ReleaseIngestor.call(surface)
+  begin
+    ActiveRecord::Base.transaction(requires_new: true) { Releases::ReleaseIngestor.call(surface.reload) }
+    report[:actual_second_ingest] = 'succeeded'
+  rescue => e
+    report[:actual_second_ingest] = {error:e.class.name, detail:e.message.lines.first.strip}
+  end
+  puts JSON.pretty_generate(report)
+  raise ActiveRecord::Rollback
+end

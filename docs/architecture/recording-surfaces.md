@@ -1,3 +1,5 @@
+> Historical design note. Surfaces are recurrence groups and cannot replace immutable observation metadata or authorize unconditional resolution of every member. See the [P1.0 surface and scoped-resolution proposal](../p1.0/foundation-and-data-contract.md#43-surfaces-and-scope-selection). No proposed schema changes are implemented yet.
+
 ## Recording Surfaces
 
 Recording surfaces represent *observed presentations* of recordings.

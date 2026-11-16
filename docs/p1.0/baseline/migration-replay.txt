@@ -1,0 +1,218 @@
+== 20260112213929 CreateArtists: migrating ====================================
+-- create_table(:users)
+   -> 0.0016s
+-- add_index(:users, :lastfm_username, {:unique=>true})
+   -> 0.0004s
+-- create_table(:artists)
+   -> 0.0011s
+-- add_index(:artists, :musicbrainz_id, {:unique=>true})
+   -> 0.0003s
+-- add_index(:artists, :name)
+   -> 0.0003s
+-- create_table(:recordings)
+   -> 0.0008s
+-- add_index(:recordings, :musicbrainz_id, {:unique=>true})
+   -> 0.0003s
+-- add_index(:recordings, :title)
+   -> 0.0003s
+-- create_table(:recording_artists)
+   -> 0.0024s
+-- add_index(:recording_artists, [:recording_id, :artist_id], {:unique=>true})
+   -> 0.0003s
+-- create_table(:daily_listens)
+   -> 0.0016s
+-- add_index(:daily_listens, [:user_id, :date])
+   -> 0.0003s
+-- add_index(:daily_listens, [:user_id, :recording_id])
+   -> 0.0002s
+-- add_index(:daily_listens, [:user_id, :recording_id, :date], {:unique=>true})
+   -> 0.0003s
+-- add_index(:daily_listens, :year)
+   -> 0.0003s
+-- create_table(:import_runs)
+   -> 0.0017s
+-- add_index(:import_runs, :status)
+   -> 0.0003s
+-- add_index(:import_runs, :created_at)
+   -> 0.0003s
+== 20260112213929 CreateArtists: migrated (0.0128s) ===========================
+
+== 20260113142421 AddStatusToArtistsAndRecordings: migrating ==================
+-- add_column(:artists, :status, :integer, {:null=>false, :default=>0})
+   -> 0.0010s
+-- add_column(:recordings, :status, :integer, {:null=>false, :default=>0})
+   -> 0.0003s
+-- remove_column(:recording_artists, :confidence_score, :float)
+   -> 0.0002s
+-- add_column(:recordings, :confidence, :float)
+   -> 0.0001s
+-- add_column(:artists, :confidence, :float)
+   -> 0.0001s
+-- remove_column(:recording_artists, :source, :string, {:null=>false, :default=>"inferred"})
+   -> 0.0001s
+-- add_column(:recordings, :source, :string, {:null=>false, :default=>"lastfm"})
+   -> 0.0003s
+-- add_column(:artists, :source, :string, {:null=>false, :default=>"lastfm"})
+   -> 0.0002s
+-- rename_column(:artists, :musicbrainz_id, :mbid)
+   -> 0.0012s
+-- rename_column(:recordings, :musicbrainz_id, :mbid)
+   -> 0.0006s
+-- add_column(:artists, :merged_into_id, :bigint)
+   -> 0.0001s
+-- add_column(:recordings, :merged_into_id, :bigint)
+   -> 0.0001s
+-- add_index(:artists, :merged_into_id)
+   -> 0.0004s
+-- add_index(:recordings, :merged_into_id)
+   -> 0.0003s
+== 20260113142421 AddStatusToArtistsAndRecordings: migrated (0.0053s) =========
+
+== 20260113152343 AddLastImportedAtToUser: migrating ==========================
+-- add_column(:users, :last_imported_at, :datetime)
+   -> 0.0003s
+== 20260113152343 AddLastImportedAtToUser: migrated (0.0003s) =================
+
+== 20260113162103 MakeImportRunBoundariesUtc: migrating =======================
+-- add_column(:import_runs, :range_start_at, :datetime)
+   -> 0.0003s
+-- add_column(:import_runs, :range_end_at, :datetime)
+   -> 0.0001s
+-- remove_column(:import_runs, :start_date, :date)
+   -> 0.0001s
+-- remove_column(:import_runs, :end_date, :date)
+   -> 0.0001s
+-- add_index(:import_runs, [:user_id, :range_start_at, :range_end_at], {:name=>"index_import_runs_on_user_and_range"})
+   -> 0.0003s
+-- add_index(:import_runs, :range_end_at)
+   -> 0.0003s
+-- remove_column(:users, :last_imported_at, :datetime)
+   -> 0.0001s
+-- remove_column(:import_runs, :status, :string, {:null=>false, :default=>"pending"})
+   -> 0.0002s
+-- add_column(:import_runs, :status, :integer, {:null=>false, :default=>0})
+   -> 0.0003s
+== 20260113162103 MakeImportRunBoundariesUtc: migrated (0.0019s) ==============
+
+== 20260114024325 CreateScrobblesTable: migrating =============================
+-- create_table(:scrobbles)
+   -> 0.0010s
+-- add_index(:scrobbles, [:user_id, :played_at], {:unique=>true, :name=>"index_scrobbles_on_user_and_played_at"})
+   -> 0.0003s
+-- add_index(:scrobbles, :played_at)
+   -> 0.0003s
+-- add_index(:scrobbles, :user_id)
+   -> 0.0003s
+== 20260114024325 CreateScrobblesTable: migrated (0.0018s) ====================
+
+== 20260116164231 AddUserTimezones: migrating =================================
+-- change_column(:artists, :confidence, :float, {:null=>false, :default=>0.0})
+   -> 0.0004s
+-- change_column(:recordings, :confidence, :float, {:null=>false, :default=>0.0})
+   -> 0.0002s
+-- create_table(:user_timezones)
+   -> 0.0011s
+== 20260116164231 AddUserTimezones: migrated (0.0018s) ========================
+
+== 20260117202859 AddRecordingToScrobbles: migrating ==========================
+-- add_reference(:scrobbles, :recording, {:null=>true, :foreign_key=>true})
+   -> 0.0012s
+== 20260117202859 AddRecordingToScrobbles: migrated (0.0012s) =================
+
+== 20260117205410 AddRecordingSurfaces: migrating =============================
+-- create_table(:recording_surfaces)
+   -> 0.0017s
+-- add_index(:recording_surfaces, :normalized_key, {:unique=>true})
+   -> 0.0003s
+-- add_index(:recording_surfaces, :track_mbid)
+   -> 0.0003s
+-- add_index(:recording_surfaces, :artist_mbid)
+   -> 0.0003s
+== 20260117205410 AddRecordingSurfaces: migrated (0.0025s) ====================
+
+== 20260121151132 CreateReleases: migrating ===================================
+-- create_table(:releases)
+   -> 0.0010s
+-- add_index(:releases, :mbid, {:unique=>true})
+   -> 0.0003s
+-- add_index(:releases, :release_group_mbid)
+   -> 0.0002s
+-- create_table(:release_artists)
+   -> 0.0012s
+-- add_index(:release_artists, [:release_id, :artist_id], {:unique=>true})
+   -> 0.0002s
+-- create_table(:release_recordings)
+   -> 0.0012s
+-- add_index(:release_recordings, [:release_id, :recording_id], {:unique=>true})
+   -> 0.0002s
+-- add_index(:release_recordings, [:release_id, :position], {:unique=>true})
+   -> 0.0003s
+-- remove_column(:artists, :confidence, :float, {:null=>false, :default=>0.0})
+   -> 0.0001s
+-- remove_column(:artists, :status, :integer, {:null=>false, :default=>0})
+   -> 0.0001s
+-- remove_column(:artists, :source, :string, {:null=>false, :default=>"lastfm"})
+   -> 0.0001s
+-- remove_column(:artists, :merged_into_id, :bigint)
+   -> 0.0001s
+== 20260121151132 CreateReleases: migrated (0.0052s) ==========================
+
+== 20260122195903 AddReleaseCandidatesJsonToRecordingSurfaces: migrating ======
+-- add_column(:recording_surfaces, :release_candidates, :jsonb, {:default=>[]})
+   -> 0.0006s
+-- add_column(:recording_surfaces, :chosen_release_candidate_index, :integer)
+   -> 0.0001s
+-- rename_column(:releases, :mbid, :ingested_from_release_mbid)
+   -> 0.0008s
+-- remove_column(:releases, :primary_type, :string)
+   -> 0.0001s
+-- add_column(:releases, :primary_type, :integer, {:null=>false, :default=>0})
+   -> 0.0003s
+-- add_column(:releases, :secondary_type, :integer, {:null=>false, :default=>0})
+   -> 0.0003s
+== 20260122195903 AddReleaseCandidatesJsonToRecordingSurfaces: migrated (0.0023s)
+
+== 20260122224844 AddCountryToArtists: migrating ==============================
+-- add_column(:artists, :country, :string)
+   -> 0.0003s
+== 20260122224844 AddCountryToArtists: migrated (0.0003s) =====================
+
+== 20260123043345 AddRecordingSurfaceToScrobbles: migrating ===================
+-- remove_column(:recording_surfaces, :confidence, :float, {:default=>0.5, :null=>false})
+   -> 0.0003s
+-- remove_column(:recording_surfaces, :source, :string, {:default=>"lastfm", :null=>false})
+   -> 0.0001s
+-- change_column(:recording_surfaces, :recording_id, :bigint, {:null=>true})
+   -> 0.0004s
+-- add_column(:recording_surfaces, :ingested_release_id, :bigint, {:null=>true})
+   -> 0.0001s
+-- remove_column(:recordings, :confidence, :float, {:default=>0.0, :null=>false})
+   -> 0.0001s
+-- remove_column(:recordings, :merged_into_id, :bigint)
+   -> 0.0001s
+-- remove_column(:recordings, :source, :string, {:default=>"lastfm", :null=>false})
+   -> 0.0001s
+-- remove_column(:recordings, :status, :integer, {:default=>0, :null=>false})
+   -> 0.0001s
+== 20260123043345 AddRecordingSurfaceToScrobbles: migrated (0.0016s) ==========
+
+== 20260123044632 AddRecordingSurfaceToScrobblesForReal: migrating ============
+-- add_reference(:scrobbles, :recording_surface, {:null=>true, :foreign_key=>true})
+   -> 0.0010s
+== 20260123044632 AddRecordingSurfaceToScrobblesForReal: migrated (0.0011s) ===
+
+== 20260123172731 CreateIngestEvents: migrating ===============================
+-- create_table(:ingest_events)
+   -> 0.0012s
+-- remove_column(:recording_artists, :role, :string, {:null=>false, :default=>"primary"})
+   -> 0.0001s
+-- add_column(:recording_artists, :role, :integer, {:null=>false, :default=>0})
+   -> 0.0003s
+== 20260123172731 CreateIngestEvents: migrated (0.0017s) ======================
+
+== 20260128223604 WalkBackIngestEvents: migrating =============================
+-- add_column(:recording_surfaces, :ingest_log, :jsonb, {:default=>[], :null=>false})
+   -> 0.0004s
+-- drop_table(:ingest_events)
+   -> 0.0003s
+== 20260128223604 WalkBackIngestEvents: migrated (0.0007s) ====================

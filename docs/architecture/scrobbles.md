@@ -1,3 +1,5 @@
+> Historical contract. The current importer stores selected parsed fields, not verbatim upstream data; timestamp-only identity is under review. See the [P1.0 observation and account proposal](../p1.0/foundation-and-data-contract.md#42-observation-and-import-extension). No proposed schema changes are implemented yet.
+
 ## Scrobbles
 
 Scrobbles represent immutable upstream facts exactly as provided by Last.fm.

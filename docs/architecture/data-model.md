@@ -1,3 +1,5 @@
+> Historical design note. The implemented schema has since removed several fields described here. The [P1.0 current-model review and proposed contract](../p1.0/foundation-and-data-contract.md) supersede this note for planning; the proposed schema is not yet implemented.
+
 ## Overview
 
 The system models *beliefs about identity*, not absolute truth. Confidence and status express epistemic certainty, not correctness.
