@@ -1,6 +1,6 @@
 # P1.0 — Import performance and idempotency requirements
 
-Status: proposed acceptance gates, not measured pipeline performance. Approximately 250,000 source scrobbles; P1.0 ran the existing small suite only. See the [schema/identity proposal](foundation-and-data-contract.md#42-observation-and-import-extension) and [baseline](baseline-results.md).
+Status: proposed P1.2 acceptance gates, not measured pipeline performance. Local 250k runs use synthetic fixtures only; the full real historical import runs on Hetzner against persistent production data after P1.1 readiness and explicit approval. Approximately 250,000 source scrobbles; P1.0 ran the existing small suite only. See the [schema/identity proposal](foundation-and-data-contract.md#42-observation-and-import-extension) and [baseline](baseline-results.md).
 
 ## Provider contract and limits
 
@@ -18,7 +18,7 @@ No live API calls were used for this milestone. Retrieval of the documentation d
 
 Run on pinned Ruby 3.3.5, locked gems, PostgreSQL 16.15 (the P1.0 disposable target), one importer process, ordinary durable PostgreSQL settings, local SSD. Record machine/CPU/RAM/OS, PG settings, database/index size, Ruby RSS, fixture manifest/hash, code revision and command. Do not disable fsync, uniqueness, immutable-source enforcement, provenance storage or indexes to meet a throughput target.
 
-Prepare a deterministic streaming source manifest with 250,000 distinct timestamped observations spread over many years and a realistic mix of repeated surfaces, missing albums/MBIDs, long/Unicode strings and payload sizes. Include separate adversarial fixtures rather than assuming every input has a unique timestamp. Each fixture page has expected received/inserted/repeat/conflict/invalid/now-playing counts and an independently computed source digest. Generate/read at most a page plus a bounded write buffer; do not create a 250k Ruby array before timing. Corpus design and construction command must be committed in P1.1, with reproducible seed and digest, not credentials or real listening data.
+Prepare a deterministic streaming source manifest with 250,000 distinct timestamped observations spread over many years and a realistic mix of repeated surfaces, missing albums/MBIDs, long/Unicode strings and payload sizes. Include separate adversarial fixtures rather than assuming every input has a unique timestamp. Each fixture page has expected received/inserted/repeat/conflict/invalid/now-playing counts and an independently computed source digest. Generate/read at most a page plus a bounded write buffer; do not create a 250k Ruby array before timing. Corpus design and construction command must be committed in P1.2, with reproducible seed and digest, not credentials or real listening data.
 
 | Benchmark | Included | Excluded / purpose |
 | --- | --- | --- |
@@ -31,7 +31,7 @@ Measure cold initial import and warm replay separately. Run A/B at least three t
 
 ### Proposed first gates
 
-These are reviewable initial budgets, to be calibrated against the first P1.1 run without quietly weakening integrity. They are **not current measurements**.
+These are reviewable initial budgets, to be calibrated against the first P1.2 run without quietly weakening integrity. They are **not current measurements**.
 
 | Metric | Initial gate |
 | --- | --- |
@@ -72,4 +72,4 @@ A replay may append new import runs/pages/assessments of conflicting source deli
 | Backlog exceeds page budget | Run paused/partial with durable continuation; never reported complete merely because default budget ended |
 | Direct SQL/bulk update/delete attempts | Protected source columns/evidence reject mutation; interpretation-only revision leaves source digest unchanged |
 
-Each oracle compares against an independent manifest, not merely the importer's own counters. Run a small adversarial suite on each change; run the complete 250k fixture gate for importer/schema changes and before releasing P1.1. Network simulation and live validation are separate from everyday unit tests. Retain failed-run manifests, exact configuration and measurements for review. Archive completeness means coverage of a recorded source interval with documented exceptions, not agreement with a potentially different profile playcount.
+Each oracle compares against an independent manifest, not merely the importer's own counters. Run a small adversarial suite on each change; run the complete 250k fixture gate for importer/schema changes and before releasing P1.2. Network simulation and live validation are separate from everyday unit tests. Retain failed-run manifests, exact configuration and measurements for review. Archive completeness means coverage of a recorded source interval with documented exceptions, not agreement with a potentially different profile playcount.

@@ -1,0 +1,29 @@
+[Unit]
+Description=Muzeum Rails web
+After=network.target postgresql.service
+StartLimitIntervalSec=60
+StartLimitBurst=5
+[Service]
+Type=simple
+User=muzeum
+Group=muzeum
+WorkingDirectory=/var/www/muzeum/current
+EnvironmentFile=/var/www/muzeum/shared/.env
+Environment=RAILS_ENV=production
+Environment=RBENV_VERSION=3.3.5
+Environment=PUMA_BIND=tcp://127.0.0.1:3011
+Environment=RAILS_MAX_THREADS=3
+ExecStart=/home/muzeum/.rbenv/shims/bundle exec puma -C config/puma.rb
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=60
+MemoryHigh=512M
+MemoryMax=768M
+CPUQuota=50%
+TasksMax=128
+NoNewPrivileges=true
+PrivateTmp=true
+UMask=0077
+SyslogIdentifier=muzeum-web
+[Install]
+WantedBy=multi-user.target

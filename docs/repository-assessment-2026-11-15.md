@@ -1,12 +1,12 @@
 # Muzeum repository assessment and development plan
 
-Original assessment: 2026-11-15. Updated for confirmed P1 decisions on the same date. The source inventory and comparative findings below remain useful; the roadmap and P1.0 contract supersede earlier proposals. P1.0 installed the pinned local runtime/dependencies and tested disposable databases; no application changes, production writes, push or deployment. See [P1.0 contract/schema proposal](p1.0/foundation-and-data-contract.md), [baseline results](p1.0/baseline-results.md) and [250k import plan](p1.0/import-requirements.md).
+Original assessment: 2026-11-15. Updated for production-first sequencing, Capistrano/GitHub Actions separation and Rails-native UI on the same date. The source inventory and comparative findings below remain useful; the roadmap and P1.0 contract supersede earlier proposals. P1.0 installed the pinned local runtime/dependencies and tested disposable databases; no application changes, production writes, push or deployment. See [P1.0 contract/schema proposal](p1.0/foundation-and-data-contract.md), [baseline results](p1.0/baseline-results.md) and [250k import plan](p1.0/import-requirements.md).
 
 ## Recommendation
 
 **Confirmed: muzeum is the definitive application.** Use muzeus only as a reference for browsing, navigation, presentation, and reporting; no legacy database migration. Keep one Rails application and one authoritative listening archive. Do not transplant the older ingestion, identity matching, SQL model layer, or authentication wholesale.
 
-This recommendation follows the code, not the relative ages of the projects. Muzeus is substantially closer to a usable personal music application. Muzeum has a more suitable separation between observations and canonical identity, database uniqueness constraints, transactional release ingestion, isolated HTTP clients, and meaningful service specs. However, its ingestion is not yet reliably idempotent, its historical preservation guarantees exceed what the code enforces, and it has no listening interface. Establish the P1.0 design/baseline, implement the 250,000-observation import foundation in P1.1, then deliver read-only history without waiting for complete metadata resolution. Local Muzeum authentication precedes browser resolution actions and is independent of Last.fm public-history access.
+This recommendation follows the code, not the relative ages of the projects. Muzeus is substantially closer to a usable personal music application. Muzeum has a more suitable separation between observations and canonical identity, database uniqueness constraints, transactional release ingestion, isolated HTTP clients, and meaningful service specs. However, its ingestion is not yet reliably idempotent, its historical preservation guarantees exceed what the code enforces, and it has no listening interface. Establish the P1.0 design/baseline, establish authenticated production infrastructure in P1.1, implement server-run historical ingestion in P1.2, then deliver the listening archive in P1.3 without waiting for complete metadata resolution. Local Muzeum authentication precedes browser resolution actions and is independent of Last.fm public-history access.
 
 ## 1. Repository inventory and evidence
 
@@ -116,7 +116,7 @@ Defer Spotify login/playlists, custom rank tiers, personal categories, automated
 
 ### Documentation precedence
 
-The January 19 “strict” plan describes provisional Recordings and a confidence-based resolver that the subsequent migrations removed. January 30 describes a working pipeline, but its completeness claims are not supported for retries, no-media ingestion or existing-release identity. `data-model.md` still describes removed status/confidence/merge columns. Preserve these documents as history and write a current contract referencing code/tests; do not treat every historical “locked” statement as simultaneously binding. January 30's token-in-query/no-auth proposal is superseded: users authenticate directly with Muzeum, Last.fm is a public source account, and browser resolution actions require server-enforced user/account permissions. Shared assertions and user-specific interpretations have distinct scope and actor attribution. CLI import and public read-only browsing must not wait for authentication.
+The January 19 “strict” plan describes provisional Recordings and a confidence-based resolver that the subsequent migrations removed. January 30 describes a working pipeline, but its completeness claims are not supported for retries, no-media ingestion or existing-release identity. `data-model.md` still describes removed status/confidence/merge columns. Preserve these documents as history and write a current contract referencing code/tests; do not treat every historical “locked” statement as simultaneously binding. January 30's token-in-query/no-auth proposal is superseded: users authenticate directly with Muzeum, Last.fm is a public source account, and browser resolution actions require server-enforced user/account permissions. Shared assertions and user-specific interpretations have distinct scope and actor attribution. Trusted CLI import needs no browser session; personal history and controls require authentication before exposure.
 
 ## 4. Development strategy comparison
 
@@ -144,55 +144,45 @@ This replaces the original seven-milestone proposal. Confirmed direction: no leg
 
 **Risks/decisions:** review source fingerprint/collision policy, raw storage budget and compatible/cohort scope applicability; identify actual existing muzeum data before a future migration. Detailed [contract/schema](p1.0/foundation-and-data-contract.md), [baseline](p1.0/baseline-results.md), [import requirements](p1.0/import-requirements.md).
 
-### 2. P1.1 — Account/provenance transition and reliable bulk import
+### 2. P1.1 — Production infrastructure and initial deployment
 
-**Dependencies:** P1.0 schema/identity contract review; isolated test environment; backup/restore plan before touching existing muzeum data. No Last.fm user credentials, MusicBrainz, human login, surface assignment or canonical resolution required.
+**Dependencies:** review P1.0; inspect actual Hetzner/Caddy/database conventions read-only before finalizing infrastructure; confirm existing manual approval workflow, capacity and data inventory. No production change is authorized by this roadmap.
 
-**Implementation slices:**
+**Work:** follow the [concrete deployment plan](p1.1/production-deployment-plan.md). Use Capistrano release directories, shared configuration/storage, approved immutable Git SHA and rollback; keep GitHub Actions CI on every main push separate from manually authorized deployment. Run RSpec, RuboCop, Brakeman and dependency security checks with severity/applicability triage, visible failures and reviewed exceptions; no automatic dependency upgrades. Establish scoped PostgreSQL ownership, backups/restore drills, additive migrations, secrets, independent Rails web/Solid Queue workers, resource limits, health/logs/alerts and a Muzeum-only integration with existing Caddy HTTPS for muzeum.fm.
 
-1. Add failing invariant tests and account/provenance migrations. Retain existing User IDs, create LastfmAccount and unverified user/account associations, backfill scrobble/import account links in bounded resumable batches. Inventory/checksum existing muzeum rows before switching event identity. No synthetic emails/passwords or fabricated historical raw XML.
-2. Implement immutable raw-page capture and source observations; account-scoped versioned exact fingerprints, differing-metadata/timestamp collision evidence and bounded bulk writes. Replace old time-only uniqueness in a coordinated writer cutover after reconciliation. Preserve all received raw evidence and first-observation content.
-3. Implement fixed-bound pagination/windows, overlap/replay, per-account serialization, application-wide pacing, atomic checkpoints and bounded progress/failure reporting. Trusted CLI/worker acts under a registered process identity and explicit source-account grant. No per-event DB callback loop, growing per-run JSON log or downstream metadata work in import.
-4. Execute 250k cold/replay benchmarks and crash/collision/network regression fixtures; publish measurements, corpus hashes, source/checkpoint checksums and limits. A separately authorized live-source run validates provider timing/boundaries after local gates pass.
+Implement local authentication/provisioning and authorization before exposing personal data or controls. Establish Rails 8 ERB/layout/partial and RESTful controller conventions with Propshaft/import maps, Turbo Drive/Frames/Streams and focused Stimulus, after reviewing existing dependencies. Add Capybara/Rails system tests and CI execution. No SPA or unnecessary API layer; rules and authorization remain server-side.
 
-**Acceptance:** 250k local pipeline ≤120s proposed gate; DB ceiling ≥5k observations/s; RSS ≤512 MiB with bounded growth; replay creates no duplicate source rows or source edits; independent manifest reconciles all input/invalid/conflict counts. A restart cannot advance the checkpoint ahead of committed data. Changed upstream observations are retained/reported rather than overwriting historical facts. No provider calls other than Last.fm and no surface/canonical prerequisites. Review/calibrate proposed timing gates from recorded measurements, not assumptions.
+**Acceptance:** reviewed plan prerequisites and decisions resolved; explicitly approved initial deployment passes HTTPS/auth/direct-access denial, assets, migration compatibility, protected readiness, worker restart/job recovery, resource and other-domain checks; backup restore and code rollback rehearsed. No public administrative/import/resolution endpoints or listening history. Production writes, DNS, Caddy edits and deployment remain separately authorized actions.
 
-**Risks:** upstream has no documented durable event ID; indistinguishable same-second duplicates and historical provider edits require explicit uncertainty. API pacing/duration is not a DB throughput test. Raw-page storage is measured. Account association is not provider ownership. Existing production-sized muzeum data remains unknown; no production changes are authorized by P1.0.
+**Risks:** server conventions/headroom and existing data are not yet verified; shared Caddy/PG changes could affect other apps. Capistrano rollback does not reverse schema/data changes. See the plan's recovery and unresolved-decision sections.
 
-### 3. P1.2 — Useful read-only source archive
+### 3. P1.2 — Production-scale Last.fm ingestion
 
-**Dependencies:** P1.1 source/provenance contract and representative data; explicit public source/history visibility and display timezone. Authentication is not a prerequisite for the public catalogue or approved public-history pages.
+**Dependencies:** P1.1 persistent production foundation and restore gates; P1.0 identity/provenance review. Local development/testing first, then a separately authorized historical import on Hetzner. Never run the full real historical import locally.
 
-**Work:** root timeline with database keyset pagination, date range and observed artist/track search; show unresolved/colliding observations and raw provenance through appropriate inspectable views. Recover compact tables, navigation and chart concepts from muzeus as useful. Add canonical cross-links opportunistically, never hide unresolved history. Show imported range, freshness, pending collisions and canonical coverage. Private user notes/associations/interpretations are not exposed through public source browsing; private views wait for authenticated access.
+**Work:** additive account/provenance transition preserving IDs/payloads; immutable raw pages/event locators, versioned account fingerprints, explicit collision evidence; bulk bounded transactions, fixed-bound pagination/window replay, per-account serialization and provider pacing; durable atomic checkpoints, heartbeat/counters, retries and throughput/failure reporting. Use Active Job/Solid Queue with a dedicated ingestion consumer and registered allowlisted service actor, independent of resolution. No MusicBrainz, canonical records, surface assignment or browser session dependency.
 
-**Acceptance:** 250k browse query plans retained; 100-row page p95 <200ms proposed target; no N+1 queries, full-Ruby-array pagination or provider dependency. UTC/DST boundaries, stable pagination, invalid filters, unresolved rows and two-account scope tests pass. An independently inspectable event shows original metadata separately from current interpretation. No browser write routes.
+**Acceptance:** execute the [synthetic 250k benchmark and fault matrix](p1.0/import-requirements.md) locally with independent manifest/digest, bounded RSS, cold/replay measurements and crash recovery. Proposed gates remain ≤120 seconds fixture pipeline, ≥5k observations/second DB ceiling and ≤512 MiB RSS, subject to documented measurement/calibration. Replay preserves source data and creates no duplicate listens. Then approve the exact server release/account/cutoff, backup and resource/rate budgets for the real import; record actual network throughput, failures, coverage and checkpoint recovery on persistent production data. A green local test is not approval for that run.
 
-**Risks/decisions:** distinguish public Last.fm source from a person's private Muzeum annotations; decide what raw response fields to display. Do not claim a conflicted observation count is a verified listen total. Make useful data visible without waiting for canonical completeness.
+**Risks:** provider drift, indistinguishable same-second duplicates, raw-storage growth and API errors; incomplete/paused must never be reported complete. Public Last.fm access does not establish account ownership.
 
-### 4. P1.3 — Local authentication and scoped, versioned resolution
+### 4. P1.3 — Authenticated listening archive
 
-**Dependencies:** P1.0 resolution schema review; P1.1 account/source identities; tested auth/session and authorization policies **before any browser resolution actions**. CLI-based ledger tests may precede UI. Triage dependency audit and apply reviewed compatible updates with regression checks before exposing authenticated writes.
+**Dependencies:** P1.1 authentication/authorization; P1.2 source contract and representative production observations. Full resolution is unnecessary.
 
-**Sequence:**
+**Work:** Rails ERB timeline/details including unresolved observations, original metadata/provenance, source collisions, imported range/freshness and coverage. Use database keyset pagination, server-side search/date filters and scoped queries across 250k observations. Use Turbo Drive, Frames for independent filters/details and authorized progress Streams where valuable; small Stimulus interactions. Recover useful legacy presentation without importing legacy business rules. Responsive accessible reusable views; no client-side loading/filtering of the whole archive.
 
-1. Adapt Rails local email/password/session patterns to retained Muzeum Users; provision accounts explicitly; implement server-side account/import/resolution grants, session revocation and CSRF checks. No Last.fm authentication, credentials or OAuth. Unverified account associations remain labeled unverified.
-2. Add actor, scope, immutable assessment/evidence and decision revision tables; current-head FK/index; compatible signature filters, frozen cohorts and individual exceptions; stale-head/idempotency checks. Snapshot existing muzeum pointers as unverified current-baseline evidence, not invented historical decisions.
-3. Correct surface-attachment/count behavior and canonical join/retry/MBID-matching defects, then route enrichment through assessments/decisions. Shared canonical assertions require approved curator/process authority. Ordinary user correction only changes that user's scoped interpretation. Retire global surface mass relinking as authority.
-4. Add protected feedback/review/search/select/defer/ingest workflow with evidence, impact preview, revision reasons and decision history. Resolve edition/track occurrence semantics before claiming accurate tracklists/release context. No automatic ambiguous match or silent target selection.
+**Acceptance:** authenticated Capybara/Rails system tests cover browse/filter/pagination, Turbo navigation, unresolved rows and access denial; request/query tests cover two-account isolation, invalid filters, UTC/DST and stable pagination. Proposed 100-row p95 <200 ms with retained query plans and no N+1/provider dependency. Original source is visibly distinct from interpretation. Private data remains protected in caches, Frames and streams, and sessions can be revoked.
 
-**Acceptance:** one decision chain can serve thousands of compatible observations; different MBID claims do not inherit blindly; an individual/cohort exception affects only its recipients/user. Reevaluation can append evidence without new decisions. Ambiguity blocks assignment; explicit unresolved overrides do not fall through. Cross-user writes, spoofed actor IDs, revoked grants, stale forms and unauthorized shared edits are rejected. Real repeated ingestion, concurrent assignment and shared-recording cases pass. As-of decision/recipient/actor/evidence reconstruction is deterministic; current lookup is indexed. Original source checksums remain identical.
+### 5. P1.4 — Progressive resolution
 
-**Risks/decisions:** reusable surface evidence versus event-specific evidence; scope overlap/conflicts; curator permissions; metadata snapshot versus current labels; local account provisioning/reset. No generalized event-sourcing framework or redundant per-observation revision copies.
+**Dependencies:** P1.0 scope/evidence/edition review; stable source identities and authenticated archive. Ingestion stays independent.
 
-### 5. P1.4 — Verified reporting, automation and release readiness
+**Work:** immutable versioned assessments/decisions with actors, evidence, reasons, predecessors, scoped current heads, cohorts/exceptions and historical queries. Preserve existing pointers as unverified migration evidence, not fabricated history. Fix attachment count/idempotency and canonical ingest/join/MBID defects before using them. Execute automatic resolution asynchronously on Hetzner through a separate Solid Queue consumer/service and provider limiter; support pause/restart without stopping ingestion. Provide authenticated ERB/Turbo candidate review, select/defer, impact preview, rationale and decision history; server rechecks grants and stale-head protection. Do not automatically resolve ambiguity. Use authorized Action Cable/Turbo Streams only where useful.
 
-**Dependencies:** stable account/source contract, tested scoped current/history resolution, chosen timezone/credit/release attribution, completed dependency remediation appropriate to exposure. Deployment remains a separately approved action.
+**Acceptance:** two-user isolation, revoked grants, spoofed actors, concurrent/stale forms, repeated ingest, ambiguous candidates and scope precedence tests pass. Decisions and as-of interpretation reconstruct deterministically from retained evidence; unchanged reassessment need not create a decision. Source checksums remain unchanged; one scoped decision can serve compatible observations without copying history per event. Browser system tests cover review/revision/history; worker restart and independent ingestion/resolution operation are verified on the approved server release.
 
-**Work:** rebuildable scoped DailyListen aggregation; counts/durations/first-last listens and initial ranks/yearly charts adapted from legacy behavior. Explicit unresolved/unknown-duration/collision coverage. Per-account scheduled import through the same tested service with pacing/checkpoints. Rehearse isolated build, backups/restores, monitoring and rollback before a future muzeum.fm release; inspect hosting separately without changing deployment configuration in P1.0.
-
-**Acceptance:** direct source+effective-resolution queries equal derived statistics; replay/revision updates affected old and new identity scopes; user corrections do not alter another user's summaries; no release-membership double count; DST/multi-credit/shared-account fixtures pass. Worker restarts/outages resume safely; import health visible. Read-only app boots without provider credentials; restore drill and proposed cutover checks documented. Public deployment/domain changes require explicit approval.
-
-**Risks:** mixing source observations with verified event counts, stale aggregates, metadata fan-out and provider drift. Defer Spotify, playlists, personalized tiers/categories and broader catalogue work until this useful archive is reliable. No legacy data/parity migration gate.
+**Deferred follow-on:** rebuildable scoped DailyListen reporting, verified counts/durations/timezones, ranks/charts and scheduled incremental import after these contracts stabilize. Preserve unresolved/unknown-duration coverage and per-user interpretation; do not discard the earlier reporting correctness requirements. Spotify, playlists and broader catalogue features remain deferred.
 
 ## 6. P1.0 deliverables and next implementation proposal
 
@@ -203,23 +193,23 @@ The original “repair ingestion first” implementation proposal is superseded 
 3. [Concrete additive schema proposal](p1.0/foundation-and-data-contract.md#4-concrete-relational-proposal) for users/accounts, immutable observations, evidence, scoped decisions, exceptions and current/history lookup.
 4. [250k benchmark and idempotency regression plan](p1.0/import-requirements.md), distinguishing DB, local pipeline and network timing.
 5. P1.0–P1.4 roadmap above, with dependencies, risks and acceptance criteria.
-6. [Recommended P1.1 implementation sequence](p1.0/foundation-and-data-contract.md#6-recommended-p11-sequence-and-review-decisions).
+6. [Production-first sequence](p1.0/foundation-and-data-contract.md#6-production-first-sequence-and-review-decisions).
 
-P1.1 proposal: implement the account/source-provenance transition and reliable bulk import in small tested slices, beginning with additive schema and immutable-source fixtures. Do not implement the whole resolution ledger or browser authentication before source import. Do not publish performance claims until the 250k benchmark has run. Existing ingestion/resolution defects are recorded; no product behavior was changed in P1.0.
+P1.1 proposal: establish the authenticated production foundation using the [deployment plan](p1.1/production-deployment-plan.md). P1.2 implements account/source provenance and bulk ingestion; P1.3 delivers the authenticated archive; P1.4 adds progressive resolution. Do not publish performance claims until the 250k benchmark has run. Existing ingestion/resolution defects are recorded; no product behavior was changed in P1.0.
 
 ## 7. Remaining review decisions
 
 | Decision | Proposed default | Gate |
 | --- | --- | --- |
-| Source fingerprint and collisions | Exact account/time/name tuple; preserve changing evidence; flag uncertainty, never silently drop/overwrite | P1.1 migrations/import |
-| Raw evidence retention | Compressed immutable raw pages plus event locators; preserve old parsed-only records honestly | P1.1 storage budget |
+| Source fingerprint and collisions | Exact account/time/name tuple; preserve changing evidence; flag uncertainty, never silently drop/overwrite | P1.2 migrations/import |
+| Raw evidence retention | Compressed immutable raw pages plus event locators; preserve old parsed-only records honestly | P1.1 capacity / P1.2 retention |
 | Existing muzeum data transition | Backup, inventory, keep User/scrobble IDs and original payloads; associations unverified | Before schema/data changes |
-| Source visibility and import grants | Public read-only only by explicit policy; CLI allowlist/process actor; authenticated association-based browser permissions | P1.1/P1.2 |
-| Authentication/provisioning | Local Muzeum credentials/sessions; explicit provisioning; Last.fm remains public source | Before P1.3 browser writes |
-| Reusable rule vs cohort | Reusable only with compatible evidence; manual event-specific fixes default frozen cohort | P1.3 |
-| Shared assertions vs personal correction | Approved curator/process authority for shared assertions; ordinary correction stays user/account scoped | P1.3 |
-| Release/track identity | Concrete edition, group navigation, repeated track occurrences | Before P1.3 canonical ingest refinements |
-| Historical reconstruction | Versioned decision/recipient/evidence history; metadata snapshots for old display labels | P1.3 |
+| Source visibility and import grants | Authenticated history by default; CLI allowlist/process actor; server-side association grants | P1.1/P1.2 |
+| Authentication/provisioning | Local Muzeum credentials/sessions; explicit provisioning; Last.fm remains public source | P1.1 before personal data/control exposure |
+| Reusable rule vs cohort | Reusable only with compatible evidence; manual event-specific fixes default frozen cohort | P1.4 |
+| Shared assertions vs personal correction | Approved curator/process authority for shared assertions; ordinary correction stays user/account scoped | P1.4 |
+| Release/track identity | Concrete edition, group navigation, repeated track occurrences | Before P1.4 canonical ingest refinements |
+| Historical reconstruction | Versioned decision/recipient/evidence history; metadata snapshots for old display labels | P1.4 |
 | Timezone/credit/duration semantics | Explicit IANA zone, unknown duration coverage, selected release context | P1.2/P1.4 |
 | Audit remediation and operations | Reviewed dependency updates; isolated release/restore rehearsal; no deployment changes now | Before authenticated exposure/release |
 

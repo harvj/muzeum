@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_28_223604) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_16_010000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -156,6 +156,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_28_223604) do
     t.index ["user_id"], name: "index_scrobbles_on_user_id"
   end
 
+  create_table "sessions", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "expires_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["expires_at"], name: "index_sessions_on_expires_at"
+    t.index ["user_id"], name: "index_sessions_on_user_id"
+  end
+
   create_table "user_timezones", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "effective_from", null: false
@@ -166,9 +175,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_28_223604) do
   end
 
   create_table "users", force: :cascade do |t|
+    t.datetime "activated_at"
     t.datetime "created_at", null: false
-    t.string "lastfm_username", null: false
+    t.datetime "disabled_at"
+    t.string "email_address"
+    t.string "lastfm_username"
+    t.string "password_digest"
     t.datetime "updated_at", null: false
+    t.index "lower((email_address)::text)", name: "index_users_on_normalized_email", unique: true
     t.index ["lastfm_username"], name: "index_users_on_lastfm_username", unique: true
   end
 
@@ -184,4 +198,5 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_28_223604) do
   add_foreign_key "release_recordings", "releases"
   add_foreign_key "scrobbles", "recording_surfaces"
   add_foreign_key "scrobbles", "recordings"
+  add_foreign_key "sessions", "users"
 end

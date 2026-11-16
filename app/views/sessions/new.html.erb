@@ -1,0 +1,9 @@
+<h1>Sign in to Muzeum</h1>
+<%= form_with url: session_path do |form| %>
+  <p><%= form.label :email_address, "Email address" %><br>
+  <%= form.email_field :email_address, required: true, autocomplete: "username", autofocus: true %></p>
+  <p><%= form.label :password %><br>
+  <%= form.password_field :password, required: true, autocomplete: "current-password", maxlength: 72 %></p>
+  <%= form.submit "Sign in" %>
+<% end %>
+<p>Accounts are provisioned by the operator. Contact the operator for access or password recovery.</p>

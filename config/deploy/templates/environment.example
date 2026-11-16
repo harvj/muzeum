@@ -1,0 +1,11 @@
+# Proposed /var/www/muzeum/shared/.env: owner muzeum, mode 0600.
+# Shell-compatible assignments (also read by systemd); no shell substitutions.
+RAILS_ENV=production
+RAILS_MASTER_KEY=PROVISION_OUT_OF_BAND
+MUZEUM_DATABASE_PASSWORD=PROVISION_OUT_OF_BAND
+# Set per-database URLs with the separately provisioned runtime role.
+DATABASE_URL=postgresql://muzeum_runtime:REPLACE@127.0.0.1/muzeum_production
+CACHE_DATABASE_URL=postgresql://muzeum_runtime:REPLACE@127.0.0.1/muzeum_production_cache
+QUEUE_DATABASE_URL=postgresql://muzeum_runtime:REPLACE@127.0.0.1/muzeum_production_queue
+CABLE_DATABASE_URL=postgresql://muzeum_runtime:REPLACE@127.0.0.1/muzeum_production_cable
+# Omit SOLID_QUEUE_IN_PUMA entirely. No Last.fm key needed for this stage.

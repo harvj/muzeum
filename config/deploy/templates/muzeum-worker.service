@@ -1,0 +1,28 @@
+[Unit]
+Description=Muzeum Solid Queue worker
+After=network.target postgresql.service
+StartLimitIntervalSec=60
+StartLimitBurst=5
+[Service]
+Type=simple
+User=muzeum
+Group=muzeum
+WorkingDirectory=/var/www/muzeum/current
+EnvironmentFile=/var/www/muzeum/shared/.env
+Environment=RAILS_ENV=production
+Environment=RBENV_VERSION=3.3.5
+Environment=JOB_CONCURRENCY=1
+ExecStart=/home/muzeum/.rbenv/shims/bundle exec ruby bin/jobs
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=120
+MemoryHigh=768M
+MemoryMax=1G
+CPUQuota=50%
+TasksMax=128
+NoNewPrivileges=true
+PrivateTmp=true
+UMask=0077
+SyslogIdentifier=muzeum-worker
+[Install]
+WantedBy=multi-user.target
