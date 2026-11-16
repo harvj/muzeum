@@ -7,7 +7,7 @@ set :keep_releases, 5
 set :bundle_flags, "--quiet"
 append :linked_files, ".env"
 append :linked_dirs, "storage", "log", "tmp/pids", "tmp/sockets"
-set :default_env, { "RAILS_ENV" => "production", "RBENV_VERSION" => "3.3.5" }
+set :default_env, { "RAILS_ENV" => "production", "RBENV_VERSION" => "3.4.12" }
 set :bundle_version, 4
 set :bundle_jobs, 2
 SSHKit.config.command_map[:bundle] = "/home/muzeum/.rbenv/shims/bundle"

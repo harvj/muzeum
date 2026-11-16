@@ -27,7 +27,20 @@ jobs:
         with:
           bundler-cache: true
       - run: bundle exec rails db:prepare
+      - name: Replay migrations in a separate disposable database
+        run: bundle exec rails db:create db:migrate
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/muzeum_migration_test
+          SCHEMA: tmp/migration-schema.rb
       - run: bundle exec rspec
+      - run: bundle exec rails zeitwerk:check
+      - name: Compile production assets
+        run: bundle exec rails assets:precompile
+        env:
+          RAILS_ENV: production
+          SECRET_KEY_BASE_DUMMY: '1'
+      - name: Validate Capistrano configuration without contacting the server
+        run: bundle exec cap production -T
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

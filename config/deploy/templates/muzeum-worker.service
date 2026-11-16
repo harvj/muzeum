@@ -10,7 +10,7 @@ Group=muzeum
 WorkingDirectory=/var/www/muzeum/current
 EnvironmentFile=/var/www/muzeum/shared/.env
 Environment=RAILS_ENV=production
-Environment=RBENV_VERSION=3.3.5
+Environment=RBENV_VERSION=3.4.12
 Environment=JOB_CONCURRENCY=1
 ExecStart=/home/muzeum/.rbenv/shims/bundle exec ruby bin/jobs
 Restart=on-failure

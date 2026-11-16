@@ -1,0 +1,1 @@
+Generating image variants with libvips requires the ruby-vips gem. Please add `gem "ruby-vips", "~> 2.3"` to your Gemfile.

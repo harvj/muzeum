@@ -1,0 +1,46 @@
+-- create_table("solid_queue_blocked_executions", {force: :cascade})
+   -> 0.0162s
+-- create_table("solid_queue_claimed_executions", {force: :cascade})
+   -> 0.0012s
+-- create_table("solid_queue_failed_executions", {force: :cascade})
+   -> 0.0011s
+-- create_table("solid_queue_jobs", {force: :cascade})
+   -> 0.0022s
+-- create_table("solid_queue_pauses", {force: :cascade})
+   -> 0.0009s
+-- create_table("solid_queue_processes", {force: :cascade})
+   -> 0.0015s
+-- create_table("solid_queue_ready_executions", {force: :cascade})
+   -> 0.0016s
+-- create_table("solid_queue_recurring_executions", {force: :cascade})
+   -> 0.0014s
+-- create_table("solid_queue_recurring_tasks", {force: :cascade})
+   -> 0.0015s
+-- create_table("solid_queue_scheduled_executions", {force: :cascade})
+   -> 0.0014s
+-- create_table("solid_queue_semaphores", {force: :cascade})
+   -> 0.0016s
+-- add_foreign_key("solid_queue_blocked_executions", "solid_queue_jobs", {column: "job_id", on_delete: :cascade})
+   -> 0.0007s
+-- add_foreign_key("solid_queue_claimed_executions", "solid_queue_jobs", {column: "job_id", on_delete: :cascade})
+   -> 0.0003s
+-- add_foreign_key("solid_queue_failed_executions", "solid_queue_jobs", {column: "job_id", on_delete: :cascade})
+   -> 0.0005s
+-- add_foreign_key("solid_queue_ready_executions", "solid_queue_jobs", {column: "job_id", on_delete: :cascade})
+   -> 0.0003s
+-- add_foreign_key("solid_queue_recurring_executions", "solid_queue_jobs", {column: "job_id", on_delete: :cascade})
+   -> 0.0003s
+-- add_foreign_key("solid_queue_scheduled_executions", "solid_queue_jobs", {column: "job_id", on_delete: :cascade})
+   -> 0.0004s
+== 20261116020000 AddSolidQueueBatches: migrating =============================
+-- add_column(:solid_queue_jobs, :batch_id, :bigint)
+   -> 0.0003s
+-- add_index(:solid_queue_jobs, :batch_id)
+   -> 0.0004s
+-- create_table(:solid_queue_batches)
+   -> 0.0014s
+-- create_table(:solid_queue_batch_executions)
+   -> 0.0011s
+== 20261116020000 AddSolidQueueBatches: migrated (0.0033s) ====================
+
+PASS: existing queue job preserved, additive batch migration applied

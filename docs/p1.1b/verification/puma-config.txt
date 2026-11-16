@@ -1,0 +1,1 @@
+PASS: Puma 8 loads config/puma.rb and retains explicit loopback bind

@@ -1,0 +1,4 @@
+PASS: schema-bootstrap and migration-replayed primary structures agree.
+Compared sorted table/column definitions (SQL types, nullability, defaults/functions), indexes and foreign keys.
+Physical column ordering excluded.
+Both normalized JSON SHA-256: 6b5d4ceaf99e176840dc65bc1b21045c6d21c8f675208fc908d4eab213fbdcb5

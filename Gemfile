@@ -1,10 +1,12 @@
 source "https://rubygems.org"
 
-gem "rails", "~> 8.1.2"
+ruby "3.4.12"
+
+gem "rails", "~> 8.1.4", ">= 8.1.4.1"
 gem "propshaft"
 gem "pg", "~> 1.1"
-gem "puma", ">= 5.0"
-gem "http", "~> 5.0"
+gem "puma", "~> 8.1"
+gem "http", "~> 6.0"
 
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 gem "bcrypt", "~> 3.1"
@@ -23,14 +25,10 @@ gem "solid_cable"
 # Reduces boot times through caching; required in config/boot.rb
 gem "bootsnap", require: false
 
-# Deploy this application anywhere as a Docker container [https://kamal-deploy.org]
-gem "kamal", require: false
-
-# Add HTTP asset caching/compression and X-Sendfile acceleration to Puma [https://github.com/basecamp/thruster/]
-gem "thruster", require: false
-
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
-gem "image_processing", "~> 1.2"
+gem "image_processing", "~> 2.2"
+# image_processing 2 makes processors optional; retain Rails' vips backend.
+gem "ruby-vips", "~> 2.3", require: false
 
 group :development, :test do
   gem "dotenv-rails"
@@ -52,6 +50,8 @@ end
 
 group :development do
   # Use console on exceptions pages [https://github.com/rails/web-console]
+  # Retain encrypted OpenSSH key support after removing Kamal's dependency chain.
+  gem "bcrypt_pbkdf", require: false
   gem "capistrano", "~> 3.19", require: false
   gem "capistrano-rails", require: false
   gem "web-console"

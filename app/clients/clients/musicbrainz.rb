@@ -104,7 +104,7 @@ module Clients
 
     def http
       @http ||= HTTP
-        .timeout(DEFAULT_TIMEOUTS)
+        .timeout(**DEFAULT_TIMEOUTS)
         .headers("User-Agent" => USER_AGENT)
     end
 

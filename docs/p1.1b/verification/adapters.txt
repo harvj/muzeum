@@ -1,0 +1,5 @@
+Generating image variants with libvips requires the ruby-vips gem. Please add `gem "ruby-vips", "~> 2.3"` to your Gemfile.
+[ActiveJob] Enqueued DependencySmokeJob (Job ID: 9bdf3c76-cf75-43ad-bcd0-c602365168da) to SolidQueue(default) with arguments: "queue-ok"
+[ActiveJob] [DependencySmokeJob] [9bdf3c76-cf75-43ad-bcd0-c602365168da] Performing DependencySmokeJob (Job ID: 9bdf3c76-cf75-43ad-bcd0-c602365168da) from SolidQueue(default) enqueued at 2026-11-16T03:20:12.546226000Z with arguments: "queue-ok"
+[ActiveJob] [DependencySmokeJob] [9bdf3c76-cf75-43ad-bcd0-c602365168da] Performed DependencySmokeJob (Job ID: 9bdf3c76-cf75-43ad-bcd0-c602365168da) from SolidQueue(default) in 7.07ms
+PASS: durable enqueue/claim/perform/finalization, Solid Cache write/read, Solid Cable broadcast

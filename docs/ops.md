@@ -9,3 +9,5 @@ The [P1.1 production deployment plan](p1.1/production-deployment-plan.md) is the
 - Authenticate before exposing personal history or controls. Use Rails-native ERB/Hotwire, Propshaft/import maps and server-side business rules.
 - Full real historical import and asynchronous resolution execute on the server; local testing uses synthetic data.
 - No push, deployment, DNS/service changes or production database operations without explicit approval.
+
+P1.1b modernizes Ruby to 3.4.12 and resolves the dependency audit; see the [dependency report](p1.1b/dependency-modernization.md). Docker/Kamal/Thruster scaffolding is removed. Future deployment must provision the new runtime and apply the additive Solid Queue batch migration; no server changes have been made.
