@@ -1,0 +1,1 @@
+{"database" : "muzeum_p12_bench_c1_virtual_clock_stall", "synthetic" : true, "scrobbles" : 10000, "fetches" : 100, "runs" : [{"id":1,"status":0,"next_page":51,"retry_count":1,"retry_at":"2026-11-17T14:59:00.317894","upper_bound":1661071501}], "fixture_count" : 250000, "reason" : "virtual retry clock rounded just before persisted deadline; no successful full-import claim"}

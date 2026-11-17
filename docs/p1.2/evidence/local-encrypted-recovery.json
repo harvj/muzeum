@@ -1,0 +1,220 @@
+{
+  "snapshot_id": "e6d27031e9c7989d0f4702a24b8e8b6ed5122a53b9b85fc3135929cfe6142b2f",
+  "restic_version": "restic 0.19.1 compiled with go1.26.4 on darwin/arm64",
+  "seconds": 23.408362292,
+  "databases_verified": 4,
+  "source_fingerprints": {
+    "primary": {
+      "ar_internal_metadata": {
+        "sha256": "2cc439de50def13d2df08b3fb916809fc8e27434c4970ea081f14aecdc7ae94e",
+        "bytes": 121
+      },
+      "artists": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "daily_listens": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "import_pages": {
+        "sha256": "49d09d5095845162f0af60cce2c888b0079f8a352edf8e675b0d9c638af01764",
+        "bytes": 43269255
+      },
+      "import_runs": {
+        "sha256": "c477bde43a7462569e139f951c400e6b9d06545a9169881ec4e6e8acce066cb3",
+        "bytes": 739
+      },
+      "ingestion_budgets": {
+        "sha256": "caf0b42d5d69914bb7acff7dbff44f3c06eede4f18ebee92957e617da508e4c8",
+        "bytes": 153
+      },
+      "ingestion_issues": {
+        "sha256": "598c2ff0be7c0e00568ff8056a1499c00dd0f4bbceb73f1b96473a0010711ad3",
+        "bytes": 255032
+      },
+      "lastfm_account_names": {
+        "sha256": "afba3254ab984a2ce3daba5318f0dd579e19376930a617ef55722b656f496300",
+        "bytes": 198
+      },
+      "lastfm_accounts": {
+        "sha256": "b1104dc4c3959e4aa7bb26e0b63e25d54a941f2494d502cf12cc72cd7497a811",
+        "bytes": 483
+      },
+      "oidc_attempts": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "page_commits": {
+        "sha256": "b7c01c8c2a4d0ec7247ab25ba6129128b4a398a507c334e369fbc4de3bcdb947",
+        "bytes": 211393
+      },
+      "recording_artists": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "recording_surfaces": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "recordings": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "release_artists": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "release_recordings": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "releases": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "schema_migrations": {
+        "sha256": "5c4594799edfbd43cee897e959be76428caedd1ee84020bcd836ec205423c23f",
+        "bytes": 609
+      },
+      "scrobbles": {
+        "sha256": "0e86520d7a4fdf959b4c3a46900fe0b63480f7529c07af2c47a25c69dc74cc87",
+        "bytes": 133348385
+      },
+      "sessions": {
+        "sha256": "7e0fdfc0e80a6617182bf58a9959476c39b9b923c7193187771b92c2bf9ed301",
+        "bytes": 381
+      },
+      "source_deliveries": {
+        "sha256": "58a6e960f4ca77a5dd12175fed8b2c98f2a643880931687f96945bf9ce08b8fa",
+        "bytes": 73370590
+      },
+      "source_fetches": {
+        "sha256": "71a13eacc7f47979f2433f77ab43e81df78de25bd754ca6ba1bbea8af529e478",
+        "bytes": 83728312
+      },
+      "user_lastfm_accounts": {
+        "sha256": "6931c99f32b713123806f7cde368acd80c6e0967087bd1843b7db99d120a8565",
+        "bytes": 195
+      },
+      "user_timezones": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "users": {
+        "sha256": "df5694dd70aec6114ea2002b913f6fc4e2a05828a1c155f56f15afc488f04073",
+        "bytes": 276
+      }
+    },
+    "cache": {
+      "ar_internal_metadata": {
+        "sha256": "6472a5c97030a711b91d992f48e2fb1fb6694cdacafdaacdf2848a43b37e1662",
+        "bytes": 121
+      },
+      "rehearsal_markers": {
+        "sha256": "74be97e2939d86b1f4c7ba79d455a77b19987e61390fa894d32ba7ac2b56b539",
+        "bytes": 52
+      },
+      "schema_migrations": {
+        "sha256": "25d269e05e8aae00d55b18b16fcc01b92086b476f4de4a2cb9d3c0c1c29b9e8e",
+        "bytes": 16
+      },
+      "solid_cache_entries": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      }
+    },
+    "queue": {
+      "ar_internal_metadata": {
+        "sha256": "4229c2a2b5c9762a740fcd1660256ebef8d45e742c85127b33d20e2d5e76fe1e",
+        "bytes": 121
+      },
+      "rehearsal_markers": {
+        "sha256": "74be97e2939d86b1f4c7ba79d455a77b19987e61390fa894d32ba7ac2b56b539",
+        "bytes": 52
+      },
+      "schema_migrations": {
+        "sha256": "236c87a232641b9c3505669794dd76c2030ece43e271835a13d42ee3e974fbe7",
+        "bytes": 493
+      },
+      "solid_queue_batch_executions": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "solid_queue_batches": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "solid_queue_blocked_executions": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "solid_queue_claimed_executions": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "solid_queue_failed_executions": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "solid_queue_jobs": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "solid_queue_pauses": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "solid_queue_processes": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "solid_queue_ready_executions": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "solid_queue_recurring_executions": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "solid_queue_recurring_tasks": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "solid_queue_scheduled_executions": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "solid_queue_semaphores": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      }
+    },
+    "cable": {
+      "ar_internal_metadata": {
+        "sha256": "35c2d747760fdbbb11e43fb1abfc48323798008ede9819d6e05ded69bfa2a91f",
+        "bytes": 121
+      },
+      "rehearsal_markers": {
+        "sha256": "74be97e2939d86b1f4c7ba79d455a77b19987e61390fa894d32ba7ac2b56b539",
+        "bytes": 52
+      },
+      "schema_migrations": {
+        "sha256": "25d269e05e8aae00d55b18b16fcc01b92086b476f4de4a2cb9d3c0c1c29b9e8e",
+        "bytes": 16
+      },
+      "solid_cable_messages": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      }
+    }
+  },
+  "proof": {
+    "primary": "muzeum_p12_recovery_restored_primary",
+    "scrobbles": 250000,
+    "deliveries": 250000,
+    "grant_decryption_verified": true,
+    "four_connections_remapped": true
+  },
+  "production_changed": false
+}

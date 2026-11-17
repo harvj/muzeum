@@ -1,0 +1,162 @@
+{
+  "implementation_sha256": "8c5bf2f4c34f4601082a21099d44b2f7aff674a355fa504d598d9ee0777de9f3",
+  "runtime": "ruby 3.4.12 (2026-10-23 revision 366f5fdc00) +PRISM [arm64-darwin25]",
+  "platform": "arm64-apple-darwin25",
+  "settings": {
+    "server_version": "16.15 (Homebrew)",
+    "fsync": "on",
+    "synchronous_commit": "on",
+    "full_page_writes": "on",
+    "shared_buffers": "128MB"
+  },
+  "database": "muzeum_p12_bench_a2",
+  "manifest_digest": "0194c967c2fa89cc0327657ad3c4555999f17ec6a06e3807591964a970ea2c2f",
+  "results": [
+    {
+      "phase": "cold",
+      "mode": "A",
+      "seconds": 50.419660000130534,
+      "observations_per_second": 4958.383297296189,
+      "new_scrobbles": 250000,
+      "queries": 22516,
+      "sql_seconds": 26.604754922911525,
+      "phase_seconds": {},
+      "cluster_wal_bytes": 569062368,
+      "statements_per_main_page": 18.0128,
+      "page_p50_seconds": 0.03684299997985363,
+      "page_p95_seconds": 0.056784000247716904,
+      "rss_at_validation_kib": 223840,
+      "rss_samples": [
+        [
+          0,
+          143184
+        ],
+        [
+          25000,
+          151376
+        ],
+        [
+          50000,
+          152768
+        ],
+        [
+          75000,
+          153984
+        ],
+        [
+          100000,
+          154560
+        ],
+        [
+          125000,
+          154752
+        ],
+        [
+          150000,
+          154832
+        ],
+        [
+          175000,
+          154864
+        ],
+        [
+          200000,
+          154896
+        ],
+        [
+          225000,
+          154912
+        ]
+      ],
+      "database_growth_bytes": 300933120,
+      "verified_fingerprint_digest": "0194c967c2fa89cc0327657ad3c4555999f17ec6a06e3807591964a970ea2c2f",
+      "lookup_p95_seconds": 0.00044499989598989487,
+      "provider_requests": 0,
+      "virtual_rate_wait_seconds": 0.0,
+      "virtual_latency_seconds": 0.0,
+      "virtual_retry_seconds": 0.0
+    },
+    {
+      "phase": "replay",
+      "mode": "A",
+      "seconds": 36.140219000168145,
+      "observations_per_second": 6917.500970285677,
+      "new_scrobbles": 0,
+      "queries": 25007,
+      "sql_seconds": 18.268963906913996,
+      "phase_seconds": {},
+      "cluster_wal_bytes": 1079809192,
+      "statements_per_main_page": 20.0056,
+      "page_p50_seconds": 0.0220320001244545,
+      "page_p95_seconds": 0.047974999994039536,
+      "rss_at_validation_kib": 232896,
+      "rss_samples": [
+        [
+          0,
+          223904
+        ],
+        [
+          25000,
+          231312
+        ],
+        [
+          50000,
+          231392
+        ],
+        [
+          75000,
+          231392
+        ],
+        [
+          100000,
+          231456
+        ],
+        [
+          125000,
+          231680
+        ],
+        [
+          150000,
+          231696
+        ],
+        [
+          175000,
+          231696
+        ],
+        [
+          200000,
+          231696
+        ],
+        [
+          225000,
+          231696
+        ]
+      ],
+      "database_growth_bytes": 76980224,
+      "verified_fingerprint_digest": "0194c967c2fa89cc0327657ad3c4555999f17ec6a06e3807591964a970ea2c2f",
+      "lookup_p95_seconds": 0.00046500004827976227,
+      "provider_requests": 0,
+      "virtual_rate_wait_seconds": 0.0,
+      "virtual_latency_seconds": 0.0,
+      "virtual_retry_seconds": 0.0
+    }
+  ],
+  "explain": [
+    "Limit  (cost=0.52..13.80 rows=100 width=233) (actual time=0.013..0.030 rows=100 loops=1)",
+    "  Buffers: shared hit=9",
+    "  ->  Incremental Sort  (cost=0.52..28017.62 rows=210880 width=233) (actual time=0.013..0.026 rows=100 loops=1)",
+    "        Sort Key: played_at DESC, id DESC",
+    "        Presorted Key: played_at",
+    "        Full-sort Groups: 4  Sort Method: quicksort  Average Memory: 37kB  Peak Memory: 37kB",
+    "        Buffers: shared hit=9",
+    "        ->  Index Scan Backward using index_scrobbles_on_played_at on scrobbles  (cost=0.42..18528.02 rows=210880 width=233) (actual time=0.006..0.017 rows=101 loops=1)",
+    "              Index Cond: (played_at < '2020-01-01 00:00:00'::timestamp without time zone)",
+    "              Filter: (lastfm_account_id = 1)",
+    "              Buffers: shared hit=9",
+    "Planning:",
+    "  Buffers: shared read=5",
+    "Planning Time: 0.071 ms",
+    "Execution Time: 0.035 ms"
+  ],
+  "external_peak_rss_bytes": 238501888
+}

@@ -18,7 +18,7 @@ module Lastfm
       IngestionBudget.find_by!(name: "lastfm").with_lock do
         # Reload under the shared row lock.
         record = IngestionBudget.find_by!(name: "lastfm")
-        record.update!(next_request_at: [ record.next_request_at, Time.current + seconds.clamp(1, 21_600) ].max)
+        record.update!(next_request_at: [ record.next_request_at, Time.current + [ seconds, 1 ].max ].max)
       end
     end
   end

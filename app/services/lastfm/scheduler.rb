@@ -64,7 +64,7 @@ module Lastfm
         delay = [ 30 * 2**[ attempts - 1, 9 ].min, 21_600 ].min + account.id % 11
         delay = [ delay, 900 ].max if attempts >= 5
         retry_after = error.respond_to?(:retry_after) ? error.retry_after : nil
-        delay = [ delay, retry_after.to_i ].max.clamp(1, 21_600)
+        delay = [ delay, retry_after.to_i, 1 ].max
         permanent = error.is_a?(Clients::Unauthorized) || error.is_a?(PermissionDenied)
         kind = error.is_a?(SourceDrift) ? "source_drift" : error.class.name
         remaining_grants = account.authorized_memberships.exists?

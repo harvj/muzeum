@@ -112,6 +112,12 @@ RSpec.describe Lastfm::RequestBudget do
     expect(IngestionBudget.where(name: "lastfm").count).to eq(1)
   end
 
+  it "does not shorten a provider cooldown beyond the ordinary retry ceiling" do
+    described_class.acquire!
+    described_class.cooldown!(1.day.to_i)
+    expect(IngestionBudget.find_by!(name: "lastfm").next_request_at).to be >= 86_399.seconds.from_now
+  end
+
   it "honors a provider-wide cooldown" do
     described_class.acquire!
     described_class.cooldown!(120)

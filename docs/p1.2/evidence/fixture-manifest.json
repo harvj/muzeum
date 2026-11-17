@@ -1,0 +1,10 @@
+{
+  "generator": "generate_fixture.py/v2",
+  "seed": 120026,
+  "count": 250000,
+  "pages": 1250,
+  "first_timestamp": 1136073600,
+  "last_timestamp": 1661071500,
+  "ordered_fingerprint_sha256": "0194c967c2fa89cc0327657ad3c4555999f17ec6a06e3807591964a970ea2c2f",
+  "page_checksum_manifest_sha256": "34c6265062e563c98b634b92f0ce2fedec94b3f9403fb384b374274b88a7e08d"
+}

@@ -1,0 +1,13 @@
+Inspecting 143 files
+.........................................................CC....................................................................................
+
+Offenses:
+
+app/services/lastfm/request_budget.rb:21:82: C: [Corrected] Layout/SpaceInsideArrayLiteralBrackets: Use space inside array brackets.
+        record.update!(next_request_at: [ record.next_request_at, Time.current + [seconds, 1].max ].max)
+                                                                                 ^
+app/services/lastfm/scheduler.rb:67:17: C: [Corrected] Layout/SpaceInsideArrayLiteralBrackets: Use space inside array brackets.
+        delay = [delay, retry_after.to_i, 1].max
+                ^
+
+143 files inspected, 2 offenses detected, 2 offenses corrected

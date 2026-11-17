@@ -1,0 +1,11 @@
+{
+  "migration_seconds": 5.176875583,
+  "backfill_seconds": 54.252450666,
+  "preserved": true,
+  "scrobbles": 250000,
+  "summary": [
+    "{\"scrobbles\" : 250000, \"account_ids\" : 1}",
+    "{\"source_deliveries\" : 250000}",
+    "{\"synced_through\" : 1661071501, \"sync_enabled\" : false}"
+  ]
+}

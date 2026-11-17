@@ -1,0 +1,33 @@
+{
+  "database": "muzeum_p12_legacy_migration",
+  "scrobbles": {
+    "count": 250000,
+    "sha256": "84171a4608843e60cc994d4da6588536bd3ee17a6380712cf663a1a9782dd856"
+  },
+  "import_pages": {
+    "count": 1250,
+    "sha256": "3ca5d7abfbc72f486ea7ca70d6de7ef9d1b00edbe0998c492bc9614f4e862a20"
+  },
+  "principals": [
+    {
+      "id": "1",
+      "oidc_issuer": "https://auth.harvj.com",
+      "oidc_subject": "preserved-synthetic-subject",
+      "lastfm_username": "synthetic"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "1",
+      "user_id": "1",
+      "status": "2",
+      "next_page": "1251",
+      "upper_bound": "1661071501",
+      "total_pages": "1250",
+      "expected_count": "250000",
+      "scrobbles_processed": "250000",
+      "last_success_at": "2026-01-01 00:00:00",
+      "source_username": "synthetic"
+    }
+  ]
+}
