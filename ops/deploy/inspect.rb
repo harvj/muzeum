@@ -26,7 +26,7 @@ ActiveRecord::Base.configurations.configs_for(env_name: "production").each do |c
       raise "Runtime ownership membership" if connection.select_value("SELECT pg_has_role(current_user,'muzeum_owner','MEMBER') OR pg_has_role(current_user,'muzeum_migrator','MEMBER')")
     end
     if config.name == "queue" && ENV["MUZEUM_DEPLOY_CHECK_HEALTH"] == "1"
-      %w[Supervisor Dispatcher Worker Scheduler].each do |kind|
+      [ "Supervisor(#{SolidQueue::Configuration.new.mode})", "Dispatcher", "Worker", "Scheduler" ].each do |kind|
         alive = connection.select_value("SELECT EXISTS(SELECT 1 FROM solid_queue_processes WHERE kind=#{connection.quote(kind)} AND last_heartbeat_at > #{connection.quote(SolidQueue.process_alive_threshold.ago)})")
         raise "Solid Queue process heartbeat unavailable" unless alive
       end

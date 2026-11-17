@@ -4,11 +4,13 @@ test_external_contention_refuses_acquisition (test_backup_lock.BackupLockTests) 
 test_freshness_failure_releases_host_lock_and_retains_failed_application_receipt (test_backup_lock.BackupLockTests) ... ok
 test_original_nested_cli_lock_is_refused (test_backup_lock.BackupLockTests) ... ok
 test_all_four_schemas_grants_migration_versions_and_source_protection_pass (test_inspection.InspectionTests) ... ok
+test_invented_plain_supervisor_label_is_not_accepted (test_inspection.InspectionTests) ... ok
 test_missing_runtime_grant_is_rejected (test_inspection.InspectionTests) ... ok
 test_missing_source_protection_is_rejected (test_inspection.InspectionTests) ... ok
 test_stale_worker_heartbeat_is_rejected (test_inspection.InspectionTests) ... ok
 test_completed_process_retains_exit_status_without_printing_output (test_migration_process.MigrationProcessTests) ... ok
 test_timeout_terminates_the_entire_migration_process_group (test_migration_process.MigrationProcessTests) ... ok
+test_inspection_runs_as_scoped_identity_with_restricted_path_and_absolute_runuser (test_runtime_command.RuntimeCommandTests) ... ok
 test_additive_migration_has_two_fresh_recovery_gates (test_workflow.DatabaseRehearsalTests) ... ok
 test_code_only_publication_failure_keeps_old_service_and_restart_failure_withdraws_new (test_workflow.DatabaseRehearsalTests) ... ok
 test_code_only_skips_backup_and_migration_and_keeps_route_available (test_workflow.DatabaseRehearsalTests) ... ok
@@ -30,7 +32,7 @@ test_failures_never_roll_back_or_restore_live_data (test_workflow.WorkflowTests)
 test_post_backup_failure_stops_published_candidate (test_workflow.WorkflowTests) ... ok
 
 ----------------------------------------------------------------------
-Ran 30 tests in 54.014s
+Ran 32 tests in 50.910s
 
 OK
 Last production backup is within 26 hours

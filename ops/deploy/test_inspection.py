@@ -52,7 +52,7 @@ end"""
         for key, database in zip(('DATABASE_URL', 'CACHE_DATABASE_URL', 'QUEUE_DATABASE_URL', 'CABLE_DATABASE_URL'), cls.databases):
             cls.sql(database, 'GRANT USAGE ON SCHEMA public TO muzeum_runtime; GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA public TO muzeum_runtime; GRANT USAGE,SELECT ON ALL SEQUENCES IN SCHEMA public TO muzeum_runtime;')
             cls.env[key] = 'postgresql://muzeum_runtime:disposable-fixture@127.0.0.1:' + cls.admin['PGPORT'] + '/' + database
-        cls.sql(cls.databases[2], "INSERT INTO solid_queue_processes(kind,last_heartbeat_at,pid,created_at,name) SELECT kind,CURRENT_TIMESTAMP AT TIME ZONE 'UTC',123,CURRENT_TIMESTAMP AT TIME ZONE 'UTC',kind FROM unnest(ARRAY['Supervisor','Dispatcher','Worker','Scheduler']) kind")
+        cls.sql(cls.databases[2], "INSERT INTO solid_queue_processes(kind,last_heartbeat_at,pid,created_at,name) SELECT kind,CURRENT_TIMESTAMP AT TIME ZONE 'UTC',123,CURRENT_TIMESTAMP AT TIME ZONE 'UTC',kind FROM unnest(ARRAY['Supervisor(fork)','Dispatcher','Worker','Scheduler']) kind")
         cls.env['MUZEUM_DEPLOY_CHECK_HEALTH'] = '1'
 
     @classmethod
@@ -99,3 +99,12 @@ end"""
             self.assertIn('heartbeat unavailable', result.stderr)
         finally:
             self.sql(self.databases[2], "UPDATE solid_queue_processes SET last_heartbeat_at=CURRENT_TIMESTAMP AT TIME ZONE 'UTC' WHERE kind='Worker'")
+
+    def test_invented_plain_supervisor_label_is_not_accepted(self):
+        self.sql(self.databases[2], "UPDATE solid_queue_processes SET kind='Supervisor' WHERE kind='Supervisor(fork)'")
+        try:
+            result = self.inspect(success=False)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('heartbeat unavailable', result.stderr)
+        finally:
+            self.sql(self.databases[2], "UPDATE solid_queue_processes SET kind='Supervisor(fork)' WHERE kind='Supervisor'")
