@@ -14,8 +14,8 @@ module OidcFlow
     stub_request(:post, "https://auth.harvj.com/revoke").to_return(status: 200)
   end
 
-  def finish_oidc(claims: {}, key: @signing_key)
-    post session_path
+  def finish_oidc(claims: {}, key: @signing_key, initiate: true)
+    post session_path if initiate
     expect(response).to have_http_status(:redirect)
     query = Rack::Utils.parse_query(URI(response.location).query)
     expect(query["code_challenge_method"]).to eq("S256")

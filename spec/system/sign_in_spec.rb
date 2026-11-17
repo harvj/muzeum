@@ -14,7 +14,7 @@ RSpec.describe "Auth sign-in page", type: :system do
   it "protects the archive and offers only the established Auth login" do
     old = ActionController::Base.allow_forgery_protection
     ActionController::Base.allow_forgery_protection = true
-    visit root_path
+    visit new_session_path
     expect(page).to have_content("Sign in to Muzeum")
     expect(page).to have_button("Continue with harvj Auth")
     expect(page).not_to have_field("Password")

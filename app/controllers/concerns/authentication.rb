@@ -2,9 +2,9 @@ module Authentication
   extend ActiveSupport::Concern
 
   included do
+    before_action :prevent_private_caching
     before_action :resume_session
     before_action :require_authentication
-    before_action :prevent_private_caching
     helper_method :current_user
   end
 
@@ -31,11 +31,26 @@ module Authentication
     end
     Current.session.update!(last_seen_at: Time.current) if request.get? && request.format.html?
   rescue OidcClient::Failure
+    session[:oidc_auto_blocked] = true
     Current.session = nil
   end
 
   def require_authentication
-    redirect_to new_session_path unless Current.session
+    return if Current.session
+
+    if interactive_application_entry? && !session[:oidc_auto_blocked]
+      session[:oidc_return_to] = request.fullpath
+      session[:oidc_auto_blocked] = true
+      session[:oidc_auto_start] = true
+    end
+    redirect_to new_session_path
+  end
+
+  def interactive_application_entry?
+    controller_path == "home" && action_name == "show" && request.get? && request.format.html? &&
+      request.headers["Sec-Fetch-Mode"] == "navigate" && request.headers["Sec-Fetch-Dest"] == "document" &&
+      request.headers["Turbo-Frame"].blank? &&
+      ![ request.headers["Purpose"], request.headers["Sec-Purpose"] ].compact.any? { |value| value.include?("prefetch") }
   end
 
   def prevent_private_caching
@@ -56,5 +71,6 @@ module Authentication
     Current.session = nil
     cookies.delete(:session_id)
     reset_session
+    session[:oidc_auto_blocked] = true
   end
 end
