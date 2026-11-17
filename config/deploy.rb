@@ -19,23 +19,80 @@ set :default_env, fetch(:default_env).merge("PATH" => "/home/muzeum/.rbenv/shims
 set :ssh_options, { forward_agent: false, verify_host_key: :always, auth_methods: %w[publickey], non_interactive: true }
 
 require_relative "../lib/muzeum_deployment_revision"
+require_relative "../lib/muzeum_deployment_reporting"
 require "digest"
 require "securerandom"
 
+def muzeum_reporting
+  git_directory = MuzeumDeploymentRevision.command("git", "rev-parse", "--git-common-dir")
+  MuzeumDeploymentReporting::Outbox.new(File.join(git_directory, "muzeum-deployments"))
+end
+
+def muzeum_verify_helper
+  on primary(:app) do
+    installed = capture(:sudo, "-n", "/usr/local/sbin/muzeum-deploy", "version").strip
+    expected = Digest::SHA256.hexdigest(File.binread(File.expand_path("../ops/deploy/muzeum_deploy.py", __dir__)) + File.binread(File.expand_path("../ops/deploy/inspect.rb", __dir__)))
+    raise "Reviewed deployment helper version mismatch" unless installed == expected
+  end
+end
+
+def muzeum_publish_result(token, sha)
+  receipt = nil
+  on primary(:app) do
+    receipt = JSON.parse(capture(:sudo, "-n", "/usr/local/sbin/muzeum-deploy", "receipt", sha, token))
+  end
+  result = muzeum_reporting.reconcile(token, receipt)
+  info "GitHub deployment #{result.fetch(:id)}: #{result.fetch(:state)}; receipt #{token}.json"
+  warn "Deployment remains incomplete; inspect server receipt #{token}.json" unless result.fetch(:terminal)
+rescue StandardError
+  warn "GitHub reporting pending; production result is retained. Retry: cap production 'muzeum:report[#{token}]'"
+end
+
 namespace :muzeum do
+  desc "Verify the exact local revision and installed production readiness without deploying"
+  task :preflight do
+    approval = MuzeumDeploymentRevision.resolve!
+    info "Preflight revision #{approval.fetch(:sha)}; CI #{approval.fetch(:ci)}"
+    muzeum_verify_helper
+    on primary(:app) do
+      execute :sudo, "-n", "/usr/local/sbin/muzeum-deploy", "preflight"
+    end
+  end
+
+  desc "Retry GitHub reporting from the existing server receipt; never redeploy"
+  task :report, [ :token ] do |_task, args|
+    token = args.fetch(:token)
+    record = muzeum_reporting.read(token)
+    muzeum_publish_result(token, record.fetch("sha"))
+  end
+
   task :authorize do
     approval = MuzeumDeploymentRevision.resolve!
     set :approved_revision, approval.fetch(:sha)
     set :branch, approval.fetch(:sha)
     set :deployment_token, SecureRandom.hex(16)
     info "Muzeum immutable revision #{fetch(:approved_revision)}; CI #{approval.fetch(:ci)}"
+    outbox = muzeum_reporting
+    outbox.check_clear!
+    muzeum_verify_helper
     on primary(:app) do
-      installed = capture(:sudo, "-n", "/usr/local/sbin/muzeum-deploy", "version").strip
-      expected = Digest::SHA256.hexdigest(File.binread(File.expand_path("../ops/deploy/muzeum_deploy.py", __dir__)) + File.binread(File.expand_path("../ops/deploy/inspect.rb", __dir__)))
-      abort "Reviewed deployment helper is not installed; complete separate safety review first" unless installed == expected
       execute :sudo, "-n", "/usr/local/sbin/muzeum-deploy", "begin", fetch(:approved_revision), fetch(:deployment_token)
       set :deployment_lock_acquired, true
     end
+    begin
+      outbox.create(fetch(:approved_revision), fetch(:deployment_token))
+      set :deployment_reporting_started, true
+      outbox.start(fetch(:deployment_token))
+    rescue StandardError, Interrupt
+      on primary(:app) do
+        execute :sudo, "-n", "/usr/local/sbin/muzeum-deploy", "cancel", fetch(:approved_revision), fetch(:deployment_token)
+        set :deployment_lock_acquired, false
+      end
+      muzeum_publish_result(fetch(:deployment_token), fetch(:approved_revision)) if fetch(:deployment_reporting_started, false)
+      set :deployment_reporting_finalized, true
+      raise "GitHub initiation failed; production deployment was not started; inspect local reporting outbox"
+    end
+    outbox.attempted(fetch(:deployment_token))
   end
 
   task :prepare do
@@ -55,12 +112,22 @@ namespace :muzeum do
       execute :sudo, "-n", "/usr/local/sbin/muzeum-deploy", "complete", fetch(:approved_revision), fetch(:deployment_token)
       set :deployment_lock_acquired, false
     end
+    muzeum_publish_result(fetch(:deployment_token), fetch(:approved_revision))
+    set :deployment_reporting_finalized, true
   end
 
   task :failed do
-    next unless fetch(:deployment_lock_acquired, false)
-    on primary(:app) do
-      execute :sudo, "-n", "/usr/local/sbin/muzeum-deploy", "fail", fetch(:approved_revision), fetch(:deployment_token)
+    begin
+      if fetch(:deployment_lock_acquired, false)
+        on primary(:app) do
+          execute :sudo, "-n", "/usr/local/sbin/muzeum-deploy", "fail", fetch(:approved_revision), fetch(:deployment_token)
+        end
+      end
+    ensure
+      if fetch(:deployment_reporting_started, false) && !fetch(:deployment_reporting_finalized, false)
+        muzeum_publish_result(fetch(:deployment_token), fetch(:approved_revision))
+        set :deployment_reporting_finalized, true
+      end
     end
   end
 
@@ -74,3 +141,9 @@ after "deploy:updated", "muzeum:prepare"
 after "deploy:published", "muzeum:finish"
 after "deploy:finished", "muzeum:complete"
 after "deploy:failed", "muzeum:failed"
+
+at_exit do
+  if fetch(:deployment_reporting_started, false) && !fetch(:deployment_reporting_finalized, false)
+    muzeum_publish_result(fetch(:deployment_token), fetch(:approved_revision))
+  end
+end

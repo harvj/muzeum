@@ -83,8 +83,7 @@ class Host:
                 raise RuntimeError('Protected configuration unavailable or unsafe')
         if shutil.disk_usage(APP).free < 8 * 1024**3:
             raise RuntimeError('Insufficient deployment/recovery headroom')
-        self.backup_api()  # Validate repository identity/scope and independent recovery escrow.
-        self.command(['/usr/local/lib/harvj-backups/muzeum-backup', 'monitor'])
+        self.check_backup_freshness()
         self.health()
         backup = json.loads((BACKUPS / 'state/last-backup.json').read_text())
         restored = json.loads((BACKUPS / 'state/last-production-restore.json').read_text())
@@ -92,6 +91,11 @@ class Host:
             raise RuntimeError('Existing four-database recovery evidence required')
         return {'revision': self.revision(), 'health': 'passed', 'backup_reference': backup['snapshot_id'],
                 'recovery_reference': restored['snapshot_id'], 'recovered_at': restored['verified_at']}
+
+    def check_backup_freshness(self):
+        # Caller owns the host lock. The CLI entry point would try to lock it again.
+        api, config = self.backup_api()
+        api['do_action'](config, 'monitor')
 
     def health(self):
         for attempt in range(10):
@@ -316,12 +320,18 @@ class Deployment:
                         self.host.health()
                         record['phase'] = 'complete'
                         record['completed_at'] = now()
+                    elif phase == 'cancel':
+                        if record['phase'] != 'prepared_checkout' or record['migrating'] or self.host.revision() != record['baseline']['revision']:
+                            raise RuntimeError('Only an untouched pre-deployment attempt can be cancelled')
+                        self.host.health()
+                        record['phase'] = 'cancelled'
+                        record['completed_at'] = now()
                     elif phase == 'fail':
                         raise RuntimeError('Capistrano reported a deployment failure')
                     else:
                         raise RuntimeError('Unknown deployment phase')
                 self.save(record)
-                if record['phase'] == 'complete':
+                if record['phase'] in ('complete', 'cancelled'):
                     active.unlink()
                 return record
             except Exception as error:
@@ -358,6 +368,20 @@ def main():
         raise RuntimeError('Root-owned installed helper required')
     if sys.argv[1:] == ['version']:
         print(hashlib.sha256(Path(__file__).resolve().read_bytes() + Path(__file__).resolve().with_name('inspect.rb').read_bytes()).hexdigest())
+        return
+    if sys.argv[1:] == ['preflight']:
+        host = Host()
+        with host.backup_lock():
+            print(json.dumps(host.preflight()))
+        return
+    if len(sys.argv) == 4 and sys.argv[1] == 'receipt':
+        sha, token = sys.argv[2:]
+        if not SHA.fullmatch(sha) or not TOKEN.fullmatch(token):
+            raise RuntimeError('Invalid receipt identity')
+        record = json.loads((STATE / (token + '.json')).read_text())
+        if record['sha'] != sha or record['token'] != token:
+            raise RuntimeError('Receipt identity mismatch')
+        print(json.dumps({key: record[key] for key in ('sha', 'token', 'phase', 'health') if key in record}))
         return
     if len(sys.argv) not in (4, 5):
         raise RuntimeError('Expected phase SHA token [release]')
