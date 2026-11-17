@@ -102,6 +102,16 @@ class FixtureHost:
         self.running = False
 
 
+class FixtureDeployment(deploy.Deployment):
+    def run(self, *args, **kwargs):
+        try:
+            return super().run(*args, **kwargs)
+        except RuntimeError as error:
+            active = self.root / 'active.json'
+            diagnostic = json.loads(active.read_text()).get('diagnostic', '') if active.exists() else ''
+            raise RuntimeError(str(error) + '; synthetic fixture diagnostic: ' + diagnostic) from error
+
+
 class WorkflowTests(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
@@ -111,7 +121,7 @@ class WorkflowTests(unittest.TestCase):
 
     def workflow(self, migration=False, fail=None):
         host = FixtureHost(self.root, migration, fail)
-        return host, deploy.Deployment(host, self.root / 'audit')
+        return host, FixtureDeployment(host, self.root / 'audit')
 
     def success(self, host, flow):
         flow.run('begin', NEW, self.token)
@@ -143,7 +153,7 @@ class WorkflowTests(unittest.TestCase):
         for failure in ('backup', 'restore', 'migration', 'publication', 'restart', 'health', 'activation'):
             with self.subTest(failure=failure), tempfile.TemporaryDirectory() as root:
                 host = FixtureHost(root, True, failure)
-                flow = deploy.Deployment(host, Path(root) / 'audit')
+                flow = FixtureDeployment(host, Path(root) / 'audit')
                 flow.run('begin', NEW, self.token)
                 with self.assertRaises(RuntimeError):
                     flow.run('prepare', NEW, self.token, str(host.candidate))
@@ -161,7 +171,7 @@ class WorkflowTests(unittest.TestCase):
         for failure in ('publication', 'restart', 'health'):
             with self.subTest(failure=failure), tempfile.TemporaryDirectory() as root:
                 host = FixtureHost(root, False, failure)
-                flow = deploy.Deployment(host, Path(root) / 'audit')
+                flow = FixtureDeployment(host, Path(root) / 'audit')
                 flow.run('begin', NEW, self.token)
                 flow.run('prepare', NEW, self.token, str(host.candidate))
                 with self.assertRaises(RuntimeError):
@@ -202,7 +212,7 @@ class WorkflowTests(unittest.TestCase):
                 else:
                     data['migrations'] = {}
                 path.write_text(json.dumps(data))
-                flow = deploy.Deployment(host, Path(root) / 'audit')
+                flow = FixtureDeployment(host, Path(root) / 'audit')
                 flow.run('begin', NEW, self.token)
                 with self.assertRaises(RuntimeError):
                     flow.run('prepare', NEW, self.token, str(host.candidate))
@@ -230,7 +240,7 @@ class WorkflowTests(unittest.TestCase):
                     else:
                         host.inspect = lambda release: {'pending': [], 'databases': {'primary': {'triggers': []}}}
                 host.migrate = changed
-                flow = deploy.Deployment(host, Path(root) / 'audit')
+                flow = FixtureDeployment(host, Path(root) / 'audit')
                 flow.run('begin', NEW, self.token)
                 with self.assertRaises(RuntimeError):
                     flow.run('prepare', NEW, self.token, str(host.candidate))
@@ -244,7 +254,7 @@ class DatabaseRehearsalTests(WorkflowTests):
     def workflow(self, migration=False, fail=None):
         host = DatabaseHost(self.root, migration, fail)
         self.addCleanup(host.cleanup)
-        return host, deploy.Deployment(host, self.root / 'audit')
+        return host, FixtureDeployment(host, self.root / 'audit')
 
     def test_real_migration_failure_keeps_source_data_and_committed_schema(self):
         host, flow = self.workflow(True)
