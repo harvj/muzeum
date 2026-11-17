@@ -136,7 +136,7 @@ class Host:
                    PGOPTIONS='-c default_transaction_read_only=on -c statement_timeout=120000',
                    MUZEUM_DEPLOY_CHECK_HEALTH='1' if health else '0')
         script = Path(__file__).resolve().with_name('inspect.rb').read_bytes()
-        output = self.command(['runuser', '-u', 'muzeum', '--', '/opt/auth/ruby-3.4.12/bin/bundle',
+        output = self.command(['/usr/sbin/runuser', '-u', 'muzeum', '--', '/opt/auth/ruby-3.4.12/bin/bundle',
                                'exec', 'rails', 'runner', '-'], cwd=release, env=env, input=script)
         line = next(line for line in output.splitlines() if line.startswith('MUZEUM_DEPLOY_INSPECTION:'))
         return json.loads(line.split(':', 1)[1])
