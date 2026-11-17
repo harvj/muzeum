@@ -151,12 +151,12 @@ RSpec.describe RecordingResolution do
         good.call(provider, path, params)
       end
     end
-    freeze_time(with_usec: true) do
+    travel_to(Time.current.change(usec: 0)) do
       processor = RecordingResolution::Processor.new(work, fixture: transport)
       processor.call
       expect(work.reload).to have_attributes(state: "pending", due_at: 20.seconds.from_now, attempts: 1)
       expect { processor.call }.not_to change { work.reload.attempts }
-      travel 21.seconds
+      travel 20.seconds
       processor.call
       expect(work.reload.state).to eq("done")
       expect(RecordingResolution::Pilot.find(work.pilot_id).musicbrainz_requests).to eq(3)
