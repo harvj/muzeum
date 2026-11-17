@@ -1,0 +1,374 @@
+#!/usr/bin/env python3
+"""Muzeum-only guarded Capistrano phases. Install only after separate safety review."""
+import contextlib
+import datetime as dt
+import fcntl
+import hashlib
+import json
+import os
+import pwd
+from pathlib import Path
+import re
+import runpy
+import shutil
+import subprocess
+import sys
+import time
+
+APP = Path('/var/www/muzeum')
+STATE = Path('/var/lib/muzeum-deploy')
+BACKUPS = Path('/var/lib/harvj-backups/muzeum')
+UNITS = ('muzeum-web.service', 'muzeum-worker.service')
+SHA = re.compile(r'[a-f0-9]{40}')
+TOKEN = re.compile(r'[a-f0-9]{32}')
+
+
+def now():
+    return dt.datetime.now(dt.timezone.utc).isoformat()
+
+
+def write_json(path, value):
+    temporary = path.with_suffix('.tmp')
+    with temporary.open('w') as output:
+        os.fchmod(output.fileno(), 0o600)
+        json.dump(value, output, indent=2)
+        output.write('\n')
+        output.flush()
+        os.fsync(output.fileno())
+    temporary.replace(path)
+
+
+class Host:
+    def command(self, argv, *, env=None, cwd=None, input=None, timeout=900):
+        # Capture everything. Neither argv from a failure nor environment/stderr reaches logs.
+        result = subprocess.run(argv, env=env, cwd=cwd, input=input, capture_output=True, timeout=timeout)
+        if result.returncode:
+            STATE.mkdir(mode=0o700, parents=True, exist_ok=True)
+            diagnostic = STATE / 'command-last-error'
+            diagnostic.write_bytes(result.stderr[-65536:])
+            diagnostic.chmod(0o600)
+            raise RuntimeError('Command failed; inspect protected command-last-error')
+        return result.stdout.decode()
+
+    def revision(self):
+        sha = (APP / 'current/REVISION').read_text().strip()
+        if not SHA.fullmatch(sha):
+            raise RuntimeError('Invalid current revision')
+        return sha
+
+    def release(self, path, sha):
+        release = Path(path).resolve(strict=True)
+        if release.parent != APP / 'releases' or not re.fullmatch(r'[0-9]{14}', release.name):
+            raise RuntimeError('Unexpected release path')
+        if (release / 'REVISION').read_text().strip() != sha:
+            raise RuntimeError('Release revision mismatch')
+        return release
+
+    def published(self, release, sha):
+        return (APP / 'current').resolve(strict=True) == self.release(release, sha) and self.revision() == sha
+
+    def preflight(self):
+        for helper in (Path(__file__).resolve(), Path(__file__).resolve().with_name('inspect.rb'), Path('/usr/local/sbin/muzeum-migrate')):
+            info = helper.stat()
+            if info.st_uid != 0 or info.st_mode & 0o022:
+                raise RuntimeError('Deployment/migration helpers must be root-owned and immutable to runtime')
+        runtime_uid = pwd.getpwnam('muzeum').pw_uid
+        for cache in (APP / 'releases').glob('*/tmp/cache/bootsnap'):
+            if any(path.is_dir() and path.stat().st_uid != runtime_uid for path in [cache, *cache.rglob('*')]):
+                raise RuntimeError('Legacy Bootsnap cache ownership requires operator repair before deployment')
+        for name in ('/var/www/muzeum/shared/.env', '/etc/muzeum/migrate.env',
+                     '/etc/muzeum/backup.pgpass', '/etc/harvj-backups/muzeum/config.json'):
+            path = Path(name)
+            if path.is_symlink() or not path.is_file() or path.stat().st_mode & 0o077:
+                raise RuntimeError('Protected configuration unavailable or unsafe')
+        if shutil.disk_usage(APP).free < 8 * 1024**3:
+            raise RuntimeError('Insufficient deployment/recovery headroom')
+        self.backup_api()  # Validate repository identity/scope and independent recovery escrow.
+        self.command(['/usr/local/lib/harvj-backups/muzeum-backup', 'monitor'])
+        self.health()
+        backup = json.loads((BACKUPS / 'state/last-backup.json').read_text())
+        restored = json.loads((BACKUPS / 'state/last-production-restore.json').read_text())
+        if restored.get('databases_verified') != 4:
+            raise RuntimeError('Existing four-database recovery evidence required')
+        return {'revision': self.revision(), 'health': 'passed', 'backup_reference': backup['snapshot_id'],
+                'recovery_reference': restored['snapshot_id'], 'recovered_at': restored['verified_at']}
+
+    def health(self):
+        for attempt in range(10):
+            try:
+                self.health_once()
+                return
+            except RuntimeError:
+                if attempt == 9:
+                    raise
+                time.sleep(1)
+
+    def health_once(self):
+        self.command(['systemctl', 'is-active', *UNITS])
+        self.command(['curl', '--fail', '--silent', '--show-error', '--max-time', '10',
+                      '--retry', '10', '--retry-connrefused', '--retry-delay', '1',
+                      '-H', 'Host: muzeum.fm', '-H', 'X-Forwarded-Proto: https', 'http://127.0.0.1:3011/up'])
+        self.command(['/usr/local/sbin/check-muzeum-runtime', 'status'])
+        # Runtime verifies all four database connections, grants, versions and source protections.
+        inspection = self.inspect((APP / 'current').resolve(), health=True)
+        if inspection['pending']:
+            raise RuntimeError('Published application has pending migrations')
+
+    def inspect(self, release, health=False):
+        values = {}
+        for line in (APP / 'shared/.env').read_text().splitlines():
+            if line.strip():
+                key, value = line.split('=', 1)
+                values[key] = value
+        from urllib.parse import urlsplit
+        for key, database in zip(('DATABASE_URL', 'CACHE_DATABASE_URL', 'QUEUE_DATABASE_URL', 'CABLE_DATABASE_URL'),
+                                 ('muzeum_production', 'muzeum_production_cache', 'muzeum_production_queue', 'muzeum_production_cable')):
+            url = urlsplit(values[key])
+            if url.hostname != '127.0.0.1' or url.username != 'muzeum_runtime' or url.path != '/' + database:
+                raise RuntimeError('Unexpected runtime database boundary')
+        env = dict(values, PATH='/opt/auth/ruby-3.4.12/bin:/usr/bin:/bin', HOME='/home/muzeum',
+                   BUNDLE_GEMFILE=str(release / 'Gemfile'), BUNDLE_IGNORE_CONFIG='1', BUNDLE_DEPLOYMENT='true',
+                   BUNDLE_FROZEN='true', BUNDLE_WITHOUT='development:test', BOOTSNAP_READONLY='1',
+                   PGOPTIONS='-c default_transaction_read_only=on -c statement_timeout=120000',
+                   MUZEUM_DEPLOY_CHECK_HEALTH='1' if health else '0')
+        script = Path(__file__).resolve().with_name('inspect.rb').read_bytes()
+        output = self.command(['runuser', '-u', 'muzeum', '--', '/opt/auth/ruby-3.4.12/bin/bundle',
+                               'exec', 'rails', 'runner', '-'], cwd=release, env=env, input=script)
+        line = next(line for line in output.splitlines() if line.startswith('MUZEUM_DEPLOY_INSPECTION:'))
+        return json.loads(line.split(':', 1)[1])
+
+    def backup_api(self):
+        sys.path.insert(0, '/usr/local/lib/harvj-backups')
+        import production_capture
+        api = runpy.run_path('/usr/local/lib/harvj-backups/muzeum-backup')
+        config = api['load_config'](Path('/etc/harvj-backups/muzeum/config.json'))
+        production_capture.validate(config)
+        return api, config
+
+    @contextlib.contextmanager
+    def backup_lock(self):
+        # Existing host lock also excludes scheduled capture/restore pauses during each phase.
+        with (BACKUPS.parent / 'backup.lock').open('a') as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            yield
+
+    def backup_restore(self, sha):
+        api, config = self.backup_api()
+        import monitoring
+        import production_restore
+        # Existing implementations, same encryption/escrow/monitoring; caller owns the host lock.
+        before = now()
+        with monitoring.job_run('backup'):
+            api['do_action'](config, 'backup')
+        receipt = json.loads((BACKUPS / 'state/last-backup.json').read_text())
+        if receipt['completed_at'] < before or not re.fullmatch(r'[a-f0-9]{64}', receipt['snapshot_id']):
+            raise RuntimeError('Fresh production backup receipt required')
+        production_restore.restore(config, api)
+        restored = json.loads((BACKUPS / 'state/last-production-restore.json').read_text())
+        if (restored['snapshot_id'] != receipt['snapshot_id'] or restored['release_sha'] != sha
+                or restored['databases_verified'] != 4 or restored['verified_at'] < before):
+            raise RuntimeError('Matching fresh four-database recovery receipt required')
+        return {'snapshot_id': receipt['snapshot_id'], 'manifest_sha256': receipt['manifest_sha256'],
+                'restored_at': restored['verified_at'], 'release_sha': sha}
+
+    def fingerprint(self, specification=None):
+        # SELECT-only backup identity. Compare original columns, so additive columns are permitted.
+        import production_capture as capture
+        result = {}
+        for database in capture.DATABASES:
+            old = specification.get(database) if specification else None
+            tables = old or {table: None for table in capture.query(database,
+                "SELECT tablename FROM pg_tables WHERE schemaname='public' AND tablename NOT IN ('schema_migrations','ar_internal_metadata') ORDER BY tablename").splitlines()}
+            result[database] = {}
+            for table, original in tables.items():
+                if not re.fullmatch(r'[a-z_][a-z0-9_]*', table):
+                    raise RuntimeError('Unexpected evidence table')
+                columns = original['columns'] if original else capture.query(database,
+                    "SELECT column_name FROM information_schema.columns WHERE table_schema='public' AND table_name='" + table + "' ORDER BY ordinal_position").splitlines()
+                if not columns or any(not re.fullmatch(r'[a-z_][a-z0-9_]*', col) for col in columns):
+                    raise RuntimeError('Unexpected evidence columns')
+                projection = ','.join('"' + col + '"' for col in columns)
+                sql = 'COPY (SELECT row_to_json(t)::text FROM (SELECT ' + projection + ' FROM "' + table + '") t ORDER BY row_to_json(t)::text COLLATE "C") TO STDOUT'
+                argv = ['psql', '-XAt', '-v', 'ON_ERROR_STOP=1', '-h', '127.0.0.1', '-U', 'muzeum_backup', '-d', database, '-c', sql]
+                digest = hashlib.sha256()
+                with subprocess.Popen(argv, env=capture.environment(), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL) as process:
+                    for chunk in iter(lambda: process.stdout.read(65536), b''):
+                        digest.update(chunk)
+                    if process.wait(timeout=180):
+                        raise RuntimeError('Evidence fingerprint failed')
+                result[database][table] = {'columns': columns, 'sha256': digest.hexdigest()}
+        return result
+
+    def withdraw(self, sha):
+        self.command(['/usr/local/sbin/muzeum-site', 'withdraw', sha])
+
+    def migrate(self, release, sha):
+        expected = hashlib.sha256((release / 'ops/provision/muzeum-migrate').read_bytes()).hexdigest()
+        if hashlib.sha256(Path('/usr/local/sbin/muzeum-migrate').read_bytes()).hexdigest() != expected:
+            raise RuntimeError('Reviewed migration helper must be installed first')
+        self.command(['/usr/local/sbin/muzeum-migrate', str(release), sha])
+
+    def start(self):
+        self.command(['systemctl', 'restart', *UNITS])
+
+    def activate(self, sha):
+        self.command(['/usr/local/sbin/muzeum-site', 'activate', sha])
+        self.command(['curl', '--fail', '--silent', '--max-time', '10', 'https://muzeum.fm/up'])
+
+    def stop(self):
+        self.command(['systemctl', 'stop', *UNITS])
+
+
+def reviewed_migrations(release, pending):
+    manifest = json.loads((release / 'config/deploy/migrations.json').read_text())
+    if manifest.get('format') != 1:
+        raise RuntimeError('Unsupported migration review manifest')
+    for item in pending:
+        path = item['path']
+        if not re.fullmatch(r'db/(?:migrate|cache_migrate|queue_migrate|cable_migrate)/[0-9]+_[a-z0-9_]+\.rb', path):
+            raise RuntimeError('Unexpected migration path')
+        review = manifest['migrations'].get(path, {})
+        if (review.get('sha256') != item['sha256'] or review.get('risk') != 'additive'
+                or review.get('quiesce') is not True or not review.get('review')):
+            raise RuntimeError('Pending migration needs a matching additive review manifest')
+
+
+class Deployment:
+    def __init__(self, host, root=STATE):
+        self.host, self.root = host, root
+
+    def save(self, record):
+        write_json(self.root / (record['token'] + '.json'), record)
+        write_json(self.root / 'active.json', record)
+
+    def run(self, phase, sha, token, path=None):
+        if not SHA.fullmatch(sha) or not TOKEN.fullmatch(token):
+            raise RuntimeError('Immutable SHA and deployment token required')
+        self.root.mkdir(mode=0o700, parents=True, exist_ok=True)
+        with (self.root / 'phase.lock').open('a') as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            active = self.root / 'active.json'
+            if phase == 'begin':
+                if active.exists():
+                    raise RuntimeError('Deployment lock retained; inspect active.json before operator recovery')
+                record = {'sha': sha, 'token': token, 'started_at': now(), 'phase': 'preflight', 'migrating': False, 'withdrawn': False}
+                self.save(record)
+            else:
+                record = json.loads(active.read_text())
+                if record['sha'] != sha or record['token'] != token:
+                    raise RuntimeError('Deployment lock identity mismatch')
+                if record['phase'] == 'failed' and phase == 'fail':
+                    return record
+                if record['phase'] == 'failed' and phase != 'fail':
+                    raise RuntimeError('Failed deployment requires operator recovery')
+            try:
+                # Serialize against scheduled backups; never test health during an intentional pause.
+                with self.host.backup_lock():
+                    if phase == 'begin':
+                        record['baseline'] = self.host.preflight()
+                        record['phase'] = 'prepared_checkout'
+                    elif phase == 'prepare':
+                        if record['phase'] != 'prepared_checkout':
+                            raise RuntimeError('Unexpected prepare transition')
+                        release = self.host.release(path, sha)
+                        record['release'] = str(release)
+                        before = self.host.inspect(release)
+                        reviewed_migrations(release, before['pending'])
+                        record['migrations'] = before['pending']
+                        if before['pending']:
+                            # Persist intent BEFORE withdrawing or executing any migration.
+                            record['migrating'] = True
+                            self.save(record)
+                            self.host.withdraw(record['baseline']['revision'])
+                            record['withdrawn'] = True
+                            self.save(record)
+                            record['pre_backup'] = self.host.backup_restore(record['baseline']['revision'])
+                            record['evidence'] = self.host.fingerprint()
+                            self.save(record)
+                            self.host.migrate(release, sha)
+                            after = self.host.inspect(release)
+                            if after['pending'] or self.host.fingerprint(record['evidence']) != record['evidence']:
+                                raise RuntimeError('Migration changed existing evidence or left pending migrations')
+                            for name, database in before['databases'].items():
+                                for kind in ('triggers', 'indexes', 'constraints'):
+                                    if any(value not in after['databases'][name].get(kind, []) for value in database.get(kind, [])):
+                                        raise RuntimeError('Existing source protections/indexes/constraints changed')
+                            record['schema_verified_at'] = now()
+                            record['schema_versions'] = {name: value['versions'] for name, value in after['databases'].items() if 'versions' in value}
+                        record['phase'] = 'ready_to_publish'
+                    elif phase == 'finish':
+                        if record['phase'] != 'ready_to_publish' or not self.host.published(record['release'], sha):
+                            raise RuntimeError('Publication did not select the exact candidate')
+                        self.host.release(record['release'], sha)
+                        self.host.start()
+                        self.host.health()
+                        if record['migrating']:
+                            record['post_backup'] = self.host.backup_restore(sha)
+                            self.host.health()
+                            record['withdrawn'] = False
+                            self.save(record)
+                            self.host.activate(sha)
+                        record['health'] = 'passed'
+                        record['phase'] = 'verified'
+                    elif phase == 'complete':
+                        if record['phase'] != 'verified' or not self.host.published(record['release'], sha):
+                            raise RuntimeError('Unexpected completion transition')
+                        self.host.health()
+                        record['phase'] = 'complete'
+                        record['completed_at'] = now()
+                    elif phase == 'fail':
+                        raise RuntimeError('Capistrano reported a deployment failure')
+                    else:
+                        raise RuntimeError('Unknown deployment phase')
+                self.save(record)
+                if record['phase'] == 'complete':
+                    active.unlink()
+                return record
+            except Exception as error:
+                # Never roll back code/schema or restore data. Preserve a root-only audit and lock.
+                record['failed_phase'] = phase
+                record['phase'] = 'failed'
+                record['failure_at'] = now()
+                record['diagnostic'] = str(error) if isinstance(error, RuntimeError) else type(error).__name__
+                self.save(record)
+                # Once migration may have run, old code must never resume. After publication,
+                # withdraw the exact current candidate if its restart/health checks failed.
+                if record['migrating'] or (record.get('baseline') and self.host.revision() != record['baseline']['revision']):
+                    route_ok = record['withdrawn']
+                    try:
+                        if not route_ok:
+                            self.host.withdraw(self.host.revision())
+                            record['withdrawn'] = route_ok = True
+                    except Exception:
+                        pass
+                    try:
+                        self.host.stop()
+                        record['safe_state'] = ('route withdrawn; ' if route_ok else 'route requires operator inspection; ') + 'Muzeum services stopped; data retained'
+                    except Exception:
+                        record['safe_state'] = 'Manual Muzeum-only withdrawal required; inspect services and route immediately'
+                else:
+                    record['safe_state'] = 'Prior application retained; verify health before releasing lock'
+                self.save(record)
+                raise RuntimeError('Deployment stopped; root-only receipt ' + str(self.root / (token + '.json')) + '; ' + record['safe_state']) from None
+
+
+def main():
+    os.umask(0o077)
+    if os.geteuid() != 0:
+        raise RuntimeError('Root-owned installed helper required')
+    if sys.argv[1:] == ['version']:
+        print(hashlib.sha256(Path(__file__).resolve().read_bytes() + Path(__file__).resolve().with_name('inspect.rb').read_bytes()).hexdigest())
+        return
+    if len(sys.argv) not in (4, 5):
+        raise RuntimeError('Expected phase SHA token [release]')
+    record = Deployment(Host()).run(*sys.argv[1:])
+    # No subprocess output, environments or opaque grants are published.
+    print(json.dumps({key: record[key] for key in ('sha', 'token', 'phase', 'baseline', 'migrations', 'pre_backup', 'post_backup', 'health', 'safe_state') if key in record}))
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except Exception as error:
+        print(str(error) if isinstance(error, RuntimeError) else 'Deployment stopped; protected operator inspection required', file=sys.stderr)
+        raise SystemExit(1)

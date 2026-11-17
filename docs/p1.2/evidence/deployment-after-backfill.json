@@ -1,0 +1,84 @@
+{
+  "audited_at": "2026-11-17T15:55:37Z",
+  "revision": "8942bc41ae76f3c4e3d63a20552b0541c5cd3412",
+  "read_only": "on",
+  "counts": {
+    "users": 1,
+    "scrobbles": 292852,
+    "raw_pages": 1465,
+    "missing_fingerprint": 0,
+    "missing_raw_page": 0,
+    "distinct_fingerprints": 292852
+  },
+  "same_second": {
+    "buckets": 1041,
+    "observations": "2245.0"
+  },
+  "preserved_source_digest_v1": "6fad7868cb769fb1229fa3149c4a3269c98886b7b0684f800d531d0e1b5c3041",
+  "id_range": [
+    1,
+    292852
+  ],
+  "runs": [
+    {
+      "id": 1,
+      "status": "completed",
+      "actor_lineage_user_id": 1,
+      "upper_bound": 1794889542,
+      "expected_count": 292852,
+      "inserted": 292852,
+      "total_pages": 1465,
+      "next_page": 1466,
+      "last_error": null,
+      "last_success_at": "2026-11-17 05:40:35 UTC",
+      "stored_pages": 1465,
+      "page_range": [
+        1,
+        1465
+      ],
+      "missing_pages": [],
+      "source_totals": [
+        "292852"
+      ],
+      "distinct_source_tuples": 292852,
+      "evidence": {
+        "delivered": 292852,
+        "timestamped": 292852,
+        "archive_not_on_first_raw_page": 0
+      },
+      "page_manifest_digest_v1": "f007312317f9131b38307578abce20d8aeef9354fd2d5ef8e6e86d21508d44cb"
+    }
+  ],
+  "immutability_triggers": [
+    {
+      "relname": "import_pages",
+      "tgname": "preserve_raw_page",
+      "tgenabled": "O",
+      "function_md5": "d59c2e18c20d7a534b3c78497e31a55f"
+    },
+    {
+      "relname": "import_pages",
+      "tgname": "retain_truncate_import_pages",
+      "tgenabled": "O",
+      "function_md5": "d59c2e18c20d7a534b3c78497e31a55f"
+    },
+    {
+      "relname": "scrobbles",
+      "tgname": "preserve_scrobble_identifier",
+      "tgenabled": "O",
+      "function_md5": "91d88ef32203c9893f6c091cf1f0565d"
+    },
+    {
+      "relname": "scrobbles",
+      "tgname": "preserve_scrobble_source",
+      "tgenabled": "O",
+      "function_md5": "d59c2e18c20d7a534b3c78497e31a55f"
+    },
+    {
+      "relname": "scrobbles",
+      "tgname": "retain_truncate_scrobbles",
+      "tgenabled": "O",
+      "function_md5": "d59c2e18c20d7a534b3c78497e31a55f"
+    }
+  ]
+}

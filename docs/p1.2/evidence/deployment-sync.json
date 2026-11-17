@@ -1,0 +1,65 @@
+{
+  "revision": "8942bc41ae76f3c4e3d63a20552b0541c5cd3412",
+  "enabled": "1",
+  "account": {
+    "id": 1,
+    "username": "qalephd",
+    "state": "active",
+    "sync_enabled": true,
+    "synced_through": 1794931270,
+    "latest_scrobble_at": "2026-11-17 15:58:34 UTC",
+    "next_poll_at": "2026-11-17 16:02:02 UTC",
+    "last_successful_poll_at": "2026-11-17 16:01:17 UTC",
+    "failure_count": 0,
+    "last_error": null
+  },
+  "observations": 292855,
+  "original_observations": 292852,
+  "request_interval": 1.0,
+  "runs": [
+    {
+      "id": 2,
+      "kind": "incremental",
+      "actor_kind": "scheduler",
+      "status": "completed",
+      "lower_bound": 1794716742,
+      "upper_bound": 1794931270,
+      "next_page": 2,
+      "total_pages": 1,
+      "scrobbles_processed": 3,
+      "last_error": null,
+      "retry_count": 0
+    },
+    {
+      "id": 1,
+      "kind": "historical",
+      "actor_kind": "legacy",
+      "status": "completed",
+      "lower_bound": null,
+      "upper_bound": 1794889542,
+      "next_page": 1466,
+      "total_pages": 1465,
+      "scrobbles_processed": 292852,
+      "last_error": null,
+      "retry_count": 0
+    }
+  ],
+  "fetches": [
+    [
+      "2026-11-17 16:01:17 UTC",
+      "response",
+      1,
+      "boundary"
+    ],
+    [
+      "2026-11-17 16:01:15 UTC",
+      "response",
+      1,
+      "main"
+    ]
+  ],
+  "issues": {
+    "now_playing": 2,
+    "repeat": 2
+  }
+}

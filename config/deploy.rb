@@ -2,7 +2,7 @@ lock "~> 3.20"
 set :application, "muzeum"
 set :repo_url, "git@github.com:harvj/muzeum.git"
 set :deploy_to, "/var/www/muzeum"
-set :branch, ENV["APPROVED_SHA"]
+set :branch, -> { fetch(:approved_revision) }
 set :keep_releases, 5
 set :bundle_flags, "--quiet"
 append :linked_files, ".env"
@@ -16,52 +16,61 @@ set :assets_manifests, [ "public/assets/.manifest.json" ]
 set :rails_env, "production"
 set :assets_roles, [ :web ]
 set :default_env, fetch(:default_env).merge("PATH" => "/home/muzeum/.rbenv/shims:/home/muzeum/.rbenv/bin:$PATH", "SECRET_KEY_BASE_DUMMY" => "1")
-set :ssh_options, { forward_agent: false, verify_host_key: :always }
+set :ssh_options, { forward_agent: false, verify_host_key: :always, auth_methods: %w[publickey], non_interactive: true }
+
+require_relative "../lib/muzeum_deployment_revision"
+require "digest"
+require "securerandom"
 
 namespace :muzeum do
   task :authorize do
-    abort "Explicit approval required: APPROVAL_REF and full APPROVED_SHA" unless
-      ENV["APPROVAL_REF"].to_s.match?(/\S/) && ENV["APPROVED_SHA"].to_s.match?(/\A[0-9a-f]{40}\z/)
-    abort "Server provisioning/runtime/backup review is not complete" unless ENV["INFRASTRUCTURE_READY"] == "yes"
-  end
-
-  desc "Migrate the prepared release only with explicit migration and backup approval"
-  task :migrate do
-    invoke "muzeum:authorize"
-    abort "Explicit migration/backup approval required" unless ENV["MIGRATION_APPROVAL_REF"].to_s.match?(/\S/) && ENV["BACKUP_ID"].to_s.match?(/\S/)
-    invoke "muzeum:verify_release"
+    approval = MuzeumDeploymentRevision.resolve!
+    set :approved_revision, approval.fetch(:sha)
+    set :branch, approval.fetch(:sha)
+    set :deployment_token, SecureRandom.hex(16)
+    info "Muzeum immutable revision #{fetch(:approved_revision)}; CI #{approval.fetch(:ci)}"
     on primary(:app) do
-      within release_path do
-        # shared .env.migrate is shell-compatible; never echo it or pass secrets in argv.
-        execute :sudo, "-n", "/usr/local/sbin/muzeum-migrate", release_path, ENV.fetch("APPROVED_SHA")
-      end
+      installed = capture(:sudo, "-n", "/usr/local/sbin/muzeum-deploy", "version").strip
+      expected = Digest::SHA256.hexdigest(File.binread(File.expand_path("../ops/deploy/muzeum_deploy.py", __dir__)) + File.binread(File.expand_path("../ops/deploy/inspect.rb", __dir__)))
+      abort "Reviewed deployment helper is not installed; complete separate safety review first" unless installed == expected
+      execute :sudo, "-n", "/usr/local/sbin/muzeum-deploy", "begin", fetch(:approved_revision), fetch(:deployment_token)
+      set :deployment_lock_acquired, true
     end
   end
 
-  task :verify_release do
-    on roles(:app) do
-      execute :test, "$(cat #{release_path}/REVISION)", "=", ENV.fetch("APPROVED_SHA")
+  task :prepare do
+    on primary(:app) do
+      execute :sudo, "-n", "/usr/local/sbin/muzeum-deploy", "prepare", fetch(:approved_revision), fetch(:deployment_token), release_path
     end
   end
 
-  task :restart do
-    on roles(:app) do
-      execute :sudo, "-n", :systemctl, :restart, "muzeum-web.service", "muzeum-worker.service"
+  task :finish do
+    on primary(:app) do
+      execute :sudo, "-n", "/usr/local/sbin/muzeum-deploy", "finish", fetch(:approved_revision), fetch(:deployment_token)
     end
   end
 
-  task :verify do
-    on roles(:app) do
-      execute :test, "$(cat #{current_path}/REVISION)", "=", ENV.fetch("APPROVED_SHA")
-      execute :systemctl, "is-active", "muzeum-web.service", "muzeum-worker.service"
-      execute "test $(curl --fail --silent --show-error --retry 10 --retry-connrefused --retry-delay 1 --retry-max-time 20 --output /dev/null --write-out '%{http_code}' -H 'Host: muzeum.fm' -H 'X-Forwarded-Proto: https' http://127.0.0.1:3011/up) = 200"
+  task :complete do
+    on primary(:app) do
+      execute :sudo, "-n", "/usr/local/sbin/muzeum-deploy", "complete", fetch(:approved_revision), fetch(:deployment_token)
+      set :deployment_lock_acquired, false
     end
+  end
+
+  task :failed do
+    next unless fetch(:deployment_lock_acquired, false)
+    on primary(:app) do
+      execute :sudo, "-n", "/usr/local/sbin/muzeum-deploy", "fail", fetch(:approved_revision), fetch(:deployment_token)
+    end
+  end
+
+  task :refuse_rollback do
+    abort "Automatic rollback is unavailable: review a schema-compatible forward deployment; never reverse migrations or restore live data automatically"
   end
 end
 before "deploy:starting", "muzeum:authorize"
-before "deploy:reverting", "muzeum:authorize"
-before "deploy:publishing", "muzeum:verify_release"
-after "deploy:updated", "muzeum:migrate"
-after "deploy:published", "muzeum:restart"
-after "deploy:finished", "muzeum:verify"
-after "deploy:finishing_rollback", "muzeum:verify"
+before "deploy:reverting", "muzeum:refuse_rollback"
+after "deploy:updated", "muzeum:prepare"
+after "deploy:published", "muzeum:finish"
+after "deploy:finished", "muzeum:complete"
+after "deploy:failed", "muzeum:failed"

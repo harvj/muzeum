@@ -1,0 +1,1035 @@
+{
+  "revision": "8942bc41ae76f3c4e3d63a20552b0541c5cd3412",
+  "versions": [
+    "20260112213929",
+    "20260113142421",
+    "20260113152343",
+    "20260113162103",
+    "20260114024325",
+    "20260116164231",
+    "20260117202859",
+    "20260117205410",
+    "20260121151132",
+    "20260122195903",
+    "20260122224844",
+    "20260123043345",
+    "20260123044632",
+    "20260123172731",
+    "20260128223604",
+    "20261116010000",
+    "20261116120000",
+    "20261116121000",
+    "20261117150000",
+    "20261117150100",
+    "20261117150200"
+  ],
+  "scrobbles": 292852,
+  "pages": 1465,
+  "commits": 1465,
+  "deliveries": {
+    "legacy_first": 292852
+  },
+  "accounts": [
+    {
+      "id": 1,
+      "username": "qalephd",
+      "state": "active",
+      "sync_enabled": false,
+      "synced_through": 1794889542
+    }
+  ],
+  "indexes": [
+    {
+      "name": "ar_internal_metadata_pkey",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "artists_pkey",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "daily_listens_pkey",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "due_lastfm_accounts",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "import_pages_pkey",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "import_runs_pkey",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_artists_on_mbid",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_artists_on_name",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_daily_listens_on_recording_id",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_daily_listens_on_user_id",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_daily_listens_on_user_id_and_date",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_daily_listens_on_user_id_and_recording_id",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_daily_listens_on_user_id_and_recording_id_and_date",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_daily_listens_on_year",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_import_pages_on_import_run_id",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_import_pages_on_import_run_id_and_number",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_import_runs_on_created_at",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_import_runs_on_lastfm_account_id",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_import_runs_on_range_end_at",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_import_runs_on_user_and_range",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_import_runs_on_user_id",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_ingestion_budgets_on_name",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_ingestion_issues_on_import_run_id",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_ingestion_issues_on_lastfm_account_id",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_ingestion_issues_on_source_fetch_id",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_lastfm_account_names_on_lastfm_account_id",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_lastfm_account_names_on_lookup_key",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_lastfm_accounts_on_archive_user_id",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_lastfm_accounts_on_identity_key",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_lastfm_accounts_on_lookup_key",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_oidc_attempts_on_state",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_page_commits_on_import_page_id",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_page_commits_on_source_fetch_id",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_recording_artists_on_artist_id",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_recording_artists_on_recording_id",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_recording_artists_on_recording_id_and_artist_id",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_recordings_on_mbid",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_recordings_on_title",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_recording_surfaces_on_artist_mbid",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_recording_surfaces_on_normalized_key",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_recording_surfaces_on_recording_id",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_recording_surfaces_on_track_mbid",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_release_artists_on_artist_id",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_release_artists_on_release_id",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_release_artists_on_release_id_and_artist_id",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_release_recordings_on_recording_id",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_release_recordings_on_release_id",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_release_recordings_on_release_id_and_position",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_release_recordings_on_release_id_and_recording_id",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_releases_on_ingested_from_release_mbid",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_releases_on_release_group_mbid",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_scrobbles_on_import_page_id",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_scrobbles_on_lastfm_account_id",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_scrobbles_on_lastfm_account_id_and_played_at_and_id",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_scrobbles_on_lastfm_account_id_and_source_fingerprint",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_scrobbles_on_played_at",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_scrobbles_on_recording_id",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_scrobbles_on_recording_surface_id",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_scrobbles_on_user_id",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_scrobbles_on_user_id_and_played_at",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_scrobbles_on_user_id_and_source_fingerprint",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_sessions_on_expires_at",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_sessions_on_user_id",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_source_deliveries_on_lastfm_account_id",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_source_deliveries_on_scrobble_id",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_source_deliveries_on_source_fetch_id",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_source_deliveries_on_source_fetch_id_and_position",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_source_fetches_on_import_run_id",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_source_fetches_on_lastfm_account_id",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_source_fetches_on_legacy_import_page_id",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_user_lastfm_accounts_on_lastfm_account_id",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_user_lastfm_accounts_on_user_id",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_user_lastfm_accounts_on_user_id_and_lastfm_account_id",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_users_on_normalized_email",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_users_on_oidc_issuer_and_oidc_subject",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "index_user_timezones_on_user_id",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "ingestion_budgets_pkey",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "ingestion_issues_pkey",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "lastfm_account_names_pkey",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "lastfm_accounts_pkey",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "oidc_attempts_pkey",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "one_active_import_per_account",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "page_commits_pkey",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "recording_artists_pkey",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "recordings_pkey",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "recording_surfaces_pkey",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "release_artists_pkey",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "release_recordings_pkey",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "releases_pkey",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "schema_migrations_pkey",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "scrobbles_pkey",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "sessions_pkey",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "source_deliveries_pkey",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "source_fetches_pkey",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "user_lastfm_accounts_pkey",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "users_pkey",
+      "indisvalid": true,
+      "indisready": true
+    },
+    {
+      "name": "user_timezones_pkey",
+      "indisvalid": true,
+      "indisready": true
+    }
+  ],
+  "constraints": [
+    {
+      "conname": "ar_internal_metadata_pkey",
+      "convalidated": true
+    },
+    {
+      "conname": "artists_pkey",
+      "convalidated": true
+    },
+    {
+      "conname": "daily_listens_pkey",
+      "convalidated": true
+    },
+    {
+      "conname": "fk_rails_00389e2abb",
+      "convalidated": true
+    },
+    {
+      "conname": "fk_rails_09d5917322",
+      "convalidated": true
+    },
+    {
+      "conname": "fk_rails_0f75bd4a1e",
+      "convalidated": true
+    },
+    {
+      "conname": "fk_rails_1465a00657",
+      "convalidated": true
+    },
+    {
+      "conname": "fk_rails_23b29f2a8f",
+      "convalidated": true
+    },
+    {
+      "conname": "fk_rails_2901fe8f5e",
+      "convalidated": true
+    },
+    {
+      "conname": "fk_rails_34b49bed2b",
+      "convalidated": true
+    },
+    {
+      "conname": "fk_rails_35b08045ae",
+      "convalidated": true
+    },
+    {
+      "conname": "fk_rails_4718593825",
+      "convalidated": true
+    },
+    {
+      "conname": "fk_rails_4e5508c5bb",
+      "convalidated": true
+    },
+    {
+      "conname": "fk_rails_58c044bcb1",
+      "convalidated": true
+    },
+    {
+      "conname": "fk_rails_662dad9174",
+      "convalidated": true
+    },
+    {
+      "conname": "fk_rails_693dddc660",
+      "convalidated": true
+    },
+    {
+      "conname": "fk_rails_6a8902e64d",
+      "convalidated": true
+    },
+    {
+      "conname": "fk_rails_6e29dbccab",
+      "convalidated": true
+    },
+    {
+      "conname": "fk_rails_715caed593",
+      "convalidated": true
+    },
+    {
+      "conname": "fk_rails_7184308464",
+      "convalidated": true
+    },
+    {
+      "conname": "fk_rails_726701e472",
+      "convalidated": true
+    },
+    {
+      "conname": "fk_rails_758836b4f0",
+      "convalidated": true
+    },
+    {
+      "conname": "fk_rails_79eb00a28c",
+      "convalidated": true
+    },
+    {
+      "conname": "fk_rails_8125fa0177",
+      "convalidated": true
+    },
+    {
+      "conname": "fk_rails_86b2e76ad1",
+      "convalidated": true
+    },
+    {
+      "conname": "fk_rails_91dfac599f",
+      "convalidated": true
+    },
+    {
+      "conname": "fk_rails_94899db3fe",
+      "convalidated": true
+    },
+    {
+      "conname": "fk_rails_9daefd50e1",
+      "convalidated": true
+    },
+    {
+      "conname": "fk_rails_aa664485cd",
+      "convalidated": true
+    },
+    {
+      "conname": "fk_rails_ac630f7ffa",
+      "convalidated": true
+    },
+    {
+      "conname": "fk_rails_ad49facee4",
+      "convalidated": true
+    },
+    {
+      "conname": "fk_rails_b3495516b0",
+      "convalidated": true
+    },
+    {
+      "conname": "fk_rails_dbc221d7c5",
+      "convalidated": true
+    },
+    {
+      "conname": "fk_rails_dcb1c83871",
+      "convalidated": true
+    },
+    {
+      "conname": "fk_rails_f336446026",
+      "convalidated": true
+    },
+    {
+      "conname": "import_pages_pkey",
+      "convalidated": true
+    },
+    {
+      "conname": "import_runs_pkey",
+      "convalidated": true
+    },
+    {
+      "conname": "ingestion_budgets_pkey",
+      "convalidated": true
+    },
+    {
+      "conname": "ingestion_issues_pkey",
+      "convalidated": true
+    },
+    {
+      "conname": "lastfm_account_names_pkey",
+      "convalidated": true
+    },
+    {
+      "conname": "lastfm_accounts_pkey",
+      "convalidated": true
+    },
+    {
+      "conname": "oidc_attempts_pkey",
+      "convalidated": true
+    },
+    {
+      "conname": "page_commits_pkey",
+      "convalidated": true
+    },
+    {
+      "conname": "recording_artists_pkey",
+      "convalidated": true
+    },
+    {
+      "conname": "recording_surfaces_pkey",
+      "convalidated": true
+    },
+    {
+      "conname": "recordings_pkey",
+      "convalidated": true
+    },
+    {
+      "conname": "release_artists_pkey",
+      "convalidated": true
+    },
+    {
+      "conname": "release_recordings_pkey",
+      "convalidated": true
+    },
+    {
+      "conname": "releases_pkey",
+      "convalidated": true
+    },
+    {
+      "conname": "schema_migrations_pkey",
+      "convalidated": true
+    },
+    {
+      "conname": "scrobbles_pkey",
+      "convalidated": true
+    },
+    {
+      "conname": "sessions_pkey",
+      "convalidated": true
+    },
+    {
+      "conname": "source_deliveries_pkey",
+      "convalidated": true
+    },
+    {
+      "conname": "source_fetches_pkey",
+      "convalidated": true
+    },
+    {
+      "conname": "user_lastfm_accounts_pkey",
+      "convalidated": true
+    },
+    {
+      "conname": "user_timezones_pkey",
+      "convalidated": true
+    },
+    {
+      "conname": "users_pkey",
+      "convalidated": true
+    },
+    {
+      "conname": "valid_ingestion_run",
+      "convalidated": true
+    },
+    {
+      "conname": "valid_lastfm_schedule",
+      "convalidated": true
+    },
+    {
+      "conname": "valid_source_delivery",
+      "convalidated": true
+    },
+    {
+      "conname": "valid_source_fetch",
+      "convalidated": true
+    },
+    {
+      "conname": "verified_source_fetch_checksum",
+      "convalidated": true
+    }
+  ],
+  "grants": [
+    {
+      "tablename": "ar_internal_metadata",
+      "dml": true,
+      "truncate": false
+    },
+    {
+      "tablename": "artists",
+      "dml": true,
+      "truncate": false
+    },
+    {
+      "tablename": "daily_listens",
+      "dml": true,
+      "truncate": false
+    },
+    {
+      "tablename": "import_pages",
+      "dml": true,
+      "truncate": false
+    },
+    {
+      "tablename": "import_runs",
+      "dml": true,
+      "truncate": false
+    },
+    {
+      "tablename": "ingestion_budgets",
+      "dml": true,
+      "truncate": false
+    },
+    {
+      "tablename": "ingestion_issues",
+      "dml": true,
+      "truncate": false
+    },
+    {
+      "tablename": "lastfm_account_names",
+      "dml": true,
+      "truncate": false
+    },
+    {
+      "tablename": "lastfm_accounts",
+      "dml": true,
+      "truncate": false
+    },
+    {
+      "tablename": "oidc_attempts",
+      "dml": true,
+      "truncate": false
+    },
+    {
+      "tablename": "page_commits",
+      "dml": true,
+      "truncate": false
+    },
+    {
+      "tablename": "recording_artists",
+      "dml": true,
+      "truncate": false
+    },
+    {
+      "tablename": "recording_surfaces",
+      "dml": true,
+      "truncate": false
+    },
+    {
+      "tablename": "recordings",
+      "dml": true,
+      "truncate": false
+    },
+    {
+      "tablename": "release_artists",
+      "dml": true,
+      "truncate": false
+    },
+    {
+      "tablename": "release_recordings",
+      "dml": true,
+      "truncate": false
+    },
+    {
+      "tablename": "releases",
+      "dml": true,
+      "truncate": false
+    },
+    {
+      "tablename": "schema_migrations",
+      "dml": true,
+      "truncate": false
+    },
+    {
+      "tablename": "scrobbles",
+      "dml": true,
+      "truncate": false
+    },
+    {
+      "tablename": "sessions",
+      "dml": true,
+      "truncate": false
+    },
+    {
+      "tablename": "source_deliveries",
+      "dml": true,
+      "truncate": false
+    },
+    {
+      "tablename": "source_fetches",
+      "dml": true,
+      "truncate": false
+    },
+    {
+      "tablename": "user_lastfm_accounts",
+      "dml": true,
+      "truncate": false
+    },
+    {
+      "tablename": "user_timezones",
+      "dml": true,
+      "truncate": false
+    },
+    {
+      "tablename": "users",
+      "dml": true,
+      "truncate": false
+    }
+  ],
+  "roles": [
+    {
+      "rolname": "muzeum_migrator",
+      "rolsuper": false,
+      "rolcreatedb": false,
+      "rolcreaterole": false
+    },
+    {
+      "rolname": "muzeum_runtime",
+      "rolsuper": false,
+      "rolcreatedb": false,
+      "rolcreaterole": false
+    }
+  ],
+  "triggers": [
+    {
+      "relname": "import_pages",
+      "tgname": "preserve_raw_page",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER preserve_raw_page BEFORE DELETE OR UPDATE ON public.import_pages FOR EACH ROW EXECUTE FUNCTION muzeum_preserve_source()"
+    },
+    {
+      "relname": "import_pages",
+      "tgname": "retain_truncate_import_pages",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER retain_truncate_import_pages BEFORE TRUNCATE ON public.import_pages FOR EACH STATEMENT EXECUTE FUNCTION muzeum_preserve_source()"
+    },
+    {
+      "relname": "import_runs",
+      "tgname": "preserve_run_origin",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER preserve_run_origin BEFORE UPDATE ON public.import_runs FOR EACH ROW EXECUTE FUNCTION muzeum_preserve_ingestion_identity()"
+    },
+    {
+      "relname": "ingestion_issues",
+      "tgname": "retain_ingestion_issues",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER retain_ingestion_issues BEFORE DELETE OR UPDATE ON public.ingestion_issues FOR EACH ROW EXECUTE FUNCTION muzeum_preserve_source()"
+    },
+    {
+      "relname": "ingestion_issues",
+      "tgname": "retain_truncate_ingestion_issues",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER retain_truncate_ingestion_issues BEFORE TRUNCATE ON public.ingestion_issues FOR EACH STATEMENT EXECUTE FUNCTION muzeum_preserve_source()"
+    },
+    {
+      "relname": "lastfm_account_names",
+      "tgname": "retain_lastfm_account_names",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER retain_lastfm_account_names BEFORE DELETE OR UPDATE ON public.lastfm_account_names FOR EACH ROW EXECUTE FUNCTION muzeum_preserve_source()"
+    },
+    {
+      "relname": "lastfm_account_names",
+      "tgname": "retain_truncate_lastfm_account_names",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER retain_truncate_lastfm_account_names BEFORE TRUNCATE ON public.lastfm_account_names FOR EACH STATEMENT EXECUTE FUNCTION muzeum_preserve_source()"
+    },
+    {
+      "relname": "lastfm_accounts",
+      "tgname": "preserve_source_account_identity",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER preserve_source_account_identity BEFORE UPDATE ON public.lastfm_accounts FOR EACH ROW EXECUTE FUNCTION muzeum_preserve_ingestion_identity()"
+    },
+    {
+      "relname": "page_commits",
+      "tgname": "retain_page_commits",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER retain_page_commits BEFORE DELETE OR UPDATE ON public.page_commits FOR EACH ROW EXECUTE FUNCTION muzeum_preserve_source()"
+    },
+    {
+      "relname": "page_commits",
+      "tgname": "retain_truncate_page_commits",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER retain_truncate_page_commits BEFORE TRUNCATE ON public.page_commits FOR EACH STATEMENT EXECUTE FUNCTION muzeum_preserve_source()"
+    },
+    {
+      "relname": "page_commits",
+      "tgname": "validate_page_commit",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER validate_page_commit BEFORE INSERT ON public.page_commits FOR EACH ROW EXECUTE FUNCTION muzeum_validate_page_commit()"
+    },
+    {
+      "relname": "scrobbles",
+      "tgname": "preserve_scrobble_identifier",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER preserve_scrobble_identifier BEFORE UPDATE ON public.scrobbles FOR EACH ROW EXECUTE FUNCTION muzeum_preserve_scrobble_identifier()"
+    },
+    {
+      "relname": "scrobbles",
+      "tgname": "preserve_scrobble_source",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER preserve_scrobble_source BEFORE DELETE OR UPDATE ON public.scrobbles FOR EACH ROW EXECUTE FUNCTION muzeum_preserve_source()"
+    },
+    {
+      "relname": "scrobbles",
+      "tgname": "retain_truncate_scrobbles",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER retain_truncate_scrobbles BEFORE TRUNCATE ON public.scrobbles FOR EACH STATEMENT EXECUTE FUNCTION muzeum_preserve_source()"
+    },
+    {
+      "relname": "source_deliveries",
+      "tgname": "retain_source_deliveries",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER retain_source_deliveries BEFORE DELETE OR UPDATE ON public.source_deliveries FOR EACH ROW EXECUTE FUNCTION muzeum_preserve_source()"
+    },
+    {
+      "relname": "source_deliveries",
+      "tgname": "retain_truncate_source_deliveries",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER retain_truncate_source_deliveries BEFORE TRUNCATE ON public.source_deliveries FOR EACH STATEMENT EXECUTE FUNCTION muzeum_preserve_source()"
+    },
+    {
+      "relname": "source_deliveries",
+      "tgname": "validate_delivery_account",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER validate_delivery_account BEFORE INSERT ON public.source_deliveries FOR EACH ROW EXECUTE FUNCTION muzeum_check_delivery_account()"
+    },
+    {
+      "relname": "source_fetches",
+      "tgname": "retain_source_fetches",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER retain_source_fetches BEFORE DELETE OR UPDATE ON public.source_fetches FOR EACH ROW EXECUTE FUNCTION muzeum_preserve_source()"
+    },
+    {
+      "relname": "source_fetches",
+      "tgname": "retain_truncate_source_fetches",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER retain_truncate_source_fetches BEFORE TRUNCATE ON public.source_fetches FOR EACH STATEMENT EXECUTE FUNCTION muzeum_preserve_source()"
+    }
+  ]
+}

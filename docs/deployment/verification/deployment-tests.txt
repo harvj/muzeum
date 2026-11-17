@@ -1,0 +1,30 @@
+test_all_four_schemas_grants_migration_versions_and_source_protection_pass (test_inspection.InspectionTests) ... ok
+test_missing_runtime_grant_is_rejected (test_inspection.InspectionTests) ... ok
+test_missing_source_protection_is_rejected (test_inspection.InspectionTests) ... ok
+test_stale_worker_heartbeat_is_rejected (test_inspection.InspectionTests) ... ok
+test_completed_process_retains_exit_status_without_printing_output (test_migration_process.MigrationProcessTests) ... ok
+test_timeout_terminates_the_entire_migration_process_group (test_migration_process.MigrationProcessTests) ... ok
+test_additive_migration_has_two_fresh_recovery_gates (test_workflow.DatabaseRehearsalTests) ... ok
+test_code_only_publication_failure_keeps_old_service_and_restart_failure_withdraws_new (test_workflow.DatabaseRehearsalTests) ... ok
+test_code_only_skips_backup_and_migration_and_keeps_route_available (test_workflow.DatabaseRehearsalTests) ... ok
+test_crash_lock_and_wrong_token_cannot_be_overridden (test_workflow.DatabaseRehearsalTests) ... ok
+test_dirty_migration_hash_and_destructive_reviews_are_refused_before_withdrawal (test_workflow.DatabaseRehearsalTests) ... ok
+test_evidence_or_source_protection_changes_block_publication (test_workflow.DatabaseRehearsalTests) ... ok
+test_failures_never_roll_back_or_restore_live_data (test_workflow.DatabaseRehearsalTests) ... ok
+test_post_backup_failure_stops_published_candidate (test_workflow.DatabaseRehearsalTests) ... ok
+test_real_backup_failure_does_not_run_migration (test_workflow.DatabaseRehearsalTests) ... ok
+test_real_failed_rails_transaction_is_not_reversed_or_published (test_workflow.DatabaseRehearsalTests) ... ok
+test_real_migration_failure_keeps_source_data_and_committed_schema (test_workflow.DatabaseRehearsalTests) ... ok
+test_additive_migration_has_two_fresh_recovery_gates (test_workflow.WorkflowTests) ... ok
+test_code_only_publication_failure_keeps_old_service_and_restart_failure_withdraws_new (test_workflow.WorkflowTests) ... ok
+test_code_only_skips_backup_and_migration_and_keeps_route_available (test_workflow.WorkflowTests) ... ok
+test_crash_lock_and_wrong_token_cannot_be_overridden (test_workflow.WorkflowTests) ... ok
+test_dirty_migration_hash_and_destructive_reviews_are_refused_before_withdrawal (test_workflow.WorkflowTests) ... ok
+test_evidence_or_source_protection_changes_block_publication (test_workflow.WorkflowTests) ... ok
+test_failures_never_roll_back_or_restore_live_data (test_workflow.WorkflowTests) ... ok
+test_post_backup_failure_stops_published_candidate (test_workflow.WorkflowTests) ... ok
+
+----------------------------------------------------------------------
+Ran 25 tests in 49.920s
+
+OK

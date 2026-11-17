@@ -13,21 +13,23 @@ curl --fail https://muzeum.fm/up
 
 `status` reports a read-only repeatable-read snapshot of real counts/checkpoints; `session` reports native grant validity and timestamps, never credentials. `/up` is liveness, not a worker/database guarantee. Inspect Muzeum-only journals without printing environment files. Private dashboard statistics require a valid local session and live provider admission within the 60-second cache.
 
-The import runs in Solid Queue on `imports`, separately from web. Leave the browser freely; refresh the dashboard for progress. Resume re-enqueues the durable checkpoint. Failed imports also offer restart/replay without deleting observations. API/history drift can require a restart. Do not change an archived username manually, seed users, enable MusicBrainz resolution, or run a full real archive locally. There is no automatic incremental-import schedule in this milestone.
+The import runs in Solid Queue on `imports`, separately from web. P1.2 continuous synchronization is active for the approved `qalephd` archive; authenticated dashboard updates appear automatically without refreshing. Resume re-enqueues the durable checkpoint. Failed imports also offer restart/replay without deleting observations. API/history drift can require a restart. Do not change an archived username manually, seed users, enable MusicBrainz resolution, or run a full real archive locally. The durable central scheduler uses bounded overlapping incremental windows and the shared one-start/second Last.fm budget. Source history/import and per-account grants remain authoritative. To stop unexpected synchronization, disable the global gate in protected configuration and restart only Muzeum; preserve all checkpoints/evidence. Do not start another historical import as a test.
 
 ## Deployment and rollback
 
-Use an immutable full SHA with passing CI and the existing Capistrano approval/backup guards. Runtime secrets are in protected shared `.env`; migration secrets are root-only `/etc/muzeum/migrate.env`. The constrained `muzeum-migrate` helper runs as `muzeum-migrate`, not the web identity. Runtime has DML only and no schema CREATE. No production reset/drop/schema-load/seeds during ordinary deployment.
+The standing routine command is:
 
 ```sh
-APPROVED_SHA=<full-sha> APPROVAL_REF=<approval-record> \
-INFRASTRUCTURE_READY=yes MIGRATION_APPROVAL_REF=<migration-review> BACKUP_ID=<verified-snapshot> \
-bundle exec cap production deploy
+cap production deploy
 ```
 
-Take and verify a fresh backup before migrations, and repeat capture/recovery after promotion. Restoration requires matching reviewed application code; stage that exact revision before recovery. Do not rotate durable keys or remove old releases/gems while a recovery drill uses them. The interpreter is the existing root-owned read-only Ruby 3.4.12; the Muzeum bundle is separate.
+Use `bundle exec cap production deploy` if the executable is not already Bundler-scoped. The command pins clean synchronized local `main`, verifies exact-SHA CI, acquires a Muzeum-only lock, checks production/credential/database readiness and detects pending Rails migrations. Its invocation authorizes reviewed ordinary additive migrations, without environment approval flags. Code-only deployment checks existing backup freshness and skips new recovery drills; migrations require matching file-hash review entries plus fresh encrypted backup/isolated four-database restoration before and after migration. Only Muzeum services/routes are controlled. Full behavior, review format, failures and lock recovery: [deployment workflow](../deployment/workflow.md).
 
-For a compatible, previously verified OIDC release, use reviewed Capistrano code rollback with its full target SHA and recheck authentication/jobs. Old password-only releases are not approved auth rollback targets. Capistrano never reverses schema/data automatically.
+**The new automation is implemented for separate safety review and is not installed/deployed in production.** Do not use it until that review and root-helper installation are authorized. Missing/different privileged helpers fail closed. [P1.2's exact-SHA deployment](../p1.2/deployment-2026-11-17.md) used the previous guarded Capistrano process, not the new automation; its approved application SHA remains `8942bc41ae76f3c4e3d63a20552b0541c5cd3412`.
+
+Runtime secrets remain in protected shared `.env`; migration secrets remain root-only `/etc/muzeum/migrate.env`. Migrations use `muzeum-migrate`, never runtime or superuser credentials. No production reset/drop/schema-load/seeds, automatic down migrations or automatic database restoration. P1.1 is not a compatible functional rollback target after P1.2's source-account transition. Prefer a reviewed compatible forward repair. Destructive data migrations, live restoration/cutover, credential rotation, other-app/shared-infrastructure and privileged-helper changes require separate approval.
+
+Restoration requires matching reviewed application code and independent recovery material. Do not rotate durable keys or remove releases/gems during a recovery drill. The interpreter remains the existing root-owned read-only Ruby 3.4.12; Muzeum's bundle is separate. A failed migration retains the schema/data and stops writers; do not expose old incompatible code. A failed readiness check retains a root-only diagnostic and safe-state receipt; no deployment lock is silently expired or stolen.
 
 First-deployment safety withdrawal:
 

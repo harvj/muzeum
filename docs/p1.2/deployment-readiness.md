@@ -1,5 +1,7 @@
 # P1.2 production approval packet
 
+**Deployment update, 2026-11-17:** approved exact SHA `8942bc41ae76f3c4e3d63a20552b0541c5cd3412` is deployed; synchronization and browser acceptance passed. [Production deployment/recovery evidence](deployment-2026-11-17.md). The readiness text below records the pre-deployment approval packet. Future single-command automation is implemented for separate safety review and has not been installed/deployed.
+
 **No P1.2 production migration, deployment, synchronization activation, service restart or backup-schedule change has been performed.** Production remains at `ab314224abb9be1b28b01c953fe093c4bddf2e72`. The only production actions were read-only archive inspection and reading existing health/recovery receipts. CE/Auth/other applications are outside this deployment.
 
 ## Migration impact

@@ -35,6 +35,14 @@ jobs:
       - run: bundle exec rspec
       - name: Verify backup helper tests
         run: python3 -m unittest discover -s ops/backups -p 'test_*.py'
+      - name: Install disposable recovery-test dependency
+        run: sudo apt-get update && sudo apt-get install -y restic
+      - name: Rehearse Muzeum deploy success and failure paths in disposable databases
+        run: python3 -m unittest discover -s ops/deploy -p 'test_*.py' -v
+        env:
+          MUZEUM_DEPLOY_TEST_PGPORT: '5432'
+          PGUSER: postgres
+          PGPASSWORD: postgres
       - run: bundle exec rails zeitwerk:check
       - name: Compile production assets
         run: bundle exec rails assets:precompile

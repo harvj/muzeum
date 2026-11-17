@@ -1,5 +1,7 @@
 # P1.2 — ready for deployment approval
 
+**Deployment update, 2026-11-17:** approved exact SHA `8942bc41ae76f3c4e3d63a20552b0541c5cd3412` is deployed; synchronization and browser acceptance passed. [Production deployment/recovery evidence](deployment-2026-11-17.md). The readiness text below records the pre-deployment approval packet. Future single-command automation is implemented for separate safety review and has not been installed/deployed.
+
 Implementation is complete locally and pushed; **production is unchanged and deployment is not authorized by this report**. The existing production archive remains 292,852 observations on application revision `ab314224abb9be1b28b01c953fe093c4bddf2e72`.
 
 Implementation commit: `1ca96bcafa10f17b2b010699b2e02252f746c50e`. [Implementation CI passed all four jobs](https://github.com/harvj/muzeum/actions/runs/44111097002). A final documentation/evidence commit follows; obtain its exact candidate with `git rev-parse HEAD` and use its CI before approving deployment.
