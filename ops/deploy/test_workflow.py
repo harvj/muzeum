@@ -295,6 +295,7 @@ class DatabaseRehearsalTests(WorkflowTests):
             flow.run('prepare', NEW, self.token, str(host.candidate))
         self.assertEqual(host.query(host.databases[0], 'SELECT count(*) FROM scrobbles'), '1000')
         self.assertEqual(host.query(host.databases[0], "SELECT count(*) FROM information_schema.columns WHERE table_name='scrobbles' AND column_name='operator_note'"), '0')
+        self.assertIn('migration', host.events)
         self.assertNotIn('publication', host.events)
         self.assertFalse(host.running or host.public)
 
