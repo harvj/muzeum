@@ -14,8 +14,9 @@ Muzeum is a Rails 8 application with its own independent production deployment. 
 3. If a requested implementation would contradict a domain rule, explicitly flag the conflict and seek a policy revision first. Update affected domain documents, examples, tests and numbered roadmap together when a decision is revised; preserve revision history in Git.
 4. Keep source observations separate from canonical interpretation and from derived statistics. Do not change immutable Last.fm evidence or overwrite user decisions. Treat source account associations as public archive access, not proof of ownership.
 5. MusicBrainz and Discogs supply evidence; Muzeum owns the resolution policy. Spotify lookup and playlist export are deferred. Do not let provider outages block ingestion.
-6. The primary user experience is canonical artists, releases and recordings, not raw scrobbles. Release membership controls visibility; per-play credited release controls disjoint release rankings. Explicit user overrides take precedence over automated reassessment.
-7. Prefer measured near-term needs over speculative 10,000-account architecture. Preserve simple, safe paths to later scaling.
+6. Recording resolution uses exact observed artist/album/track surface identity. A listener's manual surface assignment governs all inherited past/future matching scrobbles; a manual per-scrobble override always takes precedence and automation must never overwrite it. Other users' choices inform evidence only, not authoritative mappings. Preserve assessments and suggestions for a future Apply-to-all / Only-this-time / Dismiss decision journal, but do not implement that UI in P1.3a. MusicBrainz and Discogs both contribute evidence from the outset; keep Discogs secrets out of source and logs.
+7. The primary user experience is canonical artists, releases and recordings, not raw scrobbles. Release membership controls visibility; per-play credited release controls disjoint release rankings. Explicit user overrides take precedence over automated reassessment.
+8. Prefer measured near-term needs over speculative 10,000-account architecture. Preserve simple, safe paths to later scaling.
 
 ## Engineering and deployment
 
