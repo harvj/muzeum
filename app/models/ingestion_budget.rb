@@ -1,0 +1,2 @@
+class IngestionBudget < ApplicationRecord
+end

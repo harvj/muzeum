@@ -29,6 +29,7 @@ RSpec.describe "Listening archive", type: :request do
 
   it "computes statistics from only the user's persisted observations" do
     user = User.find_by!(oidc_subject: @subject)
+    LastfmAccount.associate!(user, "stats-fixture")
     user.scrobbles.create!(played_at: Time.utc(2020), payload: { artist_name: "Artist", album_name: "Album", track_name: "Track" })
     user.scrobbles.create!(played_at: Time.utc(2021), payload: { artist_name: "Artist", album_name: "", track_name: "Other" })
     other = User.create!(lastfm_username: "other")

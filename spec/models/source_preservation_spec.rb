@@ -5,7 +5,7 @@ RSpec.describe "Source preservation", type: :model do
     user = User.create!(lastfm_username: "immutable")
     event = user.scrobbles.create!(played_at: Time.utc(2020), payload: { artist_name: "Reported" })
     expect { Scrobble.transaction(requires_new: true) { Scrobble.where(id: event.id).update_all(payload: {}) } }.to raise_error(ActiveRecord::StatementInvalid, /immutable/)
-    expect { Scrobble.transaction(requires_new: true) { Scrobble.where(id: event.id).delete_all } }.to raise_error(ActiveRecord::StatementInvalid, /retained/)
+    expect { Scrobble.transaction(requires_new: true) { Scrobble.where(id: event.id).delete_all } }.to raise_error(ActiveRecord::StatementInvalid, /immutable/)
     expect { event.update!(recording_surface_id: nil) }.not_to raise_error
     expect(event.reload.payload).to eq("artist_name" => "Reported")
   end

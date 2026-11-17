@@ -36,6 +36,13 @@ RSpec.describe "Dashboard appearance", type: :system do
         page.save_screenshot(output.join("#{size}-#{mode}.png")) if ENV["CAPTURE_PREVIEWS"] == "1"
       end
     end
+    # A committed source page updates an already-open authenticated dashboard.
+    import = user.import_runs.create!(source_username: user.source_account.username, upper_bound: Time.current.to_i, actor_kind: "user")
+    client = double("synthetic source", recent_tracks: "<lfm status='ok'><recenttracks user='fixture-listener' page='1' totalPages='1' total='1'><track><artist>New artist</artist><name>New completion</name><album>Album</album><date uts='1700000000'/></track></recenttracks></lfm>")
+    Lastfm::HistoricalImporter.new(import, client: client).page!
+    using_wait_time 15 do
+      within(".stat", text: "Imported scrobbles") { expect(page).to have_content("4") }
+    end
     find("summary[aria-label='Session menu']").click
     expect(page).to have_link("Continuum Engine", href: "https://funding.harvj.com/")
     expect(page).to have_link("Muzeum", href: "https://muzeum.fm/")

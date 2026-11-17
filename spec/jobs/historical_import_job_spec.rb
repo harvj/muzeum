@@ -10,10 +10,10 @@ RSpec.describe HistoricalImportJob, type: :job do
     allow(Lastfm::HistoricalImporter).to receive(:new).and_return(importer)
     allow(importer).to receive(:page!).and_raise(Clients::NetworkError)
     job = described_class.new(run.id)
-    job.exception_executions = { [ Clients::NetworkError, Clients::RateLimited ].to_s => 4 }
+    run.update!(retry_count: 4)
     expect { job.perform_now }.not_to have_enqueued_job(described_class)
-    expect(run.reload.failed?).to be(true)
-    expect(run.last_error).to include("five attempts")
+    expect(run.reload.paused?).to be(true)
+    expect(run.last_error).to include("paused")
   end
 
   it "does not import after local permission is disabled or association changed" do

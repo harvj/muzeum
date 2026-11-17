@@ -62,24 +62,57 @@ module Clients
       query = base_params.merge(params)
       log("Requesting #{redact(query.to_query, :api_key)}")
 
+      ::Lastfm::RequestBudget.acquire!
       response = http.get(BASE_URL, params: query)
       handle_response(response)
     rescue HTTP::TimeoutError, HTTP::ConnectionError => e
-      raise Clients::NetworkError, e.message
+      raise Clients::NetworkError, "Last.fm transport failed"
     end
 
     def handle_response(response)
       case response.code
       when 200
-        response.to_s
+        body = response.to_s
+        doc = Nokogiri::XML(body) { |config| config.strict.nonet }
+        error = doc.at_xpath("/lfm/error")
+        if error
+          case error["code"].to_i
+          when 29
+            ::Lastfm::RequestBudget.cooldown!(60)
+            raise Clients::RateLimited.new(60, raw_body: body)
+          when 11, 16
+            raise Clients::NetworkError.new(raw_body: body)
+          when 4, 9, 10, 13, 26
+            raise Clients::Unauthorized.new(raw_body: body)
+          else
+            # Keep the raw error envelope as immutable fetch evidence downstream.
+            return body
+          end
+        end
+        body
       when 401
-        raise Clients::Unauthorized
+        raise Clients::Unauthorized.new(raw_body: response.to_s)
       when 429
-        raise Clients::RateLimited
+        raw_delay = response.headers["Retry-After"].to_s
+        seconds = if raw_delay.match?(/\A\d+\z/)
+          raw_delay.to_i
+        else
+          begin
+            [ Time.httpdate(raw_delay) - Time.current, 1 ].max.ceil
+          rescue ArgumentError
+            60
+          end
+        end
+        ::Lastfm::RequestBudget.cooldown!(seconds)
+        raise Clients::RateLimited.new(seconds, raw_body: response.to_s)
+      when 500..599
+        raise Clients::NetworkError.new(raw_body: response.to_s)
       else
         raise Clients::InvalidResponse,
               "Last.fm returned #{response.code}"
       end
+    rescue Nokogiri::XML::SyntaxError
+      response.to_s # Persist malformed body before SourcePage rejects it.
     end
 
     def base_params

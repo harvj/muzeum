@@ -4,5 +4,6 @@ Rails.application.routes.draw do
   get "oidc/callback", to: "sessions#callback"
   resource :lastfm_account, only: :update
   resources :imports, only: :create
+  get "dashboard", to: "home#updates", as: :dashboard_updates
   root "home#show"
 end

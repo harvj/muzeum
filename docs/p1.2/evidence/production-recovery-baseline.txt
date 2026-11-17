@@ -1,0 +1,32 @@
+{
+  "snapshot_id": "4e007340dea381ed24e4ab0f43f40c6d539569cfff8ca9fec18b106411844127",
+  "capture_path": "/var/lib/harvj-backups/muzeum/captures/20261117T134433689402Z",
+  "completed_at": "2026-11-17T13:45:28.767161+00:00",
+  "seconds": 60.445,
+  "mode": "production",
+  "credential_scope": "subaccount",
+  "manifest_sha256": "db3f82cd1e047f52be997b7d9422a1782fe76c5fcf40e90bfac3e8e584628611"
+}
+{
+  "application_recovery": {
+    "users": 1,
+    "sessions": 1,
+    "scrobbles": 292852,
+    "raw_pages": 1465,
+    "grant_decryption_verified": true
+  },
+  "snapshot_id": "4e007340dea381ed24e4ab0f43f40c6d539569cfff8ca9fec18b106411844127",
+  "verified_at": "2026-11-17T13:46:36.884373+00:00",
+  "mode": "production",
+  "databases_verified": 4,
+  "files_verified": 11,
+  "release_sha": "ab314224abb9be1b28b01c953fe093c4bddf2e72",
+  "seconds": 58.691,
+  "queue_policy": "restore durable primary checkpoints; operator re-enqueues incomplete imports before resuming workers"
+}
+active
+active
+active
+active
+active
+active

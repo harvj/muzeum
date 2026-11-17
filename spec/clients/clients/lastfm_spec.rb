@@ -16,6 +16,7 @@ RSpec.describe Clients::Lastfm do
   end
 
   before do
+    allow(ENV).to receive(:fetch).and_call_original
     allow(ENV).to receive(:fetch)
       .with("LASTFM_API_KEY")
       .and_return("test_api_key")
