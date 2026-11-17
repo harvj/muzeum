@@ -6,7 +6,14 @@ RSpec.describe "Capistrano deployment/reporting integration" do
   def rehearse(scenario)
     output, errors, status = Open3.capture3("bundle", "exec", "ruby", "spec/fixtures/deployments/capistrano_hooks.rb", scenario)
     raise errors unless status.success?
-    JSON.parse(output.lines.find { |line| line.start_with?("HOOK_FIXTURE:") }.delete_prefix("HOOK_FIXTURE:"))
+    JSON.parse(output.lines.find { |line| line.start_with?("HOOK_FIXTURE:") }.delete_prefix("HOOK_FIXTURE:")).merge("stderr" => errors)
+  end
+
+  it "runs the real preflight task without logging shims, deployment phases or GitHub records" do
+    result = rehearse("preflight")
+    expect(result["events"].select { |kind, _| kind == "server" }.map(&:last)).to eq([ "preflight" ])
+    expect(result["phase"]).to eq("unchanged")
+    expect(result["creates"]).to eq(0)
   end
 
   it "reports success only after the server completes its final verification" do
@@ -26,6 +33,7 @@ RSpec.describe "Capistrano deployment/reporting integration" do
   it "keeps verified production available after a reporting outage and retries only reporting" do
     result = rehearse("after_api")
     expect(result["error"]).to be_nil
+    expect(result["stderr"]).to include("GitHub reporting pending")
     expect(result["before_retry"]).to include("phase" => "complete", "desired" => "success", "reported" => false)
     expect(result["phase"]).to eq("complete")
     expect(result["events"].select { |kind, _| kind == "server" }.map(&:last)).to eq(%w[begin prepare finish complete])

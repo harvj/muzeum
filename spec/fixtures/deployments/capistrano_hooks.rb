@@ -31,14 +31,6 @@ def self.on(_server)
   yield
 end
 
-def self.info(message)
-  $events << [ "info", message ]
-end
-
-def self.warn(message)
-  $events << [ "warning", message ]
-end
-
 def self.capture(*args)
   if args.last == "version"
     Digest::SHA256.hexdigest(File.binread("ops/deploy/muzeum_deploy.py") + File.binread("ops/deploy/inspect.rb"))
@@ -50,13 +42,20 @@ end
 def self.execute(*args)
   phase = args.fetch(3)
   $events << [ "server", phase ]
-  $phase = { "begin" => "prepared_checkout", "prepare" => "ready_to_publish", "finish" => "verified", "complete" => "complete", "fail" => "failed", "cancel" => "cancelled" }.fetch(phase)
+  $phase = { "begin" => "prepared_checkout", "prepare" => "ready_to_publish", "finish" => "verified", "complete" => "complete", "fail" => "failed", "cancel" => "cancelled", "preflight" => "unchanged" }.fetch(phase)
   $api.fail_next = :before if phase == "begin" && $scenario == "before_api"
   $api.fail_next = :before if phase == "complete" && $scenario == "after_api"
   if phase == "finish" && $scenario == "health"
     $phase = "failed"
     raise "Synthetic server health failure"
   end
+end
+
+if $scenario == "preflight"
+  Rake::Task["muzeum:preflight"].invoke
+  puts "HOOK_FIXTURE:" + JSON.generate({ events: $events, phase: $phase, creates: $api.creates.size })
+  FileUtils.remove_entry($local)
+  exit 0
 end
 
 error = nil

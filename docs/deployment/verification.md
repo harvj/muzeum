@@ -1,8 +1,8 @@
 # Deployment workflow verification — 2026-11-17
 
-Current corrected-lock/GitHub-reporting results: [finalization record](finalization-2026-11-17.md), with 156 Rails/browser examples, 32 deployment tests, and 28 backup tests. The table below retains the original preparation baseline.
+Current corrected-lock/GitHub-reporting results: [finalization record](finalization-2026-11-17.md), with 157 Rails/browser examples, 32 deployment tests, and 28 backup tests. The table below retains the original preparation baseline.
 
-The new workflow has **not** been installed or deployed in production. P1.2's actual exact-SHA deployment and its fresh recovery gates are recorded [separately](../p1.2/deployment-2026-11-17.md).
+The corrected root-owned helpers are installed and non-deploying production readiness passes. The first application deployment through the workflow has **not** been run. P1.2's actual exact-SHA deployment and its fresh recovery gates are recorded [separately](../p1.2/deployment-2026-11-17.md).
 
 | Check | Result |
 | --- | --- |

@@ -2,7 +2,7 @@
 
 Standing operator convention: **`cap production deploy`** (equivalently `bundle exec cap production deploy` when Bundler is needed). Invoking it authorizes deployment of the reviewed, synchronized local `main` and execution of its reviewed additive migrations. No environment flags or interactive secret prompts are required. Agents still need explicit authorization to invoke a production deployment; implementing code does not imply that authorization.
 
-**Finalization is in progress: corrected helpers and local GitHub reporting are being verified before installation.** P1.2 was deployed separately through the previous process: [production record](../p1.2/deployment-2026-11-17.md). The operator remains responsible for the first production deployment; helper installation and non-deploying preflight are separate from publishing application code. It refuses a missing/different installed helper. CI never deploys.
+**Corrected root-owned helpers are installed and production preflight passes.** P1.2 was deployed separately through the previous process: [production record](../p1.2/deployment-2026-11-17.md). The operator remains responsible for the first production deployment; helper installation and non-deploying preflight are separate from publishing application code. It refuses a missing/different installed helper. CI never deploys.
 
 ## Normal behavior
 

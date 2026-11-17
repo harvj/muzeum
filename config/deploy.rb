@@ -42,7 +42,7 @@ def muzeum_publish_result(token, sha)
     receipt = JSON.parse(capture(:sudo, "-n", "/usr/local/sbin/muzeum-deploy", "receipt", sha, token))
   end
   result = muzeum_reporting.reconcile(token, receipt)
-  info "GitHub deployment #{result.fetch(:id)}: #{result.fetch(:state)}; receipt #{token}.json"
+  puts "GitHub deployment #{result.fetch(:id)}: #{result.fetch(:state)}; receipt #{token}.json"
   warn "Deployment remains incomplete; inspect server receipt #{token}.json" unless result.fetch(:terminal)
 rescue StandardError
   warn "GitHub reporting pending; production result is retained. Retry: cap production 'muzeum:report[#{token}]'"
@@ -52,7 +52,7 @@ namespace :muzeum do
   desc "Verify the exact local revision and installed production readiness without deploying"
   task :preflight do
     approval = MuzeumDeploymentRevision.resolve!
-    info "Preflight revision #{approval.fetch(:sha)}; CI #{approval.fetch(:ci)}"
+    puts "Preflight revision #{approval.fetch(:sha)}; CI #{approval.fetch(:ci)}"
     muzeum_verify_helper
     on primary(:app) do
       execute :sudo, "-n", "/usr/local/sbin/muzeum-deploy", "preflight"
@@ -71,7 +71,7 @@ namespace :muzeum do
     set :approved_revision, approval.fetch(:sha)
     set :branch, approval.fetch(:sha)
     set :deployment_token, SecureRandom.hex(16)
-    info "Muzeum immutable revision #{fetch(:approved_revision)}; CI #{approval.fetch(:ci)}"
+    puts "Muzeum immutable revision #{fetch(:approved_revision)}; CI #{approval.fetch(:ci)}"
     outbox = muzeum_reporting
     outbox.check_clear!
     muzeum_verify_helper
