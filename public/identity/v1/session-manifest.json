@@ -1,0 +1,5 @@
+{
+  "version": "1.0.0",
+  "sha256": "d4bc9e048a99bb3c8b258852c4ef47fcb2fdc38cd9bc0480ffba288bf19ab94e",
+  "markup": "app/views/shared/_session_dropdown.html.erb"
+}

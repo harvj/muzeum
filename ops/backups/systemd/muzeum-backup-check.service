@@ -1,0 +1,22 @@
+[Unit]
+Description=Muzeum off-host repository full integrity check
+After=network-online.target
+OnFailure=muzeum-backup-alert@%n.service
+[Service]
+Type=oneshot
+User=root
+UMask=0077
+ExecStart=/usr/local/lib/harvj-backups/muzeum-backup check
+TimeoutStartSec=2h
+CPUQuota=25%
+MemoryMax=1G
+Nice=10
+IOSchedulingClass=idle
+IOReadBandwidthMax=/dev/sda3 20M
+IOWriteBandwidthMax=/dev/sda3 10M
+TasksMax=64
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/harvj-backups

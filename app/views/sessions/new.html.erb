@@ -1,9 +1,7 @@
-<h1>Sign in to Muzeum</h1>
-<%= form_with url: session_path do |form| %>
-  <p><%= form.label :email_address, "Email address" %><br>
-  <%= form.email_field :email_address, required: true, autocomplete: "username", autofocus: true %></p>
-  <p><%= form.label :password %><br>
-  <%= form.password_field :password, required: true, autocomplete: "current-password", maxlength: 72 %></p>
-  <%= form.submit "Sign in" %>
-<% end %>
-<p>Accounts are provisioned by the operator. Contact the operator for access or password recovery.</p>
+<section class="card login">
+  <p class="eyebrow">A listening archive</p>
+  <h1>Sign in to Muzeum</h1>
+  <p class="muted">Keep a durable record of the music you have heard.</p>
+  <%= button_to "Continue with harvj Auth", session_path, data: { turbo: false } %>
+  <p class="muted">Access is managed through auth.harvj.com. Your Last.fm account is associated after sign-in.</p>
+</section>

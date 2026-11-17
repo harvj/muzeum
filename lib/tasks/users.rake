@@ -1,20 +1,10 @@
-require "io/console"
-
 namespace :users do
-  desc "Provision/reset an explicitly selected local login; reads password without echo"
-  task :provision, [ :user_id ] => :environment do |_, args|
-    abort "Interactive terminal required" unless $stdin.tty?
-    user = args[:user_id] ? User.find(args[:user_id]) : User.new
-    print "Local email address: "
-    email = $stdin.gets&.strip
-    print "Password (12–72 bytes): "
-    password = $stdin.noecho(&:gets)&.chomp
-    puts
-    print "Confirm password: "
-    confirmation = $stdin.noecho(&:gets)&.chomp
-    puts
-    user.update!(email_address: email, password: password, password_confirmation: confirmation,
-      activated_at: Time.current, disabled_at: nil)
-    puts "Provisioned local User #{user.id}; no Last.fm account ownership was assigned."
+  desc "Explicitly link a retained legacy user to an operator-verified Auth subject; never by email"
+  task :link, [ :user_id, :subject ] => :environment do |_, args|
+    abort "Explicit user ID and verified stable Auth subject required" if args[:user_id].blank? || args[:subject].blank?
+    user = User.find(args[:user_id])
+    abort "Identity is already linked; reconcile explicitly" if user.oidc_subject.present?
+    user.update!(oidc_issuer: OidcClient::ISSUER, oidc_subject: args[:subject])
+    puts "Linked retained Muzeum profile #{user.id}. No Auth account or credentials created."
   end
 end

@@ -1,0 +1,10 @@
+Updating ruby-advisory-db ...
+From https://github.com/rubysec/ruby-advisory-db
+ * branch              master     -> FETCH_HEAD
+Already up to date.
+Updated ruby-advisory-db
+ruby-advisory-db:
+  advisories:	1378 advisories
+  last updated:	2026-11-16 08:16:38 -0500
+  commit:	6c4efcdc4187a078c0a8a5e943ec346c4a49ab07
+No vulnerabilities found

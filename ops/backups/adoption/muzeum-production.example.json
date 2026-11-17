@@ -1,0 +1,11 @@
+{
+  "enabled": false,
+  "mode": "production-not-activated",
+  "application": "muzeum",
+  "databases": ["muzeum_production", "muzeum_production_cache", "muzeum_production_queue", "muzeum_production_cable"],
+  "persistent_files": ["/var/www/muzeum/shared/storage"],
+  "protected_recovery_material": ["/var/www/muzeum/shared/.env", "/var/www/muzeum/shared/.env.migrate", "Dedicated Rails credential and session-secret recovery material"],
+  "consistency_gate": "Reviewed Muzeum-only writer quiesce and restoration before activation; do not stop any other application",
+  "retention": {"daily": 30, "weekly": 12, "monthly": 12},
+  "production_gate": "The installed readiness helper deliberately refuses this mode"
+}

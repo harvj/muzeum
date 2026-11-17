@@ -1,5 +1,6 @@
 # P1.1 — Production infrastructure and initial deployment plan
 
+> Historical milestone record. The [canonical numbered roadmap](../roadmap.md) and P1.1d requirements supersede the local-password and import-ordering assumptions below.
 Status: original plan, 2026-11-15. P1.1a preparation is now implemented locally; see the [verified inventory](infrastructure-inventory.md), [deployment runbook](deployment-runbook.md) and [test results](p11a-results.md). Production remains unchanged. This document describes the original plan; the linked P1.1a reports distinguish prepared code from unperformed production actions. This plan supersedes the earlier import-first ordering and public-history defaults in P1.0. Production runs at **muzeum.fm on the existing Hetzner server**; development and synthetic tests remain local. Full real historical ingestion and resolution run only on the server against persistent production data.
 
 ## Evidence and prerequisites

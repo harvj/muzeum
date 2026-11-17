@@ -5,6 +5,7 @@ class ImportRun < ApplicationRecord
     pending: 0,
     running: 1,
     completed: 2,
-    failed: 3
+    failed: 3,
+    superseded: 4
   }
 end

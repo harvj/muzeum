@@ -24,17 +24,28 @@ module Clients
 
     # --- Public API -------------------------------------------------
 
-    def recent_tracks(page: nil, from: nil, limit: DEFAULT_LIMIT)
+    def recent_tracks(page: nil, from: nil, limit: DEFAULT_LIMIT, to: nil)
       params = {
         method: "user.getrecenttracks",
         user: username,
         limit: limit
       }
 
+      params[:to] = to if to.present?
       params[:page] = page if page.present?
       params[:from] = from if from.present?
 
       get(params)
+    end
+
+    def public_username!
+      raw = get(method: "user.getinfo", user: username)
+      doc = Nokogiri::XML(raw) { |config| config.strict.nonet }
+      name = doc.at_xpath("/lfm/user/name")&.text
+      raise Clients::InvalidResponse if name.blank? || doc.at_xpath("/lfm")&.[]("status") != "ok"
+      name
+    rescue Nokogiri::XML::SyntaxError
+      raise Clients::InvalidResponse
     end
 
     # --- Private ----------------------------------------------------

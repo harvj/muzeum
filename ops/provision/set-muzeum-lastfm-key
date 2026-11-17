@@ -1,0 +1,20 @@
+#!/usr/bin/env python3
+"""Accept the application Last.fm API key without terminal echo or chat transfer."""
+import getpass,os,re,sys
+from pathlib import Path
+try:
+    if os.geteuid()!=0 or not sys.stdin.isatty():raise RuntimeError()
+    os.umask(0o077)
+    parent=Path('/etc/muzeum')
+    if parent.is_symlink():raise RuntimeError()
+    parent.mkdir(mode=0o700,exist_ok=True)
+    target=parent/'lastfm.env'
+    if target.exists():raise RuntimeError()
+    key=getpass.getpass('Last.fm application API key (hidden): ')
+    if not re.fullmatch('[a-fA-F0-9]{32}',key):raise RuntimeError()
+    fd=os.open(target,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600)
+    with os.fdopen(fd,'w') as out:out.write('LASTFM_API_KEY='+key+'\n');out.flush();os.fsync(out.fileno())
+    print('Last.fm application key stored root-only. No Last.fm login credentials required.')
+except Exception:
+    print('Last.fm key preparation stopped; details suppressed. Existing files preserved.',file=sys.stderr)
+    raise SystemExit(1)

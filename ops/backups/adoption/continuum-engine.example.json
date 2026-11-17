@@ -1,0 +1,35 @@
+{
+  "enabled": false,
+  "application": "continuum-engine",
+  "review_required": "Independent review before touching existing jobs or data",
+  "subaccount": "NOT_YET_PROVISIONED",
+  "repository_relative_path": "restic",
+  "password_file": "/etc/harvj-backups/continuum-engine/restic-password",
+  "ssh_key": "/etc/harvj-backups/ssh/continuum-engine-ed25519",
+  "proposed_daily_utc": "03:30",
+  "retention": {
+    "daily": 30,
+    "weekly": 12,
+    "monthly": 12
+  },
+  "databases": [
+    "self_funding_production"
+  ],
+  "persistent_files_to_review": [
+    "/var/www/self-funding-engine/shared"
+  ],
+  "preserve_existing_backups": [
+    "/var/backups/self-funding-engine",
+    "/var/backups/continuum-engine-deploy"
+  ],
+  "consistency_gate": "Review multi-process writer coordination and application-specific integrity checks",
+  "monitoring": {
+    "provider": "Healthchecks.io",
+    "project": "harvj-backups",
+    "check": "Continuum Engine \u2014 Daily Backup",
+    "period_seconds": 86400,
+    "grace_seconds": 7200,
+    "ping_url": "PROVISION_SEPARATELY_OUTSIDE_GIT",
+    "reuse_muzeum_ping_url": false
+  }
+}

@@ -1,0 +1,11 @@
+/* harvj session dropdown v1.0.0. Vendor unchanged with the shared identity font. */
+.harvj-session{position:relative;color:var(--ink,#243b44);font-family:var(--harvj-font);font-size:14px}
+.harvj-session summary{list-style:none;display:flex;gap:6px;align-items:center;justify-content:center;width:48px;height:44px;border:1px solid var(--line,#d8dedb);border-radius:8px;background:var(--card,#fff);cursor:pointer}
+.harvj-session summary::-webkit-details-marker{display:none}
+.harvj-session summary:focus-visible,.harvj-session a:focus-visible,.harvj-session button:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+.harvj-session-panel{position:absolute;right:0;top:calc(100% + 8px);width:242px;padding:8px;background:var(--card,#fff);border:1px solid var(--line,#d8dedb);border-radius:12px;box-shadow:0 8px 28px #0002;z-index:20}
+.harvj-session-panel a,.harvj-session-panel button{display:flex;align-items:center;gap:12px;width:100%;min-height:44px;padding:10px 12px;border:0;border-radius:6px;background:transparent;color:inherit;text-decoration:none;text-align:left;font:inherit;cursor:pointer}
+.harvj-session-panel a:hover,.harvj-session-panel button:hover{background:var(--control,#f1f4f2)}
+.harvj-session-panel a[aria-current]{font-weight:600;background:var(--control,#f1f4f2)}
+.harvj-session-panel svg{width:19px;height:19px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.harvj-session-panel form{margin:5px 0 0;padding-top:5px;border-top:1px solid var(--line,#d8dedb)}

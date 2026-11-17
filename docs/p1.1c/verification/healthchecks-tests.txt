@@ -1,0 +1,20 @@
+test_errors_do_not_log_credential_urls (test_monitoring.MonitoringTests) ... ok
+test_failed_snapshot_verification_never_sends_success (test_monitoring.MonitoringTests) ... ok
+test_http_200_not_found_is_not_success (test_monitoring.MonitoringTests) ... Healthchecks signal not acknowledged: job=backup phase=success reason=request-failed-or-unacknowledged
+ok
+test_monitoring_fault_preserves_original_exit_code (test_monitoring.MonitoringTests) ... Healthchecks integration failed; backup exit status preserved
+Healthchecks integration failed; backup exit status preserved
+ok
+test_monitoring_outage_preserves_successful_backup (test_monitoring.MonitoringTests) ... ok
+test_monitoring_timeout_cannot_hide_backup_error (test_monitoring.MonitoringTests) ... Healthchecks signal not acknowledged: job=backup phase=start reason=timeout
+Healthchecks signal not acknowledged: job=backup phase=failure reason=timeout
+ok
+test_restic_exit_code_survives_monitoring_outage (test_monitoring.MonitoringTests) ... ok
+test_secret_url_uses_stdin_not_argv_and_deadlines_are_bounded (test_monitoring.MonitoringTests) ... ok
+test_secure_provisioning_rejects_other_destinations_or_action_suffixes (test_monitoring.MonitoringTests) ... ok
+test_success_signal_only_after_operation_completes (test_monitoring.MonitoringTests) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.006s
+
+OK

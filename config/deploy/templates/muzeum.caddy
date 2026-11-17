@@ -1,6 +1,7 @@
 # Proposed addition to the existing /etc/caddy/Caddyfile; do not replace it.
 muzeum.fm {
   encode gzip zstd
+  log_skip /oidc/callback
   reverse_proxy 127.0.0.1:3011
   header {
     X-Content-Type-Options nosniff

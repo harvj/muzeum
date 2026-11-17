@@ -1,0 +1,444 @@
+Inspecting 104 files
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+/Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/vendor/fileutils/lib/fileutils.rb:1383:in 'File.lstat': No such file or directory @ rb_file_s_lstat - /var/folders/dz/16844_m944q5n0ycp08f44ym0000gn/T/bundler20261116-24738-ryaepg24738 (Errno::ENOENT)
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/vendor/fileutils/lib/fileutils.rb:1383:in 'Bundler::FileUtils.remove_entry_secure'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler.rb:351:in 'Bundler.rm_rf'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler.rb:685:in 'block (2 levels) in Bundler.tmp_home_path'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:675:in 'Process.fork'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:675:in 'Parallel.worker'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:658:in 'block in Parallel.create_workers'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:657:in 'Array#each'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:657:in 'Enumerable#each_with_index'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:657:in 'Parallel.create_workers'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:595:in 'Parallel.work_in_processes'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:317:in 'Parallel.map'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:248:in 'Parallel.each'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/runner.rb:265:in 'RuboCop::Runner#parallel_file_iterator'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/runner.rb:198:in 'RuboCop::Runner#file_iterator'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/runner.rb:170:in 'RuboCop::Runner#inspect_files'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/runner.rb:93:in 'RuboCop::Runner#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli/command/execute_runner.rb:26:in 'block in RuboCop::CLI::Command::ExecuteRunner#execute_runner'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli/command/execute_runner.rb:92:in 'RuboCop::CLI::Command::ExecuteRunner#with_redirect'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli/command/execute_runner.rb:25:in 'RuboCop::CLI::Command::ExecuteRunner#execute_runner'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli/command/execute_runner.rb:17:in 'RuboCop::CLI::Command::ExecuteRunner#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli/command.rb:11:in 'RuboCop::CLI::Command.run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli/environment.rb:18:in 'RuboCop::CLI::Environment#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli.rb:129:in 'RuboCop::CLI#run_command'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli.rb:136:in 'RuboCop::CLI#execute_runners'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli.rb:55:in 'block in RuboCop::CLI#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli.rb:89:in 'RuboCop::CLI#profile_if_needed'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli.rb:46:in 'RuboCop::CLI#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/exe/rubocop:15:in '<top (required)>'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/rubygems.rb:306:in 'Kernel#load'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/rubygems.rb:306:in 'Gem.activate_and_load_bin_path'
+	from /Users/jim/.rbenv/versions/3.4.12/bin/rubocop:25:in '<top (required)>'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/cli/exec.rb:61:in 'Kernel.load'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/cli/exec.rb:61:in 'Bundler::CLI::Exec#kernel_load'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/cli/exec.rb:24:in 'Bundler::CLI::Exec#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/cli.rb:525:in 'Bundler::CLI#exec'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/vendor/thor/lib/thor/command.rb:28:in 'Bundler::Thor::Command#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/vendor/thor/lib/thor/invocation.rb:127:in 'Bundler::Thor::Invocation#invoke_command'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/vendor/thor/lib/thor.rb:538:in 'Bundler::Thor.dispatch'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/cli.rb:35:in 'Bundler::CLI.dispatch'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/vendor/thor/lib/thor/base.rb:585:in 'Bundler::Thor::Base::ClassMethods#start'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/cli.rb:29:in 'Bundler::CLI.start'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/bundler-4.1.0/exe/bundle:28:in 'block in <top (required)>'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/friendly_errors.rb:118:in 'Bundler.with_friendly_errors'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/bundler-4.1.0/exe/bundle:20:in '<top (required)>'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/rubygems.rb:306:in 'Kernel#load'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/rubygems.rb:306:in 'Gem.activate_and_load_bin_path'
+	from /Users/jim/.rbenv/versions/3.4.12/bin/bundle:25:in '<main>'
+Warning: /tmp is a symlink, which is not allowed.
+/Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/vendor/fileutils/lib/fileutils.rb:1383:in 'File.lstat': No such file or directory @ rb_file_s_lstat - /var/folders/dz/16844_m944q5n0ycp08f44ym0000gn/T/bundler20261116-24738-ryaepg24738 (Errno::ENOENT)
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/vendor/fileutils/lib/fileutils.rb:1383:in 'Bundler::FileUtils.remove_entry_secure'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler.rb:351:in 'Bundler.rm_rf'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler.rb:685:in 'block (2 levels) in Bundler.tmp_home_path'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:675:in 'Process.fork'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:675:in 'Parallel.worker'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:658:in 'block in Parallel.create_workers'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:657:in 'Array#each'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:657:in 'Enumerable#each_with_index'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:657:in 'Parallel.create_workers'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:595:in 'Parallel.work_in_processes'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:317:in 'Parallel.map'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:248:in 'Parallel.each'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/runner.rb:265:in 'RuboCop::Runner#parallel_file_iterator'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/runner.rb:198:in 'RuboCop::Runner#file_iterator'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/runner.rb:170:in 'RuboCop::Runner#inspect_files'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/runner.rb:93:in 'RuboCop::Runner#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli/command/execute_runner.rb:26:in 'block in RuboCop::CLI::Command::ExecuteRunner#execute_runner'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli/command/execute_runner.rb:92:in 'RuboCop::CLI::Command::ExecuteRunner#with_redirect'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli/command/execute_runner.rb:25:in 'RuboCop::CLI::Command::ExecuteRunner#execute_runner'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli/command/execute_runner.rb:17:in 'RuboCop::CLI::Command::ExecuteRunner#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli/command.rb:11:in 'RuboCop::CLI::Command.run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli/environment.rb:18:in 'RuboCop::CLI::Environment#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli.rb:129:in 'RuboCop::CLI#run_command'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli.rb:136:in 'RuboCop::CLI#execute_runners'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli.rb:55:in 'block in RuboCop::CLI#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli.rb:89:in 'RuboCop::CLI#profile_if_needed'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli.rb:46:in 'RuboCop::CLI#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/exe/rubocop:15:in '<top (required)>'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/rubygems.rb:306:in 'Kernel#load'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/rubygems.rb:306:in 'Gem.activate_and_load_bin_path'
+	from /Users/jim/.rbenv/versions/3.4.12/bin/rubocop:25:in '<top (required)>'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/cli/exec.rb:61:in 'Kernel.load'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/cli/exec.rb:61:in 'Bundler::CLI::Exec#kernel_load'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/cli/exec.rb:24:in 'Bundler::CLI::Exec#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/cli.rb:525:in 'Bundler::CLI#exec'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/vendor/thor/lib/thor/command.rb:28:in 'Bundler::Thor::Command#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/vendor/thor/lib/thor/invocation.rb:127:in 'Bundler::Thor::Invocation#invoke_command'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/vendor/thor/lib/thor.rb:538:in 'Bundler::Thor.dispatch'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/cli.rb:35:in 'Bundler::CLI.dispatch'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/vendor/thor/lib/thor/base.rb:585:in 'Bundler::Thor::Base::ClassMethods#start'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/cli.rb:29:in 'Bundler::CLI.start'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/bundler-4.1.0/exe/bundle:28:in 'block in <top (required)>'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/friendly_errors.rb:118:in 'Bundler.with_friendly_errors'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/bundler-4.1.0/exe/bundle:20:in '<top (required)>'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/rubygems.rb:306:in 'Kernel#load'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/rubygems.rb:306:in 'Gem.activate_and_load_bin_path'
+/Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/vendor/fileutils/lib/fileutils.rb:1383:in 'File.lstat': No such file or directory @ rb_file_s_lstat - /var/folders/dz/16844_m944q5n0ycp08f44ym0000gn/T/bundler20261116-24738-ryaepg24738 (Errno::ENOENT)
+/Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/vendor/fileutils/lib/fileutils.rb:1383:in 'File.lstat': No such file or directory @ rb_file_s_lstat - /var/folders/dz/16844_m944q5n0ycp08f44ym0000gn/T/bundler20261116-24738-ryaepg24738 (Errno::ENOENT)
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/vendor/fileutils/lib/fileutils.rb:1383:in 'Bundler::FileUtils.remove_entry_secure'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler.rb:351:in 'Bundler.rm_rf'
+	from /Users/jim/.rbenv/versions/3.4.12/bin/bundle:25:in '<main>'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/vendor/fileutils/lib/fileutils.rb:1383:in 'Bundler::FileUtils.remove_entry_secure'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler.rb:351:in 'Bundler.rm_rf'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler.rb:685:in 'block (2 levels) in Bundler.tmp_home_path'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:675:in 'Process.fork'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:675:in 'Parallel.worker'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:658:in 'block in Parallel.create_workers'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:657:in 'Array#each'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:657:in 'Enumerable#each_with_index'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:657:in 'Parallel.create_workers'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:595:in 'Parallel.work_in_processes'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:317:in 'Parallel.map'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:248:in 'Parallel.each'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/runner.rb:265:in 'RuboCop::Runner#parallel_file_iterator'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/runner.rb:198:in 'RuboCop::Runner#file_iterator'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/runner.rb:170:in 'RuboCop::Runner#inspect_files'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/runner.rb:93:in 'RuboCop::Runner#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli/command/execute_runner.rb:26:in 'block in RuboCop::CLI::Command::ExecuteRunner#execute_runner'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli/command/execute_runner.rb:92:in 'RuboCop::CLI::Command::ExecuteRunner#with_redirect'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli/command/execute_runner.rb:25:in 'RuboCop::CLI::Command::ExecuteRunner#execute_runner'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli/command/execute_runner.rb:17:in 'RuboCop::CLI::Command::ExecuteRunner#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli/command.rb:11:in 'RuboCop::CLI::Command.run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli/environment.rb:18:in 'RuboCop::CLI::Environment#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli.rb:129:in 'RuboCop::CLI#run_command'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli.rb:136:in 'RuboCop::CLI#execute_runners'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli.rb:55:in 'block in RuboCop::CLI#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli.rb:89:in 'RuboCop::CLI#profile_if_needed'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli.rb:46:in 'RuboCop::CLI#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/exe/rubocop:15:in '<top (required)>'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/rubygems.rb:306:in 'Kernel#load'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/rubygems.rb:306:in 'Gem.activate_and_load_bin_path'
+	from /Users/jim/.rbenv/versions/3.4.12/bin/rubocop:25:in '<top (required)>'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/cli/exec.rb:61:in 'Kernel.load'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/cli/exec.rb:61:in 'Bundler::CLI::Exec#kernel_load'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/cli/exec.rb:24:in 'Bundler::CLI::Exec#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/cli.rb:525:in 'Bundler::CLI#exec'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/vendor/thor/lib/thor/command.rb:28:in 'Bundler::Thor::Command#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/vendor/thor/lib/thor/invocation.rb:127:in 'Bundler::Thor::Invocation#invoke_command'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/vendor/thor/lib/thor.rb:538:in 'Bundler::Thor.dispatch'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/cli.rb:35:in 'Bundler::CLI.dispatch'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/vendor/thor/lib/thor/base.rb:585:in 'Bundler::Thor::Base::ClassMethods#start'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/cli.rb:29:in 'Bundler::CLI.start'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/bundler-4.1.0/exe/bundle:28:in 'block in <top (required)>'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/friendly_errors.rb:118:in 'Bundler.with_friendly_errors'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/bundler-4.1.0/exe/bundle:20:in '<top (required)>'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/rubygems.rb:306:in 'Kernel#load'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/rubygems.rb:306:in 'Gem.activate_and_load_bin_path'
+	from /Users/jim/.rbenv/versions/3.4.12/bin/bundle:25:in '<main>'
+/Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/vendor/fileutils/lib/fileutils.rb:1383:in 'File.lstat': No such file or directory @ rb_file_s_lstat - /var/folders/dz/16844_m944q5n0ycp08f44ym0000gn/T/bundler20261116-24738-ryaepg24738 (Errno::ENOENT)
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/vendor/fileutils/lib/fileutils.rb:1383:in 'Bundler::FileUtils.remove_entry_secure'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler.rb:351:in 'Bundler.rm_rf'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler.rb:685:in 'block (2 levels) in Bundler.tmp_home_path'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:675:in 'Process.fork'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:675:in 'Parallel.worker'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:658:in 'block in Parallel.create_workers'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:657:in 'Array#each'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:657:in 'Enumerable#each_with_index'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:657:in 'Parallel.create_workers'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:595:in 'Parallel.work_in_processes'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:317:in 'Parallel.map'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:248:in 'Parallel.each'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/runner.rb:265:in 'RuboCop::Runner#parallel_file_iterator'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/runner.rb:198:in 'RuboCop::Runner#file_iterator'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/runner.rb:170:in 'RuboCop::Runner#inspect_files'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/runner.rb:93:in 'RuboCop::Runner#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli/command/execute_runner.rb:26:in 'block in RuboCop::CLI::Command::ExecuteRunner#execute_runner'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli/command/execute_runner.rb:92:in 'RuboCop::CLI::Command::ExecuteRunner#with_redirect'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli/command/execute_runner.rb:25:in 'RuboCop::CLI::Command::ExecuteRunner#execute_runner'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli/command/execute_runner.rb:17:in 'RuboCop::CLI::Command::ExecuteRunner#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli/command.rb:11:in 'RuboCop::CLI::Command.run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli/environment.rb:18:in 'RuboCop::CLI::Environment#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli.rb:129:in 'RuboCop::CLI#run_command'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli.rb:136:in 'RuboCop::CLI#execute_runners'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli.rb:55:in 'block in RuboCop::CLI#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli.rb:89:in 'RuboCop::CLI#profile_if_needed'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli.rb:46:in 'RuboCop::CLI#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/exe/rubocop:15:in '<top (required)>'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/rubygems.rb:306:in 'Kernel#load'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/rubygems.rb:306:in 'Gem.activate_and_load_bin_path'
+	from /Users/jim/.rbenv/versions/3.4.12/bin/rubocop:25:in '<top (required)>'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/cli/exec.rb:61:in 'Kernel.load'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/cli/exec.rb:61:in 'Bundler::CLI::Exec#kernel_load'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/cli/exec.rb:24:in 'Bundler::CLI::Exec#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/cli.rb:525:in 'Bundler::CLI#exec'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/vendor/thor/lib/thor/command.rb:28:in 'Bundler::Thor::Command#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/vendor/thor/lib/thor/invocation.rb:127:in 'Bundler::Thor::Invocation#invoke_command'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/vendor/thor/lib/thor.rb:538:in 'Bundler::Thor.dispatch'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/cli.rb:35:in 'Bundler::CLI.dispatch'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/vendor/thor/lib/thor/base.rb:585:in 'Bundler::Thor::Base::ClassMethods#start'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/cli.rb:29:in 'Bundler::CLI.start'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/bundler-4.1.0/exe/bundle:28:in 'block in <top (required)>'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/friendly_errors.rb:118:in 'Bundler.with_friendly_errors'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/bundler-4.1.0/exe/bundle:20:in '<top (required)>'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/rubygems.rb:306:in 'Kernel#load'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/rubygems.rb:306:in 'Gem.activate_and_load_bin_path'
+	from /Users/jim/.rbenv/versions/3.4.12/bin/bundle:25:in '<main>'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler.rb:685:in 'block (2 levels) in Bundler.tmp_home_path'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:675:in 'Process.fork'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:675:in 'Parallel.worker'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:658:in 'block in Parallel.create_workers'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:657:in 'Array#each'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:657:in 'Enumerable#each_with_index'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:657:in 'Parallel.create_workers'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:595:in 'Parallel.work_in_processes'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:317:in 'Parallel.map'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:248:in 'Parallel.each'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/runner.rb:265:in 'RuboCop::Runner#parallel_file_iterator'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/runner.rb:198:in 'RuboCop::Runner#file_iterator'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/runner.rb:170:in 'RuboCop::Runner#inspect_files'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/runner.rb:93:in 'RuboCop::Runner#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli/command/execute_runner.rb:26:in 'block in RuboCop::CLI::Command::ExecuteRunner#execute_runner'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli/command/execute_runner.rb:92:in 'RuboCop::CLI::Command::ExecuteRunner#with_redirect'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli/command/execute_runner.rb:25:in 'RuboCop::CLI::Command::ExecuteRunner#execute_runner'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli/command/execute_runner.rb:17:in 'RuboCop::CLI::Command::ExecuteRunner#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli/command.rb:11:in 'RuboCop::CLI::Command.run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli/environment.rb:18:in 'RuboCop::CLI::Environment#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli.rb:129:in 'RuboCop::CLI#run_command'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli.rb:136:in 'RuboCop::CLI#execute_runners'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli.rb:55:in 'block in RuboCop::CLI#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli.rb:89:in 'RuboCop::CLI#profile_if_needed'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli.rb:46:in 'RuboCop::CLI#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/exe/rubocop:15:in '<top (required)>'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/rubygems.rb:306:in 'Kernel#load'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/rubygems.rb:306:in 'Gem.activate_and_load_bin_path'
+	from /Users/jim/.rbenv/versions/3.4.12/bin/rubocop:25:in '<top (required)>'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/cli/exec.rb:61:in 'Kernel.load'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/cli/exec.rb:61:in 'Bundler::CLI::Exec#kernel_load'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/cli/exec.rb:24:in 'Bundler::CLI::Exec#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/cli.rb:525:in 'Bundler::CLI#exec'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/vendor/thor/lib/thor/command.rb:28:in 'Bundler::Thor::Command#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/vendor/thor/lib/thor/invocation.rb:127:in 'Bundler::Thor::Invocation#invoke_command'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/vendor/thor/lib/thor.rb:538:in 'Bundler::Thor.dispatch'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/cli.rb:35:in 'Bundler::CLI.dispatch'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/vendor/thor/lib/thor/base.rb:585:in 'Bundler::Thor::Base::ClassMethods#start'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/cli.rb:29:in 'Bundler::CLI.start'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/bundler-4.1.0/exe/bundle:28:in 'block in <top (required)>'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/friendly_errors.rb:118:in 'Bundler.with_friendly_errors'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/bundler-4.1.0/exe/bundle:20:in '<top (required)>'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/rubygems.rb:306:in 'Kernel#load'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/rubygems.rb:306:in 'Gem.activate_and_load_bin_path'
+	from /Users/jim/.rbenv/versions/3.4.12/bin/bundle:25:in '<main>'
+Warning: /tmp is a symlink, which is not allowed.
+Warning: /tmp is a symlink, which is not allowed.
+/Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/vendor/fileutils/lib/fileutils.rb:1383:in 'File.lstat': No such file or directory @ rb_file_s_lstat - /var/folders/dz/16844_m944q5n0ycp08f44ym0000gn/T/bundler20261116-24738-ryaepg24738 (Errno::ENOENT)
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/vendor/fileutils/lib/fileutils.rb:1383:in 'Bundler::FileUtils.remove_entry_secure'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler.rb:351:in 'Bundler.rm_rf'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler.rb:685:in 'block (2 levels) in Bundler.tmp_home_path'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:675:in 'Process.fork'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:675:in 'Parallel.worker'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:658:in 'block in Parallel.create_workers'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:657:in 'Array#each'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:657:in 'Enumerable#each_with_index'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:657:in 'Parallel.create_workers'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:595:in 'Parallel.work_in_processes'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:317:in 'Parallel.map'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:248:in 'Parallel.each'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/runner.rb:265:in 'RuboCop::Runner#parallel_file_iterator'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/runner.rb:198:in 'RuboCop::Runner#file_iterator'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/runner.rb:170:in 'RuboCop::Runner#inspect_files'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/runner.rb:93:in 'RuboCop::Runner#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli/command/execute_runner.rb:26:in 'block in RuboCop::CLI::Command::ExecuteRunner#execute_runner'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli/command/execute_runner.rb:92:in 'RuboCop::CLI::Command::ExecuteRunner#with_redirect'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli/command/execute_runner.rb:25:in 'RuboCop::CLI::Command::ExecuteRunner#execute_runner'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli/command/execute_runner.rb:17:in 'RuboCop::CLI::Command::ExecuteRunner#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli/command.rb:11:in 'RuboCop::CLI::Command.run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli/environment.rb:18:in 'RuboCop::CLI::Environment#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli.rb:129:in 'RuboCop::CLI#run_command'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli.rb:136:in 'RuboCop::CLI#execute_runners'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli.rb:55:in 'block in RuboCop::CLI#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli.rb:89:in 'RuboCop::CLI#profile_if_needed'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli.rb:46:in 'RuboCop::CLI#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/exe/rubocop:15:in '<top (required)>'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/rubygems.rb:306:in 'Kernel#load'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/rubygems.rb:306:in 'Gem.activate_and_load_bin_path'
+	from /Users/jim/.rbenv/versions/3.4.12/bin/rubocop:25:in '<top (required)>'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/cli/exec.rb:61:in 'Kernel.load'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/cli/exec.rb:61:in 'Bundler::CLI::Exec#kernel_load'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/cli/exec.rb:24:in 'Bundler::CLI::Exec#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/cli.rb:525:in 'Bundler::CLI#exec'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/vendor/thor/lib/thor/command.rb:28:in 'Bundler::Thor::Command#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/vendor/thor/lib/thor/invocation.rb:127:in 'Bundler::Thor::Invocation#invoke_command'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/vendor/thor/lib/thor.rb:538:in 'Bundler::Thor.dispatch'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/cli.rb:35:in 'Bundler::CLI.dispatch'
+/Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/vendor/fileutils/lib/fileutils.rb:1383:in 'File.lstat': No such file or directory @ rb_file_s_lstat - /var/folders/dz/16844_m944q5n0ycp08f44ym0000gn/T/bundler20261116-24738-ryaepg24738 (Errno::ENOENT)
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/vendor/fileutils/lib/fileutils.rb:1383:in 'Bundler::FileUtils.remove_entry_secure'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler.rb:351:in 'Bundler.rm_rf'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler.rb:685:in 'block (2 levels) in Bundler.tmp_home_path'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:675:in 'Process.fork'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:675:in 'Parallel.worker'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:658:in 'block in Parallel.create_workers'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:657:in 'Array#each'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:657:in 'Enumerable#each_with_index'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:657:in 'Parallel.create_workers'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:595:in 'Parallel.work_in_processes'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:317:in 'Parallel.map'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/parallel-2.3.0/lib/parallel.rb:248:in 'Parallel.each'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/runner.rb:265:in 'RuboCop::Runner#parallel_file_iterator'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/runner.rb:198:in 'RuboCop::Runner#file_iterator'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/runner.rb:170:in 'RuboCop::Runner#inspect_files'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/runner.rb:93:in 'RuboCop::Runner#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli/command/execute_runner.rb:26:in 'block in RuboCop::CLI::Command::ExecuteRunner#execute_runner'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli/command/execute_runner.rb:92:in 'RuboCop::CLI::Command::ExecuteRunner#with_redirect'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli/command/execute_runner.rb:25:in 'RuboCop::CLI::Command::ExecuteRunner#execute_runner'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli/command/execute_runner.rb:17:in 'RuboCop::CLI::Command::ExecuteRunner#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli/command.rb:11:in 'RuboCop::CLI::Command.run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli/environment.rb:18:in 'RuboCop::CLI::Environment#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli.rb:129:in 'RuboCop::CLI#run_command'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli.rb:136:in 'RuboCop::CLI#execute_runners'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli.rb:55:in 'block in RuboCop::CLI#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli.rb:89:in 'RuboCop::CLI#profile_if_needed'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/lib/rubocop/cli.rb:46:in 'RuboCop::CLI#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/rubocop-1.92.2/exe/rubocop:15:in '<top (required)>'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/rubygems.rb:306:in 'Kernel#load'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/rubygems.rb:306:in 'Gem.activate_and_load_bin_path'
+	from /Users/jim/.rbenv/versions/3.4.12/bin/rubocop:25:in '<top (required)>'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/cli/exec.rb:61:in 'Kernel.load'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/cli/exec.rb:61:in 'Bundler::CLI::Exec#kernel_load'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/cli/exec.rb:24:in 'Bundler::CLI::Exec#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/cli.rb:525:in 'Bundler::CLI#exec'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/vendor/thor/lib/thor/command.rb:28:in 'Bundler::Thor::Command#run'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/vendor/thor/lib/thor/invocation.rb:127:in 'Bundler::Thor::Invocation#invoke_command'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/vendor/thor/lib/thor.rb:538:in 'Bundler::Thor.dispatch'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/cli.rb:35:in 'Bundler::CLI.dispatch'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/vendor/thor/lib/thor/base.rb:585:in 'Bundler::Thor::Base::ClassMethods#start'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/cli.rb:29:in 'Bundler::CLI.start'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/bundler-4.1.0/exe/bundle:28:in 'block in <top (required)>'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/friendly_errors.rb:118:in 'Bundler.with_friendly_errors'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/bundler-4.1.0/exe/bundle:20:in '<top (required)>'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/vendor/thor/lib/thor/base.rb:585:in 'Bundler::Thor::Base::ClassMethods#start'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/cli.rb:29:in 'Bundler::CLI.start'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/bundler-4.1.0/exe/bundle:28:in 'block in <top (required)>'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/bundler/friendly_errors.rb:118:in 'Bundler.with_friendly_errors'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/gems/3.4.0/gems/bundler-4.1.0/exe/bundle:20:in '<top (required)>'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/rubygems.rb:306:in 'Kernel#load'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/rubygems.rb:306:in 'Gem.activate_and_load_bin_path'
+	from /Users/jim/.rbenv/versions/3.4.12/bin/bundle:25:in '<main>'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/rubygems.rb:306:in 'Kernel#load'
+	from /Users/jim/.rbenv/versions/3.4.12/lib/ruby/site_ruby/3.4.0/rubygems.rb:306:in 'Gem.activate_and_load_bin_path'
+	from /Users/jim/.rbenv/versions/3.4.12/bin/bundle:25:in '<main>'
+Warning: /tmp is a symlink, which is not allowed.
+........................................................................................................
+
+104 files inspected, no offenses detected

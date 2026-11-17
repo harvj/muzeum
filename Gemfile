@@ -8,8 +8,6 @@ gem "pg", "~> 1.1"
 gem "puma", "~> 8.1"
 gem "http", "~> 6.0"
 
-# Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
-gem "bcrypt", "~> 3.1"
 gem "importmap-rails"
 gem "turbo-rails"
 gem "stimulus-rails"
@@ -62,3 +60,5 @@ group :test do
   gem "capybara"
   gem "selenium-webdriver"
 end
+
+gem "openid_connect", "~> 2.3"

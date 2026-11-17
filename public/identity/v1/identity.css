@@ -1,0 +1,7 @@
+/* harvj identity v1.0.0 — identical vendored bytes; no runtime dependency. */
+@font-face{font-family:DM;src:url('./dm-sans.woff2') format('woff2');font-style:normal;font-weight:400 600;font-display:swap}
+:root{--harvj-size-body:16px;--harvj-size-nav:14px;--harvj-size-label:12px;--harvj-size-button:14px;--harvj-size-heading:32px;--harvj-line-body:1.55;--harvj-font:DM,ui-rounded,"Arial Rounded MT Bold",system-ui,sans-serif;--harvj-weight-body:400;--harvj-weight-heading:400;--harvj-weight-strong:600;--harvj-wordmark-size:24px;--harvj-wordmark-tracking:-1.2px;--harvj-header-x:6.5vw;--harvj-header-y:35px;--harvj-nav-gap:20px}
+body,button,input,select,textarea{font-family:var(--harvj-font);font-synthesis:none}
+.harvj-wordmark{position:fixed;top:var(--harvj-header-y);left:var(--harvj-header-x);z-index:5;font-family:var(--harvj-font);font-size:var(--harvj-wordmark-size);font-weight:600;letter-spacing:var(--harvj-wordmark-tracking);line-height:1.2;text-decoration:none;color:var(--harvj-wordmark-color,#243b44)}
+.harvj-wordmark:focus-visible{outline:2px solid currentColor;outline-offset:5px}
+@media(max-width:700px){:root{--harvj-header-x:28px;--harvj-header-y:27px;--harvj-wordmark-size:23px}}

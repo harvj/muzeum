@@ -7,7 +7,7 @@ set :keep_releases, 5
 set :bundle_flags, "--quiet"
 append :linked_files, ".env"
 append :linked_dirs, "storage", "log", "tmp/pids", "tmp/sockets"
-set :default_env, { "RAILS_ENV" => "production", "RBENV_VERSION" => "3.4.12" }
+set :default_env, { "RAILS_ENV" => "production", "RBENV_VERSION" => "3.4.12", "BUNDLE_PATH" => "/var/www/muzeum/shared/bundle" }
 set :bundle_version, 4
 set :bundle_jobs, 2
 SSHKit.config.command_map[:bundle] = "/home/muzeum/.rbenv/shims/bundle"
@@ -33,7 +33,7 @@ namespace :muzeum do
     on primary(:app) do
       within release_path do
         # shared .env.migrate is shell-compatible; never echo it or pass secrets in argv.
-        execute "set -ae; . #{shared_path}/.env.migrate; set +a; cd #{release_path} && /home/muzeum/.rbenv/shims/bundle exec rails db:migrate"
+        execute :sudo, "-n", "/usr/local/sbin/muzeum-migrate", release_path, ENV.fetch("APPROVED_SHA")
       end
     end
   end

@@ -1,0 +1,9 @@
+[Unit]
+Description=Weekly Muzeum full repository integrity verification
+[Timer]
+OnCalendar=Sun *-*-* 04:00:00 UTC
+RandomizedDelaySec=15m
+Persistent=true
+Unit=muzeum-backup-check.service
+[Install]
+WantedBy=timers.target

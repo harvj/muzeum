@@ -7,13 +7,13 @@ RSpec.describe User, type: :model do
     expect(user.email_address).to be_nil
   end
 
-  it "requires local credentials for activation and rejects short or oversized passwords" do
-    user = User.new(activated_at: Time.current)
-    expect(user).not_to be_valid
-    user.assign_attributes(email_address: "person@example.com", password: "short")
-    expect(user).not_to be_valid
-    user.password = "é" * 40
-    expect(user).not_to be_valid
+  it "requires an Auth subject for login, never local credentials" do
+    user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "stable-uuid")
+    expect(user.login_enabled?).to be(true)
+    expect(user.password_digest).to be_nil
+    expect(user).not_to respond_to(:authenticate)
+    user.update!(disabled_at: Time.current)
+    expect(user.login_enabled?).to be(false)
   end
 
   it "normalizes and uniquely constrains email addresses in the database" do

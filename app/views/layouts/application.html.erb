@@ -1,31 +1,32 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <title><%= content_for(:title) || "Muzeum" %></title>
+    <title>Muzeum — listening archive</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="Muzeum">
-    <meta name="mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
-
-    <%= yield :head %>
-
-    <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
-    <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
-
-    <link rel="icon" href="/icon.png" type="image/png">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="/icon.png">
-
-    <%# Includes all stylesheet files in app/assets/stylesheets %>
+    <link rel="stylesheet" href="/identity/v1/identity.css">
+    <link rel="stylesheet" href="/identity/v1/session.css">
+    <link rel="stylesheet" href="/environments/stone/environment.css">
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
-
   <body>
+    <div class="stone-environment" aria-hidden="true"></div>
+    <header>
+      <a class="harvj-wordmark" href="/">muzeum</a>
+      <nav aria-label="Appearance and account">
+        <div class="controls" data-controller="appearance">
+          <label for="appearance">Appearance</label>
+          <select id="appearance" data-action="appearance#change"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select>
+          <button type="button" data-action="appearance#toggleMotion" aria-pressed="false">Pause light</button>
+        </div>
+        <% if current_user %><%= render "shared/session_dropdown" %><% end %>
+      </nav>
+    </header>
     <main>
-      <% flash.each do |_, message| %><p role="alert"><%= message %></p><% end %>
+      <% flash.each do |_, message| %><p class="card flash" role="status"><%= message %></p><% end %>
       <%= yield %>
     </main>
   </body>

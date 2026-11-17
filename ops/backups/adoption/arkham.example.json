@@ -1,0 +1,32 @@
+{
+  "enabled": false,
+  "application": "arkham",
+  "review_required": "Independent review before touching existing service or data",
+  "subaccount": "NOT_YET_PROVISIONED",
+  "repository_relative_path": "restic",
+  "password_file": "/etc/harvj-backups/arkham/restic-password",
+  "ssh_key": "/etc/harvj-backups/ssh/arkham-ed25519",
+  "proposed_daily_utc": "02:30",
+  "retention": {
+    "daily": 30,
+    "weekly": 12,
+    "monthly": 12
+  },
+  "databases": [
+    "arkham_production"
+  ],
+  "persistent_files_to_review": [
+    "/var/www/arkham/shared",
+    "/var/www/arkham/current/storage"
+  ],
+  "consistency_gate": "Identify all upload/secret paths and writers before selecting capture method",
+  "monitoring": {
+    "provider": "Healthchecks.io",
+    "project": "harvj-backups",
+    "check": "Arkham \u2014 Daily Backup",
+    "period_seconds": 86400,
+    "grace_seconds": 7200,
+    "ping_url": "PROVISION_SEPARATELY_OUTSIDE_GIT",
+    "reuse_muzeum_ping_url": false
+  }
+}

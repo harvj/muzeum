@@ -1,0 +1,15 @@
+# Shared harvj session dropdown v1
+
+Muzeum vendors Auth's identity v1 font, CSS and license byte-for-byte at `public/identity/v1`; `manifest.json` retains Auth's upstream checksums. The small additional `session.css` and Rails partial `app/views/shared/_session_dropdown.html.erb` define the compatible dropdown. Native `<details>` supplies keyboard opening, focusable links and static/no-JavaScript behavior. No session cookie, token or user information is put in cross-application links.
+
+Order: Continuum Engine (`https://funding.harvj.com/`), Muzeum (`https://muzeum.fm/`), User management (`https://auth.harvj.com/admin`, administrator evidence required), then the current application's existing CSRF-protected local Log out. Use the identical 19px stroked SVG icons and account summary icon, 242px panel, 44px targets, 12px panel radius, 8px inset, shared DM font and hover/focus rules. Current application has subtle semibold/background emphasis. Themes supply local `--ink`, `--card`, `--line`, `--control` values.
+
+The actual Auth `/admin` route redirects to `/admin/users` and enforces active administrator status plus fresh native MFA. Auth application membership and OIDC subject do **not** prove administrator status. The existing consumer contract exposes no administrator-role evidence. Consequently Muzeum currently withholds User management for every consumer session: `auth_administration_available?` fails closed. It does not infer privilege from the operator email, a request parameter, an allowlist or possession of an Auth account. This is an explicit remaining compatibility limitation, not a claim that the link is available to administrators today.
+
+Minimal compatible adoption, requiring separately authorized CE/Auth changes:
+
+- **CE:** vendor the same CSS and SVG/link markup in `templates/_navigation.html` in place of its small `ce-session` panel. Preserve all existing primary navigation, OIDC enforcement, `/logout` POST and native CSRF value. Change only the current-app emphasis. No worker/deployment changes.
+- **Auth administrative interface:** vendor the panel's CSS/markup only inside the existing authenticated administrative layout. Use its existing active-account/admin guard to show User management and its existing CSRF/native logout flow. Keep `/admin`'s role and recent-MFA enforcement intact; do not show the admin navigation in login/MFA/consent screens.
+- **Consumer administrator navigation:** Auth must first define and test narrowly scoped, provider-authenticated administrator-navigation evidence with bounded role-change propagation (for example alongside the already authenticated introspection result). Then each consumer can use that evidence solely to show this navigation link. It must not confer application administration or replace Auth's own admin/MFA checks. Do not activate an invented or unverified claim in Muzeum.
+
+CE and Auth repositories, deployments, authentication, session cookies and credentials were not modified for this dropdown. Links follow normal OIDC navigation and each destination independently authorizes the user.

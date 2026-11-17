@@ -1,0 +1,9 @@
+[Unit]
+Description=Hourly Muzeum backup freshness check
+[Timer]
+OnCalendar=hourly
+RandomizedDelaySec=5m
+Persistent=true
+Unit=muzeum-backup-monitor.service
+[Install]
+WantedBy=timers.target

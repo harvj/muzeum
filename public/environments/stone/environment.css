@@ -1,0 +1,10 @@
+/* Environment only: immutable stone, independently moving illumination. */
+:root{--stone-image:url('/environments/stone/limestone.jpg');--stone-color:#e7ddc9;--light-color:255,242,208}
+@media(prefers-color-scheme:dark){:root{--stone-image:url('/environments/stone/onyx.jpg');--stone-color:#161817;--light-color:221,231,231}}
+html[data-appearance=light]{--stone-image:url('/environments/stone/limestone.jpg');--stone-color:#e7ddc9;--light-color:255,242,208}
+html[data-appearance=dark]{--stone-image:url('/environments/stone/onyx.jpg');--stone-color:#161817;--light-color:221,231,231}
+.stone-environment{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden;background:var(--stone-color) var(--stone-image) center/cover no-repeat}
+.stone-environment::after{content:"";position:absolute;left:-15%;top:12%;width:75vw;height:65vh;opacity:0;background:radial-gradient(ellipse,rgba(var(--light-color),.34),rgba(var(--light-color),.13) 34%,transparent 68%);filter:blur(26px);animation:stone-illumination 23s ease-in-out infinite;will-change:transform,opacity}
+@keyframes stone-illumination{0%,26%,70%,100%{opacity:0;transform:translate(0,0) rotate(-16deg)}34%{opacity:.7}52%{opacity:.85}69%{opacity:0;transform:translate(65vw,20vh) rotate(-16deg)}}
+html[data-still=true] .stone-environment::after{animation:none;opacity:0}
+@media(prefers-reduced-motion:reduce){.stone-environment::after{animation:none;opacity:0;will-change:auto}}

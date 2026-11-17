@@ -1,5 +1,6 @@
 # P1.0 — Foundation and data contract
 
+> Historical milestone record. The [canonical numbered roadmap](../roadmap.md) and P1.1d requirements supersede the local-password and import-ordering assumptions below.
 Status: proposal for review, 2026-11-15. Production-first ordering and Rails-native UI requirements are now defined by the [roadmap](../repository-assessment-2026-11-15.md#5-numbered-implementation-roadmap) and [P1.1 deployment plan](../p1.1/production-deployment-plan.md), which supersede earlier milestone/visibility assumptions. Baseline execution completed; application/schema implementation has not begun. This document supersedes conflicting architectural proposals in the January context notes and the original assessment. See [baseline results](baseline-results.md), [import requirements](import-requirements.md), and the [updated roadmap](../repository-assessment-2026-11-15.md#5-numbered-implementation-roadmap).
 
 ## 1. Confirmed contract

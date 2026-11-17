@@ -1,4 +1,43 @@
-<h1>Muzeum</h1>
-<p>Signed in as <%= current_user.email_address %>.</p>
-<p>Your listening archive is being prepared.</p>
-<%= button_to "Sign out", session_path, method: :delete %>
+<section class="intro">
+  <p class="eyebrow">Your listening archive</p>
+  <h1>A history, preserved.</h1>
+  <p>Public Last.fm observations, kept as they were reported.</p>
+</section>
+<div class="columns">
+  <section class="card">
+    <h2>Last.fm account</h2>
+    <% if current_user.lastfm_username.present? %>
+      <p class="source-name"><%= current_user.lastfm_username %></p>
+      <p class="muted">Associated public archive · ownership unverified</p>
+    <% else %>
+      <p class="muted">Associate a public username to begin. No Last.fm password is needed.</p>
+      <%= form_with url: lastfm_account_path, method: :patch do |form| %>
+        <%= form.label :lastfm_username, "Last.fm username" %>
+        <div class="field-row"><%= form.text_field :lastfm_username, required: true, maxlength: 64, autocomplete: "off" %><%= form.button "Associate" %></div>
+      <% end %>
+    <% end %>
+  </section>
+  <section class="card">
+    <h2>Import status</h2>
+    <% if @run %>
+      <p><%= @run.status.capitalize %> · <%= number_with_delimiter(@run.scrobbles_processed.to_i) %> new observations</p>
+      <p class="muted">Pages saved: <%= @run.next_page - 1 %><%= " / #{@run.total_pages}" if @run.total_pages %></p>
+      <% if @run.total_pages.to_i.positive? %><progress aria-label="Import pages saved" value="<%= @run.next_page - 1 %>" max="<%= @run.total_pages %>"></progress><% end %>
+      <p class="muted">Last successful update: <%= @run.last_success_at&.utc&.strftime("%Y-%m-%d %H:%M UTC") || "Not yet" %></p>
+      <% if @run.last_error %><p class="error" role="alert"><%= @run.last_error %></p><% end %>
+    <% else %><p class="muted">No import started. Progress will be saved after each page.</p><% end %>
+    <% if current_user.lastfm_username.present? %>
+      <%= button_to(@run && !@run.completed? ? "Resume import" : "Import history", imports_path) %>
+    <% end %>
+    <% if @run&.failed? %><%= button_to "Restart import from beginning", imports_path(restart: "1") %><% end %>
+    <p class="muted">Refresh this page to see progress.</p>
+  </section>
+</div>
+<section class="grid" aria-label="Observed listening history">
+  <% [["Imported scrobbles", @count], ["Observed artists", @artists], ["Observed albums", @albums], ["Observed tracks", @tracks]].each do |label, value| %>
+    <article class="card stat"><span><%= label %></span><strong><%= number_with_delimiter(value) %></strong><span><%= label == "Imported scrobbles" ? "Persisted source observations" : "Distinct reported names" %></span></article>
+  <% end %>
+  <article class="card"><span class="muted">Earliest scrobble</span><p class="date"><%= @earliest&.utc&.strftime("%d %b %Y") || "No history yet" %></p><p class="muted"><%= @earliest&.utc&.strftime("%H:%M:%S UTC") %></p></article>
+  <article class="card"><span class="muted">Latest scrobble</span><p class="date"><%= @latest&.utc&.strftime("%d %b %Y") || "No history yet" %></p><p class="muted"><%= @latest&.utc&.strftime("%H:%M:%S UTC") %></p></article>
+</section>
+<footer>Names are source observations and have not been resolved to MusicBrainz identities. Album and track counts include the reported artist. Same-second differing observations are retained; identical same-second deliveries cannot be distinguished by Last.fm.</footer>

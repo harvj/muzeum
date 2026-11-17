@@ -31,8 +31,10 @@ jobs:
         run: bundle exec rails db:create db:migrate
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/muzeum_migration_test
-          SCHEMA: tmp/migration-schema.rb
+          SCHEMA: tmp/migration-structure.sql
       - run: bundle exec rspec
+      - name: Verify backup helper tests
+        run: python3 -m unittest discover -s ops/backups -p 'test_*.py'
       - run: bundle exec rails zeitwerk:check
       - name: Compile production assets
         run: bundle exec rails assets:precompile

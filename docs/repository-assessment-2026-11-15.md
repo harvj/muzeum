@@ -1,5 +1,6 @@
 # Muzeum repository assessment and development plan
 
+> Historical milestone record. The [canonical numbered roadmap](roadmap.md) and P1.1d requirements supersede the local-password and import-ordering assumptions below.
 Original assessment: 2026-11-15. Updated for production-first sequencing, Capistrano/GitHub Actions separation and Rails-native UI on the same date. The source inventory and comparative findings below remain useful; the roadmap and P1.0 contract supersede earlier proposals. P1.0 installed the pinned local runtime/dependencies and tested disposable databases; no application changes, production writes, push or deployment. See [P1.0 contract/schema proposal](p1.0/foundation-and-data-contract.md), [baseline results](p1.0/baseline-results.md) and [250k import plan](p1.0/import-requirements.md).
 
 ## Recommendation

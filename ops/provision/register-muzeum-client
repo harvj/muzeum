@@ -1,0 +1,82 @@
+#!/usr/bin/env python3
+"""Trusted Auth operator operation, never loaded by the Muzeum application."""
+import getpass,json,os,pwd,stat,subprocess,sys
+from pathlib import Path
+
+
+def main():
+    if os.geteuid()!=0 or not sys.stdin.isatty():
+        raise RuntimeError('Interactive root terminal required')
+    os.umask(0o077)
+    candidate=json.loads(Path('/etc/auth/candidate.json').read_text())
+    release=Path(candidate['release']).resolve(strict=True)
+    if release.parent!=Path('/var/www/auth/releases') or Path('/var/www/auth/current').resolve()!=release or (release/'REVISION').read_text().strip()!=candidate['sha']:
+        raise RuntimeError('Verified live Auth release required')
+    auth=pwd.getpwnam('auth')
+    pending=Path('/etc/auth/muzeum-client-material')
+    if pending.is_symlink():raise RuntimeError('Unsafe material directory')
+    pending.mkdir(mode=0o700,exist_ok=True)
+    os.chown(pending,auth.pw_uid,auth.pw_gid);pending.chmod(0o700)
+    output=pending/'client.json'
+    if output.is_symlink():raise RuntimeError('Unsafe material file')
+    prior=json.loads(output.read_text()) if output.exists() else None
+    env={'PATH':'/opt/auth/ruby-3.4.12/bin:/usr/bin:/bin','LANG':'C.UTF-8','RACK_ENV':'production',
+         'AUTH_ISSUER':'https://auth.harvj.com','AUTH_EMAIL_TRANSPORT':'disabled','AUTH_KEY_DIR':'/etc/auth/keys',
+         'DATABASE_URL':'postgresql://auth_runtime@127.0.0.1:5432/auth_production','PGPASSFILE':'/etc/auth/runtime.pgpass',
+         'BUNDLE_GEMFILE':str(release/'Gemfile'),'BUNDLE_WITHOUT':'development:test','AUTH_CODE_DIR':str(release),
+         'MUZEUM_CLIENT_OUTPUT':str(output)}
+    ruby="""require 'bundler/setup';require 'json';require File.join(ENV.fetch('AUTH_CODE_DIR'),'app');
+input=JSON.parse($stdin.read)
+actor=Auth::Access.active_accounts.where(email: 'jimrharvey@gmail.com',admin: true).first
+raise 'Active existing administrator required' unless actor
+Auth::App.rodauth.otp_auth(account_id: actor[:id],otp_auth: input.fetch('otp'))
+Auth::DB.transaction(savepoint: true) do
+ rows=Auth::DB[:oauth_applications].where(name: 'Muzeum').all
+ prior=input['prior']
+ if prior
+  row=rows.first
+  raise 'Reconcile existing registration' unless rows.size==1 && row[:client_id]==prior['client_id'] && row[:redirect_uri]=='https://muzeum.fm/oidc/callback' && row[:enabled] && row[:token_endpoint_auth_method]=='client_secret_basic' && BCrypt::Password.new(row[:client_secret])==prior['client_secret']
+  id=row[:id];material=prior
+ else
+  raise 'Existing client requires reconciliation' unless rows.empty?
+  id,secret=Auth::Clients.register(actor[:id],name: 'Muzeum',redirect_uri: 'https://muzeum.fm/oidc/callback',method: 'client_secret_basic')
+  material={'client_id'=>Auth::DB[:oauth_applications].where(id:id).get(:client_id),'client_secret'=>secret}
+ end
+ Auth::DB[:oauth_applications].where(id:id).update(scopes:'openid offline_access')
+ unless Auth::DB[:memberships].where(account_id:actor[:id],oauth_application_id:id,active:true).any?
+  Auth::Lifecycle.membership(actor[:id],actor[:id],id,active:true)
+ end
+ Auth::Audit.record('operator.client_provisioned',actor:actor[:id],client:id)
+ unless File.exist?(ENV.fetch('MUZEUM_CLIENT_OUTPUT'))
+  File.open(ENV.fetch('MUZEUM_CLIENT_OUTPUT'),File::WRONLY|File::CREAT|File::EXCL,0600){|f|f.write(JSON.generate(material));f.flush;f.fsync}
+ end
+end
+"""
+    otp=getpass.getpass('Fresh code from your existing administrator authenticator (hidden): ')
+    result=subprocess.run(['/usr/sbin/runuser','-u','auth','--','/opt/auth/ruby-3.4.12/bin/ruby','-e',ruby],
+                          env=env,input=json.dumps({'otp':otp,'prior':prior}).encode(),capture_output=True,timeout=30)
+    if result.returncode:raise RuntimeError('Native registration failed; details suppressed. Preserve material and reconcile before retry.')
+    material=json.loads(output.read_text())
+    import re
+    if not all(re.fullmatch('[a-f0-9]{48,128}',material.get(k,'')) for k in ('client_id','client_secret')):
+        raise RuntimeError('Unexpected credential format')
+    target=Path('/etc/muzeum')
+    if target.is_symlink():raise RuntimeError('Unsafe target directory')
+    target.mkdir(mode=0o700,exist_ok=True)
+    target.chmod(0o700)
+    final=target/'oidc.env'
+    content=('OIDC_CLIENT_ID='+material['client_id']+'\nOIDC_CLIENT_SECRET='+material['client_secret']+'\nOIDC_REDIRECT_URI=https://muzeum.fm/oidc/callback\n').encode()
+    if final.exists():
+        if final.is_symlink() or final.read_bytes()!=content:raise RuntimeError('Existing configuration differs; preserve and reconcile')
+    else:
+        fd=os.open(final,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600)
+        with os.fdopen(fd,'wb') as f:f.write(content);f.flush();os.fsync(f.fileno())
+    print('Muzeum native client and existing administrator membership verified. Credentials: /etc/muzeum/oidc.env (root-only).')
+    print('No account, password, MFA enrollment, application service, proxy or timer created or changed.')
+
+
+if __name__=='__main__':
+    try:main()
+    except Exception:
+        print('Muzeum registration stopped; sensitive details suppressed. Preserve pending material for reconciliation.',file=sys.stderr)
+        raise SystemExit(1)

@@ -1,0 +1,33 @@
+#!/usr/bin/env python3
+"""Migrate only an exact Muzeum candidate as the isolated migration OS identity."""
+import fcntl,json,os,re,subprocess,sys
+from pathlib import Path
+try:
+    if os.geteuid()!=0 or len(sys.argv)!=3:raise RuntimeError()
+    release=Path(sys.argv[1]).resolve(strict=True);sha=sys.argv[2]
+    if release.parent!=Path('/var/www/muzeum/releases') or not re.fullmatch('[a-f0-9]{40}',sha) or (release/'REVISION').read_text().strip()!=sha:raise RuntimeError()
+    os.umask(0o077)
+    with open('/etc/muzeum/migration.lock','a') as lock:
+        fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+        env={'PATH':'/opt/auth/ruby-3.4.12/bin:/usr/bin:/bin','LANG':'C.UTF-8','HOME':'/home/muzeum-migrate','BUNDLE_WITHOUT':'development:test'}
+        for line in Path('/etc/muzeum/migrate.env').read_text().splitlines():
+            name,value=line.split('=',1);env[name]=value
+        env['BUNDLE_GEMFILE']=str(release/'Gemfile')
+        # Only empty auxiliary databases may receive an explicit first bootstrap.
+        ruby="""require 'bundler/setup';require './config/environment';
+%w[cache queue cable].each do |name|
+ config=ActiveRecord::Base.configurations.configs_for(env_name:'production',name:name)
+ ActiveRecord::Base.establish_connection(config)
+ if ActiveRecord::Base.connection.tables.empty?
+  load Rails.root.join('db',name+'_schema.rb')
+ end
+end
+"""
+        result=subprocess.run(['runuser','-u','muzeum-migrate','--','/opt/auth/ruby-3.4.12/bin/ruby','-e',ruby],cwd=release,env=env,capture_output=True,timeout=120)
+        if result.returncode:raise RuntimeError()
+        result=subprocess.run(['runuser','-u','muzeum-migrate','--','/opt/auth/ruby-3.4.12/bin/bundle','exec','rails','db:migrate'],cwd=release,env=env,capture_output=True,timeout=180)
+        if result.returncode:raise RuntimeError()
+    print('Exact Muzeum candidate migration completed with isolated migrator credentials.')
+except Exception:
+    print('Muzeum migration stopped; details suppressed; inspect protected diagnostics before retry.',file=sys.stderr)
+    raise SystemExit(1)

@@ -1,0 +1,9 @@
+[Unit]
+Description=Daily Muzeum off-host backup readiness
+[Timer]
+OnCalendar=*-*-* 02:00:00 UTC
+RandomizedDelaySec=15m
+Persistent=true
+Unit=muzeum-backup.service
+[Install]
+WantedBy=timers.target
