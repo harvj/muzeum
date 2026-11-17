@@ -1,6 +1,6 @@
 # P1.3a — Canonical recording resolution
 
-**Status:** Repository assessment and migration proposal. The existing schema cannot persist a recording decision with both immutable history and independent listener scope. The first writable slice depends on the additive ledger below and an approved acceptance rule. This milestone delivers the proposal; it applies no schema changes.
+**Status:** Implemented for a bounded assessment-only pilot in disposable development or staging data. Manual decision services and effective reads are available to future application callers. Production pilot execution and automatic acceptance are disabled.
 
 ## Repository assessment
 
@@ -17,49 +17,48 @@ The deployed reference is P1.2 at `8942bc41ae76f3c4e3d63a20552b0541c5cd3412`. Th
 
 The repository demonstrates exposure to cross-user leakage through the legacy write path. This review did not measure production incidence. P1.2 import and routes do not invoke that resolver.
 
-## Approved domain clarification — surface defaults and event exceptions
+## Persistence and effective reads
 
-The earlier proposal below was written before the listener clarified surface semantics. **Treat this section and [REC-010–REC-018](../domain/recording-resolution.md) as authoritative over conflicting proposal details.** Update the schema design before writing migrations; the existing private listener/scrobble-only stream is not sufficient.
-
-- An exact Last.fm **surface** is the observed artist, album and track **strings**, preserving missing album distinctly. Additional MBID claims and normalization may narrow investigation groups, but do not change surface equality. A surface is not a canonical recording.
-- A listener's explicit **user + archive + exact surface** assignment is a persistent default for **all past and future** matching scrobbles. An explicit **user + scrobble** assignment is a protected exception, even if a surface is later reassessed or reassigned.
-- The effective query uses manual scrobble > manual surface > accepted automatic surface > unresolved, with explicit unresolved and return-to-inheritance modes at the relevant scope. Do not materialize surface changes by rewriting scrobble identities or event-specific manual decisions.
-- Another user's choice can inform candidates, but cannot commit a mapping for this listener; protect private decision details and user identity.
-- Reassessments may create suggestions or no-change evidence without changing the effective choice. Preserve a ledger suitable for a future decision journal, including suggestion/decision distinction and user action scope.
-- The future review UI offers **Apply to all** (this listener's surface default), **Only this time** (this scrobble), and **Dismiss/defer**; it never overwrites manual exceptions. **This UI is not in P1.3a.**
-- MusicBrainz and Discogs participate in P1.3a provider evidence from the beginning. Discogs developer application Consumer Key/Secret have been obtained by the operator; no OAuth/user account access is required for public catalog reads. Secrets stay in protected configuration, not Git or chat. Follow confirmed provider authentication, rate limits, retention, freshness and attribution terms before live requests.
-
-### Required migration proposal revision
-
-Introduce an explicit stable surface key/identity per archive (or prove an equivalent indexed exact-tuple representation) **separate from evidence-rich investigation groups**. Add append-only decision streams for (a) accepted automatic surface defaults, (b) listener+surface explicit choices and (c) listener+scrobble explicit exceptions. Scope every stream and predecessor to the correct archive/listener/surface/event, with database constraints and indexed current heads. A manual event exception must remain stable across compatibility-version changes. Membership/lookup must include future scrobbles without duplicating decisions. Maintain append-only assessments and durable work state.
-
-Test exact string distinctions, missing albums, late arrivals, shared archive users, manual event exceptions across surface revisions and group regrouping, explicit unresolved and return-to-inheritance, and cross-user evidence isolation. This is a **design correction before implementation**, not authorization to deploy.
-
-## Additive migration proposal
-
-Use the primary PostgreSQL database so an assessment, canonical identity, decision and work completion can commit together. Keep existing columns, tables and source triggers. No bulk rewrite or backfill in the schema migration.
-
-| Proposed relation | Identity and integrity |
+| Relation | Purpose |
 | --- | --- |
-| `recording_resolution_groups` | Unique archive, compatibility version and structured input digest. Store the input signature and compare it when reusing a digest. For the pilot use exact parsed artist/title/album and all source MBID claims, retaining missing values and version markers. A group narrows investigation; identical strings can still hide different performances. |
-| `recording_resolution_memberships` | Append-only mapping from a scrobble to one group per compatibility version. Unique on scrobble and version. Enforce matching archive and compatibility version with composite foreign keys or an insert trigger. A policy change creates new memberships under a new version. Old decisions retain their original scope. |
-| `recording_resolution_assessments` | Append-only evaluation of a group or a listener-scoped observation. Store the evidence digest, actor, UTC time, algorithm/version, outcome and reason codes. Store typed candidate MBIDs and compact evidence in a versioned JSON envelope with request references, fetch times, response digests, candidate ordering, support, contradictions and completeness. Candidates need no canonical rows before selection. A provider failure is work state, distinct from a completed unresolved assessment. |
-| `recording_resolution_decisions` | Append-only ledger. **Superseded scope wording:** automatic stream per group and private stream per listener/scrobble. Replace with the three surface/event streams defined above; investigation groups are not authoritative surface keys. Explicit modes for resolved, unresolved and return to automatic management, with recording FK only for resolved. Store assessment, actor, UTC time, reason, predecessor and optional revert target. Require same-scope references and one sequence number per stream. Use partial unique indexes for shared and private streams plus SQL checks for valid scope/mode combinations. Prevent update/delete/truncate through database guards consistent with source history protection. |
-| `recording_resolution_work` | Mutable work state keyed by group and evaluation generation. Record attempt, lease/token, retry due time and terminal failure details. Use unique keys and a due-work index. Jobs reference this row; it survives a queue handoff gap or worker interruption. |
+| `resolution_surfaces` | Archive-scoped, exact artist/album/title tuple. SQL uses a generated digest for indexed lookup and verifies exact text before membership and reads. SQL NULL and an empty album string have distinct keys. |
+| `resolution_memberships` | One immutable membership per selected observation. An insert guard verifies the observation’s archive and exact tuple. |
+| `resolution_groups` | Investigation signature of surface ID, compatibility version and source MBID claims. Grouping is independent of authoritative surface equality. |
+| `resolution_assessments` | Append-only evidence, candidate IDs, uncertainty reasons, worker and evaluation version, request provenance, timestamp and an optional single suggested recording. Repeating equivalent evidence reuses the assessment by group/version/digest. |
+| `resolution_decisions` | Append-only automatic surface, listener/surface and listener/scrobble streams. Rows carry the reason, mode, recording and assessment references where applicable, listener or worker actor, version, time and same-stream predecessor. Foreign keys, a unique no-branch predecessor index and scope triggers enforce the stream relationships. |
+| `resolution_pilots`, `resolution_work` | Frozen archive and upper ID, selection cursor, counters, leases, retry due times and completion or terminal failure. |
+| `resolution_provider_budgets`, `resolution_request_cache` | Shared provider cooldown and request spacing, plus size- and time-bounded projected request cache. |
 
-Reuse `recordings.mbid` and `artists.mbid` after verification. Capture ordered credited names, artist MBIDs and join phrases from the recording response. The ordered credit snapshot in the assessment preserves the provider claim even if catalog metadata later changes. Review legacy rows with mismatched titles or durations before changing catalog metadata. Keep release/track IDs out of the recording key.
+`RecordingResolution::Ledger.effective(listener)` starts with the current OIDC user's active archive grants and returns scrobbles with `effective_recording_id`, `effective_recording_decision_id` and `effective_recording_mode`. Use normal Rails filters and keyset pagination on this relation. It checks the latest scrobble decision, then the listener surface decision, then the automatic surface decision. Explicit unresolved entries mask lower-priority layers. An inherit head releases that layer only. The lookup uses exact source text, so a future scrobble inherits even before pilot membership exists. Revocation takes effect on the next query.
 
-Define the effective query from the authenticated user's active archive association. **Superseded precedence wording:** For each observation, take the newest private decision for that listener and observation. The authoritative query must also check the listener's exact-surface decision before the automatic surface default. An explicit unresolved override masks the group default. A return-to-automatic entry or missing private decision permits the latest group decision for the selected compatibility version. Missing or unresolved group decisions produce no canonical recording. Index by stream and descending sequence and join to `recordings` only after resolving precedence. Scope private assessments and history by listener as well as archive. Recheck access at write time, including after I/O. A revert appends a new entry targeting a prior decision. Release credit remains a separate decision and adds nothing to this query.
+`Ledger.record!` requires the authenticated listener, a scrobble from a currently granted archive, a scope (`:surface` or `:scrobble`), mode, reason and the expected current head ID (nil for a first decision). Pass a verified catalog recording for resolved entries and optionally an assessment from the same surface. A stale head fails without branching history. Returning to inheritance appends a decision. `Ledger.history(listener)` exposes only that user's authorized history and any shared automatic decisions. `Ledger.assessments(listener)` exposes only provider assessments from authorized archives. This version shares provider evidence within an archive and excludes other listeners' choices and private reasoning from candidate evaluation.
 
-Rehearse the additive migration on empty and populated disposable databases. Compare source IDs, counts, payload/fingerprint digests and lineage before and after, including existing legacy interpretation columns. Exercise concurrent constraints and query plans. Any later production schema change needs the current [deployment workflow](../deployment/workflow.md), reviewed hash-matched migrations and fresh encrypted backup with isolated four-database recovery evidence. Leave legacy decisions out of the new effective query until their provenance and scope can be established.
+Successful suggestions may insert verified canonical recording and artist MBIDs or attach missing artist links. Existing IDs and metadata are preserved. Ordered credits with credited names and join phrases are retained in the assessment. Release relationships are evidence for identity corroboration and create no release membership or attribution writes.
 
-## First implementation assignment
+## Running the bounded pilot
 
-1. Implement the additive ledger and scoped read query. Use a fixture-only or explicitly operator-selected local/staging sample, with a mandatory archive, immutable upper ID, keyset cursor and explicit positive cap on rows, groups and provider requests. Use bounded chunks and a fixed end condition. Replays visit the same group/membership keys.
-2. Enqueue discrete work with Active Job/Solid Queue after committing selection. Claim with a short transaction and renewable lease token. Fetch outside application write transactions. A bounded dispatcher can recover due/expired rows and enqueue gaps when explicitly invoked. Keep this facility independent of Last.fm ingestion and production scheduling.
-3. Search escaped artist/title terms independently of album; verify any supplied recording MBID by lookup and gather recording artist credits and available release evidence. Preserve plausible alternatives, truncation, version signals and provider conflicts. Verify edition track slots when used as corroboration.
-4. Start with fixture-backed assessments and reviewable abstentions. Proposed first automatic rule for operator validation: require a verified source recording claim, concordant recording title and ordered artist credit, and a provider edition whose identity agrees with the observed album evidence and whose relevant track slot links to that exact recording. Conflicting claims, indistinguishable plausible competitors, incomplete search/track evidence, or unresolved version differences block automatic acceptance. An album title match by itself, near text, search rank and source MBID alone are insufficient. Without a source recording MBID, keep candidates available for review in the pilot. Evaluate the rule on labeled examples before enabling writes.
-5. Finalize under the group lock with the current lease token. Use a unique evaluation key (scope, version and evidence digest) and idempotent stream commit. Persist assessment, any justified changed decision and work completion in one transaction. Same evidence on replay creates no duplicate history. Changed evidence with the same effective choice may append an assessment alone. A stale worker cannot commit after a lease is reclaimed. Downstream reads use the scoped query above.
+Use a disposable Rails development database with explicitly chosen observations and a separate Solid Queue database. Each invocation selects up to 100 observations by keyset; at most 1,000 observations, 100 groups, 300 MusicBrainz requests and 150 Discogs requests are allowed per pilot. The upper observation ID must already belong to the selected archive. The cutoffs are resource limits. Fixture mode uses deterministic synthetic catalog records, so use disposable databases where fixture recordings cannot be mistaken for real catalog entries.
+
+```sh
+export RAILS_ENV=development MUZEUM_RESOLUTION_QUEUE=1
+export SOLID_QUEUE_CONFIG=config/recording_resolution_queue.yml
+export SOLID_QUEUE_SKIP_RECURRING=true
+# Set DATABASE_URL and QUEUE_DATABASE_URL to separate disposable databases.
+bin/rails db:prepare
+ARCHIVE_ID=<archive-id> UPPER_ID=<observation-id> bin/rails recording_resolution:start
+# Start bin/jobs start in a separate terminal with the same environment.
+PILOT_ID=<reported-id> bin/rails recording_resolution:dispatch
+```
+
+Replace the angle-bracket placeholders with numeric IDs. For a supported fixture result, seed an event for Night Lines / Night Drive / Signals with `FixtureTransport::IDS[:studio]` as the track MBID. Repeat dispatch for the same pilot to advance selection and recover due retries, expired leases or a failed queue handoff. Stop once selection is finished and no work is pending or leased. The normal failure ceiling is five attempts. Shared rate-budget deferrals use durable due times and do not consume that ceiling. A terminal failure stays visible. After correcting the cause, start a fresh bounded pilot if replay is warranted.
+
+The worker obtains a lease before provider I/O, rechecks ownership on each request reservation and at finalization, and records assessment and completion atomically. Cached results prevent throttled attempts from repeating completed requests. Neither provider is called from Last.fm ingestion. No production queue, jobs schedule or ingestion hook was added. Starting or processing a pilot in Rails production is blocked.
+
+## Validation and migration evidence
+
+The synthetic labeled corpus had **2 supported suggestions out of 2 emitted** (100% fixture precision) and **8 abstentions out of 10 cases** (80%). One intentional Discogs disagreement was observed and abstained. The corpus covers a valid redirect, an incorrect/missing MBID, missing album, a truncated search, indistinguishable candidates and studio/live/remix distinctions. These fixture metrics do not establish precision on real catalog data. No effective automatic decisions were emitted.
+
+Both migrations are additive and registered in [the exact-hash manifest](../../config/deploy/migrations.json). An isolated PostgreSQL rehearsal loaded the pre-change structure, seeded 10,000 observations with legacy recording/surface references and applied both migrations. Before/after row digests matched for source observations (including fingerprints), legacy recordings and surfaces, users, archives and source tables. The new concurrent archive/ID index was valid and used for a 100-row keyset query. The fixture job also ran through the isolated Solid Queue worker. A production migration requires the established [deployment and recovery gates](../deployment/workflow.md).
 
 ## P1.3b workspace brief
 
@@ -67,10 +66,9 @@ Plan a compact Rails/Hotwire queue for ambiguous and unresolved groups, with sta
 
 ## Open decisions
 
-- **Open — Autopilot admission.** Approve the first rule and labeled validation corpus. Include messy source claims, similarly named versions and recordings with incomplete catalog metadata. Agree how precision and abstention will be reviewed before any automatic acceptance.
-- **Open — Group compatibility.** Start with exact evidence signatures for the pilot. Decide whether broader normalization or applying a group decision to later arrivals is justified after reviewing collisions.
-- **Open — Legacy decisions and MBID redirects.** Decide how to handle legacy manual data without recoverable actor/scope and how to record provider redirects or merges without rewriting prior decisions.
-- **Open — Provider budgets and retention.** Specify pilot caps, cache freshness, retry ceiling and operator replay procedure. Approve MusicBrainz contact/use classification and review Discogs credentials, terms and evidence retention before integration.
-- **Open — Release evidence policy.** P1.3c owns collection equivalence, origin-country chronology, chronology fallbacks and release-credit reassessment. The existing [domain rules](../domain/release-assignment.md) govern those decisions.
+- **Open — Automatic acceptance.** Review labeled real-catalog decisions and the operating precision/abstention target before authorizing writes. Consider conflicting claims across groups that share a surface.
+- **Open — Discogs verification and retention.** Install the application credentials through protected configuration and authorize a small live verification. Confirm the current endpoint limits and attribution obligations before any display.
+- **Open — Legacy interpretations and provider changes.** Review legacy assignments with incomplete actor provenance, MusicBrainz redirect chains and conflicting/existing catalog metadata. Provider aliases and broader compatibility need independent review.
+- **Open — Release relationship policy.** P1.3c owns collection equivalence, chronology fallbacks and contextual release credit.
 
-See the [provider contracts and verification cases](providers-and-verification.md).
+See the [provider contracts, credential setup and verification matrix](providers-and-verification.md).

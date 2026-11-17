@@ -1,4 +1,17 @@
 {
   "format": 1,
-  "migrations": {}
+  "migrations": {
+    "db/migrate/20261118120000_add_recording_resolution.rb": {
+      "sha256": "9d2678e0e0383c0845277c738f0bd506142880cbee4b987f1bdedcf2a434e875",
+      "risk": "additive",
+      "quiesce": true,
+      "review": "Adds empty recording-resolution tables, foreign keys, indexes and database guards. Locks referenced tables briefly for FK setup. No source or legacy interpretation rewrite. Quiesce Muzeum and require the encrypted four-database recovery gate."
+    },
+    "db/migrate/20261118120100_index_resolution_archive_traversal.rb": {
+      "sha256": "cc6e6c83ca89e182b6b14a19a2dc6428c3dd1f18d0f8e1427e97baa0923c4abe",
+      "risk": "additive",
+      "quiesce": true,
+      "review": "Adds one concurrent index over existing scrobble archive and ID. Reads the source table for index construction without rewriting rows. Verify index validity during migration rehearsal and quiesce Muzeum for the reviewed deployment workflow."
+    }
+  }
 }

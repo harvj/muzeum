@@ -1,0 +1,12 @@
+[
+  {"case":"supported","expected":"accept","track":"Signals","album":"Night Drive","claim":"studio"},
+  {"case":"alternate performance","expected":"abstain","track":"Signals","album":"Night Drive","claim":"studio","alternative":"Signals"},
+  {"case":"studio versus live","expected":"abstain","track":"Signals","album":"Night Drive","claim":"studio","alternative":"Signals (Live)"},
+  {"case":"remix","expected":"abstain","track":"Signals (Remix)","album":"Night Drive","claim":"studio"},
+  {"case":"incorrect MBID","expected":"abstain","track":"Signals","album":"Night Drive","claim":"other"},
+  {"case":"missing MBID","expected":"abstain","track":"Signals","album":"Night Drive"},
+  {"case":"missing album","expected":"abstain","track":"Signals","album":null,"claim":"studio"},
+  {"case":"provider disagreement","expected":"abstain","track":"Signals","album":"Night Drive","claim":"studio","discogs_track":"Different Song"},
+  {"case":"redirected MBID","expected":"accept","track":"Signals","album":"Night Drive","claim":"redirect"},
+  {"case":"truncated search","expected":"abstain","track":"Signals","album":"Night Drive","claim":"studio","count":26}
+]

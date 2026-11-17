@@ -20,6 +20,17 @@ default: &default
   max_connections: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
 
 
+<% if ENV["MUZEUM_RESOLUTION_QUEUE"] == "1" %>
+development:
+  primary:
+    <<: *default
+    database: muzeum_development
+  queue:
+    <<: *default
+    database: muzeum_development_resolution_queue
+    schema_format: ruby
+    migrations_paths: db/queue_migrate
+<% else %>
 development:
   <<: *default
   database: muzeum_development
@@ -50,6 +61,8 @@ development:
   #   log, notice, warning, error, fatal, and panic
   # Defaults to warning.
   #min_messages: notice
+
+<% end %>
 
 # Warning: The database defined as "test" will be erased and
 # re-generated from your development database when you run "rake".

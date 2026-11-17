@@ -90,16 +90,53 @@ module Clients
       )
     end
 
+    MBID = /\A[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\z/i
+
+    def candidate_page(session, artist:, title:, offset: 0)
+      params = { query: build_recording_query(artist:, recording: title, release: nil), limit: 25, offset:, fmt: "json" }
+      session.get(:musicbrainz, "/ws/2/recording", params:) do |data|
+        unless data["count"].is_a?(Integer) && data["offset"] == offset && data["recordings"].is_a?(Array) &&
+            data["recordings"].all? { |recording| recording.is_a?(Hash) && MBID.match?(recording["id"].to_s) }
+          raise RecordingResolution::ProviderError, "MusicBrainz search envelope is incomplete"
+        end
+
+        data
+      end.fetch("data") { raise RecordingResolution::ProviderError, "MusicBrainz search endpoint unavailable" }
+    end
+
+    def verify_recording(session, mbid)
+      return { "status" => "invalid" } unless MBID.match?(mbid.to_s)
+
+      params = { fmt: "json", inc: "artist-credits+releases+release-groups+isrcs" }
+      first = session.get(:musicbrainz, "/ws/2/recording/#{mbid.downcase}", params:)
+      return first unless first["redirect"]
+
+      session.get(:musicbrainz, "/ws/2/recording/#{first.fetch("redirect")}", params:)
+        .merge("redirected_from" => mbid, "redirected_to" => first.fetch("redirect"))
+    end
+
+    def edition(session, mbid)
+      return unless MBID.match?(mbid.to_s)
+
+      session.get(:musicbrainz, "/ws/2/release/#{mbid}", params: {
+        fmt: "json", inc: "recordings+artist-credits+release-groups"
+      })["data"]
+    end
+
     # --- Private ----------------------------------------------------
 
     private
 
     def build_recording_query(artist:, recording:, release:)
       parts = []
-      parts << %(artist:"#{artist}")
-      parts << %(recording:"#{recording}")
-      parts << %(release:"#{release}") if release.present?
+      parts << %(artist:"#{escape_phrase(artist)}")
+      parts << %(recording:"#{escape_phrase(recording)}")
+      parts << %(release:"#{escape_phrase(release)}") if release.present?
       parts.join(" AND ")
+    end
+
+    def escape_phrase(value)
+      value.gsub(/["\\]/) { |character| "\\#{character}" }
     end
 
     def http
