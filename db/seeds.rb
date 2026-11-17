@@ -8,4 +8,5 @@
 #     MovieGenre.find_or_create_by!(name: genre_name)
 #   end
 
-User.create!(lastfm_username: "qalephd")
+# No automatic users, credentials or source associations. Auth admission and
+# Last.fm association are explicit authenticated/operator actions.

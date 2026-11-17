@@ -1,5 +1,5 @@
 [Unit]
-Description=Muzeum off-host backup readiness (disposable data only)
+Description=Muzeum off-host production backup (gated configuration)
 Wants=network-online.target
 After=network-online.target postgresql.service
 OnFailure=muzeum-backup-alert@%n.service

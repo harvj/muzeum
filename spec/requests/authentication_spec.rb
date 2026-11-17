@@ -69,8 +69,7 @@ RSpec.describe "OIDC authentication", type: :request do
     User.create!(lastfm_username: "legacy", email_address: "listener@example.com")
     get "/oidc/callback", params: { state: "forged", code: "x" }
     expect(Session.count).to eq(0)
-    finish_oidc
-    expect(User.count).to eq(2)
+    expect { finish_oidc }.to change(User, :count).by(1)
     expect(User.find_by!(lastfm_username: "legacy").oidc_subject).to be_nil
   end
 
@@ -100,9 +99,22 @@ RSpec.describe "OIDC authentication", type: :request do
   it "supports continuity beyond access-token expiry with matching active grant" do
     finish_oidc
     Session.update_all(verified_at: 6.minutes.ago, created_at: 6.minutes.ago)
-    stub_request(:post, "https://auth.harvj.com/introspect").to_return(body: { active: true, sub: @subject, client_id: "muzeum-test" }.to_json)
+    stub_request(:post, "https://auth.harvj.com/introspect").to_return(body: { active: true, client_id: "muzeum-test" }.to_json)
     get root_path
     expect(response).to have_http_status(:ok)
+  end
+
+  it "rejects introspection for another client or a conflicting returned subject" do
+    finish_oidc
+    Session.update_all(verified_at: 61.seconds.ago)
+    stub_request(:post, "https://auth.harvj.com/introspect").to_return(body: { active: true, client_id: "wrong" }.to_json)
+    get root_path
+    expect(Session.count).to eq(0)
+    finish_oidc
+    Session.update_all(verified_at: 61.seconds.ago)
+    stub_request(:post, "https://auth.harvj.com/introspect").to_return(body: { active: true, client_id: "muzeum-test", sub: "wrong" }.to_json)
+    get root_path
+    expect(Session.count).to eq(0)
   end
 
   it "rejects forged cookies and enforces CSRF" do

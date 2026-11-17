@@ -182,6 +182,8 @@ def do_action(config, action):
                              '--keep-daily', '30', '--keep-weekly', '12', '--keep-monthly', '12', '--dry-run']))
     elif action == 'monitor':
         record = json.loads((state / 'last-backup.json').read_text())
+        if record.get('mode') != config['mode']:
+            raise RuntimeError('Latest backup does not cover the configured environment')
         age = (dt.datetime.now(dt.timezone.utc) - dt.datetime.fromisoformat(record['completed_at'])).total_seconds()
         if age > 26 * 3600:
             raise RuntimeError('Backup success is stale (older than 26 hours)')

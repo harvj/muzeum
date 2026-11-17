@@ -1,5 +1,5 @@
 [Unit]
-Description=Verify Muzeum readiness off-host restoration into disposable targets
+Description=Verify Muzeum production off-host restoration into isolated disposable targets
 After=network-online.target postgresql.service
 OnFailure=muzeum-backup-alert@%n.service
 [Service]

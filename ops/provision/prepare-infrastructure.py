@@ -80,6 +80,7 @@ def main():
     write(ROOT/'backup.pgpass',(''.join('127.0.0.1:5432:'+db+':muzeum_backup:'+values['muzeum_backup']+'\n' for db in DATABASES)).encode())
     for name in ('ruby','bundle'):
         path=Path('/home/muzeum/.rbenv/shims');path.mkdir(parents=True,exist_ok=True,mode=0o755)
+        path.parent.chmod(0o755);path.chmod(0o755)
         write(path/name,('#!/bin/sh\nexec /opt/auth/ruby-3.4.12/bin/'+name+' "$@"\n').encode(),0,0,0o755)
     ssh=Path('/home/muzeum/.ssh');ssh.mkdir(mode=0o700,exist_ok=True);os.chown(ssh,user.pw_uid,user.pw_gid)
     operator_key=Path('/opt/muzeum/operator-tools/operator.pub').read_bytes()

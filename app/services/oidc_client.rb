@@ -40,7 +40,10 @@ class OidcClient
     response = http.post("#{ISSUER}/introspect", form: { token: grant, token_type_hint: "refresh_token" })
     raise Failure unless response.status.success?
     data = JSON.parse(response.to_s)
-    data.fetch("active") == true && data["sub"] == subject && data["client_id"] == ENV.fetch("OIDC_CLIENT_ID")
+    # Rodauth opaque refresh-token introspection returns client_id but no sub.
+    # The encrypted grant was bound to the verified subject at code exchange.
+    data.fetch("active") == true && data["client_id"] == ENV.fetch("OIDC_CLIENT_ID") &&
+      (!data.key?("sub") || data["sub"] == subject)
   rescue HTTP::Error, JSON::ParserError, KeyError
     raise Failure
   end
