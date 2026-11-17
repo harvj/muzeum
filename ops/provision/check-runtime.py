@@ -5,7 +5,7 @@ from pathlib import Path
 try:
     if os.geteuid()!=0 or len(sys.argv) not in (2,3):raise RuntimeError()
     action=sys.argv[1];reference=sys.argv[2] if len(sys.argv)==3 else ''
-    if action not in ('enqueue','probe','status') or (action!='status' and not re.fullmatch('[a-f0-9]{32}',reference)):raise RuntimeError()
+    if action not in ('enqueue','probe','status','session') or (action in ('enqueue','probe') and not re.fullmatch('[a-f0-9]{32}',reference)):raise RuntimeError()
     release=Path('/var/www/muzeum/current').resolve(strict=True)
     if release.parent!=Path('/var/www/muzeum/releases'):raise RuntimeError()
     env={'PATH':'/home/muzeum/.rbenv/shims:/opt/auth/ruby-3.4.12/bin:/usr/bin:/bin','LANG':'C.UTF-8',
@@ -16,7 +16,8 @@ try:
     script={
      'enqueue':'OpsProbeJob.set(wait: 15.seconds).perform_later(ENV.fetch("MUZEUM_PROBE_REFERENCE")); puts "Durable probe queued"',
      'probe':'puts({completed_at: Rails.cache.read("muzeum/worker-probe/#{ENV.fetch("MUZEUM_PROBE_REFERENCE")}")}.to_json)',
-     'status':'''run=ImportRun.order(:created_at).last;puts({revision:File.read('REVISION').strip,users:User.count,sessions:Session.unexpired.count,scrobbles:Scrobble.count,raw_pages:ImportPage.count,canonical_recordings:Recording.count,import:run && {status:run.status,page:run.next_page,inserted:run.scrobbles_processed,total:run.expected_count,total_pages:run.total_pages,last_error:run.last_error}}.to_json)'''
+     'session':'''record=Session.unexpired.order(created_at: :desc).first; puts(record ? {sessions:Session.unexpired.count,age_seconds:(Time.current-record.created_at).to_i,last_seen_at:record.last_seen_at,verified_at:record.verified_at,grant_active:OidcClient.new.active?(record.grant_token,subject:record.user.oidc_subject)}.to_json : {sessions:0}.to_json)''',
+     'status':'''ActiveRecord::Base.transaction(isolation: :repeatable_read) do; ActiveRecord::Base.connection.execute('SET TRANSACTION READ ONLY'); run=ImportRun.order(:created_at).last;puts({observed_at:Time.current.utc.iso8601,revision:File.read('REVISION').strip,users:User.count,sessions:Session.unexpired.count,scrobbles:Scrobble.count,raw_pages:ImportPage.count,canonical_recordings:Recording.count,import:run && {status:run.status,page:run.next_page,inserted:run.scrobbles_processed,total:run.expected_count,total_pages:run.total_pages,last_error:run.last_error}}.to_json);end'''
     }[action]
     result=subprocess.run(['/usr/sbin/runuser','-u','muzeum','--','/opt/auth/ruby-3.4.12/bin/bundle','exec','rails','runner',script],
                           env=env,cwd=release,capture_output=True,text=True,timeout=45)
