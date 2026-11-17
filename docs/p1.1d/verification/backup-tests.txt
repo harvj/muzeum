@@ -1,4 +1,4 @@
-..............Healthchecks signal not acknowledged: job=backup phase=success reason=request-failed-or-unacknowledged
+...............Healthchecks signal not acknowledged: job=backup phase=success reason=request-failed-or-unacknowledged
 .Healthchecks integration failed; backup exit status preserved
 Healthchecks integration failed; backup exit status preserved
 ..Healthchecks signal not acknowledged: job=backup phase=start reason=timeout
@@ -6,6 +6,6 @@ Healthchecks signal not acknowledged: job=backup phase=failure reason=timeout
 ..Healthchecks signal acknowledged: job=backup phase=success run_id=None
 ......
 ----------------------------------------------------------------------
-Ran 25 tests in 0.010s
+Ran 26 tests in 0.010s
 
 OK

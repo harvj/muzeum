@@ -40,7 +40,7 @@ module Authentication
 
   def prevent_private_caching
     response.headers["Cache-Control"] = "no-store"
-    response.headers["Referrer-Policy"] = "no-referrer"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
   end
 
   def start_session(user, grant:)

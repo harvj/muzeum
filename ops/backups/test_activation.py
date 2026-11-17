@@ -21,3 +21,16 @@ class ActivationTests(unittest.TestCase):
                 self.assertFalse(config.with_name('Caddyfile.muzeum-candidate').exists())
 
 if __name__=='__main__':unittest.main()
+
+class ActivationPermissionsTests(unittest.TestCase):
+    def test_caddy_readability_survives_private_operator_umask(self):
+        import os,stat
+        with tempfile.TemporaryDirectory() as root:
+            config=Path(root)/'Caddyfile';config.write_bytes(b'existing sites');config.chmod(0o644)
+            previous=os.umask(0o077)
+            try:
+                with patch.object(activation,'CADDY',config),patch.object(activation,'run'):
+                    activation.replace_config(b'existing sites plus Muzeum',activation.digest(b'existing sites'))
+                self.assertEqual(stat.S_IMODE(config.stat().st_mode),0o644)
+                self.assertEqual(config.read_bytes(),b'existing sites plus Muzeum')
+            finally:os.umask(previous)

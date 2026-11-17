@@ -19,6 +19,7 @@ class SessionsController < ApplicationController
   end
 
   def callback
+    response.headers["Referrer-Policy"] = "no-referrer"
     attempt = OidcAttempt.consume!(params[:state].to_s, session.delete(:oidc_browser))
     raise OidcClient::Failure unless attempt && params[:code].present? && params[:error].blank?
     subject, grant = OidcClient.new.exchange(params[:code], attempt)

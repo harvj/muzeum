@@ -20,6 +20,7 @@ RSpec.describe "OIDC authentication", type: :request do
   it "validates an issued token, persists subject identity, continues sessions and logs out" do
     state = finish_oidc
     expect(response).to redirect_to(root_path)
+    expect(response.headers["Referrer-Policy"]).to eq("no-referrer")
     user = User.find_by!(oidc_subject: @subject)
     expect(user.oidc_issuer).to eq(OidcClient::ISSUER)
     expect(user.password_digest).to be_nil
@@ -115,6 +116,19 @@ RSpec.describe "OIDC authentication", type: :request do
     stub_request(:post, "https://auth.harvj.com/introspect").to_return(body: { active: true, client_id: "muzeum-test", sub: "wrong" }.to_json)
     get root_path
     expect(Session.count).to eq(0)
+  end
+
+  it "accepts the rendered CSRF token and same-origin sign-in without weakening origin checks" do
+    old = ActionController::Base.allow_forgery_protection
+    ActionController::Base.allow_forgery_protection = true
+    get new_session_path
+    expect(response.headers["Referrer-Policy"]).to eq("strict-origin-when-cross-origin")
+    token = Nokogiri::HTML(response.body).at_css('input[name="authenticity_token"]')["value"]
+    post session_path, params: { authenticity_token: token }, headers: { "Origin" => "http://www.example.com" }
+    expect(response.location).to start_with("https://auth.harvj.com/authorize")
+    expect(OidcAttempt.count).to eq(1)
+  ensure
+    ActionController::Base.allow_forgery_protection = old
   end
 
   it "rejects forged cookies and enforces CSRF" do
