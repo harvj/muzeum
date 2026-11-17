@@ -20,6 +20,14 @@ def main():
     output=pending/'client.json'
     if output.is_symlink():raise RuntimeError('Unsafe material file')
     prior=json.loads(output.read_text()) if output.exists() else None
+    installed=Path('/etc/muzeum/oidc.env')
+    if prior is None and installed.exists():
+        info=installed.lstat()
+        if not stat.S_ISREG(info.st_mode) or info.st_uid!=0 or stat.S_IMODE(info.st_mode)!=0o600:
+            raise RuntimeError('Unsafe installed client material')
+        existing=dict(line.split('=',1) for line in installed.read_text().splitlines() if line)
+        if existing.get('OIDC_REDIRECT_URI')!='https://muzeum.fm/oidc/callback':raise RuntimeError('Unexpected installed callback')
+        prior={'client_id':existing['OIDC_CLIENT_ID'],'client_secret':existing['OIDC_CLIENT_SECRET']}
     env={'PATH':'/opt/auth/ruby-3.4.12/bin:/usr/bin:/bin','LANG':'C.UTF-8','RACK_ENV':'production',
          'AUTH_ISSUER':'https://auth.harvj.com','AUTH_EMAIL_TRANSPORT':'disabled','AUTH_KEY_DIR':'/etc/auth/keys',
          'DATABASE_URL':'postgresql://auth_runtime@127.0.0.1:5432/auth_production','PGPASSFILE':'/etc/auth/runtime.pgpass',
@@ -71,6 +79,8 @@ end
     else:
         fd=os.open(final,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600)
         with os.fdopen(fd,'wb') as f:f.write(content);f.flush();os.fsync(f.fileno())
+    output.unlink()
+    pending.rmdir()
     print('Muzeum native client and existing administrator membership verified. Credentials: /etc/muzeum/oidc.env (root-only).')
     print('No account, password, MFA enrollment, application service, proxy or timer created or changed.')
 

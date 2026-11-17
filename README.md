@@ -110,15 +110,11 @@ Key external data sources currently include:
 
 ## Current Status
 
-Muzeum is under active development.
+Muzeum is live at **https://muzeum.fm/** using the existing harvj Auth identity. Authenticated users can associate a public Last.fm account, import historical observations with durable checkpoints, and view a small dashboard of persisted listening-history counts and progress.
 
-Current areas of focus include:
-- MusicBrainz release candidate extraction
-- Release ingestion and tracklist construction
-- Canonical recording resolution and merging
-- Preservation of scrobble lineage
+The [canonical numbered roadmap](docs/roadmap.md), [production acceptance record](docs/p1.1d/status.md), and [operations runbook](docs/p1.1d/operations.md) distinguish deployed features from future work. The first production backfill is running. Advanced browsing and MusicBrainz resolution remain deferred; observed names are not canonical identities.
 
-The data model and ingestion workflows are still evolving.
+[Desktop/mobile appearance previews and browser recordings](docs/p1.1d/environment.md) document the stationary limestone/onyx environment and accessibility fallbacks.
 
 ---
 

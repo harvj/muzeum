@@ -1,6 +1,6 @@
 # P1.1a deployment preparation and runbook
 
-> Historical milestone record. The [canonical numbered roadmap](../roadmap.md) and P1.1d requirements supersede the local-password and import-ordering assumptions below.
+> Historical milestone record. The [canonical numbered roadmap](../roadmap.md) and [current operations runbook](../p1.1d/operations.md) supersede the local-password and import-ordering assumptions below.
 Prepared locally, not deployed. Read the [verified inventory](infrastructure-inventory.md) and [production plan](production-deployment-plan.md). Configuration uses the verified `/var/www`, systemd, Caddy and PostgreSQL 16 conventions. Dedicated Muzeum identity and port are proposed additions, not existing resources. P1.1b removes the obsolete Docker/Kamal/Thruster scaffold; Capistrano is the application deployment mechanism.
 
 ## Exact proposed server changes (all pending explicit approval)

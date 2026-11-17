@@ -1,5 +1,6 @@
 # Backup activation readiness
 
+> Historical P1.1c checkpoint. Production backup activation, independent vault retrieval and actual identity/history/session restoration are now recorded in [P1.1d acceptance](../p1.1d/status.md) and the [current operations runbook](../p1.1d/operations.md).
 ## Current verification
 
 The earlier authentication blocker is resolved. Following [Hetzner's documented port-23 OpenSSH key method](https://docs.hetzner.com/storage/storage-box/ssh-keys/add-ssh-keys/), the dedicated public key was installed through the authenticated main Storage Box account at `applications/muzeum/.ssh/authorized_keys`. The file was absent; existing-byte preservation and duplicate-key checks were performed before upload, followed by byte-for-byte readback. `.ssh` is mode 0700 and `authorized_keys` mode 0600. No other account's keys were changed.
