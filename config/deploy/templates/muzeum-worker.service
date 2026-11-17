@@ -11,6 +11,7 @@ WorkingDirectory=/var/www/muzeum/current
 EnvironmentFile=/var/www/muzeum/shared/.env
 Environment=RAILS_ENV=production
 Environment=RBENV_VERSION=3.4.12
+Environment=PATH=/home/muzeum/.rbenv/shims:/opt/auth/ruby-3.4.12/bin:/usr/local/bin:/usr/bin:/bin
 Environment=JOB_CONCURRENCY=1
 ExecStart=/home/muzeum/.rbenv/shims/bundle exec ruby bin/jobs
 Restart=on-failure

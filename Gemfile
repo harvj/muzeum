@@ -50,6 +50,7 @@ group :development do
   # Use console on exceptions pages [https://github.com/rails/web-console]
   # Retain encrypted OpenSSH key support after removing Kamal's dependency chain.
   gem "bcrypt_pbkdf", require: false
+  gem "ed25519", "~> 1.4", require: false
   gem "capistrano", "~> 3.19", require: false
   gem "capistrano-rails", require: false
   gem "web-console"

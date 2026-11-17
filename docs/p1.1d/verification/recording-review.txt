@@ -1,0 +1,6 @@
+Capybara starting Puma...
+* Version 8.1.1, codename: Puma Psychosis
+* Min threads: 0, max threads: 4
+* Listening on http://127.0.0.1:53254
+{"mode":"light","metadata":{"duration":22.747527,"height":720,"width":1280}}
+{"mode":"dark","metadata":{"duration":22.749847,"height":720,"width":1280}}

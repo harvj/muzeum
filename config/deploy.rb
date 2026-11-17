@@ -54,7 +54,7 @@ namespace :muzeum do
     on roles(:app) do
       execute :test, "$(cat #{current_path}/REVISION)", "=", ENV.fetch("APPROVED_SHA")
       execute :systemctl, "is-active", "muzeum-web.service", "muzeum-worker.service"
-      execute "test $(curl --fail --silent --show-error --output /dev/null --write-out '%{http_code}' -H 'Host: muzeum.fm' -H 'X-Forwarded-Proto: https' http://127.0.0.1:3011/up) = 200"
+      execute "test $(curl --fail --silent --show-error --retry 10 --retry-connrefused --retry-delay 1 --retry-max-time 20 --output /dev/null --write-out '%{http_code}' -H 'Host: muzeum.fm' -H 'X-Forwarded-Proto: https' http://127.0.0.1:3011/up) = 200"
     end
   end
 end

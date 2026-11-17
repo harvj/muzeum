@@ -67,7 +67,7 @@ def main():
         psql('REVOKE ALL ON DATABASE '+database+' FROM PUBLIC; GRANT CONNECT ON DATABASE '+database+' TO muzeum_migrator,muzeum_runtime,muzeum_backup;')
         psql('REVOKE CREATE ON SCHEMA public FROM PUBLIC; GRANT USAGE,CREATE ON SCHEMA public TO muzeum_owner; GRANT USAGE ON SCHEMA public TO muzeum_runtime,muzeum_backup; ALTER DEFAULT PRIVILEGES FOR ROLE muzeum_migrator IN SCHEMA public GRANT SELECT,INSERT,UPDATE,DELETE ON TABLES TO muzeum_runtime; ALTER DEFAULT PRIVILEGES FOR ROLE muzeum_migrator IN SCHEMA public GRANT USAGE,SELECT ON SEQUENCES TO muzeum_runtime; ALTER DEFAULT PRIVILEGES FOR ROLE muzeum_migrator IN SCHEMA public GRANT SELECT ON TABLES TO muzeum_backup; ALTER DEFAULT PRIVILEGES FOR ROLE muzeum_migrator IN SCHEMA public GRANT SELECT ON SEQUENCES TO muzeum_backup;',database)
     shared=Path('/var/www/muzeum/shared')
-    for path in (Path('/var/www/muzeum'),Path('/var/www/muzeum/releases'),shared,shared/'storage',shared/'log',shared/'tmp/pids',shared/'tmp/sockets',shared/'bundle'):
+    for path in (Path('/var/www/muzeum'),Path('/var/www/muzeum/releases'),shared,shared/'storage',shared/'log',shared/'tmp',shared/'public',shared/'public/assets',shared/'tmp/pids',shared/'tmp/sockets',shared/'bundle'):
         path.mkdir(parents=True,exist_ok=True,mode=0o750);os.chown(path,user.pw_uid,user.pw_gid);path.chmod(0o750)
     provider=(ROOT/'oidc.env').read_text()+(ROOT/'lastfm.env').read_text()
     def environment(role):

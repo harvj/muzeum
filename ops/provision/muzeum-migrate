@@ -9,7 +9,7 @@ try:
     os.umask(0o077)
     with open('/etc/muzeum/migration.lock','a') as lock:
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
-        env={'PATH':'/opt/auth/ruby-3.4.12/bin:/usr/bin:/bin','LANG':'C.UTF-8','HOME':'/home/muzeum-migrate','BUNDLE_WITHOUT':'development:test'}
+        env={'PATH':'/opt/auth/ruby-3.4.12/bin:/usr/bin:/bin','LANG':'C.UTF-8','HOME':'/home/muzeum-migrate','BUNDLE_WITHOUT':'development:test','BUNDLE_IGNORE_CONFIG':'1','BUNDLE_DEPLOYMENT':'true','BUNDLE_FROZEN':'true'}
         for line in Path('/etc/muzeum/migrate.env').read_text().splitlines():
             name,value=line.split('=',1);env[name]=value
         env['BUNDLE_GEMFILE']=str(release/'Gemfile')
@@ -23,10 +23,18 @@ try:
  end
 end
 """
-        result=subprocess.run(['runuser','-u','muzeum-migrate','--','/opt/auth/ruby-3.4.12/bin/ruby','-e',ruby],cwd=release,env=env,capture_output=True,timeout=120)
-        if result.returncode:raise RuntimeError()
-        result=subprocess.run(['runuser','-u','muzeum-migrate','--','/opt/auth/ruby-3.4.12/bin/bundle','exec','rails','db:migrate'],cwd=release,env=env,capture_output=True,timeout=180)
-        if result.returncode:raise RuntimeError()
+        result=subprocess.run(['/usr/sbin/runuser','-u','muzeum-migrate','--','/opt/auth/ruby-3.4.12/bin/ruby','-e',ruby],cwd=release,env=env,capture_output=True,timeout=120)
+        if result.returncode:
+            diagnostic=Path('/etc/muzeum/migration-last-error')
+            fd=os.open(diagnostic,os.O_WRONLY|os.O_CREAT|os.O_TRUNC|os.O_NOFOLLOW,0o600)
+            with os.fdopen(fd,'wb') as out:out.write(result.stderr)
+            raise RuntimeError()
+        result=subprocess.run(['/usr/sbin/runuser','-u','muzeum-migrate','--','/opt/auth/ruby-3.4.12/bin/bundle','exec','rails','db:migrate'],cwd=release,env=env,capture_output=True,timeout=180)
+        if result.returncode:
+            diagnostic=Path('/etc/muzeum/migration-last-error')
+            fd=os.open(diagnostic,os.O_WRONLY|os.O_CREAT|os.O_TRUNC|os.O_NOFOLLOW,0o600)
+            with os.fdopen(fd,'wb') as out:out.write(result.stderr)
+            raise RuntimeError()
     print('Exact Muzeum candidate migration completed with isolated migrator credentials.')
 except Exception:
     print('Muzeum migration stopped; details suppressed; inspect protected diagnostics before retry.',file=sys.stderr)
