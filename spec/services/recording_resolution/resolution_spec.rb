@@ -141,17 +141,16 @@ RSpec.describe RecordingResolution do
   end
 
   it "persists Retry-After and recovers without duplicate work or decisions" do
-    event = observation
-    work = select_work(event)
-    good = RecordingResolution::FixtureTransport.new
-    transport = lambda do |provider, path, params|
-      if provider == :discogs && work.attempts.zero?
-        [ 429, { "Retry-After" => "20" }, "" ]
-      else
-        good.call(provider, path, params)
+    freeze_time do
+      work = select_work(observation)
+      good = RecordingResolution::FixtureTransport.new
+      transport = lambda do |provider, path, params|
+        if provider == :discogs && work.attempts.zero?
+          [ 429, { "Retry-After" => "20" }, "" ]
+        else
+          good.call(provider, path, params)
+        end
       end
-    end
-    travel_to(Time.current.change(usec: 0)) do
       processor = RecordingResolution::Processor.new(work, fixture: transport)
       processor.call
       expect(work.reload).to have_attributes(state: "pending", due_at: 20.seconds.from_now, attempts: 1)
