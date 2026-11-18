@@ -13,6 +13,7 @@ import runpy
 import shutil
 import subprocess
 import sys
+import tempfile
 import time
 
 APP = Path('/var/www/muzeum')
@@ -213,12 +214,12 @@ class Host:
             raise RouteRefused('Published SHA changed before route operation')
         result = subprocess.run([str(ROUTE_HELPER), action], capture_output=True, timeout=180)
         if result.returncode:
-            diagnostic = STATE / 'route-last-error'
-            diagnostic.write_bytes(result.stderr[-65536:])
-            diagnostic.chmod(0o600)
+            with tempfile.NamedTemporaryFile(dir=STATE, prefix='route-error-', delete=False) as diagnostic:
+                diagnostic.write(result.stderr[-65536:])
+                reference = Path(diagnostic.name).name
             if result.returncode == 3:
-                raise RouteRefused('Muzeum route operation refused; inspect protected route-last-error')
-            raise RuntimeError('Muzeum route state requires operator inspection')
+                raise RouteRefused(f'Muzeum route operation refused; inspect protected {reference}')
+            raise RuntimeError(f'Muzeum route state requires operator inspection; protected {reference}')
 
     def check_withdrawal(self, sha):
         self.route('check-withdraw', sha)

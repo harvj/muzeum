@@ -184,6 +184,19 @@ class WorkflowTests(unittest.TestCase):
         self.assertFalse(record['migrating'])
         self.assertTrue(host.running)
 
+    def test_route_outcomes_keep_separate_protected_diagnostics(self):
+        host = deploy.Host()
+        with patch.object(host, 'revision', return_value=OLD), patch.object(deploy, 'STATE', self.root):
+            for status, diagnostic, outcome in ((3, b'refused fixture', deploy.RouteRefused),
+                                                 (4, b'uncertain fixture', RuntimeError)):
+                result = subprocess.CompletedProcess([], status, stderr=diagnostic)
+                with patch.object(subprocess, 'run', return_value=result), self.assertRaises(outcome) as error:
+                    host.withdraw(OLD)
+                reference = self.root / str(error.exception).split()[-1]
+                self.assertEqual(reference.read_bytes(), diagnostic)
+                self.assertEqual(reference.stat().st_mode & 0o777, 0o600)
+        self.assertEqual(len(list(self.root.glob('route-error-*'))), 2)
+
     def test_failures_never_roll_back_or_restore_live_data(self):
         for failure in ('backup', 'restore', 'migration', 'publication', 'restart', 'health', 'activation'):
             with self.subTest(failure=failure), tempfile.TemporaryDirectory() as root:

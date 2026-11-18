@@ -43,7 +43,7 @@ Destructive/irreversible data migrations, live restoration/cutover, credential r
 
 ## Failure recovery without losing data
 
-Every failure retains `active.json`, the token receipt, failed phase, migration intent and safe-state diagnosis. Sensitive subprocess stderr is bounded and root-only in `command-last-error`; migration detail is root-only `/etc/muzeum/migration-last-error`. Never paste protected diagnostics/environment files into public logs. Helper stdout contains references/status only. A disconnected client may leave a phase running: inspect process groups, the phase lock, database activity, service/route state and receipts before taking action.
+Every failure retains `active.json`, the token receipt, failed phase, migration intent and safe-state diagnosis. Sensitive subprocess stderr is bounded and root-only. Route failures retain distinct `route-error-*` files referenced by the protected diagnostic. Other command stderr uses `command-last-error` and migration detail uses `/etc/muzeum/migration-last-error`. Never paste protected diagnostics or environment files into public logs. Helper stdout contains references and status only. A disconnected client may leave a phase running. Inspect process groups, the phase lock, database activity, service and route state, and receipts before taking action.
 
 | Failure | Expected safe state and operator action |
 | --- | --- |
