@@ -10,6 +10,12 @@ Status: **Authoritative semantics; algorithmic thresholds remain open.** See [pr
 
 **REL-003 — User overrides prevail.** A listener may reassign any individual play to an eligible release without changing its canonical recording. An explicit user override takes precedence over subsequent automatic reassessments until the listener explicitly returns the play to automatic management. Bulk corrections of selected plays or a listening session may be offered, but must not eliminate individual control. A revert appends a new decision with provenance.
 
+## Release admission versus listening credit
+
+**REL-014 — Admission is deliberate.** A verified recording resolution may trigger import of one contextually justified canonical release collection and its full track listing; it must not traverse every compilation, reissue, edition or other release appearance. Original album context is generally preferred when justified, including over an earlier single, while original singles/EPs, distinct collections, live albums and explicitly selected compilations can qualify. No arbitrary chronology window is approved. See DOM-016–DOM-019.
+
+**REL-015 — Complete membership is not automatic credit.** Importing all tracks of an admitted release establishes catalog relationships, not historical listening events or per-play release credit. An unresolvable release choice leaves the recording available with a pending association. A listener's explicit credited compilation remains permissible even if that compilation was not the automatic import default; deliberate admission and credited-release assignment are independently auditable.
+
 ## Default evidence and chronology
 
 **REL-004 — Surrounding listens are strong evidence.** Analyze neighboring plays in both directions, including chronological proximity, plausible duration/gaps, contiguous or nearly contiguous track positions, intervening songs, and shared release membership. A coherent sequence may outweigh an isolated recording's fallback release. A partial album sequence can suffice; do not require listening to a complete album.
@@ -55,5 +61,7 @@ A listener hears Radiohead's **High and Dry → Fake Plastic Trees → Bones** i
 - Whether credit can be explicitly 'none' by user choice in addition to unresolved automation.
 
 ## Revision history
+
+- 2026-11-17: Clarified deliberate release admission, bounded full-tracklist enrichment and separation from per-play release credit.
 
 - 2026-11-17: Initial policy for session inference, origin-country chronology, per-play credit and append-only reassessment.
