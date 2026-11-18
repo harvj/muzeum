@@ -1,0 +1,20 @@
+<section class="intro">
+  <h1><%= @section.capitalize %></h1>
+</section>
+<section class="card library-card">
+  <%= form_with url: catalog_index_path(@section), method: :get, class: "catalog-filter" do |form| %>
+    <div><%= form.label :q, "Search #{@section}" %><%= form.search_field :q, value: @query %></div>
+    <%= form.submit "Search", class: "catalog-submit" %>
+  <% end %>
+  <% if @entries.any? %>
+    <ul class="catalog-list">
+      <% @entries.each do |entry| %><li><%= catalog_link(entry) %></li><% end %>
+    </ul>
+  <% elsif @query.present? %>
+    <p>No <%= @section %> match this search.</p>
+  <% else %>
+    <p>No canonical <%= @section %> yet. Resolve a recording to start building the library.</p>
+    <p><%= link_to "Review Last.fm recordings", resolution_surfaces_path %></p>
+  <% end %>
+  <% if @next_page %><p><%= link_to "Next page", catalog_index_path(@section, before: @next_page, q: @query) %></p><% end %>
+</section>

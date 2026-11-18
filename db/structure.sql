@@ -255,6 +255,117 @@ ALTER SEQUENCE public.artists_id_seq OWNED BY public.artists.id;
 
 
 --
+-- Name: catalog_imports; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.catalog_imports (
+    id bigint NOT NULL,
+    kind character varying NOT NULL,
+    entity_id bigint NOT NULL,
+    context jsonb DEFAULT '{}'::jsonb NOT NULL,
+    state character varying DEFAULT 'pending'::character varying NOT NULL,
+    due_at timestamp(6) without time zone NOT NULL,
+    lease_until timestamp(6) without time zone,
+    lease_token character varying,
+    attempts integer DEFAULT 0 NOT NULL,
+    request_count integer DEFAULT 0 NOT NULL,
+    failure character varying,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT catalog_import_lease CHECK ((((state)::text = 'refreshing'::text) = ((lease_token IS NOT NULL) AND (lease_until IS NOT NULL)))),
+    CONSTRAINT catalog_import_state CHECK (((state)::text = ANY ((ARRAY['pending'::character varying, 'refreshing'::character varying, 'imported'::character varying, 'incomplete'::character varying, 'failed'::character varying])::text[])))
+);
+
+
+--
+-- Name: catalog_imports_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.catalog_imports_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: catalog_imports_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.catalog_imports_id_seq OWNED BY public.catalog_imports.id;
+
+
+--
+-- Name: catalog_revisions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.catalog_revisions (
+    id bigint NOT NULL,
+    catalog_import_id bigint NOT NULL,
+    entity_type character varying NOT NULL,
+    entity_id bigint NOT NULL,
+    evidence jsonb DEFAULT '{}'::jsonb NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: catalog_revisions_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.catalog_revisions_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: catalog_revisions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.catalog_revisions_id_seq OWNED BY public.catalog_revisions.id;
+
+
+--
+-- Name: catalog_track_slots; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.catalog_track_slots (
+    id bigint NOT NULL,
+    release_id bigint NOT NULL,
+    recording_id bigint NOT NULL,
+    medium integer NOT NULL,
+    "position" integer NOT NULL,
+    number character varying,
+    track_mbid character varying NOT NULL,
+    title character varying NOT NULL,
+    CONSTRAINT catalog_track_slot_position CHECK (((medium > 0) AND ("position" > 0)))
+);
+
+
+--
+-- Name: catalog_track_slots_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.catalog_track_slots_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: catalog_track_slots_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.catalog_track_slots_id_seq OWNED BY public.catalog_track_slots.id;
+
+
+--
 -- Name: daily_listens; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -789,7 +900,9 @@ CREATE TABLE public.releases (
     release_day integer,
     source character varying DEFAULT 'musicbrainz'::character varying NOT NULL,
     primary_type integer DEFAULT 0 NOT NULL,
-    secondary_type integer DEFAULT 0 NOT NULL
+    secondary_type integer DEFAULT 0 NOT NULL,
+    catalog_country character varying,
+    catalog_verified_at timestamp(6) without time zone
 );
 
 
@@ -1318,6 +1431,27 @@ ALTER TABLE ONLY public.artists ALTER COLUMN id SET DEFAULT nextval('public.arti
 
 
 --
+-- Name: catalog_imports id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.catalog_imports ALTER COLUMN id SET DEFAULT nextval('public.catalog_imports_id_seq'::regclass);
+
+
+--
+-- Name: catalog_revisions id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.catalog_revisions ALTER COLUMN id SET DEFAULT nextval('public.catalog_revisions_id_seq'::regclass);
+
+
+--
+-- Name: catalog_track_slots id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.catalog_track_slots ALTER COLUMN id SET DEFAULT nextval('public.catalog_track_slots_id_seq'::regclass);
+
+
+--
 -- Name: daily_listens id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -1485,6 +1619,30 @@ ALTER TABLE ONLY public.ar_internal_metadata
 
 ALTER TABLE ONLY public.artists
     ADD CONSTRAINT artists_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: catalog_imports catalog_imports_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.catalog_imports
+    ADD CONSTRAINT catalog_imports_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: catalog_revisions catalog_revisions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.catalog_revisions
+    ADD CONSTRAINT catalog_revisions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: catalog_track_slots catalog_track_slots_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.catalog_track_slots
+    ADD CONSTRAINT catalog_track_slots_pkey PRIMARY KEY (id);
 
 
 --
@@ -1783,6 +1941,13 @@ CREATE INDEX due_lastfm_accounts ON public.lastfm_accounts USING btree (next_pol
 
 
 --
+-- Name: idx_on_release_id_medium_position_5d7e315be8; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_on_release_id_medium_position_5d7e315be8 ON public.catalog_track_slots USING btree (release_id, medium, "position");
+
+
+--
 -- Name: index_artists_on_mbid; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1794,6 +1959,55 @@ CREATE UNIQUE INDEX index_artists_on_mbid ON public.artists USING btree (mbid);
 --
 
 CREATE INDEX index_artists_on_name ON public.artists USING btree (name);
+
+
+--
+-- Name: index_catalog_imports_active_entity; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_catalog_imports_active_entity ON public.catalog_imports USING btree (kind, entity_id) WHERE ((state)::text = ANY ((ARRAY['pending'::character varying, 'refreshing'::character varying])::text[]));
+
+
+--
+-- Name: index_catalog_imports_on_kind_and_entity_id_and_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_catalog_imports_on_kind_and_entity_id_and_id ON public.catalog_imports USING btree (kind, entity_id, id);
+
+
+--
+-- Name: index_catalog_imports_on_state_and_due_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_catalog_imports_on_state_and_due_at ON public.catalog_imports USING btree (state, due_at);
+
+
+--
+-- Name: index_catalog_revisions_on_catalog_import_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_catalog_revisions_on_catalog_import_id ON public.catalog_revisions USING btree (catalog_import_id);
+
+
+--
+-- Name: index_catalog_revisions_on_entity_type_and_entity_id_and_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_catalog_revisions_on_entity_type_and_entity_id_and_id ON public.catalog_revisions USING btree (entity_type, entity_id, id);
+
+
+--
+-- Name: index_catalog_track_slots_on_recording_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_catalog_track_slots_on_recording_id ON public.catalog_track_slots USING btree (recording_id);
+
+
+--
+-- Name: index_catalog_track_slots_on_release_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_catalog_track_slots_on_release_id ON public.catalog_track_slots USING btree (release_id);
 
 
 --
@@ -2322,6 +2536,20 @@ CREATE INDEX resolution_work_pilot_id_state_due_at_id_idx ON public.resolution_w
 
 
 --
+-- Name: catalog_revisions catalog_revisions_immutable; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER catalog_revisions_immutable BEFORE DELETE OR UPDATE ON public.catalog_revisions FOR EACH ROW EXECUTE FUNCTION public.muzeum_preserve_source();
+
+
+--
+-- Name: catalog_revisions catalog_revisions_no_truncate; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER catalog_revisions_no_truncate BEFORE TRUNCATE ON public.catalog_revisions FOR EACH STATEMENT EXECUTE FUNCTION public.muzeum_preserve_source();
+
+
+--
 -- Name: resolution_decisions check_resolution_decision; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -2617,6 +2845,14 @@ ALTER TABLE ONLY public.source_deliveries
 
 
 --
+-- Name: catalog_track_slots fk_rails_428a52fbd2; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.catalog_track_slots
+    ADD CONSTRAINT fk_rails_428a52fbd2 FOREIGN KEY (recording_id) REFERENCES public.recordings(id);
+
+
+--
 -- Name: source_fetches fk_rails_4718593825; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2638,6 +2874,14 @@ ALTER TABLE ONLY public.scrobbles
 
 ALTER TABLE ONLY public.recording_artists
     ADD CONSTRAINT fk_rails_58c044bcb1 FOREIGN KEY (artist_id) REFERENCES public.artists(id);
+
+
+--
+-- Name: catalog_track_slots fk_rails_657ee70ea3; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.catalog_track_slots
+    ADD CONSTRAINT fk_rails_657ee70ea3 FOREIGN KEY (release_id) REFERENCES public.releases(id);
 
 
 --
@@ -2809,6 +3053,14 @@ ALTER TABLE ONLY public.release_recordings
 
 
 --
+-- Name: catalog_revisions fk_rails_ffc437f4fb; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.catalog_revisions
+    ADD CONSTRAINT fk_rails_ffc437f4fb FOREIGN KEY (catalog_import_id) REFERENCES public.catalog_imports(id);
+
+
+--
 -- Name: resolution_assessments resolution_assessments_group_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2943,6 +3195,7 @@ ALTER TABLE ONLY public.resolution_work
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261118120200'),
 ('20261118120100'),
 ('20261118120000'),
 ('20261117150200'),

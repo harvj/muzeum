@@ -4,8 +4,9 @@ module RecordingResolution
     MAX_SEARCH_PAGES = 3
     MAX_RELEASE_DETAILS = 3
 
-    def initialize(client)
+    def initialize(client, expanded: false)
       @client = client
+      @expanded = expanded
     end
 
     def compare(surface, musicbrainz_edition, evidence)
@@ -16,6 +17,13 @@ module RecordingResolution
 
       evidence.merge!("status" => "incomplete", "search_pages" => [], "matching_release_ids" => [],
         "releases" => [], "incomplete_reasons" => [])
+      unless @client
+        evidence["incomplete_reasons"] << "provider_unconfigured"
+        return
+      end
+      references = @expanded ? cross_references(musicbrainz_edition) : []
+      evidence["cross_reference_ids"] = references if @expanded
+      evidence["matching_release_ids"].concat(references)
       search(surface, evidence)
 
       ids = evidence["matching_release_ids"]
@@ -59,7 +67,7 @@ module RecordingResolution
           return
         end
 
-        ids.replace(ids | rows.select { |item| item["title"] == "#{surface.artist} - #{surface.album}" }.pluck("id"))
+        ids.replace(ids | rows.select { |item| text_matches?(item["title"], "#{surface.artist} - #{surface.album}") }.pluck("id"))
         return if page >= pagination.fetch("pages")
       end
       evidence["incomplete_reasons"] << "search_page_limit"
@@ -84,9 +92,9 @@ module RecordingResolution
 
       comparison["master_id"] = edition["master_id"]
       credit = edition.fetch("artists").map { |artist| "#{artist["anv"].presence || artist["name"]}#{artist["join"]}" }.join
-      unless edition["id"] == id && edition["title"] == surface.album && credit == surface.artist
+      unless edition["id"] == id && text_matches?(edition["title"], surface.album) && text_matches?(credit, surface.artist)
         return comparison.merge("reason" => "release_identity_mismatch", "id_matches" => edition["id"] == id,
-          "title_matches" => edition["title"] == surface.album, "credit_matches" => credit == surface.artist)
+          "title_matches" => text_matches?(edition["title"], surface.album), "credit_matches" => text_matches?(credit, surface.artist))
       end
 
       slots = track_slots(edition.fetch("tracklist"))
@@ -97,6 +105,20 @@ module RecordingResolution
         "slot_count" => matches.size, "matching_positions" => matches.pluck("position"),
         "country_agreement" => agreement(edition["country"], musicbrainz_edition&.fetch("country", nil)),
         "release_year_agreement" => agreement(edition["year"]&.to_s, musicbrainz_edition&.fetch("date", nil)&.slice(0, 4)))
+    end
+
+    def text_matches?(left, right)
+      return left == right unless @expanded
+
+      left.to_s.squish.casecmp?(right.to_s.squish)
+    end
+
+    def cross_references(edition)
+      Array(edition&.fetch("relations", nil)).filter_map do |relation|
+        url = relation.dig("url", "resource").to_s
+        id = url[%r{\Ahttps?://(?:www\.)?discogs\.com/(?:[^/]+/)?release/(\d+)(?:[-/?#]|\z)}i, 1]
+        id.to_i if id
+      end.uniq.first(MAX_RELEASE_DETAILS)
     end
 
     def track_slots(entries)

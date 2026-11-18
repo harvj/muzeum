@@ -59,6 +59,18 @@ RSpec.describe RecordingResolution::DiscogsEvidence do
     expect(compare).to include("status" => "incomplete", "incomplete_reasons" => [ "invalid_search_results" ])
   end
 
+  it "checks bounded cross-references and case variations in workspace mode" do
+    stub_page(1, 2, [ result(3, title: "Night Lines - NIGHT DRIVE"), result(4, title: "Unrelated") ])
+    stub_release(2, "Signals")
+    stub_release(3, "Signals")
+    edition = { "relations" => [ { "url" => { "resource" => "https://www.discogs.com/release/2-Night-Drive" } } ] }
+    evidence = {}
+    described_class.new(client, expanded: true).compare(surface, edition, evidence)
+
+    expect(evidence).to include("status" => "corroborates", "cross_reference_ids" => [ 2 ], "matching_release_ids" => [ 2, 3 ])
+    expect(evidence["releases"].pluck("status")).to eq(%w[corroborates corroborates])
+  end
+
   it "preserves mixed edition evidence within the release-detail ceiling" do
     stub_page(1, 4, [ result(1), result(2) ])
     stub_page(2, 4, [ result(3), result(4) ])

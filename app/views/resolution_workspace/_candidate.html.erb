@@ -1,0 +1,38 @@
+<% mbid = candidate.fetch("id") %>
+<% slots = Array(@assessment.evidence["slots"]).select { |slot| slot["recording_mbid"] == mbid } %>
+<% preferred = [@assessment.evidence["suggested_mbid"], @assessment.evidence["review_mbid"]].include?(mbid) %>
+<details class="candidate" <%= "open" if preferred || slots.any? %>>
+  <summary><strong><%= candidate["title"] %></strong>
+    <% if preferred %> · Suggested for review<% end %>
+    <% if slots.any? %> · <%= @assessment.evidence.dig("edition", "title") == @observation.payload["album_name"] ? "Observed edition slot" : "Checked edition slot" %><% end %>
+  </summary>
+  <p><%= Array(candidate["artist-credit"]).map { |credit| "#{credit["name"]}#{credit["joinphrase"]}" }.join.presence || "Artist credit unavailable" %>
+    · <%= recording_duration(candidate["length"]) %><% if candidate["disambiguation"].present? %> · <%= candidate["disambiguation"] %><% end %></p>
+  <p><%= link_to "MusicBrainz recording", "https://musicbrainz.org/recording/#{mbid}" %>
+    <% if candidate["video"] %> · Video recording<% end %></p>
+  <% if slots.any? %>
+    <p><%= @assessment.evidence.dig("edition", "title") %> · <%= slots.map { |slot| "disc #{slot["medium"]}, track #{slot["position"]}" }.join("; ") %></p>
+  <% else %>
+    <p class="muted">No verified slot for this candidate in the checked observed edition.</p>
+  <% end %>
+  <% editions = RecordingResolution::Workspace.editions(candidate, @assessment) %>
+  <%= form_with url: decide_resolution_surface_path(@observation) do |form| %>
+    <%= form.hidden_field :recording_mbid, value: mbid %>
+    <%= form.hidden_field :assessment_id, value: @assessment.id %>
+    <%= form.hidden_field :scope, value: @selected_scrobble ? "scrobble" : "surface" %>
+    <%= form.hidden_field :play_id, value: @selected_scrobble&.id %>
+    <%= form.hidden_field :head, value: (@selected_scrobble ? @selected_head : @surface_head)&.id %>
+    <% if editions.any? %>
+      <%= form.label :edition_mbid, "Release to verify", for: "edition-#{mbid}" %>
+      <%= form.select :edition_mbid, [["Use supported album context", ""]] + editions.map { |title, id| ["#{title} · #{id.first(8)}", id] }, {}, id: "edition-#{mbid}" %>
+    <% end %>
+    <%= form.label :reason, "Reason for this assignment", for: "reason-#{mbid}" %>
+    <%= form.text_field :reason, id: "reason-#{mbid}", required: true, maxlength: 500 %>
+    <div class="catalog-actions">
+      <%= form.button(@selected_scrobble ? "Only this time" : "Apply to all", name: "mode", value: "resolved") %>
+      <% if @current_recording&.mbid == mbid && editions.any? %>
+        <%= form.button "Verify selected release", formaction: admit_resolution_surface_path(@observation), formnovalidate: true %>
+      <% end %>
+    </div>
+  <% end %>
+</details>

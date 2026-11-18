@@ -3,7 +3,7 @@ development:
     - polling_interval: 1
       batch_size: 100
   workers:
-    - queues: [recording_resolution]
+    - queues: [recording_resolution<%= ", canonical_catalog" if ENV["MUZEUM_CATALOG_WORKER"] == "1" %>]
       threads: 1
       processes: 1
       polling_interval: 0.2

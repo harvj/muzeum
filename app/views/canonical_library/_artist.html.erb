@@ -1,0 +1,6 @@
+<section class="card library-card">
+  <h2>Artist details</h2>
+  <p>Country <%= @entry.country.presence || "Unknown" %></p>
+</section>
+<%= render "related", title: "Recordings", items: @recordings %>
+<%= render "related", title: "Releases", items: @releases %>

@@ -12,16 +12,17 @@ module RecordingResolution
 
     attr_reader :provenance, :current_request
 
-    def initialize(work, token, fixture: nil)
+    def initialize(work, token, fixture: nil, catalog: false)
       @work, @token, @fixture = work, token, fixture
-      @pilot = Pilot.find(work.pilot_id)
+      @catalog = catalog
+      @pilot = Pilot.find(work.pilot_id) unless catalog
       @provenance = []
       @http = HTTP.timeout(connect: 5, read: 10, write: 5)
     end
 
     def get(provider, path, params: {}, headers: {}, &project)
       @current_request = { "provider" => provider.to_s, "endpoint" => path, "parameters" => params.stringify_keys }
-      key = Digest::SHA256.hexdigest([ "v1", @pilot.id, provider, path, params.sort ].to_json)
+      key = Digest::SHA256.hexdigest([ @catalog ? "catalog-v1" : "v1", (@catalog ? @work.id : @pilot.id), provider, path, params.sort ].to_json)
       cached = RequestCache.find_by(request_key: key, expires_at: Time.current..)
       return remember(provider, path, params, cached.document) if cached
 
@@ -31,7 +32,7 @@ module RecordingResolution
       document["retrieved_at"] = Time.current.iso8601(6)
       retain = provider == :discogs ? 30.minutes : 1.day
       @work.with_lock do
-        self.class.assert_lease!(@work, @token)
+        self.class.assert_lease!(@work, @token, state: @catalog ? "refreshing" : "leased")
         RequestCache.where(expires_at: ...Time.current).delete_all
         RequestCache.upsert({ request_key: key, expires_at: retain.from_now, document: }, unique_by: :request_key)
         RequestCache.where(request_key: RequestCache.order(expires_at: :desc, request_key: :desc).offset(MAX_CACHE_ROWS).select(:request_key)).delete_all
@@ -43,8 +44,8 @@ module RecordingResolution
       raise ProviderError, "#{provider} response contract mismatch"
     end
 
-    def self.assert_lease!(work, token)
-      return if work.state == "leased" && work.lease_token == token && work.lease_until.future?
+    def self.assert_lease!(work, token, state: "leased")
+      return if work.state == state && work.lease_token == token && work.lease_until.future?
 
       raise ActiveRecord::StaleObjectError.new(work, "resolve")
     end
@@ -59,6 +60,8 @@ module RecordingResolution
     end
 
     def reserve!(provider)
+      return reserve_catalog!(provider) if @catalog
+
       Work.transaction do
         @pilot.lock!
         @work.lock!
@@ -66,22 +69,40 @@ module RecordingResolution
         counter = "#{provider}_requests"
         raise ProviderError.new("#{provider} pilot request limit reached", terminal: true) if @pilot[counter] >= LIMITS.fetch(provider)
 
-        if @pilot.live
-          budget = ProviderBudget.create_or_find_by!(provider:) { |row| row.available_at = Time.current }
-          budget.lock!
-          if budget.available_at.future?
-            raise ProviderError.new("#{provider} request deferred", deferred: true, retry_at: budget.available_at)
-          end
-
-          budget.update!(available_at: SPACING.fetch(provider).from_now)
-        end
+        reserve_provider!(provider) if live?
         @pilot.increment!(counter)
         @work.update!(lease_until: LEASE.from_now)
       end
     end
 
+    def reserve_catalog!(provider)
+      @work.with_lock do
+        self.class.assert_lease!(@work, @token, state: "refreshing")
+        if @work.request_count >= 32
+          raise ProviderError.new("Catalog import request limit reached", terminal: true)
+        end
+
+        reserve_provider!(provider)
+        @work.update!(request_count: @work.request_count + 1, lease_until: LEASE.from_now)
+      end
+    end
+
+    def reserve_provider!(provider)
+      budget = ProviderBudget.create_or_find_by!(provider:) { |row| row.available_at = Time.current }
+      budget.lock!
+      if budget.available_at.future?
+        raise ProviderError.new("#{provider} request deferred", deferred: true, retry_at: budget.available_at)
+      end
+
+      budget.update!(available_at: SPACING.fetch(provider).from_now)
+    end
+
+    def live?
+      @catalog || @pilot.live
+    end
+
     def fetch(provider, path, params, headers)
-      if @pilot.live
+      if live?
         url = "#{ORIGINS.fetch(provider)}#{path}"
         response = @http.headers({ "User-Agent" => USER_AGENT, "Accept" => "application/json" }.merge(headers))
           .get(url, params:)
@@ -134,7 +155,7 @@ module RecordingResolution
     end
 
     def impose_cooldown(provider, due)
-      return unless @pilot.live
+      return unless live?
 
       ProviderBudget.where(provider:).where(available_at: ...due).update_all(available_at: due)
     end

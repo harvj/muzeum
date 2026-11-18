@@ -92,7 +92,7 @@ module Clients
 
     MBID = /\A[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\z/i
 
-    def candidate_page(session, artist:, title:, offset: 0)
+    def candidate_page(session, artist:, title:, offset: 0, catalog: false)
       params = { query: build_recording_query(artist:, recording: title, release: nil), limit: 25, offset:, fmt: "json" }
       session.get(:musicbrainz, "/ws/2/recording", params:) do |data|
         unless data["count"].is_a?(Integer) && data["offset"] == offset && data["recordings"].is_a?(Array) &&
@@ -100,32 +100,76 @@ module Clients
           raise RecordingResolution::ProviderError, "MusicBrainz search envelope is incomplete"
         end
 
-        data
+        if catalog
+          data.slice("count", "offset").merge("recordings" => data.fetch("recordings").map { |recording| project_recording(recording) })
+        else
+          data
+        end
       end.fetch("data") { raise RecordingResolution::ProviderError, "MusicBrainz search endpoint unavailable" }
     end
 
-    def verify_recording(session, mbid)
+    def verify_recording(session, mbid, catalog: false)
       return { "status" => "invalid" } unless MBID.match?(mbid.to_s)
 
       params = { fmt: "json", inc: "artist-credits+releases+release-groups+isrcs" }
-      first = session.get(:musicbrainz, "/ws/2/recording/#{mbid.downcase}", params:)
+      projection = method(:project_recording) if catalog
+      first = session.get(:musicbrainz, "/ws/2/recording/#{mbid.downcase}", params:, &projection)
       return first unless first["redirect"]
 
-      session.get(:musicbrainz, "/ws/2/recording/#{first.fetch("redirect")}", params:)
+      session.get(:musicbrainz, "/ws/2/recording/#{first.fetch("redirect")}", params:, &projection)
         .merge("redirected_from" => mbid, "redirected_to" => first.fetch("redirect"))
     end
 
-    def edition(session, mbid)
+    def edition(session, mbid, catalog: false)
       return unless MBID.match?(mbid.to_s)
 
+      projection = method(:project_edition) if catalog
       session.get(:musicbrainz, "/ws/2/release/#{mbid}", params: {
-        fmt: "json", inc: "recordings+artist-credits+release-groups"
-      })["data"]
+        fmt: "json", inc: catalog ? "recordings+artist-credits+release-groups+url-rels" : "recordings+artist-credits+release-groups"
+      }, &projection)["data"]
+    end
+
+    def catalog_artist(session, mbid)
+      return unless MBID.match?(mbid.to_s)
+
+      session.get(:musicbrainz, "/ws/2/artist/#{mbid}", params: { fmt: "json" }) do |data|
+        data.slice("id", "name", "country")
+      end["data"]
     end
 
     # --- Private ----------------------------------------------------
 
     private
+
+    def project_recording(data)
+      data.slice("id", "title", "length", "video", "disambiguation", "first-release-date", "isrcs").merge(
+        "artist-credit" => project_credits(data["artist-credit"]),
+        "releases" => Array(data["releases"]).map { |release| release.slice("id", "title", "date", "country") })
+    end
+
+    def project_edition(data)
+      result = data.slice("id", "title", "status", "country", "date")
+      result["release-group"] = data["release-group"]&.slice("id", "primary-type", "secondary-types", "first-release-date")
+      result["artist-credit"] = project_credits(data["artist-credit"])
+      result["relations"] = Array(data["relations"]).select { |relation| relation["type"] == "discogs" }.map do |relation|
+        { "url" => relation.fetch("url").slice("resource") }
+      end
+      result["media"] = Array(data["media"]).map do |medium|
+        medium.slice("position", "track-count").merge("extra-track-layout" => medium["pregap"].present? || medium["data-tracks"].present?,
+          "tracks" => medium["tracks"]&.map do |track|
+          track.slice("id", "position", "number", "title").merge(
+            "artist-credit" => project_credits(track["artist-credit"]),
+            "recording" => track["recording"] && project_recording(track["recording"]).except("releases"))
+        end)
+      end
+      result
+    end
+
+    def project_credits(credits)
+      Array(credits).map do |credit|
+        credit.slice("name", "joinphrase").merge("artist" => credit.fetch("artist").slice("id", "name", "country"))
+      end
+    end
 
     def build_recording_query(artist:, recording:, release:)
       parts = []

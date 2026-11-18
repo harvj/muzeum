@@ -12,6 +12,12 @@
       "risk": "additive",
       "quiesce": true,
       "review": "Adds one concurrent index over existing scrobble archive and ID. Reads the source table for index construction without rewriting rows. Verify index validity during migration rehearsal and quiesce Muzeum for the reviewed deployment workflow."
+    },
+    "db/migrate/20261118120200_add_canonical_catalog_imports.rb": {
+      "sha256": "e64f276a2bbd7783cec35086e70a2ed75d0ea0eed50937d6cb2dc38de14c2198",
+      "risk": "additive",
+      "quiesce": true,
+      "review": "Adds empty catalog import, revision and ordered track-slot tables with indexes and constraints, plus two nullable release metadata columns. Foreign keys and nullable columns briefly lock referenced catalog tables. Preserves all existing rows, legacy memberships, interpretation history and source definitions. Require the reviewed Muzeum-only quiescence and encrypted four-database recovery gates."
     }
   }
 }

@@ -1,6 +1,6 @@
 # P1.3a — Canonical recording resolution
 
-**Status:** Implemented for a bounded assessment-only pilot in disposable development or staging data. Manual decision services and effective reads are available to future application callers. Production pilot execution and automatic acceptance are disabled. See the [live pilot report](live-provider-pilot-2026-11-17.md) for both catalog evaluations and review findings.
+**Status:** Implemented for a bounded assessment-only pilot in disposable development or staging data. The [P1.3b workspace and canonical library](workspace-and-canonical-library.md) use the manual ledger and effective reads. Production pilot execution and automatic acceptance are disabled. See the [live pilot report](live-provider-pilot-2026-11-17.md) for both catalog evaluations and review findings.
 
 ## Repository assessment
 
@@ -60,9 +60,9 @@ The synthetic labeled corpus had **2 supported suggestions out of 2 emitted** (1
 
 Both migrations are additive and registered in [the exact-hash manifest](../../config/deploy/migrations.json). An isolated PostgreSQL rehearsal loaded the pre-change structure, seeded 10,000 observations with legacy recording/surface references and applied both migrations. Before/after row digests matched for source observations (including fingerprints), legacy recordings and surfaces, users, archives and source tables. The new concurrent archive/ID index was valid and used for a 100-row keyset query. A second rehearsal included real importer-generated fetch, delivery, raw page and checkpoint lineage. The fixture job ran through the isolated Solid Queue worker, and a two-connection PostgreSQL run yielded one assessment from competing jobs. A production migration requires the established [deployment and recovery gates](../deployment/workflow.md).
 
-## P1.3b workspace brief
+## P1.3b workspace and library
 
-Plan a compact Rails/Hotwire queue for ambiguous and unresolved groups, with status filters and a detail view for original observations, payload lineage and version disagreements. Compare ordered credits, provider IDs, release context and reason codes side by side. Allow authorized accept, correct, return to automatic and reverse operations with history and actor attribution. Design a future decision journal showing evidence-driven suggestions versus applied changes, and explicit **Apply to all / Only this time / Dismiss** scope; implement these controls only when separately authorized. Use stable pagination and current archive grants on each request. The general listening history belongs to the canonical library.
+The [implementation and readiness notes](workspace-and-canonical-library.md) describe the authenticated workspace, canonical pages, bounded catalog import and the remaining review questions. P1.3a's assessment-only pilot remains available for disposable catalog evaluation.
 
 ## Open decisions
 

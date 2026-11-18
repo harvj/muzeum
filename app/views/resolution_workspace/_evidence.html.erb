@@ -1,0 +1,33 @@
+<% evidence = assessment.evidence %>
+<% discogs = evidence.fetch("discogs", {}) %>
+<% if evidence.dig("search", "count") %><p>MusicBrainz returned <%= pluralize(evidence.dig("search", "returned") || Array(evidence["candidates"]).size, "candidate") %> of <%= evidence.dig("search", "count") %>.</p><% end %>
+<% if evidence["reasons"].present? %>
+  <details open>
+    <summary>Uncertainty in this assessment</summary>
+    <ul class="catalog-list">
+      <% labels = { "unverified_edition_slot" => "No verified release track slot", "competing_recordings" => "Competing recordings",
+        "missing_source_mbid" => "Missing source recording ID", "unverified_recording" => "Source recording ID unverified",
+        "incomplete_discogs_evidence" => "Discogs investigation incomplete", "discogs_disagreement" => "Discogs editions disagree",
+        "provider_temporarily_unavailable" => "Provider temporarily unavailable" } %>
+      <% evidence["reasons"].each do |reason| %>
+        <% details = evidence.fetch("reason_details", {}).fetch(reason, {}) %>
+        <li><%= labels.fetch(reason, reason.humanize) %>
+          <% if details["message"] %> · <%= details["message"] %><% end %>
+          <% if details["causes"] %> · <%= details["causes"].map(&:humanize).join(", ") %><% end %>
+          <% if details["candidate_mbids"] %> · <%= pluralize(details["candidate_mbids"].size, "alternative") %><% end %>
+        </li>
+      <% end %>
+    </ul>
+  </details>
+<% end %>
+<% if discogs["status"] %>
+  <details>
+    <summary>Discogs comparison</summary>
+    <p><%= discogs["status"].humanize %>. <%= pluralize(Array(discogs["releases"]).count { |release| release["status"] == "corroborates" }, "checked edition") %> corroborated the track.</p>
+    <% absent = Array(discogs["releases"]).count { |release| release["status"] == "track_absent" } %>
+    <% if absent.positive? %><p><%= pluralize(absent, "checked edition") %> lacked the exact track title.</p><% end %>
+    <% if discogs["incomplete_reasons"].present? %><p>Unchecked or incomplete evidence remains.</p><% end %>
+    <p><%= Clients::Discogs::NOTICE %></p>
+    <p><%= link_to Clients::Discogs::ATTRIBUTION, "https://www.discogs.com/" %></p>
+  </details>
+<% end %>

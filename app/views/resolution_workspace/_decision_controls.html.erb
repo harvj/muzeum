@@ -1,0 +1,14 @@
+<%= form_with url: decide_resolution_surface_path(@observation) do |form| %>
+  <%= form.hidden_field :scope, value: @selected_scrobble ? "scrobble" : "surface" %>
+  <%= form.hidden_field :play_id, value: @selected_scrobble&.id %>
+  <%= form.hidden_field :head, value: (@selected_scrobble ? @selected_head : @surface_head)&.id %>
+  <%= form.label :reason, "Reason for this change", for: "resolution-mode-reason" %>
+  <%= form.text_field :reason, id: "resolution-mode-reason", required: true, maxlength: 500 %>
+  <div class="catalog-actions">
+    <%= form.button "Leave unresolved", name: "mode", value: "unresolved" %>
+    <% head = @selected_scrobble ? @selected_head : @surface_head %>
+    <% if head && head.mode != "inherit" %>
+      <%= form.button "Return to inheritance", name: "mode", value: "inherit" %>
+    <% end %>
+  </div>
+<% end %>

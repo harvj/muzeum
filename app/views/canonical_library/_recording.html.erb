@@ -1,0 +1,24 @@
+<% if @releases.any? %>
+  <%= render "related", title: "Release appearances", items: @releases %>
+<% else %>
+  <section class="card library-card">
+    <h2>Release appearances</h2>
+    <p>Release association pending. Use a resolution observation to verify an eligible release.</p>
+  </section>
+<% end %>
+<section class="card library-card">
+  <h2>Listening activity</h2>
+  <p>Recording duration <%= recording_duration(@entry.duration_ms) %></p>
+  <% if @archive_available %>
+    <p><%= pluralize(@observation_count, "resolved listening observation") %>.</p>
+    <% if @unresolved_available %><p class="muted">Your archive contains unresolved observations that are outside this count.</p><% end %>
+    <% if @plays.any? %>
+      <ul class="catalog-list">
+        <% @plays.each do |play| %><li><%= browser_time(play.played_at) %> · <%= link_to "Review observation", resolution_surface_path(play, play: play.id) %></li><% end %>
+      </ul>
+      <% if @next_page %><p><%= link_to "Older observations", recording_path(@entry, before: @next_page) %></p><% end %>
+    <% end %>
+  <% else %>
+    <p>Listening activity is unavailable until you connect a Last.fm archive.</p>
+  <% end %>
+</section>

@@ -1,0 +1,24 @@
+<section class="card library-card">
+  <h2>Track listing</h2>
+  <p><%= [@entry.release_year, @entry.release_month&.to_s&.rjust(2, "0"), @entry.release_day&.to_s&.rjust(2, "0")].compact.join("-").presence || "Date unknown" %>
+    · <%= @entry.catalog_country.presence || "Country unknown" %></p>
+  <% if @slots.any? %>
+    <table class="catalog-table">
+      <thead><tr><th scope="col">Disc / track</th><th scope="col">Recording</th><th scope="col">Your resolved observations</th></tr></thead>
+      <tbody>
+        <% @slots.each do |slot| %>
+          <tr><td><%= slot.medium %> / <%= slot.number.presence || slot.position %></td>
+            <td><%= link_to slot.title, recording_path(slot.recording) %></td>
+            <td><%= @archive_available ? @track_counts.fetch(slot.recording_id, 0) : "Unavailable" %></td></tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% elsif @legacy_slots.present? %>
+    <p>Earlier catalog listing. Verify the full edition with Import.</p>
+    <ol class="catalog-list">
+      <% @legacy_slots.each do |slot| %><li><%= catalog_link(slot.recording) %></li><% end %>
+    </ol>
+  <% else %>
+    <p>No verified track listing is available.</p>
+  <% end %>
+</section>

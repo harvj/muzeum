@@ -16,7 +16,7 @@
     <div class="stone-environment" aria-hidden="true"></div>
     <header>
       <a class="harvj-wordmark" href="/">muzeum</a>
-      <nav aria-label="Appearance and account">
+      <nav class="account-nav" aria-label="Appearance and account">
         <div class="controls" data-controller="appearance">
           <label for="appearance">Appearance</label>
           <select id="appearance" data-action="appearance#change"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select>
@@ -24,6 +24,15 @@
         </div>
         <% if current_user %><%= render "shared/session_dropdown" %><% end %>
       </nav>
+      <% if current_user %>
+        <nav class="library-nav" aria-label="Music library">
+          <% { "Archive" => root_path, "Artists" => artists_path, "Releases" => releases_path,
+               "Recordings" => recordings_path, "Resolution" => resolution_surfaces_path }.each do |label, path| %>
+            <% active = path == root_path ? current_page?(path) : request.path.start_with?(path) %>
+            <%= link_to label, path, aria: { current: active ? "page" : nil } %>
+          <% end %>
+        </nav>
+      <% end %>
     </header>
     <main>
       <% flash.each do |_, message| %><p class="card flash" role="status"><%= message %></p><% end %>

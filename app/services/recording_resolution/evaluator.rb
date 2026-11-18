@@ -5,9 +5,10 @@ module RecordingResolution
 
     attr_reader :evidence
 
-    def initialize(session, discogs:)
+    def initialize(session, discogs:, workspace: false)
       @session = session
-      @discogs = DiscogsEvidence.new(discogs)
+      @discogs = DiscogsEvidence.new(discogs, expanded: workspace)
+      @workspace = workspace
       @musicbrainz = Clients::Musicbrainz.new
     end
 
@@ -18,7 +19,7 @@ module RecordingResolution
         return evidence
       end
 
-      page = @musicbrainz.candidate_page(@session, artist: surface.artist, title: surface.track)
+      page = @musicbrainz.candidate_page(@session, artist: surface.artist, title: surface.track, catalog: @workspace)
       candidates = page.fetch("recordings")
       evidence["search"] = page.slice("count", "offset").merge("returned" => candidates.size)
       evidence["candidates"] = candidates.map { |candidate| recording_evidence(candidate) }
@@ -26,7 +27,7 @@ module RecordingResolution
       reason("missing_album", "field" => "album") if surface.album.blank?
       reason("missing_source_mbid", "field" => "track_mbid") if claims["track_mbid"].blank?
 
-      verification = claims["track_mbid"].present? ? @musicbrainz.verify_recording(@session, claims["track_mbid"]) : {}
+      verification = claims["track_mbid"].present? ? @musicbrainz.verify_recording(@session, claims["track_mbid"], catalog: @workspace) : {}
       recording = verification["data"]
       evidence["verification"] = verification.except("data")
       evidence["verified_recording"] = recording && recording_evidence(recording)
@@ -40,7 +41,14 @@ module RecordingResolution
 
       releases = Array(recording&.fetch("releases", nil))
       edition_id = claims["album_mbid"].presence || releases.find { |release| release["title"] == surface.album }&.fetch("id", nil)
-      edition = @musicbrainz.edition(@session, edition_id) if edition_id && surface.album.present?
+      if @workspace && edition_id.blank? && surface.album.present?
+        relevant = candidates.flat_map { |candidate| Array(candidate["releases"]) }.select { |release| release["title"] == surface.album }
+        ids = relevant.pluck("id").compact.uniq
+        edition_id = ids.first if ids.one?
+      end
+      if edition_id && surface.album.present?
+        edition = @workspace ? @musicbrainz.edition(@session, edition_id, catalog: true) : @musicbrainz.edition(@session, edition_id)
+      end
       evidence["edition"] = edition&.slice("id", "title", "release-group", "country", "date")
       evidence["slots"] = edition_slots(edition)
       if verified
