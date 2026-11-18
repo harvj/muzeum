@@ -41,6 +41,25 @@ Requests use one database lease, a 32-request ceiling and five provider failure 
 
 The migration adds three empty tables, two nullable columns on releases and append-only revision guards. It ran against a pre-migration PostgreSQL database populated with 10,000 immutable scrobbles, fingerprints, legacy surface and membership rows, canonical identities, and a listener ledger entry. Original-column digests matched before and after. The [exact-hash manifest](../../config/deploy/migrations.json) records the additive review. A separate PostgreSQL 16 and Restic rehearsal passed all 28 backup helper tests and 32 deployment tests, including isolated four-database recovery. A disposable Solid Queue worker consumed a recording job through stubbed MusicBrainz HTTP with two provider requests, imported all three ordered track slots across two discs, and produced zero listener decisions. The full Rails suite passed with browser tests enabled. Browser coverage exercises keyboard submission, record and release navigation, zero-listening presentation, and desktop/mobile light and dark layouts. Production migration, recovery and activation remain subject to the operator [deployment workflow](../deployment/workflow.md).
 
+### Production catalog activation and rollback
+
+Obtain explicit authorization for activation, the two Muzeum service restarts and the scoped smoke test. Before changing the flag, verify the published revision, both Muzeum services, public `/up`, fresh Solid Queue heartbeats and recent Last.fm job completions. Check the primary database for active catalog requests and the queue database for existing catalog jobs. Reconcile any unexpected work before activation. Verify the Discogs application pair through an authenticated catalog search and install it through the [protected credential mechanism](providers-and-verification.md#protected-credential-setup). The production file is owned by `muzeum` with mode `0600`. Keep credentials out of terminal output, command arguments and logs.
+
+On the production host, add exactly one `MUZEUM_CATALOG_WORKER=1` entry in the protected environment file. Preserve the other settings, ownership and mode.
+
+```sh
+sudoedit /var/www/muzeum/shared/.env
+sudo systemctl restart muzeum-worker.service muzeum-web.service
+```
+
+Verify systemd and public `/up` again. Confirm that the live Solid Queue worker advertises exactly `imports,default,canonical_catalog`, with one worker process and one thread for this rollout. The existing ready jobs in `solid_queue_recurring` are outside that subscription. Check Last.fm scheduler and worker heartbeats, continued `imports` completions and any growth in ready or failed ingestion work. Catalog uses a named queue but shares the worker thread with ingestion, so the restart and an in-flight catalog request can briefly delay ingestion.
+
+The flag also permits user-requested workspace assessments. Those can append evidence and suggestions. Automatic recording decisions and per-play release attribution stay disabled. The separately configured P1.3a resolution pilot remains blocked in production. Catalog has no recurring dispatch. A request has a renewable two-minute lease, a combined 32-call provider ceiling and up to five counted failures. Provider reservations are paced at one second for MusicBrainz and three seconds for Discogs. Shared cooldown deferrals do not consume failure attempts.
+
+For the initial smoke test, use an authorized archive observation for Boards of Canada's “Roygbiv” ([recording MBID `2a72cd7b-f566-4c91-8e9b-7b33b95dfff7`](https://musicbrainz.org/recording/2a72cd7b-f566-4c91-8e9b-7b33b95dfff7)) and explicitly select the [original UK CD of *Music Has the Right to Children*](https://musicbrainz.org/release/c77121b6-4552-3127-9f19-685a7f8f090f) (edition MBID `c77121b6-4552-3127-9f19-685a7f8f090f`). If a recording assignment is needed, use **Only this time** and account for the resulting manual decision. Track only this candidate and edition through the workflow. Verify exactly one admitted release with all 17 ordered slots, “Roygbiv” at medium 1, position 10, and catalog provenance for the edition. Verify that the import has no additional release admissions, scrobble writes, per-play release credits or automatic recording decisions. Allow for independent Last.fm arrivals when comparing source rows. Record incomplete or failed provider evidence and preserve the request for review. Skip bulk dispatch during the smoke test.
+
+To roll back activation, use `sudoedit /var/www/muzeum/shared/.env` to remove the added flag, then run `sudo systemctl restart muzeum-worker.service muzeum-web.service`. Confirm both units and `/up` are healthy, the worker advertises exactly `imports,default`, and Last.fm job completions resume. Preserve durable catalog requests, queue records, catalog revisions, admitted releases and listener decisions. Inspect pending or leased work before any subsequent activation or targeted retry.
+
 ## Open questions
 
 - How to rank alternatives when multiple verified original editions share a title but have different track sequences.
