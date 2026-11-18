@@ -21,6 +21,11 @@ BACKUPS = Path('/var/lib/harvj-backups/muzeum')
 UNITS = ('muzeum-web.service', 'muzeum-worker.service')
 SHA = re.compile(r'[a-f0-9]{40}')
 TOKEN = re.compile(r'[a-f0-9]{32}')
+ROUTE_HELPER = Path('/usr/local/sbin/harvj-muzeum-route')
+
+
+class RouteRefused(RuntimeError):
+    """The route helper confirmed that the original route was retained."""
 
 
 def now():
@@ -68,7 +73,7 @@ class Host:
         return (APP / 'current').resolve(strict=True) == self.release(release, sha) and self.revision() == sha
 
     def preflight(self):
-        for helper in (Path(__file__).resolve(), Path(__file__).resolve().with_name('inspect.rb'), Path('/usr/local/sbin/muzeum-migrate')):
+        for helper in (Path(__file__).resolve(), Path(__file__).resolve().with_name('inspect.rb'), Path('/usr/local/sbin/muzeum-migrate'), ROUTE_HELPER):
             info = helper.stat()
             if info.st_uid != 0 or info.st_mode & 0o022:
                 raise RuntimeError('Deployment/migration helpers must be root-owned and immutable to runtime')
@@ -203,8 +208,23 @@ class Host:
                 result[database][table] = {'columns': columns, 'sha256': digest.hexdigest()}
         return result
 
+    def route(self, action, sha):
+        if self.revision() != sha:
+            raise RouteRefused('Published SHA changed before route operation')
+        result = subprocess.run([str(ROUTE_HELPER), action], capture_output=True, timeout=180)
+        if result.returncode:
+            diagnostic = STATE / 'route-last-error'
+            diagnostic.write_bytes(result.stderr[-65536:])
+            diagnostic.chmod(0o600)
+            if result.returncode == 3:
+                raise RouteRefused('Muzeum route operation refused; inspect protected route-last-error')
+            raise RuntimeError('Muzeum route state requires operator inspection')
+
+    def check_withdrawal(self, sha):
+        self.route('check-withdraw', sha)
+
     def withdraw(self, sha):
-        self.command(['/usr/local/sbin/muzeum-site', 'withdraw', sha])
+        self.route('withdraw', sha)
 
     def migrate(self, release, sha):
         expected = hashlib.sha256((release / 'ops/provision/muzeum-migrate').read_bytes()).hexdigest()
@@ -216,7 +236,7 @@ class Host:
         self.command(['systemctl', 'restart', *UNITS])
 
     def activate(self, sha):
-        self.command(['/usr/local/sbin/muzeum-site', 'activate', sha])
+        self.route('activate', sha)
         self.command(['curl', '--fail', '--silent', '--max-time', '10', 'https://muzeum.fm/up'])
 
     def stop(self):
@@ -280,14 +300,22 @@ class Deployment:
                         reviewed_migrations(release, before['pending'])
                         record['migrations'] = before['pending']
                         if before['pending']:
-                            # Persist intent BEFORE withdrawing or executing any migration.
-                            record['migrating'] = True
+                            self.host.check_withdrawal(record['baseline']['revision'])
+                            record['route_transition'] = 'withdrawing'
                             self.save(record)
-                            self.host.withdraw(record['baseline']['revision'])
+                            try:
+                                self.host.withdraw(record['baseline']['revision'])
+                            except RouteRefused:
+                                record['route_transition'] = 'refused'
+                                raise
                             record['withdrawn'] = True
+                            record['route_transition'] = 'withdrawn'
                             self.save(record)
+                            self.host.stop()
                             record['pre_backup'] = self.host.backup_restore(record['baseline']['revision'])
                             record['evidence'] = self.host.fingerprint()
+                            # Persist intent immediately before issuing any migration.
+                            record['migrating'] = True
                             self.save(record)
                             self.host.migrate(release, sha)
                             after = self.host.inspect(release)
@@ -321,7 +349,7 @@ class Deployment:
                         record['phase'] = 'complete'
                         record['completed_at'] = now()
                     elif phase == 'cancel':
-                        if record['phase'] != 'prepared_checkout' or record['migrating'] or self.host.revision() != record['baseline']['revision']:
+                        if record['phase'] != 'prepared_checkout' or record['migrating'] or record.get('route_transition') or self.host.revision() != record['baseline']['revision']:
                             raise RuntimeError('Only an untouched pre-deployment attempt can be cancelled')
                         self.host.health()
                         record['phase'] = 'cancelled'
@@ -343,7 +371,7 @@ class Deployment:
                 self.save(record)
                 # Once migration may have run, old code must never resume. After publication,
                 # withdraw the exact current candidate if its restart/health checks failed.
-                if record['migrating'] or (record.get('baseline') and self.host.revision() != record['baseline']['revision']):
+                if record['migrating'] or record['withdrawn'] or (record.get('baseline') and self.host.revision() != record['baseline']['revision']):
                     route_ok = record['withdrawn']
                     try:
                         if not route_ok:
@@ -356,6 +384,8 @@ class Deployment:
                         record['safe_state'] = ('route withdrawn; ' if route_ok else 'route requires operator inspection; ') + 'Muzeum services stopped; data retained'
                     except Exception:
                         record['safe_state'] = 'Manual Muzeum-only withdrawal required; inspect services and route immediately'
+                elif record.get('route_transition') == 'withdrawing':
+                    record['safe_state'] = 'Route requires operator inspection; service state preserved; migration not attempted'
                 else:
                     record['safe_state'] = 'Prior application retained; verify health before releasing lock'
                 self.save(record)

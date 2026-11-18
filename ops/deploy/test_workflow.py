@@ -73,7 +73,10 @@ class FixtureHost:
 
     def withdraw(self, sha):
         self.event('withdraw')
-        self.public, self.running = False, False
+        self.public = False
+
+    def check_withdrawal(self, sha):
+        self.event('check_withdrawal')
 
     def migrate(self, release, sha):
         self.event('migration')
@@ -148,6 +151,38 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(receipt['pre_backup']['release_sha'], OLD)
         self.assertEqual(receipt['post_backup']['release_sha'], NEW)
         self.assertTrue(host.public and host.running)
+
+    def test_failed_route_check_preserves_running_application(self):
+        host, flow = self.workflow(True, 'check_withdrawal')
+        flow.run('begin', NEW, self.token)
+        with self.assertRaises(RuntimeError):
+            flow.run('prepare', NEW, self.token, str(host.candidate))
+        record = json.loads((self.root / 'audit/active.json').read_text())
+        self.assertFalse(record['migrating'] or record['withdrawn'])
+        self.assertTrue(host.public and host.running)
+        self.assertFalse({'stop', 'withdraw', 'migration'} & set(host.events))
+
+    def test_route_refusal_after_eligibility_preserves_running_application(self):
+        host, flow = self.workflow(True)
+        flow.run('begin', NEW, self.token)
+        with patch.object(host, 'withdraw', side_effect=deploy.RouteRefused('Concurrent edit')):
+            with self.assertRaises(RuntimeError):
+                flow.run('prepare', NEW, self.token, str(host.candidate))
+        record = json.loads((self.root / 'audit/active.json').read_text())
+        self.assertEqual(record['route_transition'], 'refused')
+        self.assertFalse(record['migrating'] or record['withdrawn'])
+        self.assertTrue(host.public and host.running)
+        self.assertFalse({'stop', 'migration'} & set(host.events))
+
+    def test_unknown_withdrawal_state_requires_inspection_without_stopping_services(self):
+        host, flow = self.workflow(True, 'withdraw')
+        flow.run('begin', NEW, self.token)
+        with self.assertRaisesRegex(RuntimeError, 'Route requires operator inspection'):
+            flow.run('prepare', NEW, self.token, str(host.candidate))
+        record = json.loads((self.root / 'audit/active.json').read_text())
+        self.assertEqual(record['route_transition'], 'withdrawing')
+        self.assertFalse(record['migrating'])
+        self.assertTrue(host.running)
 
     def test_failures_never_roll_back_or_restore_live_data(self):
         for failure in ('backup', 'restore', 'migration', 'publication', 'restart', 'health', 'activation'):
