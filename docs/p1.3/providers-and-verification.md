@@ -33,7 +33,7 @@ For a disposable development/staging worker, the operator should install `DISCOG
 )
 ```
 
-Run this in a shell with tracing off. Have the worker process load the file as environment variables using the approved launcher or with `set -a; source "$HOME/.muzeum-discogs-pilot.env"; set +a` in its startup shell. Never share the file or include values in logs, Git, task arguments, chat or fixtures. For authorized live validation, use an explicit one-observation disposable archive and start the normal pilot with `LIVE=authorized`. Confirm the request succeeds and the assessment retains the Discogs comparison. No live authentication or provider traffic was performed during implementation.
+Run this in a shell with tracing off. Have the worker process load the file as environment variables using the approved launcher or with `set -a; source "$HOME/.muzeum-discogs-pilot.env"; set +a` in its startup shell. Never share the file or include values in logs, Git, task arguments, chat or fixtures. For authorized live validation, use an explicit one-observation disposable archive and start the normal pilot with `LIVE=authorized`. Confirm the request succeeds and the assessment retains the Discogs comparison. The [first live pilot](live-provider-pilot-2026-11-17.md) verified authenticated catalog search. Paginated results prevented live release-detail comparisons in that sample.
 
 ## Assessment rule and regression coverage
 

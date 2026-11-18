@@ -1,6 +1,6 @@
 # P1.3a — Canonical recording resolution
 
-**Status:** Implemented for a bounded assessment-only pilot in disposable development or staging data. Manual decision services and effective reads are available to future application callers. Production pilot execution and automatic acceptance are disabled.
+**Status:** Implemented for a bounded assessment-only pilot in disposable development or staging data. Manual decision services and effective reads are available to future application callers. Production pilot execution and automatic acceptance are disabled. The [first live pilot](live-provider-pilot-2026-11-17.md) completed four assessments, all of which abstained.
 
 ## Repository assessment
 
@@ -67,7 +67,7 @@ Plan a compact Rails/Hotwire queue for ambiguous and unresolved groups, with sta
 ## Open decisions
 
 - **Open — Automatic acceptance.** Review labeled real-catalog decisions and the operating precision/abstention target before authorizing writes. Consider conflicting claims across groups that share a surface.
-- **Open — Discogs verification and retention.** Install the application credentials through protected configuration and authorize a small live verification. Confirm the current endpoint limits and attribution obligations before any display.
+- **Open — Discogs verification and retention.** The first live pilot verified protected credentials and authenticated catalog search. Live release-detail comparison and review of current endpoint limits and display obligations remain open.
 - **Open — Legacy interpretations and provider changes.** Review legacy assignments with incomplete actor provenance, MusicBrainz redirect chains and conflicting/existing catalog metadata. Provider aliases and broader compatibility need independent review.
 - **Open — Release relationship policy.** P1.3c owns collection equivalence, chronology fallbacks and contextual release credit.
 
