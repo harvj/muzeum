@@ -10,7 +10,7 @@ module RecordingResolution
     SPACING = { musicbrainz: 1.second, discogs: 3.seconds }.freeze
     ORIGINS = { musicbrainz: "https://musicbrainz.org", discogs: "https://api.discogs.com" }.freeze
 
-    attr_reader :provenance
+    attr_reader :provenance, :current_request
 
     def initialize(work, token, fixture: nil)
       @work, @token, @fixture = work, token, fixture
@@ -20,6 +20,7 @@ module RecordingResolution
     end
 
     def get(provider, path, params: {}, headers: {}, &project)
+      @current_request = { "provider" => provider.to_s, "endpoint" => path, "parameters" => params.stringify_keys }
       key = Digest::SHA256.hexdigest([ "v1", @pilot.id, provider, path, params.sort ].to_json)
       cached = RequestCache.find_by(request_key: key, expires_at: Time.current..)
       return remember(provider, path, params, cached.document) if cached

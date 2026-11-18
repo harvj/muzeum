@@ -40,3 +40,50 @@ IDs are listed in the order returned by the search. The Roygbiv list applies to 
 - **Open — Edition evidence.** Decide whether to preserve a bounded set of edition references and the specific incomplete reason in assessments. Review how multiple editions could support recording identity before adjusting pagination or selection.
 - **Open — Competing recordings.** Review whether to distinguish alternatives supported by the observed edition from versions found elsewhere. The current rule blocked a catalog-supported album case even with a verified slot. Two same-title candidates and a named rework illustrate why alternative candidates still need review.
 - The focused offline resolution suite passed with 21 examples and zero failures. No evaluator changes were made. The small single-artist sample establishes live adapter connectivity and observed abstention behavior. Automatic acceptance and P1.3b remain subject to separate review.
+
+## P1.3a.1 follow-up · bounded pagination and explanations
+
+The follow-up used `recording-evidence-v2` through the normal Solid Queue worker on November 17, 2026 (America/Chicago). The sample comprised 12 manually constructed Last.fm-shaped surfaces across six artists, with four cases repeated from the first pilot. Catalog expectations were selected before running the worker using the public edition and recording pages and independent artist or label tracklists where available. The sample includes exact album slots, competing recordings, missing album or MBID, an incorrect MBID, conflicting album context, version text, and Japanese artist credit. It contains no listener history.
+
+| Outcome | Count |
+| --- | ---: |
+| Surfaces selected and completed | 12 |
+| Correct suggestions against the pre-labeled catalog | 1 |
+| Incorrect suggestions | 0 |
+| Abstentions | 11 |
+| Final incomplete investigations | 6 |
+| Mixed Discogs edition evidence | 1 |
+| Complete Discogs contradictions | 0 |
+| MusicBrainz / Discogs request reservations | 28 / 26 |
+| Transient failures recovered / terminal work failures | 6 / 0 |
+| Resolution decisions | 0 |
+
+All six final incomplete investigations hit the Discogs release-detail limit, and one also hit the page limit. The single suggestion is correct for the labeled MusicBrainz edition and track slot. Discogs returned an empty exact search for that surface. One suggestion in a curated, claim-seeded sample provides little evidence about real-world suggestion precision or coverage.
+
+### Surface-level comparison
+
+The MusicBrainz column gives search candidate counts. The Discogs column describes exact artist/album hits under the pilot rule; an empty result does not establish catalog absence.
+
+| Artist and surface | Independent catalog label | MusicBrainz and final outcome | Discogs comparison |
+| --- | --- | --- | --- |
+| Boards of Canada · Music Has the Right to Children / Roygbiv | UK CD slot 10 identifies the 2:31 album recording. [Edition](https://musicbrainz.org/release/c77121b6-4552-3127-9f19-685a7f8f090f) | 18. Verified claimed slot. Abstained for competing recordings. | All 3 pages, 0 exact hits. |
+| Boards of Canada · Music Has the Right to Children / Kaini Industries | UK CD slot 8 identifies the album recording. [Artist tracklist](https://boardsofcanada.bandcamp.com/album/music-has-the-right-to-children) | 3. Verified claimed slot. Abstained for competing recordings. | Same 3 pages, 0 exact hits. |
+| Boards of Canada · Peel Session / Roygbiv | The original edition and reissue omit Roygbiv. [Original edition](https://musicbrainz.org/release/0709c446-e190-4dce-b469-908e51267770) · [Reissue](https://bleep.com/release/141387-boards-of-canada-peel-session?lang=en_GB) | 18. Verified the recording claim. Abstained for competing recordings and a missing edition slot. | Both pages, 0 exact hits. |
+| Boards of Canada · Roygbiv, album and MBID missing | The album recording is plausible. The observation does not identify the version. [Recording](https://musicbrainz.org/recording/2a72cd7b-f566-4c91-8e9b-7b33b95dfff7) | 18. Abstained for missing album and source MBID. | No album context. |
+| Slint · Spiderland / Good Morning, Captain | Original vinyl slot B3 identifies the studio recording. [Edition](https://musicbrainz.org/release/a16b871f-3b71-3bb0-9a9d-798b513a4fc0) · [Artist tracklist](https://slint.bandcamp.com/album/spiderland) | 11. Verified claimed slot. Abstained for competing recordings and incomplete Discogs evidence. | Both pages; 39 exact hits. All 3 checked editions corroborated B3. |
+| Slint · Spiderland / Breadcrumb Trail, MBID from Good Morning, Captain | Slot A1 points to `8971961f-143b-4aba-8721-550eeb56073d`, a different recording from the source claim. [Edition](https://musicbrainz.org/release/a16b871f-3b71-3bb0-9a9d-798b513a4fc0) | 10. Abstained for identity conflict, missing search confirmation and edition slot, competition, and incomplete Discogs evidence. | Both pages; 39 exact hits. All 3 checked editions corroborated the title at A1. |
+| Nick Drake · Pink Moon / Horn | CD track 5 links to `e2471abf-b272-431f-a030-48a958aa3694`. [Edition](https://musicbrainz.org/release/2a274c12-8785-351a-9155-1d6d2dfde21c) · [Label tracklist](https://nickdrake.islandrecords.co.uk/collections/music/products/pink-moon-cd?currency=USD) | 1. Verified claimed slot. Abstained solely for incomplete Discogs evidence. | 3 of 4 pages; 69 exact hits examined. All 3 checked editions corroborated the track. |
+| Nick Drake · Horn, album missing | The claim identifies the recording. The surface omits edition context. [Recording](https://musicbrainz.org/recording/e2471abf-b272-431f-a030-48a958aa3694) | 1. Verified claim. Abstained for missing album and slot evidence. | No album context. |
+| The Postal Service · Give Up / Recycled Air | Original edition slot 5 identifies the album recording. [Edition](https://musicbrainz.org/release/15166868-2c9e-36c4-959f-d0010ecf55c0) · [Artist tracklist](https://thepostalservice.bandcamp.com/album/give-up) | 11. Verified claimed slot. Abstained for competing recordings and incomplete Discogs evidence. | Both pages; 36 exact hits. All 3 checked editions corroborated the album track. |
+| The Postal Service · Give Up / Recycled Air (Live), MBID missing | The artist's album tracklist gives Recycled Air without the live qualifier. No live recording was assigned as ground truth. [Artist tracklist](https://thepostalservice.bandcamp.com/album/give-up) | 0. Abstained for missing source MBID and incomplete Discogs evidence. | All 3 checked editions lacked the exact live title. Remaining exact hits were unchecked. |
+| Broadcast · Tender Buttons / Corporeal | MusicBrainz track 6 and the artist list identify Corporeal on the album. [Edition](https://musicbrainz.org/release/111349e0-5427-4dfb-b419-e2e689861ebf) · [Artist tracklist](https://broadcast.bandcamp.com/album/tender-buttons) | 3. Verified claimed slot. Abstained for competing recordings, incomplete evidence, and mixed Discogs edition results. | 13 exact hits on one page. Releases `532524` and `15640374` corroborated the track. Release `31651739` lacked the exact title. |
+| フィッシュマンズ · LONG SEASON / LONG SEASON 1 | The checked SHM-CD edition links track 1 to `2fe61028-0845-46e0-8b6c-e0ed01b76802`. [Edition](https://musicbrainz.org/release/0e81f608-23ca-4d63-9563-9ef7da624ef1) · [Separate SHM-CD reissue listing with the same first track](https://www.universal-music.co.jp/fishmans/products/upcy-7175/) | 1. Verified exact artist credit, recording and slot. Suggested the labeled MBID. | Search returned zero results for the supplied Japanese credit and title. |
+
+The worker checked 12 distinct Discogs release IDs and reused them across compatible catalog queries. The first pilot's Boards of Canada album query now completes all 3 pages. It returns zero exact artist/album display-string matches despite the independently cataloged edition, exposing a limitation of exact Discogs text comparison. The six transient failures were MusicBrainz HTTP 503 responses. They produced scoped partial assessments, recovered through durable retries, and left all 12 work items complete. The final evaluator reproduced all 12 completed assessments offline from the captured projections. Country/year differences across editions were retained as context and excluded from recording disagreement counts. Data provided by [Discogs](https://www.discogs.com/).
+
+### Review questions
+
+- **Open — Discogs discovery.** Evaluate bounded exact-title alternatives and provider cross-references for casing, localized credits, and equivalent editions. A completed query with zero exact hits supports only that query outcome.
+- **Open — Edition evidence.** Decide how verified corroboration should affect eligibility when additional editions remain behind the cap. Horn illustrates the trade-off. The incomplete-evidence veto remains in force.
+- **Open — Candidate relevance.** Review whether an alternate recording from a different edition should block a verified slot in the observed edition. The current competing-recordings rule remains in force.
+- A broader, independently labeled archive-shaped sample is still needed for automatic acceptance review. The follow-up used one protected local worker and disposable primary and queue databases. It produced no listener decisions.

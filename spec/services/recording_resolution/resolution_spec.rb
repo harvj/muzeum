@@ -126,6 +126,10 @@ RSpec.describe RecordingResolution do
       processor = RecordingResolution::Processor.new(work, fixture: transport)
       expect { processor.call }.not_to change(RecordingResolution::Decision, :count)
       assessment = RecordingResolution::Assessment.find(work.reload.assessment_id)
+      expect(assessment.evidence.fetch("reason_details").keys).to match_array(assessment.evidence.fetch("reasons"))
+      if example["alternative"]
+        expect(assessment.evidence.dig("reason_details", "competing_recordings", "candidate_mbids")).to eq([ ids[:other] ])
+      end
       accepted = example["expected"] == "accept"
       expect(assessment.suggested_recording_id.present?).to eq(accepted)
       expect(assessment.evidence.dig("discogs", "status")).to eq("contradicts") if example["discogs_track"]
@@ -188,7 +192,71 @@ RSpec.describe RecordingResolution do
     expect(work.attempts).to eq(1)
     expect(work.due_at).to be >= before + 30.seconds
     expect { observation }.to change(Scrobble, :count).by(1)
-    expect(RecordingResolution::Assessment.count).to eq(0)
+    evidence = ledger.assessments(listener).sole.evidence
+    expect(evidence.dig("reason_details", "provider_temporarily_unavailable")).to include(
+      "provider" => "musicbrainz", "endpoint" => "/ws/2/recording", "retry_exhausted" => false)
+  end
+
+  it "resumes a failed Discogs page from cached evidence and deduplicates the failure assessment" do
+    freeze_time do
+      work = select_work(observation)
+      fixture = RecordingResolution::FixtureTransport.new
+      page_one = { pagination: { page: 1, pages: 2, items: 2, per_page: 1 }, results: [ { id: 42, title: "Unrelated" } ] }
+      page_two = { pagination: { page: 2, pages: 2, items: 2, per_page: 1 },
+        results: [ { id: 123, title: "Night Lines - Night Drive" } ] }
+      transport = lambda do |provider, path, params|
+        next fixture.call(provider, path, params) unless provider == :discogs && path == "/database/search"
+        next [ 200, {}, page_one.to_json ] if params[:page] == 1
+        next [ 503, { "Retry-After" => "20" }, "" ] if work.attempts < 2
+
+        [ 200, {}, page_two.to_json ]
+      end
+      processor = RecordingResolution::Processor.new(work, fixture: transport)
+      processor.call
+      failure = ledger.assessments(listener).sole.evidence
+      expect(failure.dig("discogs", "search_pages").pluck("page")).to eq([ 1 ])
+      expect(failure.dig("reason_details", "provider_temporarily_unavailable", "parameters", "page")).to eq(2)
+      expect(failure.dig("verified_recording", "id")).to eq(ids[:studio])
+      travel 20.seconds
+      expect { processor.call }.not_to change(RecordingResolution::Assessment, :count)
+      travel 20.seconds
+      expect { processor.call }.to change(RecordingResolution::Assessment, :count).by(1)
+      expect(work.reload.state).to eq("done")
+      expect(RecordingResolution::Pilot.find(work.pilot_id)).to have_attributes(musicbrainz_requests: 3, discogs_requests: 5)
+    end
+  end
+
+  it "records exhaustion after five transient failures and stops requesting" do
+    freeze_time do
+      work = select_work(observation)
+      processor = RecordingResolution::Processor.new(work, fixture: ->(*) { [ 503, { "Retry-After" => "30" }, "" ] })
+      5.times do
+        processor.call
+        travel 30.seconds
+      end
+
+      expect(work.reload).to have_attributes(state: "failed", attempts: 5)
+      expect { processor.call }.not_to change { work.reload.attempts }
+      failures = ledger.assessments(listener).map { |assessment|
+        assessment.evidence.dig("reason_details", "provider_temporarily_unavailable", "retry_exhausted")
+      }
+      expect(failures).to contain_exactly(false, true)
+      expect(RecordingResolution::Pilot.find(work.pilot_id).musicbrainz_requests).to eq(5)
+    end
+  end
+
+  it "stops at the pilot provider budget and records the failed endpoint without another request" do
+    work = select_work(observation)
+    pilot = RecordingResolution::Pilot.find(work.pilot_id)
+    pilot.update!(discogs_requests: RecordingResolution::ProviderSession::LIMITS.fetch(:discogs))
+    transport = RecordingResolution::FixtureTransport.new
+    allow(transport).to receive(:call).and_call_original
+    RecordingResolution::Processor.new(work, fixture: transport).call
+
+    expect(work.reload).to have_attributes(state: "failed", attempts: 1)
+    expect(transport).not_to have_received(:call).with(:discogs, anything, anything)
+    expect(ledger.assessments(listener).sole.evidence.dig("reason_details", "provider_request_stopped")).to include(
+      "provider" => "discogs", "endpoint" => "/database/search", "message" => "discogs pilot request limit reached")
   end
 
   it "rejects stale leases after an interrupted worker is reclaimed" do

@@ -1,83 +1,115 @@
 module RecordingResolution
   class Evaluator
-    VERSION = "recording-evidence-v1"
+    VERSION = "recording-evidence-v2"
     VERSION_MARKER = /\b(live|remix|remixed|acoustic|demo|alternate|edit|instrumental|take)\b/i
+
+    attr_reader :evidence
 
     def initialize(session, discogs:)
       @session = session
-      @discogs = discogs
+      @discogs = DiscogsEvidence.new(discogs)
       @musicbrainz = Clients::Musicbrainz.new
     end
 
     def call(surface, claims)
-      return { "reasons" => [ "missing_title_or_artist" ] } if surface.track.blank? || surface.artist.blank?
+      @evidence = { "source_claims" => claims, "reasons" => [], "reason_details" => {} }
+      if surface.track.blank? || surface.artist.blank?
+        reason("missing_title_or_artist", "missing_fields" => %w[artist track].select { |field| surface.public_send(field).blank? })
+        return evidence
+      end
 
       page = @musicbrainz.candidate_page(@session, artist: surface.artist, title: surface.track)
       candidates = page.fetch("recordings")
+      evidence["search"] = page.slice("count", "offset").merge("returned" => candidates.size)
+      evidence["candidates"] = candidates.map { |candidate| recording_evidence(candidate) }
+      reason("incomplete_search", evidence["search"].merge("provider" => "musicbrainz")) if page["count"] != candidates.size
+      reason("missing_album", "field" => "album") if surface.album.blank?
+      reason("missing_source_mbid", "field" => "track_mbid") if claims["track_mbid"].blank?
+
       verification = claims["track_mbid"].present? ? @musicbrainz.verify_recording(@session, claims["track_mbid"]) : {}
       recording = verification["data"]
+      evidence["verification"] = verification.except("data")
+      evidence["verified_recording"] = recording && recording_evidence(recording)
+      verified = verified_recording?(recording, verification["redirected_to"] || claims["track_mbid"])
+      if verified
+        assess_identity(surface, claims, recording, candidates)
+      else
+        reason("unverified_recording", evidence["verification"].merge("claimed_mbid" => claims["track_mbid"],
+          "returned_mbid" => recording&.fetch("id", nil)))
+      end
+
       releases = Array(recording&.fetch("releases", nil))
       edition_id = claims["album_mbid"].presence || releases.find { |release| release["title"] == surface.album }&.fetch("id", nil)
       edition = @musicbrainz.edition(@session, edition_id) if edition_id && surface.album.present?
-      slots = edition_slots(edition)
-      discogs = discogs_evidence(surface, edition)
-      reasons = reasons_for(surface, claims, page, verification, edition, edition_id, slots, discogs)
-      {
-        "source_claims" => claims, "search" => page.slice("count", "offset"),
-        "candidates" => candidates.map { |candidate| recording_evidence(candidate) },
-        "verification" => verification.except("data"), "verified_recording" => recording && recording_evidence(recording),
-        "edition" => edition&.slice("id", "title", "release-group", "country", "date"),
-        "slots" => slots, "discogs" => discogs, "reasons" => reasons,
-        "suggested_mbid" => reasons.empty? ? recording.fetch("id") : nil
-      }
+      evidence["edition"] = edition&.slice("id", "title", "release-group", "country", "date")
+      evidence["slots"] = edition_slots(edition)
+      if verified
+        slot_check = {
+          "requested_edition_mbid" => edition_id, "returned_edition_mbid" => edition&.fetch("id", nil),
+          "title_matches" => edition.present? && edition["title"] == surface.album,
+          "complete_media" => edition.present? && complete_edition?(edition),
+          "matching_slots" => evidence["slots"].select { |slot| slot["recording_mbid"] == recording["id"] && slot["title"] == surface.track }
+        }
+        if !slot_check["title_matches"] || !slot_check["complete_media"] ||
+            slot_check["returned_edition_mbid"] != edition_id || slot_check["matching_slots"].empty?
+          reason("unverified_edition_slot", slot_check)
+        end
+      end
+
+      discogs = evidence["discogs"] = {}
+      @discogs.compare(surface, edition, discogs)
+      if discogs["incomplete_reasons"].present?
+        reason("incomplete_discogs_evidence", "provider" => "discogs", "causes" => discogs["incomplete_reasons"])
+      end
+      if %w[contradicts mixed].include?(discogs["status"])
+        reason("discogs_disagreement", "status" => discogs["status"],
+          "release_ids" => discogs["releases"].select { |release| release["status"] == "track_absent" }.pluck("release_id"))
+      end
+      evidence["suggested_mbid"] = recording.fetch("id") if evidence["reasons"].empty?
+      evidence
     end
 
     private
 
-    def reasons_for(surface, claims, page, verification, edition, edition_id, slots, discogs)
-      recording = verification["data"]
-      reasons = []
-      reasons << "incomplete_search" if page["count"] != page["recordings"].size
-      reasons << "missing_album" if surface.album.blank?
-      reasons << "missing_source_mbid" if claims["track_mbid"].blank?
-      unless recording && Clients::Musicbrainz::MBID.match?(recording["id"].to_s) &&
-          recording["id"].casecmp?(verification["redirected_to"] || claims["track_mbid"].to_s)
-        return reasons << "unverified_recording"
-      end
-
-      reasons.concat(identity_reasons(surface, claims, recording, page["recordings"]))
-      if edition.blank? || !complete_edition?(edition) || edition["title"] != surface.album ||
-          edition["id"] != edition_id ||
-          !slots.any? { |slot| slot["recording_mbid"] == recording["id"] && slot["title"] == surface.track }
-        reasons << "unverified_edition_slot"
-      end
-      reasons << "incomplete_discogs_evidence" if discogs["status"] == "incomplete"
-      reasons << "discogs_disagreement" if discogs["status"] == "contradicts"
-      reasons
+    def reason(code, details)
+      evidence["reasons"] << code
+      evidence["reason_details"][code] = details
     end
 
-    def identity_reasons(surface, claims, recording, candidates)
-      reasons = []
+    def verified_recording?(recording, expected_id)
+      recording && Clients::Musicbrainz::MBID.match?(recording["id"].to_s) &&
+        recording["id"].casecmp?(expected_id.to_s)
+    end
+
+    def assess_identity(surface, claims, recording, candidates)
       credits = Array(recording["artist-credit"])
+      artist_ids = credits.map { |credit| credit.dig("artist", "id") }
       if recording["title"] != surface.track || credit_name(credits) != surface.artist ||
-          credits.empty? || credits.any? { |credit|
-            credit.dig("artist", "name").blank? || !Clients::Musicbrainz::MBID.match?(credit.dig("artist", "id").to_s)
-          } ||
-          (claims["artist_mbid"].present? && credits.none? { |credit| credit.dig("artist", "id") == claims["artist_mbid"] })
-        reasons << "source_identity_conflict"
+          credits.empty? || credits.any? { |credit| credit.dig("artist", "name").blank? } ||
+          artist_ids.any? { |id| !Clients::Musicbrainz::MBID.match?(id.to_s) } ||
+          (claims["artist_mbid"].present? && !artist_ids.include?(claims["artist_mbid"]))
+        reason("source_identity_conflict", "recording_mbid" => recording["id"], "catalog_title" => recording["title"],
+          "catalog_credit" => credit_name(credits), "catalog_artist_mbids" => artist_ids)
       end
       if candidates.none? { |candidate| candidate["id"] == recording["id"] }
-        reasons << "search_does_not_confirm_recording"
+        reason("search_does_not_confirm_recording", "recording_mbid" => recording["id"])
       end
-      if candidates.any? { |candidate| candidate["id"] != recording["id"] &&
-          credit_name(Array(candidate["artist-credit"])) == surface.artist &&
-          candidate["title"].to_s.sub(/\s*[(\[].*\z/, "") == surface.track.to_s.sub(/\s*[(\[].*\z/, "") }
-        reasons << "competing_recordings"
+      competing = candidates.select do |candidate|
+        candidate["id"] != recording["id"] && credit_name(Array(candidate["artist-credit"])) == surface.artist &&
+          base_title(candidate["title"]) == base_title(surface.track)
       end
-      if recording["video"] || recording["disambiguation"].present? || [ surface.album, surface.track ].any? { |text| VERSION_MARKER.match?(text.to_s) }
-        reasons << "unresolved_version"
+      if competing.any?
+        reason("competing_recordings", "verified_mbid" => recording["id"], "candidate_mbids" => competing.pluck("id"))
       end
-      reasons
+      markers = [ surface.album, surface.track ].filter_map { |text| text.to_s[VERSION_MARKER] }
+      if recording["video"] || recording["disambiguation"].present? || markers.any?
+        reason("unresolved_version", "video" => recording["video"], "disambiguation" => recording["disambiguation"],
+          "source_markers" => markers)
+      end
+    end
+
+    def base_title(title)
+      title.to_s.sub(/\s*[(\[].*\z/, "")
     end
 
     def complete_edition?(edition)
@@ -107,33 +139,6 @@ module RecordingResolution
       recording.slice("id", "title", "length", "disambiguation", "video", "isrcs", "artist-credit", "first-release-date").merge(
         "releases" => Array(recording["releases"]).map { |release| release.slice("id", "title", "country", "date", "release-group") }
       )
-    end
-
-    def discogs_evidence(surface, musicbrainz_edition)
-      return { "status" => "no_album_context" } if surface.album.blank?
-
-      result = @discogs.search_release(artist: surface.artist, title: surface.album)
-      return { "status" => "incomplete" } unless result
-
-      matches = result.fetch("results").select { |item| item["title"] == "#{surface.artist} - #{surface.album}" }
-      return { "status" => "incomplete" } if result.dig("pagination", "pages").to_i > 1 || matches.size > 1
-      return { "status" => "no_matching_release" } if matches.empty?
-
-      edition = @discogs.release(matches.first.fetch("id"))
-      return { "status" => "incomplete" } unless edition && edition["title"] == surface.album &&
-        edition.fetch("artists").map { |artist| "#{artist["anv"].presence || artist["name"]}#{artist["join"]}" }.join == surface.artist
-
-      matching_slots = edition.fetch("tracklist").select { |track| track["type_"] == "track" && track["title"] == surface.track }
-      # Retain derived comparisons and references. Catalog display would need a fresh response and attribution.
-      { "status" => matching_slots.any? ? "corroborates" : "contradicts",
-        "release_id" => edition.fetch("id"), "master_id" => edition["master_id"],
-        "slot_count" => matching_slots.size,
-        "country_agreement" => agreement(edition["country"], musicbrainz_edition&.fetch("country", nil)),
-        "release_year_agreement" => agreement(edition["year"]&.to_s, musicbrainz_edition&.fetch("date", nil)&.slice(0, 4)) }
-    end
-
-    def agreement(left, right)
-      left == right if left.present? && right.present?
     end
   end
 end

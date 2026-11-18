@@ -2,6 +2,7 @@ module Clients
   class Discogs
     NOTICE = "This application uses Discogs’ API but is not affiliated with, sponsored or endorsed by Discogs. ‘Discogs’ is a trademark of Zink Media, LLC."
     ATTRIBUTION = "Data provided by Discogs."
+    SEARCH_PAGE_SIZE = 25
 
     def initialize(session, live:)
       @session = session
@@ -46,7 +47,7 @@ module Clients
     private
 
     def search(params, page)
-      get("/database/search", **params, page:, per_page: 25) do |data|
+      get("/database/search", **params, page:, per_page: SEARCH_PAGE_SIZE) do |data|
         page_subset(data, "results", %w[id title country year master_id])
       end
     end

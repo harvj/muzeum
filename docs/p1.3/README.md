@@ -1,6 +1,6 @@
 # P1.3a — Canonical recording resolution
 
-**Status:** Implemented for a bounded assessment-only pilot in disposable development or staging data. Manual decision services and effective reads are available to future application callers. Production pilot execution and automatic acceptance are disabled. The [first live pilot](live-provider-pilot-2026-11-17.md) completed four assessments, all of which abstained.
+**Status:** Implemented for a bounded assessment-only pilot in disposable development or staging data. Manual decision services and effective reads are available to future application callers. Production pilot execution and automatic acceptance are disabled. See the [live pilot report](live-provider-pilot-2026-11-17.md) for both catalog evaluations and review findings.
 
 ## Repository assessment
 
@@ -50,7 +50,7 @@ ARCHIVE_ID=<archive-id> UPPER_ID=<observation-id> bin/rails recording_resolution
 PILOT_ID=<reported-id> bin/rails recording_resolution:dispatch
 ```
 
-Replace the angle-bracket placeholders with numeric IDs. For a supported fixture result, seed an event for Night Lines / Night Drive / Signals with `FixtureTransport::IDS[:studio]` as the track MBID. Repeat dispatch for the same pilot to advance selection and recover due retries, expired leases or a failed queue handoff. Stop once selection is finished and no work is pending or leased. The normal failure ceiling is five attempts. Shared rate-budget deferrals use durable due times and do not consume that ceiling. A terminal failure stays visible. After correcting the cause, start a fresh bounded pilot if replay is warranted.
+Replace the angle-bracket placeholders with numeric IDs. For a supported fixture result, seed an event for Night Lines / Night Drive / Signals with `FixtureTransport::IDS[:studio]` as the track MBID. Repeat dispatch for the same pilot to advance selection and recover due retries, expired leases or a failed queue handoff. Stop once selection is finished and no work is pending or leased. The normal failure ceiling is five attempts. Shared rate-budget deferrals use durable due times and do not consume that ceiling. Provider failures leave scoped, append-only partial assessments and a terminal work failure stays visible. After correcting the cause, start a fresh bounded pilot if replay is warranted.
 
 The worker obtains a lease before provider I/O, rechecks ownership on each request reservation and at finalization, and records assessment and completion atomically. Cached results prevent throttled attempts from repeating completed requests. Neither provider is called from Last.fm ingestion. No production queue, jobs schedule or ingestion hook was added. Starting or processing a pilot in Rails production is blocked.
 
@@ -67,7 +67,7 @@ Plan a compact Rails/Hotwire queue for ambiguous and unresolved groups, with sta
 ## Open decisions
 
 - **Open — Automatic acceptance.** Review labeled real-catalog decisions and the operating precision/abstention target before authorizing writes. Consider conflicting claims across groups that share a surface.
-- **Open — Discogs verification and retention.** The first live pilot verified protected credentials and authenticated catalog search. Live release-detail comparison and review of current endpoint limits and display obligations remain open.
+- **Open — Discogs verification and retention.** The live pilots verified protected credentials, authenticated search, and bounded release-detail comparisons. Review the exact-match and edition-cap limitations and verify current endpoint limits and display obligations before display.
 - **Open — Legacy interpretations and provider changes.** Review legacy assignments with incomplete actor provenance, MusicBrainz redirect chains and conflicting/existing catalog metadata. Provider aliases and broader compatibility need independent review.
 - **Open — Release relationship policy.** P1.3c owns collection equivalence, chronology fallbacks and contextual release credit.
 
