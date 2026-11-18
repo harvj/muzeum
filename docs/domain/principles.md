@@ -36,11 +36,23 @@ Status: **Authoritative product policy**, 2026-11-17. These rules describe inten
 
 **DOM-015 — Listening history meets musical knowledge.** Support questions such as "Which of my favorite recordings have dual guitar solos?" and "What should I revisit that I haven't played recently?" by intersecting listener-scoped scrobbles, effective canonical interpretations, explicit preferences where available, and musical annotations. Return known coverage/uncertainty rather than claiming unannotated recordings lack a property. Keep the experience focused on choosing music rather than supervising metadata.
 
+## Deliberate canonical catalog growth
+
+**DOM-016 — Resolve into a navigable library.** Artists, Releases and Recordings are first-class top-navigation destinations, including while the library is initially sparse. Explicitly resolving a scrobble to a verified canonical recording should initiate bounded, asynchronous enrichment of that recording and its credited artist(s), plus at least one **verified, contextually relevant** release when one can be justified. Import the complete ordered track listing of each admitted release, including recordings not yet scrobbled; these have zero listening observations until independently reported. If no defensible release exists, retain the resolved recording and a pending release association rather than inventing one. Do not require completion of background enrichment to preserve the listener's resolution decision.
+
+**DOM-017 — Release admission is selective.** A recording's appearance on a provider release does **not** authorize importing that release. Prefer the meaningful original album collection when supported, including over a single issued shortly before it; consider an original single/EP for otherwise non-album material, distinct song collections or sequencing, and live collections with genuinely different performances. Do not automatically admit compilations/greatest-hits, foreign/format variants, remasters or reissues solely because they appear in provider relationships. Explicit listener selection or compelling contextual evidence may justify a compilation. Do not invent chronology cutoffs or silently equate provider release groups/masters with Muzeum collections.
+
+**DOM-018 — Bounded, nonrecursive expansion.** After admitting a release, import its complete ordered track listing, recording identities and necessary credited artists, then **stop**. Do not recursively import other releases containing those recordings, their other tracks, or their entire provider relationship graph. Additional releases require deliberate later admission through an explicit Import action or separately justified policy. Keep compact external appearance evidence distinct from admitted canonical Releases. Deduplicate identities and track positions, preserve provenance and make retries idempotent.
+
+**DOM-019 — Catalog membership does not create listening history or credit.** An imported recording may have zero scrobbles. Release track membership does not assign the listener's historical scrobbles to that release for rankings. Listener-scoped recording resolution, shared catalog admission, and per-play credited release remain separate decisions; no import may overwrite explicit listener assignments.
+
 ## Product-facing vocabulary
 
 - **Observation / scrobble:** Immutable Last.fm evidence of a listening event.
 - **Recording:** Canonical identity for the particular recorded performance heard, usually associated with a MusicBrainz recording.
 - **Release collection:** Muzeum's representation of a particular collection/ordering of songs, supported by MusicBrainz and Discogs release evidence, independent of physical format/remaster.
+- **Admitted release:** A deliberately selected canonical collection stored in Muzeum; not every provider release appearance.
+- **External release appearance:** Evidence that a recording occurs on a provider release without admitting it to Muzeum's library.
 - **Release membership:** A recording appears on a release collection; many-to-many.
 - **Credited release:** The one collection, if any, receiving a given play's release-ranking credit.
 - **Assessment:** Evidence-based evaluation, possibly without a change.
@@ -59,6 +71,8 @@ These documents supersede contradictory *proposals* in dated P1.0 design notes. 
 - How to handle cases where a single song has multiple distinct recordings with ambiguous source metadata.
 
 ## Revision history
+
+- 2026-11-17: Added selective release admission, complete track-list import, bounded nonrecursive catalog growth and first-class canonical navigation.
 
 - 2026-11-17: Made choosing from one's own shelf a primary daily purpose; added purposeful metadata, repeatable imports and future queryable musical-event annotations.
 
