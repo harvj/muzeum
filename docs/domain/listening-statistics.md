@@ -24,6 +24,10 @@ Status: **Authoritative accounting semantics; aggregation implementation and dur
 
 **STAT-010 — User/account scope.** Shared Last.fm source accounts must not cause double counting for a user. Users with the same source archive may have different credited-release rankings because their interpretations differ.
 
+**STAT-011 — Scrobble is not proof of complete playback.** Last.fm is authoritative for what it reported, not a guarantee of the duration or completeness of actual listening. A scrobble of a recording containing a guitar solo counts as a scrobble of that recording; it does not prove the listener reached the solo's timestamp. Keep recording-level exposure queries distinct from measured passage-level playback. Conversational wording such as "how many times have I heard" may be answered naturally, but label the underlying metric accurately. Do not manufacture playback completion, elapsed listening seconds or additional events.
+
+**STAT-012 — Queryable listening preferences and annotation coverage.** Future "favorites" and "what next" queries may combine counts, recency and explicit listener preferences, with transparent criteria rather than assuming most-scrobbled equals favorite. When filtering by musical events, distinguish known matches, known nonmatches and unannotated/unknown recordings. Count distinct scrobbles of qualifying recordings without multiplying by the number of solos or contributors; passage-level exposure requires independent playback evidence.
+
 ## Worked example
 
 The canonical Radiohead recording *Fake Plastic Trees* has **150 accepted plays** (illustrative). Both *The Bends* and the *Fake Plastic Trees* single contain that recording. Each release's track listing displays 150 plays for that recording. The recording page also displays 150.
@@ -41,5 +45,7 @@ A release page may offer both 'All recording activity' and 'Credited to this rel
 - Presentation of partial/incomplete listening sessions and confidence of release credit.
 
 ## Revision history
+
+- 2026-11-17: Clarified Last.fm's observation authority, non-guaranteed playback, and future shelf-selection/temporal annotation query semantics.
 
 - 2026-11-17: Initial distinct membership-versus-credit and ranking semantics.
