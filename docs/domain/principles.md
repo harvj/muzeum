@@ -24,6 +24,18 @@ Status: **Authoritative product policy**, 2026-11-17. These rules describe inten
 
 **DOM-010 — Provider independence.** Spotify identifiers may later identify playable equivalents and support playlist export; Spotify must not own Muzeum's recording identity or playlist definitions. Spotify API integration is deferred. Last.fm completed scrobbles should import automatically; no now-playing UI is required.
 
+## Daily use, purposeful metadata and musical knowledge
+
+**DOM-011 — Choose from the listener's own shelf.** Muzeum's primary everyday purpose is helping listeners explore, remember and choose what to listen to next from music already in their collection/history. "What am I pulling off my shelf next?" is a first-class product question, not merely a deferred streaming recommendation feature. Support useful discovery using available listening frequency, recency, canonical relationships and eventually richer musical characteristics. Do not assume favorite means most scrobbled; make preference/ranking semantics explicit and revisable. Discovery of unfamiliar music may exist later, but is not the defining daily workflow.
+
+**DOM-012 — Deliberate canonical metadata.** Import only fields with a stated purpose in identity verification, relationships, presentation, search, listening analysis or choosing music. Define each field's intended use, provenance, conflict policy and refresh semantics before promoting it into canonical storage. Provider payload availability alone is not a reason to mirror it. Preserve compact audit evidence separately from canonical attributes and respect provider retention/licensing.
+
+**DOM-013 — Repeatable import/refresh.** A canonical artist, release or recording should eventually offer an **Import** action that fetches current MusicBrainz/Discogs evidence by known identifiers, compares selected fields and safely updates the same Muzeum entity. It must be idempotent against unchanged evidence, preserve import/change history, report contradictions, distinguish absent/unknown from explicit correction or removal, and never silently erase useful metadata. Run bounded background work without duplicate concurrent imports; metadata refresh must not rewrite scrobbles, canonical identity, or protected listener recording/release decisions. The initial UI and service belong to a future numbered milestone, not P1.3a.
+
+**DOM-014 — Queryable musical content.** Eventually model recording contributors (musicians and roles), instruments, and time-bounded musical events (such as solos, entrances, harmonies and transitions) with evidence, uncertainty and optional start/end offsets. Model distinct events and overlapping/coordinated contributions: two successive guitar solos differ from one dual-guitar solo with two participants. Absence of annotation is unknown, not proof of absence. This is a first-class future musical-knowledge capability, not a request to indiscriminately ingest provider fields.
+
+**DOM-015 — Listening history meets musical knowledge.** Support questions such as "Which of my favorite recordings have dual guitar solos?" and "What should I revisit that I haven't played recently?" by intersecting listener-scoped scrobbles, effective canonical interpretations, explicit preferences where available, and musical annotations. Return known coverage/uncertainty rather than claiming unannotated recordings lack a property. Keep the experience focused on choosing music rather than supervising metadata.
+
 ## Product-facing vocabulary
 
 - **Observation / scrobble:** Immutable Last.fm evidence of a listening event.
@@ -47,5 +59,7 @@ These documents supersede contradictory *proposals* in dated P1.0 design notes. 
 - How to handle cases where a single song has multiple distinct recordings with ambiguous source metadata.
 
 ## Revision history
+
+- 2026-11-17: Made choosing from one's own shelf a primary daily purpose; added purposeful metadata, repeatable imports and future queryable musical-event annotations.
 
 - 2026-11-17: First authoritative consolidation of agreed domain rules. Implementation remains governed by numbered milestones.
