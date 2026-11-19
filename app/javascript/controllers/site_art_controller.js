@@ -1,12 +1,18 @@
 import { Controller } from "@hotwired/stimulus"
+import { artworkTreatment } from "site_art_presentation"
 
 const failed = new Map()
+const refreshInterval = 60000
 const imageTimeout = 5000
 
 export default class extends Controller {
   static values = { urls: Object }
 
   connect() {
+    const body = this.element.parentElement
+    this.regions = { top: body.querySelector("header"), main: body.querySelector("main"), bottom: body.querySelector("footer") }
+    this.snapshot = this.urlsValue
+    this.refreshTimer = setInterval(() => this.refreshSnapshot(), refreshInterval)
     this.scheme = matchMedia("(prefers-color-scheme: dark)")
     this.updateBackground = () => this.showBackground()
     this.scheme.addEventListener("change", this.updateBackground)
@@ -18,43 +24,106 @@ export default class extends Controller {
       this.iconLoad?.abort()
       this.icon?.remove()
     }
+    this.clearTreatment = () => this.applyTreatment()
+    document.addEventListener("turbo:before-cache", this.clearTreatment)
     document.addEventListener("turbo:before-render", this.clearIcon)
     this.showBackground()
     this.showIcon()
   }
 
   disconnect() {
+    clearInterval(this.refreshTimer)
+    this.snapshotLoad?.abort()
+    this.snapshotLoad = undefined
+    this.backgroundKey = undefined
+    this.iconURL = undefined
     this.scheme.removeEventListener("change", this.updateBackground)
     this.appearance.disconnect()
+    document.removeEventListener("turbo:before-cache", this.clearTreatment)
     document.removeEventListener("turbo:before-render", this.clearIcon)
     this.clearIcon()
     this.backgroundLoad?.abort()
+    this.clearBackground()
+  }
+
+  async refreshSnapshot() {
+    if (document.hidden || this.snapshotLoad) return
+    const load = this.snapshotLoad = new AbortController()
+    const timeout = setTimeout(() => load.abort(), imageTimeout)
+    try {
+      const response = await fetch("/site-art", {
+        credentials: "omit", redirect: "error", signal: load.signal
+      })
+      if (!response.ok) return
+      const snapshot = await response.json()
+      if (load.signal.aborted || !snapshot.release) return
+      this.snapshot = snapshot
+      this.showBackground()
+      this.showIcon()
+    } catch (_) {
+      // Preserve the current image and treatment when refresh fails.
+    } finally {
+      clearTimeout(timeout)
+      if (this.snapshotLoad === load) this.snapshotLoad = undefined
+    }
+  }
+
+  clearBackground() {
     this.background?.remove()
+    this.background = undefined
+    this.applyTreatment()
+  }
+
+  applyTreatment(record, theme) {
+    for (const [region, element] of Object.entries(this.regions)) {
+      const values = record ? artworkTreatment(record, theme, region) : {}
+      for (const name of ["foreground", "shadow", "backing", "scrim"]) {
+        const property = `--art-${name}`
+        if (values[name]) element.style.setProperty(property, values[name])
+        else element.style.removeProperty(property)
+      }
+      element.toggleAttribute("data-art-treatment", Boolean(values.foreground))
+    }
   }
 
   async showBackground() {
     const appearance = document.documentElement.dataset.appearance
     const theme = appearance === "light" || appearance === "dark"
       ? appearance : (this.scheme.matches ? "dark" : "light")
-    const url = this.urlsValue[theme]
-    if (url === this.backgroundURL) return
+    const record = this.snapshot[theme]
+    const key = JSON.stringify([theme, this.snapshot.release, record])
+    if (key === this.backgroundKey && (this.background || !record || performance.now() < this.retryBackgroundAt)) return
 
-    this.backgroundURL = url
+    this.backgroundKey = key
+    if (this.background && this.background.getAttribute("src") === record?.url) {
+      this.applyTreatment(record, theme)
+      return
+    }
+
     this.backgroundLoad?.abort()
-    this.background?.remove()
+    this.clearBackground()
     const load = this.backgroundLoad = new AbortController()
-    const image = await this.decode(theme, url, load.signal)
+    this.retryBackgroundAt = performance.now() + refreshInterval
+    const image = await this.decode(theme, record?.url, load.signal)
     if (!image || load.signal.aborted) return
 
     image.className = "site-art-background"
     image.alt = ""
     image.dataset.turboTemporary = ""
+    image.addEventListener("error", () => {
+      if (this.background === image) this.clearBackground()
+    }, { once: true })
     this.background = image
     this.element.prepend(image)
+    this.applyTreatment(record, theme)
   }
 
   async showIcon() {
-    const url = this.urlsValue.favicon
+    const url = this.snapshot.favicon
+    if (url === this.iconURL) return
+
+    this.iconURL = url
+    this.clearIcon()
     const load = this.iconLoad = new AbortController()
     const image = await this.decode("favicon", url, load.signal)
     if (!image || load.signal.aborted) return

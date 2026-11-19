@@ -17,7 +17,7 @@ RSpec.describe "Public profile browsing", type: :system do
     authorize_fixture_publication(fixture)
     browser = page.driver.browser
     allow(SiteArt).to receive(:snapshot).and_return(
-      light: "/environments/stone/limestone.jpg", dark: "/environments/stone/onyx.jpg")
+      light: { url: "/environments/stone/limestone.jpg" }, dark: { url: "/environments/stone/onyx.jpg" })
 
     [ [ 1440, 960, "light" ], [ 390, 844, "dark" ] ].each do |width, height, theme|
       browser.execute_cdp("Emulation.setDeviceMetricsOverride", width:, height:, deviceScaleFactor: 1, mobile: width < 700)

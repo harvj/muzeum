@@ -19,6 +19,9 @@ class SiteArt
     "ico" => "image/vnd.microsoft.icon"
   }.freeze
   ID_PATTERN = /\A[a-z][a-z0-9-]*\.[a-z][a-z0-9_]*\z/
+  TREATMENT_KEYS = %w[foreground text_shadow backing].freeze
+  REGIONS = %w[top bottom].freeze
+  COLOR_PATTERN = /\A#[0-9a-fA-F]{6}\z/
   SHA_PATTERN = /\A[0-9a-f]{64}\z/
   URL_PATTERN = %r{\A#{Regexp.escape(ORIGIN)}/assets/([0-9a-f]{64})\.([a-z]+)\z}
 
@@ -98,24 +101,82 @@ class SiteArt
     assets.each do |id, record|
       raise InvalidManifest unless ID_PATTERN.match?(id) && valid_record?(record)
     end
-    IDS.filter_map do |slot, id|
+    IDS.each_with_object({ release: manifest.fetch("release").freeze }) do |(slot, id), snapshot|
       record = assets[id]
-      [ slot, record.fetch("url").freeze ] if record
-    end.to_h.freeze
+      next unless record
+
+      snapshot[slot] = if slot == :favicon
+        record.fetch("url").freeze
+      else
+        background_record(record)
+      end
+    end.freeze
+  end
+
+  def background_record(record)
+    result = record.slice("url", "foreground")
+    if (presentation = record["presentation"])
+      treatment = presentation.slice(*TREATMENT_KEYS)
+      regions = presentation["regions"]&.slice(*REGIONS)&.transform_values { |region| region.slice(*TREATMENT_KEYS) }
+      regions&.reject! { |_, region| region.empty? }
+      treatment["regions"] = regions if regions&.any?
+      result["presentation"] = treatment if treatment.any?
+    end
+    freeze_value(result)
+  end
+
+  def freeze_value(value)
+    value.each_value { |child| freeze_value(child) } if value.is_a?(Hash)
+    value.freeze
   end
 
   def valid_record?(record)
     return false unless record.is_a?(Hash) && record["url"].is_a?(String)
 
-    keys = record.keys - [ "foreground" ]
+    keys = record.keys - %w[foreground presentation]
     return false unless keys.sort == %w[bytes media_type rights sha256 url]
 
     match = URL_PATTERN.match(record["url"])
     match && match[1] == record["sha256"] &&
-      MEDIA_TYPES.fetch(match[2], false) == record["media_type"] &&
+      MEDIA_TYPES.key?(match[2]) && MEDIA_TYPES.fetch(match[2]) == record["media_type"] &&
       record["bytes"].is_a?(Integer) && record["bytes"].between?(1, 25 * 1024 * 1024) &&
       record["rights"].is_a?(String) && !record["rights"].empty? &&
-      (!record.key?("foreground") || %w[light dark].include?(record["foreground"]))
+      (!record.key?("foreground") || %w[light dark].include?(record["foreground"])) &&
+      (!record.key?("presentation") || valid_presentation?(record["presentation"]))
+  end
+
+  def valid_presentation?(presentation)
+    return false unless valid_treatment?(presentation)
+    return true unless presentation.key?("regions")
+
+    regions = presentation["regions"]
+    regions.is_a?(Hash) && regions.any? && regions.slice(*REGIONS).values.all? { |region| valid_treatment?(region) }
+  end
+
+  def valid_treatment?(treatment)
+    return false unless treatment.is_a?(Hash) && treatment.any?
+
+    treatment.slice(*TREATMENT_KEYS).all? do |key, value|
+      case key
+      when "foreground" then valid_color?(value)
+      when "text_shadow"
+        valid_effect?(value, opacity_percent: 0..60, blur_px: 0..8, x_px: -4..4, y_px: -4..4)
+      when "backing"
+        valid_effect?(value, opacity_percent: 0..50)
+      end
+    end
+  end
+
+  def valid_effect?(value, **bounds)
+    value.is_a?(Hash) && value.keys.sort == [ "color", *bounds.keys.map(&:to_s) ].sort &&
+      valid_color?(value["color"]) && bounds.all? do |name, range|
+        amount = value[name.to_s]
+        amount.is_a?(Integer) && range.cover?(amount)
+      end
+  end
+
+  def valid_color?(value)
+    value.is_a?(String) && COLOR_PATTERN.match?(value)
   end
 
   CACHE = new

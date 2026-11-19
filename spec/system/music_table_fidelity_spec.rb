@@ -93,7 +93,7 @@ RSpec.describe "Music table fidelity", type: :system do
   it "centers the shared footer at the viewport bottom or after long content in either theme" do
     user, = seed_library
     allow(SiteArt).to receive(:snapshot).and_return(
-      light: "/environments/stone/limestone.jpg", dark: "/environments/stone/onyx.jpg")
+      light: { url: "/environments/stone/limestone.jpg" }, dark: { url: "/environments/stone/onyx.jpg" })
     revision = "a" * 40
     metadata = Tempfile.create("muzeum-footer")
     metadata.write("#{revision} v0.2.1\n")

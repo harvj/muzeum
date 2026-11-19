@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  get "site-art", to: "site_art#show"
   get "up" => "rails/health#show", as: :rails_health_check
   resource :session, only: %i[new create destroy]
   get "oidc/callback", to: "sessions#callback"
