@@ -11,14 +11,17 @@ RSpec.describe "Capistrano deployment/reporting integration" do
 
   it "runs the real preflight task without logging shims, deployment phases or GitHub records" do
     result = rehearse("preflight")
-    expect(result["events"].select { |kind, _| kind == "server" }.map(&:last)).to eq([ "preflight" ])
+    expect(result["events"]).to eq([ [ "server", "preflight" ] ])
     expect(result["phase"]).to eq("unchanged")
     expect(result["creates"]).to eq(0)
   end
 
   it "reports success only after the server completes its final verification" do
     result = rehearse("success")
-    expect(result["events"].select { |kind, _| kind == "server" }.map(&:last)).to eq(%w[begin prepare finish complete])
+    expect(result["events"]).to eq([
+      [ "server", "begin" ], [ "stamp", "v0.2.0\n", "/disposable/release/PUBLISHED_RELEASE" ],
+      [ "server", "prepare" ], [ "server", "finish" ], [ "server", "complete" ]
+    ])
     expect(result["states"]).to eq(%w[in_progress success])
     expect(result["phase"]).to eq("complete")
   end

@@ -34,7 +34,9 @@
     <main>
       <% flash.each do |_, message| %><p class="card flash" role="status"><%= message %></p><% end %>
       <%= yield %>
-      <footer class="site-footer">© 2026 Jim Harvey</footer>
+      <footer class="site-footer">
+        © 2026 Jim Harvey<% if (tag = Rails.configuration.x.published_release_tag) %> · Muzeum <%= tag %><% end %>
+      </footer>
     </main>
   </body>
 </html>

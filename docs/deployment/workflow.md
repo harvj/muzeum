@@ -2,7 +2,7 @@
 
 Standing operator convention: **`cap production deploy`** (equivalently `bundle exec cap production deploy` when Bundler is needed). Invoking it authorizes deployment of the reviewed, synchronized local `main` and execution of its reviewed additive migrations. No environment flags or interactive secret prompts are required. Agents still need explicit authorization to invoke a production deployment; implementing code does not imply that authorization.
 
-**Shared Caddy isolation is awaiting separately authorized infrastructure activation.** Production was recovered on the prior P1.2 follow-up revision after the November 18 failed P1.3b attempt. The revised coordinator requires the installed scoped route interface from [harvj/infrastructure](https://github.com/harvj/infrastructure). The operator installs and verifies reviewed privileged helpers before a non-deploying preflight. CI never deploys.
+**Shared Caddy isolation is active.** P1.3b was published at `364996ed0528a9e94a4287255dc7680c3fe39354` through the installed scoped route interface from [harvj/infrastructure](https://github.com/harvj/infrastructure). The operator installs and verifies reviewed privileged helpers before a non-deploying preflight. CI never deploys.
 
 ## Normal behavior
 
@@ -18,6 +18,12 @@ Standing operator convention: **`cap production deploy`** (equivalently `bundle 
 10. Finish Capistrano cleanup, reverify health/current release, retain the completed receipt, then release the deployment lock. Output SHA, migration inventory, backup/recovery references, service verification and outcome. Only after the server records `complete` with passed health, publish GitHub `success` from the local command. A failed attempted deployment reports `failure`; cancelled initiation reports `error`. Releases, migration versions and off-host backup snapshots remain separate audit records.
 
 The helper uses the **installed existing** backup/recovery implementation and the same host lock, repository, protected credentials, escrow, monitoring and scoped databases. It does not provision infrastructure, rotate keys, change timers, or restart CE/Auth/shared Caddy. The infrastructure route interface validates the assembled Caddy configuration under the shared lock and gracefully reloads Caddy after changing the Muzeum site file. It compares the live configuration against a fresh transaction snapshot, so earlier changes to other sites do not invalidate eligibility. Old releases remain subject to Capistrano's five-release retention.
+
+## Published version in the footer
+
+Preflight reads the latest stable published Muzeum release through the operator’s authenticated GitHub CLI. It resolves the release tag to a commit and checks that the candidate contains that commit. Deploy repeats the verification and stamps the validated tag into `PUBLISHED_RELEASE` in the staged application directory before publication. Rails reads that file at boot. The label describes the latest published release verified at deploy time, while the deployed commit remains in `REVISION` and the deployment receipt.
+
+This adapts Continuum Engine’s publication and tag verification to Muzeum’s local deployment boundary. GitHub Actions and production require no additional production credentials or release synchronization service. Publish a new release separately before deploying if its version should appear on that deployment. A release published after deployment is reflected at the next authorized deploy.
 
 ## Reviewing an additive migration
 

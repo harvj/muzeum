@@ -27,6 +27,15 @@ RSpec.describe "Listening archive", type: :request do
     expect(User.last.lastfm_username).to be_nil
   end
 
+  it "displays the verified published release tag in the footer when stamped" do
+    allow(Rails.configuration.x).to receive(:published_release_tag).and_return("v0.2.0")
+
+    get root_path
+
+    footer = Nokogiri::HTML(response.body).at_css(".site-footer")
+    expect(footer.text.strip).to eq("© 2026 Jim Harvey · Muzeum v0.2.0")
+  end
+
   it "computes statistics from only the user's persisted observations" do
     user = User.find_by!(oidc_subject: @subject)
     LastfmAccount.associate!(user, "stats-fixture")

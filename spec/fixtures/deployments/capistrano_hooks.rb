@@ -19,6 +19,14 @@ module MuzeumDeploymentRevision
   end
 end
 
+module MuzeumPublishedRelease
+  def self.verify!(revision, command:)
+    raise "Fixture expected exact revision and local command" unless revision == "a" * 40 && command.receiver == MuzeumDeploymentRevision
+
+    "v0.2.0"
+  end
+end
+
 def self.muzeum_reporting
   $box
 end
@@ -49,6 +57,10 @@ def self.execute(*args)
     $phase = "failed"
     raise "Synthetic server health failure"
   end
+end
+
+def self.upload!(input, path)
+  $events << [ "stamp", input.read, path ]
 end
 
 if $scenario == "preflight"

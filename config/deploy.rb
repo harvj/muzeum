@@ -19,9 +19,11 @@ set :default_env, fetch(:default_env).merge("PATH" => "/home/muzeum/.rbenv/shims
 set :ssh_options, { forward_agent: false, verify_host_key: :always, auth_methods: %w[publickey], non_interactive: true }
 
 require_relative "../lib/muzeum_deployment_revision"
+require_relative "../lib/muzeum_published_release"
 require_relative "../lib/muzeum_deployment_reporting"
 require "digest"
 require "securerandom"
+require "stringio"
 
 def muzeum_reporting
   git_directory = MuzeumDeploymentRevision.command("git", "rev-parse", "--git-common-dir")
@@ -52,7 +54,8 @@ namespace :muzeum do
   desc "Verify the exact local revision and installed production readiness without deploying"
   task :preflight do
     approval = MuzeumDeploymentRevision.resolve!
-    puts "Preflight revision #{approval.fetch(:sha)}; CI #{approval.fetch(:ci)}"
+    tag = MuzeumPublishedRelease.verify!(approval.fetch(:sha), command: MuzeumDeploymentRevision.method(:command))
+    puts "Preflight revision #{approval.fetch(:sha)}; published release #{tag}; CI #{approval.fetch(:ci)}"
     muzeum_verify_helper
     on primary(:app) do
       execute :sudo, "-n", "/usr/local/sbin/muzeum-deploy", "preflight"
@@ -70,8 +73,10 @@ namespace :muzeum do
     approval = MuzeumDeploymentRevision.resolve!
     set :approved_revision, approval.fetch(:sha)
     set :branch, approval.fetch(:sha)
+    set :published_release_tag,
+      MuzeumPublishedRelease.verify!(approval.fetch(:sha), command: MuzeumDeploymentRevision.method(:command))
     set :deployment_token, SecureRandom.hex(16)
-    puts "Muzeum immutable revision #{fetch(:approved_revision)}; CI #{approval.fetch(:ci)}"
+    puts "Muzeum immutable revision #{fetch(:approved_revision)}; published release #{fetch(:published_release_tag)}; CI #{approval.fetch(:ci)}"
     outbox = muzeum_reporting
     outbox.check_clear!
     muzeum_verify_helper
@@ -97,6 +102,7 @@ namespace :muzeum do
 
   task :prepare do
     on primary(:app) do
+      upload! StringIO.new("#{fetch(:published_release_tag)}\n"), File.join(release_path, MuzeumPublishedRelease::FILENAME)
       execute :sudo, "-n", "/usr/local/sbin/muzeum-deploy", "prepare", fetch(:approved_revision), fetch(:deployment_token), release_path
     end
   end
