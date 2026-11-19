@@ -45,20 +45,45 @@ The migration adds three empty tables, two nullable columns on releases and appe
 
 Obtain explicit authorization for activation, the two Muzeum service restarts and the scoped smoke test. Before changing the flag, verify the published revision, both Muzeum services, public `/up`, fresh Solid Queue heartbeats and recent Last.fm job completions. Check the primary database for active catalog requests and the queue database for existing catalog jobs. Reconcile any unexpected work before activation. Verify the Discogs application pair through an authenticated catalog search and install it through the [protected credential mechanism](providers-and-verification.md#protected-credential-setup). The production file is owned by `muzeum` with mode `0600`. Keep credentials out of terminal output, command arguments and logs.
 
-On the production host, add exactly one `MUZEUM_CATALOG_WORKER=1` entry in the protected environment file. Preserve the other settings, ownership and mode.
+Run the read-only [readiness probe](../../ops/catalog/readiness.py) from reviewed operator tooling on the production host. Use the exact reviewed file without deploying it into the application release or installing a privileged helper. Coordinate the window with the existing Muzeum deployment, backup and shared infrastructure locks. Confirm no retained active deployment or conflicting operation before editing or restarting. Capture a UTC baseline and run the probe with `--catalog off` before activation.
+
+Add exactly one `MUZEUM_CATALOG_WORKER=1` entry in the protected environment file. Preserve the other settings, ownership and mode. Restart the worker first while the existing web process continues serving requests with catalog dispatch paused. Once the worker passes readiness, restart web to load the flag for request dispatch and paused-state messaging.
 
 ```sh
 sudoedit /var/www/muzeum/shared/.env
-sudo systemctl restart muzeum-worker.service muzeum-web.service
+sudo systemctl restart muzeum-worker.service
+worker_started=$(date -u +%Y-%m-%dT%H:%M:%S.%6NZ)
+sudo /usr/bin/python3 /path/to/reviewed/readiness.py --catalog on --since "$worker_started"
 ```
 
-Verify systemd and public `/up` again. Confirm that the live Solid Queue worker advertises exactly `imports,default,canonical_catalog`, with one worker process and one thread for this rollout. The existing ready jobs in `solid_queue_recurring` are outside that subscription. Check Last.fm scheduler and worker heartbeats, continued `imports` completions and any growth in ready or failed ingestion work. Catalog uses a named queue but shares the worker thread with ingestion, so the restart and an in-flight catalog request can briefly delay ingestion.
+Continue only after that probe passes.
+
+```sh
+sudo systemctl restart muzeum-web.service
+web_started=$(date -u +%Y-%m-%dT%H:%M:%S.%6NZ)
+sudo /usr/bin/python3 /path/to/reviewed/readiness.py --catalog on --since "$web_started"
+```
+
+The probe reports systemd process state and PID separately from public HTTP, the current supervisor's exact queue subscription and one-thread pool, its four Solid Queue heartbeats and Last.fm completions. It reports unfinished and failed ingestion counts for comparison with the baseline. A passing probe requires a new imports completion since the supplied UTC marker. The 45-second polling budget covers the observed roughly four-second startup with margin for boot and scheduling variability. Individual probes time out within four seconds, and heartbeat ages allow 90 seconds for Solid Queue's 60-second heartbeat cadence. The existing ready jobs in `solid_queue_recurring` are outside the worker subscription. Watch imports completions and backlog throughout the smoke test because catalog uses the same worker thread.
 
 The flag also permits user-requested workspace assessments. Those can append evidence and suggestions. Automatic recording decisions and per-play release attribution stay disabled. The separately configured P1.3a resolution pilot remains blocked in production. Catalog has no recurring dispatch. A request has a renewable two-minute lease, a combined 32-call provider ceiling and up to five counted failures. Provider reservations are paced at one second for MusicBrainz and three seconds for Discogs. Shared cooldown deferrals do not consume failure attempts.
 
 For the initial smoke test, use an authorized archive observation for Boards of Canada's “Roygbiv” ([recording MBID `2a72cd7b-f566-4c91-8e9b-7b33b95dfff7`](https://musicbrainz.org/recording/2a72cd7b-f566-4c91-8e9b-7b33b95dfff7)) and explicitly select the [original UK CD of *Music Has the Right to Children*](https://musicbrainz.org/release/c77121b6-4552-3127-9f19-685a7f8f090f) (edition MBID `c77121b6-4552-3127-9f19-685a7f8f090f`). If a recording assignment is needed, use **Only this time** and account for the resulting manual decision. Track only this candidate and edition through the workflow. Verify exactly one admitted release with all 17 ordered slots, “Roygbiv” at medium 1, position 10, and catalog provenance for the edition. Verify that the import has no additional release admissions, scrobble writes, per-play release credits or automatic recording decisions. Allow for independent Last.fm arrivals when comparing source rows. Record incomplete or failed provider evidence and preserve the request for review. Skip bulk dispatch during the smoke test.
 
-To roll back activation, use `sudoedit /var/www/muzeum/shared/.env` to remove the added flag, then run `sudo systemctl restart muzeum-worker.service muzeum-web.service`. Confirm both units and `/up` are healthy, the worker advertises exactly `imports,default`, and Last.fm job completions resume. Preserve durable catalog requests, queue records, catalog revisions, admitted releases and listener decisions. Inspect pending or leased work before any subsequent activation or targeted retry.
+If either stage fails, preserve its output and remove the added flag with `sudoedit /var/www/muzeum/shared/.env`. If web already restarted with the flag, restart web first to stop new web dispatches. If activation stopped at the worker stage, leave the original web process running. Restart the worker, capture a fresh UTC marker, and run the same probe with `--catalog off`.
+
+```sh
+sudoedit /var/www/muzeum/shared/.env
+# Run this web restart only if web loaded the enabled flag.
+sudo systemctl restart muzeum-web.service
+sudo systemctl restart muzeum-worker.service
+rollback_started=$(date -u +%Y-%m-%dT%H:%M:%S.%6NZ)
+sudo /usr/bin/python3 /path/to/reviewed/readiness.py --catalog off --since "$rollback_started"
+```
+
+Confirm both units and `/up` are healthy, the worker advertises exactly `imports,default`, and imports completions continue. Preserve durable catalog requests, queue records, catalog revisions, admitted releases and listener decisions. Inspect pending or leased work before any subsequent activation or targeted retry.
+
+The first production attempt on November 19 UTC is documented in the [readiness incident record](catalog-activation-2026-11-19.md).
 
 ## Open questions
 
