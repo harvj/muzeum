@@ -6,7 +6,7 @@ Status: **Authoritative product policy**, 2026-11-17. These rules describe inten
 
 **DOM-001 — Muzeum presents music, not raw scrobbles.** Last.fm supplies immutable observations of listening events. The normal experience centers on canonical artists, releases, recordings and their listening histories. Raw payloads, source discrepancies, and unresolved observations remain available in an appropriate resolution/diagnostic workspace, not as the primary library interface.
 
-**DOM-002 — Source is evidence, interpretation is separate.** Never overwrite or delete an original observation merely because its artist, title, recording or release has been resolved differently. An observation's identity and provenance are not determined by the current canonical mapping. Source import must function with no MusicBrainz, Discogs, or canonical records. Preserve original timestamps, text, identifiers and raw-page lineage.
+**DOM-002 — Source is evidence, interpretation is separate.** Every imported listening observation is a permanent historical record. Never delete an observation, destructively deduplicate it, or rewrite the original timestamp, reported artist, recording or album text, or source provenance. An observation's identity and provenance are not determined by the current canonical mapping. Source import must function with no MusicBrainz, Discogs, or canonical records. Preserve original identifiers and raw-page lineage. Raw HTTP response bodies are a separate dataset with their own storage and contractual questions. Any change to retained raw responses requires separate explicit authorization.
 
 **DOM-003 — MusicBrainz and Discogs are evidence providers, not product policy.** Muzeum establishes its own canonicalization, release-selection and accounting rules. A provider's classification is not automatically Muzeum's choice. Preserve source identifiers and the evidence/algorithm version behind each decision.
 
@@ -46,7 +46,7 @@ Status: **Authoritative product policy**, 2026-11-17. These rules describe inten
 
 **DOM-019 — Catalog membership does not create listening history or credit.** An imported recording may have zero scrobbles. Release track membership does not assign the listener's historical scrobbles to that release for rankings. Listener-scoped recording resolution, shared catalog admission, and per-play credited release remain separate decisions; no import may overwrite explicit listener assignments.
 
-**DOM-020 — Profile ownership and publication are distinct.** An administrative association records local ownership provenance separately from provider verification and archive access. A public profile requires explicit owner consent and provider approval. Public browsing projects only the published archive and its catalog context. It confers no mutation rights and exposes no private interpretation history or account settings.
+**DOM-020 — Profile ownership and publication are distinct.** An administrative association records local ownership provenance separately from provider verification and archive access. Owner consent can be recorded privately. Explicit activation requires current owner consent, a valid owner and grant, and provider approval. Withdrawal preserves audit history, and grant restoration does not reactivate a withdrawn profile. Public browsing projects only the published archive and its catalog context. It confers no mutation rights and exposes no private interpretation history or account settings.
 
 ## Product-facing vocabulary
 

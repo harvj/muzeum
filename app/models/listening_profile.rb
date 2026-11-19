@@ -2,6 +2,8 @@ class ListeningProfile < ApplicationRecord
   belongs_to :lastfm_account
   belongs_to :owner, class_name: "User"
 
+  has_many :publication_events, class_name: "ListeningProfilePublicationEvent"
+
   attr_readonly :lastfm_account_id, :owner_id, :ownership_basis, :ownership_reference
 
   scope :published, -> {
@@ -42,18 +44,67 @@ class ListeningProfile < ApplicationRecord
     lastfm_account.lookup_key
   end
 
-  # Operator records approval obtained from this specific owner. There is no public write route.
-  def record_publication!(consenting_owner:, provider_reference:)
-    raise ArgumentError, "Owner consent and a provider approval reference are required" unless
-      consenting_owner.id == owner_id && provider_reference.present?
+  # These operations are exposed only through the protected operator runtime.
+  def record_consent!(consenting_owner:, reference:)
+    require_reference!(reference)
 
     lastfm_account.with_lock do
-      unless owner.reload.login_enabled? && lastfm_account.user_lastfm_accounts.active.exists?(user_id: owner_id)
-        raise ArgumentError, "The owner needs an active archive grant"
-      end
+      with_lock do
+        validate_current_owner!(consenting_owner)
+        if owner_consented_at
+          event = publication_events.find_by(action: "consented", created_at: owner_consented_at)
+          next if event&.evidence_reference == reference
+          raise ArgumentError, "Withdraw current consent before recording different evidence" if event
+        end
 
-      update!(published_lookup_key: lastfm_account.lookup_key,
-        owner_consented_at: Time.current, provider_approval_reference: provider_reference)
+        event = publication_events.create!(action: "consented", evidence_reference: reference)
+        update!(owner_consented_at: event.created_at)
+      end
+    end
+  end
+
+  def activate_publication!(provider_reference:)
+    require_reference!(provider_reference)
+
+    lastfm_account.with_lock do
+      with_lock do
+        validate_current_owner!(owner)
+        unless owner_consented_at && publication_events.exists?(action: "consented", created_at: owner_consented_at)
+          raise ArgumentError, "Recorded owner consent is required"
+        end
+
+        if published_lookup_key
+          next if published_lookup_key == lastfm_account.lookup_key && provider_approval_reference == provider_reference
+          raise ArgumentError, "Withdraw current publication before changing its approval"
+        end
+
+        update!(published_lookup_key: lastfm_account.lookup_key, provider_approval_reference: provider_reference)
+        publication_events.create!(action: "activated", evidence_reference: provider_reference)
+      end
+    end
+  end
+
+  def withdraw_publication!(reference:)
+    require_reference!(reference)
+
+    with_lock do
+      next unless published_lookup_key || owner_consented_at || provider_approval_reference
+
+      update!(published_lookup_key: nil, owner_consented_at: nil, provider_approval_reference: nil)
+      publication_events.create!(action: "withdrawn", evidence_reference: reference)
+    end
+  end
+
+  private
+
+  def require_reference!(reference)
+    raise ArgumentError, "A protected evidence reference is required" if reference.blank?
+  end
+
+  def validate_current_owner!(consenting_owner)
+    unless consenting_owner.id == owner_id && owner.reload.login_enabled? &&
+        lastfm_account.user_lastfm_accounts.active.exists?(user_id: owner_id)
+      raise ArgumentError, "The Auth-linked owner needs an active archive grant"
     end
   end
 end

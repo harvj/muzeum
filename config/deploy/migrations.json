@@ -30,6 +30,12 @@
       "risk": "additive",
       "quiesce": true,
       "review": "Adds a B-tree expression index on existing archive ID and immutable exact-surface digest. Scans observations for index build while writers are quiescent and does not rewrite observations or modify source identity. Require guarded quiescence, disk headroom and four-database recovery."
+    },
+    "db/migrate/20261119150200_audit_listening_profile_publication.rb": {
+      "sha256": "559bbbe51f9fc12f5cb16916e1a3b4f186194781d9b3ff06d6e8014a3951a7eb",
+      "risk": "additive",
+      "quiesce": true,
+      "review": "Adds an empty append-only publication audit table, foreign key, and an owning-grant revocation trigger. No backfill, profile activation, or source data changes. DDL briefly locks the profile and grant tables. Require Muzeum-only quiescence, a fresh encrypted backup and isolated four-database recovery. Retain the migration and audit records during forward repair."
     }
   }
 }

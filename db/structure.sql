@@ -205,6 +205,40 @@ CREATE FUNCTION public.resolution_surface_key(artist text, album text, track tex
 $$;
 
 
+--
+-- Name: withdraw_profile_on_grant_loss(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.withdraw_profile_on_grant_loss() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+  profile_id bigint;
+BEGIN
+  IF OLD.revoked_at IS NOT NULL THEN RETURN NULL; END IF;
+  IF TG_OP = 'UPDATE' THEN
+    IF NEW.revoked_at IS NULL AND NEW.user_id = OLD.user_id
+        AND NEW.lastfm_account_id = OLD.lastfm_account_id THEN RETURN NULL; END IF;
+  END IF;
+
+  -- Lock even a private profile so concurrent activation cannot escape withdrawal.
+  SELECT id INTO profile_id FROM public.listening_profiles
+    WHERE lastfm_account_id = OLD.lastfm_account_id AND owner_id = OLD.user_id
+    FOR UPDATE;
+  UPDATE public.listening_profiles
+    SET published_lookup_key = NULL, provider_approval_reference = NULL,
+        updated_at = statement_timestamp()
+    WHERE id = profile_id AND published_lookup_key IS NOT NULL;
+  IF FOUND THEN
+    INSERT INTO public.listening_profile_publication_events
+      (listening_profile_id, action, created_at)
+      VALUES (profile_id, 'grant_revoked', statement_timestamp());
+  END IF;
+  RETURN NULL;
+END;
+$$;
+
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
@@ -641,6 +675,39 @@ CREATE SEQUENCE public.lastfm_accounts_id_seq
 --
 
 ALTER SEQUENCE public.lastfm_accounts_id_seq OWNED BY public.lastfm_accounts.id;
+
+
+--
+-- Name: listening_profile_publication_events; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.listening_profile_publication_events (
+    id bigint NOT NULL,
+    listening_profile_id bigint NOT NULL,
+    action character varying NOT NULL,
+    evidence_reference text,
+    created_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT listening_profile_publication_event_evidence CHECK (((((action)::text = 'grant_revoked'::text) AND (evidence_reference IS NULL)) OR (((action)::text = ANY ((ARRAY['consented'::character varying, 'activated'::character varying, 'withdrawn'::character varying])::text[])) AND (evidence_reference IS NOT NULL) AND (btrim(evidence_reference) <> ''::text))))
+);
+
+
+--
+-- Name: listening_profile_publication_events_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.listening_profile_publication_events_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: listening_profile_publication_events_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.listening_profile_publication_events_id_seq OWNED BY public.listening_profile_publication_events.id;
 
 
 --
@@ -1540,6 +1607,13 @@ ALTER TABLE ONLY public.lastfm_accounts ALTER COLUMN id SET DEFAULT nextval('pub
 
 
 --
+-- Name: listening_profile_publication_events id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.listening_profile_publication_events ALTER COLUMN id SET DEFAULT nextval('public.listening_profile_publication_events_id_seq'::regclass);
+
+
+--
 -- Name: listening_profiles id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -1745,6 +1819,14 @@ ALTER TABLE ONLY public.lastfm_account_names
 
 ALTER TABLE ONLY public.lastfm_accounts
     ADD CONSTRAINT lastfm_accounts_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: listening_profile_publication_events listening_profile_publication_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.listening_profile_publication_events
+    ADD CONSTRAINT listening_profile_publication_events_pkey PRIMARY KEY (id);
 
 
 --
@@ -1992,6 +2074,13 @@ ALTER TABLE ONLY public.users
 --
 
 CREATE INDEX due_lastfm_accounts ON public.lastfm_accounts USING btree (next_poll_at, id) WHERE (sync_enabled AND ((state)::text = 'active'::text));
+
+
+--
+-- Name: idx_on_listening_profile_id_24b6f2d861; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_on_listening_profile_id_24b6f2d861 ON public.listening_profile_publication_events USING btree (listening_profile_id);
 
 
 --
@@ -2702,6 +2791,13 @@ CREATE TRIGGER retain_lastfm_account_names BEFORE DELETE OR UPDATE ON public.las
 
 
 --
+-- Name: listening_profile_publication_events retain_listening_profile_publication_events; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER retain_listening_profile_publication_events BEFORE DELETE OR UPDATE ON public.listening_profile_publication_events FOR EACH ROW EXECUTE FUNCTION public.muzeum_preserve_source();
+
+
+--
 -- Name: page_commits retain_page_commits; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -2853,6 +2949,13 @@ CREATE TRIGGER validate_delivery_account BEFORE INSERT ON public.source_deliveri
 --
 
 CREATE TRIGGER validate_page_commit BEFORE INSERT ON public.page_commits FOR EACH ROW EXECUTE FUNCTION public.muzeum_validate_page_commit();
+
+
+--
+-- Name: user_lastfm_accounts withdraw_profile_on_grant_loss; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER withdraw_profile_on_grant_loss AFTER DELETE OR UPDATE OF revoked_at, user_id, lastfm_account_id ON public.user_lastfm_accounts FOR EACH ROW EXECUTE FUNCTION public.withdraw_profile_on_grant_loss();
 
 
 --
@@ -3045,6 +3148,14 @@ ALTER TABLE ONLY public.user_lastfm_accounts
 
 ALTER TABLE ONLY public.import_runs
     ADD CONSTRAINT fk_rails_8125fa0177 FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
+-- Name: listening_profile_publication_events fk_rails_841d09a8a9; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.listening_profile_publication_events
+    ADD CONSTRAINT fk_rails_841d09a8a9 FOREIGN KEY (listening_profile_id) REFERENCES public.listening_profiles(id);
 
 
 --
@@ -3286,6 +3397,7 @@ ALTER TABLE ONLY public.resolution_work
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261119150200'),
 ('20261119150100'),
 ('20261119150000'),
 ('20261118120200'),

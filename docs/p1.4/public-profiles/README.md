@@ -43,60 +43,82 @@ It is not verification by Last.fm.
 
 The migration adds one empty table and an archive/exact-surface expression index for catalog discovery. A unique archive index prevents duplicate
 ownership, and establishment checks the existing archive user and active grant.
-No production account is associated or published by migration. Publication is
-a separate record of explicit owner consent and a provider approval reference.
-Both must be present and tied to the approved username and active owner/grant.
-A username reconciliation, owner disablement or grant revocation withholds the
-public endpoints. Self-service visibility and revocation are deferred.
+Publication state is separate from administrative ownership. An additive
+migration creates the append-only publication event table and installs a grant
+trigger. It does not backfill approvals or change existing profile or source
+rows. An already-private profile stays private. Activation requires a consent
+event recorded through the new workflow. A username reconciliation, owner
+disablement or grant revocation withholds the public endpoints. Revoking or
+removing the owning grant clears activation in the same transaction, even when
+the grant is changed outside Rails. Restoring a grant requires explicit
+reactivation with a reviewed provider reference. Self-service controls are deferred.
 
-### Last.fm publication gate
+### Last.fm publication and retention review
 
-Last.fm's API terms §2.7 call for prior written approval for public pages using
-its web services and specify attribution, link targets and approval of
-placements. §4.2 covers license notice, attribution and privacy obligations,
-and §4.3.4 lists a 100 MB usage cap and caching requirements. Resolve the terms'
-application to this stored archive and proposed public catalog, confirm use and
-retention scope with Last.fm, and obtain written approval or document a reviewed
-alternative covering publication. Reconcile any required notice, branding or
-profile/catalog links before enabling access. Confirm owner approval covers the
-displayed timestamps, unresolved text, interpretations and future additions.
-No provider branding is introduced by this milestone. [Last.fm API terms](https://www.last.fm/api/tos)
+Last.fm API terms §2.7 specifies attribution, profile and catalog link targets,
+placement approval, and prior written approval of public pages using its web
+services. §4.2 extends credit and applicable license notices and privacy
+obligations to public reuse. Whether serving stored observations without live
+API calls changes the written approval requirement is open. Resolve attribution,
+links, notices and approval against the exact public scope before activation.
+[Last.fm API terms](https://www.last.fm/api/tos)
 
-### Proposed operator sequence
+§4.3.4 states a 100 MB aggregate usage cap, prior written consent for a larger
+portion, and caching consistent with response headers. The measured raw-body
+inventory of 324,374,400 bytes exceeds that threshold if counted. The
+83,055,438-byte normalized observation measurement is a different representation.
+The handling of raw bodies, normalized fields, caches, backups and duplicates
+requires confirmation. Limiting the public projection leaves the retention
+question open.
 
-1. Review the exact-SHA CI and migration hash. With separate deployment
-   authorization, run the [guarded deployment](../../deployment/workflow.md).
-   The additive migration requires fresh encrypted backup and isolated
-   four-database recovery checks. Verify the new homepage and that the profile
-   path returns 404 before association and publication.
-2. With separate association authorization, re-read the production identity,
-   matching grant and history before running the Muzeum runtime task privately.
-   Use the reviewed operator evidence reference and verify publication columns
-   are still empty afterward.
+All imported observations, including the existing 292,969, are permanent.
+Preserve original timestamps, reported artist, recording and album text, and
+source provenance. Canonical resolution adds interpretation. The retained raw
+HTTP responses are a separate dataset. This work neither alters them nor
+authorizes future changes. Account-holder-initiated export uploads are the likely
+initial onboarding path, with optional incremental Last.fm API synchronization
+using the associated source username subject to separate review.
 
-   ```sh
-   bin/rails 'listening_profiles:establish[1,1,<reviewed-ownership-reference>]'
-   ```
+A reviewed alternative contractual interpretation belongs in a separate
+protected decision record with its reviewer, terms version, affected data and
+routes, reasoning, conditions and review date. Keep it out of
+`provider_approval_reference`, which is for actual provider approval. Accepting
+an alternative would require an explicit DOM-020 policy revision and a distinct,
+validated authorization basis in the application. The existing gate explicitly
+requires provider approval.
 
-3. Obtain the exact owner's approval and satisfy the provider gate. After
-   separate publication authorization, use the deployed runtime Rails console.
-   Pass the consenting user ID confirmed in the private review and a reference
-   to the written provider approval. Verify the exact public archive and catalog
-   routes anonymously, and confirm the private routes remain protected.
+### Operator sequence
 
-   ```ruby
-   profile = ListeningProfile.find_by!(lastfm_account_id: 1)
-   profile.record_publication!(
-     consenting_owner: User.find(1),
-     provider_reference: "<reviewed-provider-approval-reference>"
-   )
-   ```
+1. Verify exact-SHA CI and the migration hash. With separate deployment
+   authorization, use the [guarded deployment](../../deployment/workflow.md)
+   with Muzeum quiescence, a fresh encrypted backup and isolated four-database
+   recovery. Verify the private profile remains undiscoverable and returns 404.
+   Preserve the audit table on forward repair.
+2. Re-read the existing administrative association, Auth-linked owner and active
+   grant privately. For an archive with no ownership row, establish it only
+   with separate authorization using
+   `bin/rails 'listening_profiles:establish[1,1,<reviewed-ownership-reference>]'`.
+3. With consent-recording authorization, use the protected Muzeum runtime to run
+   `bin/rails 'listening_profiles:record_consent[1,1]'`. Supply the private
+   `MUZEUM_PUBLICATION_EVIDENCE_REFERENCE` through the protected runtime
+   environment. The referenced record identifies the owner, scope, approval
+   and operator. Verify the consent timestamp and audit event while the public
+   key and provider reference remain null for the private profile.
+4. After separately authorizing activation, provide an evidence reference to
+   actual written Last.fm approval via the same protected environment variable
+   and run `bin/rails 'listening_profiles:activate[1]'`. Verify the homepage,
+   archive and catalog routes anonymously, and check that protected reads and
+   writes are still denied.
+5. To withdraw, provide a protected withdrawal evidence reference and run
+   `bin/rails 'listening_profiles:withdraw[1]'`. This clears the active key,
+   current consent and current provider reference while retaining ownership and
+   all prior events. Verify the homepage link disappears and public routes return
+   404. Explicit reactivation after manual withdrawal requires new consent.
 
-4. If authorized to withdraw publication, clear `owner_consented_at` through
-   the existing operator runtime and verify 404 on the public archive and
-   catalog. Preserve the ownership row, observations, and decisions.
-
-No production deployment, association or publication occurred during the work.
+These tasks have no web endpoints. Repeating the same consent or activation
+against the same state preserves the original evidence. Repeating withdrawal on
+a fully withdrawn row is a no-op. Inspect audit evidence privately and keep
+protected references and identifiers out of issue updates.
 
 ## Verification
 

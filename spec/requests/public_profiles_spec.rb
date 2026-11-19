@@ -23,7 +23,9 @@ RSpec.describe "Public listening profiles", type: :request do
     expect(html.at_css("form")).to be_nil
     expect(response.body).not_to include("qalephd", "An unrecognized track")
 
-    profile.update!(owner_consented_at: Time.current)
+    profile.record_consent!(consenting_owner: fixture.fetch(:owner), reference: "disposable-consent-fixture")
+    get root_path
+    expect(response.body).not_to include(public_profile_path(profile))
     get public_profile_path(profile)
     expect(response).to have_http_status(:not_found)
     get public_profile_recording_path(profile, fixture.fetch(:recording))
@@ -46,7 +48,8 @@ RSpec.describe "Public listening profiles", type: :request do
     expect(response.headers["Cache-Control"]).to include("no-store")
     expect(response.body).to include('name="turbo-cache-control" content="no-cache"')
     expect(response.body).to include("Harbor Lights", "An unrecognized track", "Unresolved")
-    expect(response.body).not_to include("Private song", "private-name", "resolution/", "unpublished source detail", "Private fixture rationale")
+    expect(response.body).not_to include("Private song", "private-name", "resolution/", "unpublished source detail", "Private fixture rationale",
+      "disposable-consent-fixture", "disposable-policy-fixture")
     expect(response.body.index("Harbor Lights")).to be < response.body.index("An unrecognized track")
 
     get public_profile_artists_path(profile)
@@ -67,7 +70,11 @@ RSpec.describe "Public listening profiles", type: :request do
     get public_profile_recording_path(profile, private_recording)
     expect(response).to have_http_status(:not_found)
 
-    fixture.fetch(:owner).user_lastfm_accounts.active.find_by!(lastfm_account: fixture.fetch(:account)).revoke!
+    grant = fixture.fetch(:owner).user_lastfm_accounts.active.find_by!(lastfm_account: fixture.fetch(:account))
+    grant.revoke!
+    get public_profile_path(profile)
+    expect(response).to have_http_status(:not_found)
+    grant.update!(revoked_at: nil)
     get public_profile_path(profile)
     expect(response).to have_http_status(:not_found)
   end
@@ -113,7 +120,7 @@ RSpec.describe "Public listening profiles", type: :request do
     expect(response).to redirect_to(archive_path)
     UserLastfmAccount.create!(user: other, lastfm_account: account)
     expect { ListeningProfile.establish!(account:, owner: other, reference: "Unreviewed") }.to raise_error(ArgumentError)
-    expect { profile.record_publication!(consenting_owner: other, provider_reference: "wrong owner") }.to raise_error(ArgumentError)
+    expect { profile.record_consent!(consenting_owner: other, reference: "wrong owner") }.to raise_error(ArgumentError)
     expect { post decide_resolution_surface_path(play) }.not_to change(RecordingResolution::Decision, :count)
     expect(response).to have_http_status(:forbidden)
     expect { post import_recording_path(fixture.fetch(:recording)) }.not_to change(CatalogImport, :count)

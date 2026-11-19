@@ -23,6 +23,8 @@ module PublicProfileFixture
   end
 
   def authorize_fixture_publication(fixture)
-    fixture.fetch(:profile).record_publication!(consenting_owner: fixture.fetch(:owner), provider_reference: "disposable-policy-fixture")
+    profile = fixture.fetch(:profile)
+    profile.record_consent!(consenting_owner: fixture.fetch(:owner), reference: "disposable-consent-fixture")
+    profile.activate_publication!(provider_reference: "disposable-policy-fixture")
   end
 end
