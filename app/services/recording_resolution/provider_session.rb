@@ -118,7 +118,13 @@ module RecordingResolution
       if [ 429, 503 ].include?(status)
         due = retry_time(headers["Retry-After"]) || 1.minute.from_now
         impose_cooldown(provider, due)
-        raise ProviderError.new("#{provider} throttled (#{status})", retry_at: due)
+        raise ProviderError.new("#{provider} throttled (#{status})", retry_at: due, http_status: status)
+      end
+
+      if provider == :discogs && status.between?(500, 599)
+        due = retry_time(headers["Retry-After"])
+        impose_cooldown(provider, due) if due
+        raise ProviderError.new("#{provider} returned #{status}", retry_at: due, http_status: status)
       end
 
       if provider == :musicbrainz && [ 301, 302, 307, 308 ].include?(status)

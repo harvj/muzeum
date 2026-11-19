@@ -64,8 +64,14 @@ module CanonicalCatalog
         stopped = error.terminal || attempts >= MAX_ATTEMPTS
         persist_assessment_failure(error, stopped) if @surface && !error.deferred
         @request.update!(state: stopped ? "failed" : "pending", attempts:, failure: error.deferred ? nil : error.message,
-          due_at: error.retry_at || (2**attempts).seconds.from_now, lease_token: nil, lease_until: nil)
+          due_at: retry_due_at(error, attempts), lease_token: nil, lease_until: nil)
       end
+    end
+
+    def retry_due_at(error, attempts)
+      return error.retry_at if error.deferred
+
+      [ error.retry_at, (2**attempts).seconds.from_now ].compact.max
     end
 
     def import_artist
@@ -182,7 +188,8 @@ module CanonicalCatalog
       code = error.terminal ? "provider_request_stopped" : "provider_temporarily_unavailable"
       evidence["reasons"] << code
       evidence["reason_details"][code] = (@session.current_request || {}).merge(
-        "message" => error.message, "retry_exhausted" => stopped && !error.terminal)
+        "message" => error.message, "http_status" => error.http_status,
+        "retry_exhausted" => stopped && !error.terminal).compact
       evidence["partial"] = true
       write_assessment(evidence)
     end

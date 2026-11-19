@@ -26,16 +26,25 @@ module RecordingResolution
       Surface.find_by(lastfm_account_id: observation.lastfm_account_id, artist:, album:, track:)
     end
 
+    def matching_page(observation, before_id:)
+      matches = matching(observation).select("scrobbles.id", "COUNT(*) OVER () AS total")
+      page = Scrobble.from(matches, :exact_matches).order(Arel.sql("exact_matches.id DESC")).limit(PAGE + 1)
+      page = page.where("exact_matches.id < ?", before_id) if before_id.positive?
+      rows = page.pluck(Arel.sql("exact_matches.id"), Arel.sql("exact_matches.total"))
+      [ rows.map(&:first), rows.first&.last || (before_id.positive? ? matching(observation).count : 0) ]
+    end
+
     def list(filter:, before_id:)
-      # The earliest observation identifies a surface; new matching observations do not move it between pages.
-      scoped = observations.joins(surface_join).joins(head_join)
-      scoped = apply_filter(scoped, filter)
-      rows = scoped.group("scrobbles.lastfm_account_id", "scrobbles.payload->>'artist_name'",
-        "scrobbles.payload->>'album_name'", "scrobbles.payload->>'track_name'")
-      rows = rows.having("MIN(scrobbles.id) < ?", before_id) if before_id.positive?
-      rows.order(Arel.sql("MIN(scrobbles.id) DESC")).limit(PAGE + 1).pluck(
-        Arel.sql("min(scrobbles.id)"), Arel.sql("payload->>'artist_name'"), Arel.sql("payload->>'album_name'"),
-        Arel.sql("payload->>'track_name'"), Arel.sql("count(*)"))
+      # Aggregate exact surfaces before examining their decisions or assessment evidence.
+      grouped = observations.group("lastfm_account_id", *Ledger::PAYLOAD_FIELDS.map { |field| "payload->>'#{field}'" })
+        .select("MIN(id) AS first_id", "COUNT(*) AS observation_count", "lastfm_account_id",
+          "payload->>'artist_name' AS artist", "payload->>'album_name' AS album", "payload->>'track_name' AS track")
+      grouped = grouped.having("MIN(id) < ?", before_id) if before_id.positive?
+      rows = Scrobble.from(grouped, :workspace_rows)
+      rows = filter_surfaces(rows, filter) if filter
+      rows.order(Arel.sql("workspace_rows.first_id DESC")).limit(PAGE + 1).pluck(
+        Arel.sql("workspace_rows.first_id"), Arel.sql("workspace_rows.artist"), Arel.sql("workspace_rows.album"),
+        Arel.sql("workspace_rows.track"), Arel.sql("workspace_rows.observation_count"))
     end
 
     def assessments(surface)
@@ -57,26 +66,48 @@ module RecordingResolution
     end
 
     def self.editions(candidate, assessment)
-      appearances = Array(candidate["releases"]).filter_map do |release|
-        [ release["title"], release["id"] ] if release["title"].present? && Clients::Musicbrainz::MBID.match?(release["id"].to_s)
-      end
-      edition = assessment.evidence["edition"]
-      if edition && Array(assessment.evidence["slots"]).any? { |slot| slot["recording_mbid"] == candidate["id"] }
-        appearances.unshift([ edition["title"], edition["id"] ])
-      end
-      appearances.uniq(&:last).first(25)
+      checked = assessment.evidence["edition"]
+      slots = Array(assessment.evidence["slots"]).select { |slot| slot["recording_mbid"] == candidate["id"] }
+      appearances = Array(candidate["releases"])
+      appearances = [ checked, *appearances ] if checked && slots.any?
+      choices = appearances.filter_map do |edition|
+        id, title = edition.values_at("id", "title")
+        next unless title.present? && Clients::Musicbrainz::MBID.match?(id.to_s)
+
+        details = edition.values_at("date", "country").compact_blank
+        if checked && id == checked["id"] && slots.any?
+          details += slots.map { |slot| "checked disc #{slot['medium']}, track #{slot['position']}" }
+        end
+        [ title, details, id ]
+      end.uniq(&:last)
+      choices.group_by(&:first).values.flat_map do |versions|
+        versions.group_by { |_, details, _| details }.values.filter_map do |matches|
+          title, details, id = matches.first
+          next unless matches.one? && (versions.one? || details.any?)
+
+          [ ([ title ] + details).join(" · "), id ]
+        end
+      end.first(25)
     end
 
     private
 
-    def surface_join
-      <<~SQL
-        LEFT JOIN resolution_surfaces workspace_surface ON workspace_surface.lastfm_account_id = scrobbles.lastfm_account_id
-          AND workspace_surface.exact_key = resolution_surface_key(
-            scrobbles.payload->>'artist_name', scrobbles.payload->>'album_name', scrobbles.payload->>'track_name')
-          AND (workspace_surface.artist, workspace_surface.album, workspace_surface.track) IS NOT DISTINCT FROM
-            (scrobbles.payload->>'artist_name', scrobbles.payload->>'album_name', scrobbles.payload->>'track_name')
+    def filter_surfaces(rows, filter)
+      surfaces = Surface.from("resolution_surfaces workspace_surface")
+        .where("workspace_surface.lastfm_account_id" => listener.user_lastfm_accounts.active.select(:lastfm_account_id))
+        .select("workspace_surface.id", "workspace_surface.lastfm_account_id",
+          "workspace_surface.artist", "workspace_surface.album", "workspace_surface.track")
+      resolved = %w[resolved unresolved].include?(filter)
+      surfaces = surfaces.joins(head_join) if resolved
+      eligible = apply_filter(surfaces, resolved ? "resolved" : filter)
+      # Evaluate decisions on attached surfaces. Array equality matches NULL elements and supports a hash join.
+      rows = rows.joins(<<~SQL)
+        LEFT JOIN (#{eligible.to_sql} OFFSET 0) eligible_surface
+          ON eligible_surface.lastfm_account_id = workspace_rows.lastfm_account_id
+          AND ARRAY[eligible_surface.artist, eligible_surface.album, eligible_surface.track] =
+            ARRAY[workspace_rows.artist, workspace_rows.album, workspace_rows.track]
       SQL
+      filter == "unresolved" ? rows.where("eligible_surface.id IS NULL") : rows.where("eligible_surface.id IS NOT NULL")
     end
 
     def head_join
@@ -98,7 +129,6 @@ module RecordingResolution
       mode = "COALESCE(NULLIF(workspace_head.mode, 'inherit'), workspace_auto.mode, 'unresolved')"
       case filter
       when "resolved" then scoped.where("#{mode} = 'resolved'")
-      when "unresolved" then scoped.where("#{mode} <> 'resolved'")
       when "suggested", "ambiguous"
         predicate = filter == "suggested" ?
           "a.evidence->>'suggested_mbid' IS NOT NULL OR a.evidence->>'review_mbid' IS NOT NULL OR a.suggested_recording_id IS NOT NULL" :

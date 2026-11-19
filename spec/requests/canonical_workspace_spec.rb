@@ -8,6 +8,17 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
   before { prepare_oidc }
   after { restore_oidc }
 
+  it "withholds indistinguishable edition choices" do
+    candidate = { "id" => CatalogFixtures::IDS[:studio], "releases" => [
+      { "title" => "ESTRUS", "id" => CatalogFixtures::IDS[:edition] },
+      { "title" => "ESTRUS", "id" => CatalogFixtures::IDS[:other] },
+      { "title" => "ESTRUS", "id" => CatalogFixtures::IDS[:track], "date" => "2026", "country" => "US" }
+    ] }
+    assessment = RecordingResolution::Assessment.new(evidence: {})
+    expect(RecordingResolution::Workspace.editions(candidate, assessment)).to eq(
+      [ [ "ESTRUS · 2026 · US", CatalogFixtures::IDS[:track] ] ])
+  end
+
   it "protects the library, workspace and import actions" do
     [ artists_path, releases_path, recordings_path, resolution_surfaces_path ].each do |path|
       get path
@@ -31,9 +42,21 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     expect(response.body).to include("Signals", "Night Lines", "Night Drive")
     get resolution_surface_path(example)
     expect(response.body).to include("Apply to all", "Observed edition slot")
+    expect(response.body).not_to include("Release edition to verify")
+    get resolution_surface_path(example, before: second.id)
+    expect(response.body).to include("2 observations with these exact Last.fm strings")
     expect { post decide_resolution_surface_path(example), params: choice }.to change(RecordingResolution::Decision, :count).by(1)
     expect(response).to redirect_to(resolution_surface_path(example))
+    get resolution_surfaces_path(filter: "resolved")
+    expect(response.body).to include("Signals")
+    get resolution_surfaces_path(filter: "unresolved")
+    expect(response.body).not_to include("Signals")
     import = CatalogImport.where(kind: "recording").sole
+    expect(import.context).not_to have_key("edition_mbid")
+    get resolution_surface_path(example)
+    page = Nokogiri::HTML(response.body)
+    expect(page.at_css("select[name='edition_mbid']").ancestors("form").first["action"]).to eq(admit_resolution_surface_path(example))
+    expect(response.body).to include("checked disc 1, track 1")
     import.update!(state: "imported")
     expect do
       post admit_resolution_surface_path(example), params: choice.merge(edition_mbid: CatalogFixtures::IDS[:edition])
@@ -46,6 +69,8 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     post decide_resolution_surface_path(example), params: { scope: "scrobble", play_id: second.id, mode: "unresolved", reason: "Unclear version" }
     head = RecordingResolution::Decision.last
     expect(head.scrobble_id).to eq(second.id)
+    get resolution_surfaces_path(filter: "exceptions")
+    expect(response.body).to include("Signals")
     expect(RecordingResolution::Ledger.effective(user).find(second.id).effective_recording_id).to be_nil
     get resolution_surface_path(example, play: second.id)
     expect(response.body).to include("Only this time", "Return to inheritance")

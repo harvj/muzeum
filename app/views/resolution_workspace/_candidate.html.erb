@@ -15,24 +15,35 @@
   <% else %>
     <p class="muted">No verified slot for this candidate in the checked observed edition.</p>
   <% end %>
-  <% editions = RecordingResolution::Workspace.editions(candidate, @assessment) %>
   <%= form_with url: decide_resolution_surface_path(@observation) do |form| %>
     <%= form.hidden_field :recording_mbid, value: mbid %>
     <%= form.hidden_field :assessment_id, value: @assessment.id %>
     <%= form.hidden_field :scope, value: @selected_scrobble ? "scrobble" : "surface" %>
     <%= form.hidden_field :play_id, value: @selected_scrobble&.id %>
     <%= form.hidden_field :head, value: (@selected_scrobble ? @selected_head : @surface_head)&.id %>
-    <% if editions.any? %>
-      <%= form.label :edition_mbid, "Release to verify", for: "edition-#{mbid}" %>
-      <%= form.select :edition_mbid, [["Use supported album context", ""]] + editions.map { |title, id| ["#{title} · #{id.first(8)}", id] }, {}, id: "edition-#{mbid}" %>
-    <% end %>
     <%= form.label :reason, "Reason for this assignment", for: "reason-#{mbid}" %>
     <%= form.text_field :reason, id: "reason-#{mbid}", required: true, maxlength: 500 %>
     <div class="catalog-actions">
       <%= form.button(@selected_scrobble ? "Only this time" : "Apply to all", name: "mode", value: "resolved") %>
-      <% if @current_recording&.mbid == mbid && editions.any? %>
-        <%= form.button "Verify selected release", formaction: admit_resolution_surface_path(@observation), formnovalidate: true %>
-      <% end %>
     </div>
+  <% end %>
+  <% if @current_recording&.mbid == mbid %>
+    <% editions = RecordingResolution::Workspace.editions(candidate, @assessment) %>
+    <h3>Release edition</h3>
+    <% if editions.any? %>
+      <p>Request verification of an edition you recognize. Muzeum checks its complete track listing before admission.</p>
+      <%= form_with url: admit_resolution_surface_path(@observation) do |form| %>
+        <%= form.hidden_field :recording_mbid, value: mbid, id: nil %>
+        <%= form.hidden_field :assessment_id, value: @assessment.id, id: nil %>
+        <%= form.hidden_field :play_id, value: @selected_scrobble&.id, id: nil %>
+        <%= form.label :edition_mbid, "Release edition to verify", for: "edition-#{mbid}" %>
+        <%= form.select :edition_mbid, editions, { include_blank: "Choose a release edition" }, id: "edition-#{mbid}", required: true %>
+        <%= form.submit "Verify selected release" %>
+      <% end %>
+    <% else %>
+      <p>The available evidence does not distinguish a release edition. You can keep the recording assignment while the release is pending.</p>
+    <% end %>
+  <% else %>
+    <p>Confirm the recording first. Muzeum checks for a supported release in the background and can keep the recording assignment if the release remains uncertain.</p>
   <% end %>
 </details>

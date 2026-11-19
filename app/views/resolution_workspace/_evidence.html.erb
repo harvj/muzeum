@@ -1,6 +1,10 @@
 <% evidence = assessment.evidence %>
 <% discogs = evidence.fetch("discogs", {}) %>
 <% if evidence.dig("search", "count") %><p>MusicBrainz returned <%= pluralize(evidence.dig("search", "returned") || Array(evidence["candidates"]).size, "candidate") %> of <%= evidence.dig("search", "count") %>.</p><% end %>
+<% outage = evidence.dig("reason_details", "provider_temporarily_unavailable") %>
+<% if outage&.fetch("provider", nil) == "discogs" %>
+  <p>Discogs could not complete its check. MusicBrainz candidates remain available for review, and release verification may still be pending.</p>
+<% end %>
 <% if evidence["reasons"].present? %>
   <details open>
     <summary>Uncertainty in this assessment</summary>

@@ -11,30 +11,27 @@ class ResolutionWorkspaceController < ApplicationController
 
   def show
     @surface = @workspace.surface(@observation)
-    matching = @workspace.matching(@observation)
-    @observations_count = matching.count
-    @scrobbles = RecordingResolution::Ledger.effective(current_user).where(id: matching.select(:id)).order(id: :desc)
-    @scrobbles = @scrobbles.where("scrobbles.id < ?", params[:before].to_i) if params[:before].to_i.positive?
-    @scrobbles = @scrobbles.limit(31).to_a
-    @next_scrobble = @scrobbles.pop && @scrobbles.last.id if @scrobbles.size > 30
+    ids, @observations_count = @workspace.matching_page(@observation, before_id: params[:before].to_i)
+    @next_scrobble = ids.pop && ids.last if ids.size > RecordingResolution::Workspace::PAGE
+    @scrobbles = RecordingResolution::Ledger.effective(current_user).where(id: ids).order(id: :desc).to_a
     @history = @workspace.history(@surface)
     @surface_head = @history.find_by(user_id: current_user.id, scrobble_id: nil)
     @inherited_head = @surface_head unless @surface_head&.mode == "inherit"
     @inherited_head ||= @history.find_by(user_id: nil, scrobble_id: nil)
     @exception_heads = @history.where(user_id: current_user.id, scrobble_id: @scrobbles.map(&:id)).group_by(&:scrobble_id).transform_values(&:first)
-    @selected_scrobble = matching.find(params[:play]) if params[:play].present?
+    @selected_scrobble = @workspace.matching(@observation).find(params[:play]) if params[:play].present?
     @assessments = @workspace.assessments(@surface)
     @assessment = if params[:assessment].present?
       @assessments.find(params[:assessment])
     else
       claims = (@selected_scrobble || @observation).payload.slice(*RecordingResolution::PilotRunner::CLAIM_FIELDS)
       matching_claims = RecordingResolution::Group.where(claims:).select(:id)
-      @assessments.where(group_id: matching_claims).where("evidence->>'partial' IS DISTINCT FROM 'true'").first ||
-        @assessments.where(group_id: matching_claims).first
+      @assessments.where(group_id: matching_claims)
+        .reorder(Arel.sql("(evidence->>'partial' IS NOT DISTINCT FROM 'true') ASC"), id: :desc).first
     end
     older = params[:assessment_before].to_i
     assessment_history = older.positive? ? @assessments.where("id < ?", older) : @assessments
-    @assessment_history = assessment_history.limit(21).to_a
+    @assessment_history = assessment_history.select(:id, :created_at).limit(21).to_a
     @next_assessment = @assessment_history.pop && @assessment_history.last.id if @assessment_history.size > 20
     @assessment_request = CatalogImport.latest("assessment", @surface.id) if @surface
     @candidates = RecordingResolution::Workspace.candidates(@assessment)
@@ -71,7 +68,7 @@ class ResolutionWorkspaceController < ApplicationController
     target = scope == :scrobble ? @workspace.matching(@observation).find(params[:play_id]) : @observation
     surface = @workspace.surface(@observation)
     assessment = @workspace.assessments(surface).find(params[:assessment_id]) if params[:assessment_id].present?
-    request = context = nil
+    request = nil
     ActiveRecord::Base.transaction do
       recording, context = selection(assessment, target) if mode == "resolved"
       RecordingResolution::Ledger.record!(listener: current_user, scrobble: target, scope:, mode:, reason:, recording:,
@@ -80,9 +77,6 @@ class ResolutionWorkspaceController < ApplicationController
     end
     request&.dispatch
     notice = "Recording decision saved."
-    if request && request.context["edition_mbid"] != context["edition_mbid"]
-      notice += " Another import is in progress. Request the selected release again after it finishes."
-    end
     redirect_to resolution_surface_path(@observation, play: scope == :scrobble ? target.id : nil),
       notice:, status: :see_other
   rescue ActiveRecord::StaleObjectError
@@ -99,8 +93,8 @@ class ResolutionWorkspaceController < ApplicationController
       surface = @workspace.surface(target)
       surface&.lock!
       assessment = @workspace.assessments(surface).find(params[:assessment_id])
-      recording, context = selection(assessment, target)
-      raise ArgumentError if context["edition_mbid"].blank?
+      edition = params[:edition_mbid].presence || raise(ArgumentError)
+      recording, context = selection(assessment, target, edition:)
 
       if params[:play_id].present?
         current = RecordingResolution::Ledger.effective(current_user).find(target.id).effective_recording_id
@@ -135,11 +129,10 @@ class ResolutionWorkspaceController < ApplicationController
     @observation = @workspace.observations.find(params[:id])
   end
 
-  def selection(assessment, target)
+  def selection(assessment, target, edition: nil)
     candidate = RecordingResolution::Workspace.candidates(assessment).find { |item| item["id"] == params[:recording_mbid] }
     raise ArgumentError unless candidate
 
-    edition = params[:edition_mbid].presence
     if edition && RecordingResolution::Workspace.editions(candidate, assessment).none? { |_, id| id == edition }
       raise ArgumentError
     end
