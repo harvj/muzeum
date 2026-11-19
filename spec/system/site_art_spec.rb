@@ -9,7 +9,7 @@ RSpec.describe "Site Art appearance", type: :system do
     end
   end
 
-  it "decodes the current theme, preserves the crop, and follows OS and explicit appearance" do
+  it "decodes the current theme, shares the bottom-anchored crop, and follows OS and explicit appearance" do
     light = "/environments/stone/limestone.jpg"
     dark = "/environments/stone/onyx.jpg"
     allow(SiteArt).to receive(:snapshot).and_return(light: light, dark: dark, favicon: "/icon.svg")
@@ -22,15 +22,21 @@ RSpec.describe "Site Art appearance", type: :system do
     expect(page).to have_css("img.site-art-background[src='#{light}']", visible: :all)
     expect(page).to have_css("link[rel=icon][href='/icon.svg']", visible: :all)
 
-    browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 390, height: 844, deviceScaleFactor: 1, mobile: true)
-    browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "prefers-color-scheme", value: "dark" } ])
-    expect(page).to have_css("img.site-art-background[src='#{dark}']", visible: :all)
-    expect(browser.execute_script(<<~JS)).to eq([ "cover", "50% 50%", true, true ])
-      const image = document.querySelector(".site-art-background")
-      const style = getComputedStyle(image)
-      return [style.objectFit, style.objectPosition, image.clientWidth === innerWidth, image.clientHeight === innerHeight]
-    JS
-    expect(page.evaluate_script("[innerWidth, innerHeight]")).to eq([ 390, 844 ])
+    [ [ 1440, 960 ], [ 390, 844 ] ].each do |width, height|
+      browser.execute_cdp("Emulation.setDeviceMetricsOverride", width:, height:, deviceScaleFactor: 1, mobile: width < 700)
+      { "light" => light, "dark" => dark }.each do |theme, source|
+        browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "prefers-color-scheme", value: theme } ])
+        expect(page).to have_css("img.site-art-background[src='#{source}']", visible: :all)
+        expect(page.evaluate_script("[innerWidth, innerHeight]")).to eq([ width, height ])
+        expect(browser.execute_script(<<~JS)).to eq([ "cover", "50% 100%", "cover", "50% 100%", "no-repeat", true, true ])
+          const image = document.querySelector(".site-art-background")
+          const style = getComputedStyle(image)
+          const fallback = getComputedStyle(image.parentElement)
+          return [style.objectFit, style.objectPosition, fallback.backgroundSize, fallback.backgroundPosition,
+            fallback.backgroundRepeat, image.clientWidth === innerWidth, image.clientHeight === innerHeight]
+        JS
+      end
+    end
     select "Light", from: "Appearance"
     expect(page).to have_css("img.site-art-background[src='#{light}']", visible: :all)
     click_button "Pause light"

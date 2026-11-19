@@ -203,15 +203,6 @@ body:has(.library-nav) main { margin-top: 14px; }
   .release-tracks .table-number { width: 4.25rem; white-space: normal; }
 }
 
-.stone-environment > .site-art-background {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-}
-
 .profile-import {
   margin-top: 12px;
   flex-wrap: wrap;
