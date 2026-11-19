@@ -16,10 +16,21 @@ RSpec.describe "Capistrano deployment/reporting integration" do
     expect(result["creates"]).to eq(0)
   end
 
+  it "reconciles only metadata after verifying an already deployed revision" do
+    result = rehearse("sync")
+    expect(result["events"]).to eq([
+      [ "remote revision", "/var/www/muzeum/current/REVISION" ],
+      [ "github", "release" ], [ "github", "api" ],
+      [ "metadata only", "/var/www/muzeum/current/lib/muzeum_published_release.rb", "a" * 40, "v0.2.1" ]
+    ])
+    expect(result["creates"]).to eq(0)
+    expect(rehearse("sync_mismatch")["events"].map(&:first)).to eq([ "remote revision", "github", "github" ])
+  end
+
   it "reports success only after the server completes its final verification" do
     result = rehearse("success")
     expect(result["events"]).to eq([
-      [ "server", "begin" ], [ "stamp", "v0.2.0\n", "/disposable/release/PUBLISHED_RELEASE" ],
+      [ "server", "begin" ],
       [ "server", "prepare" ], [ "server", "finish" ], [ "server", "complete" ]
     ])
     expect(result["states"]).to eq(%w[in_progress success])

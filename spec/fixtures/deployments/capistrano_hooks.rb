@@ -14,16 +14,18 @@ $local = Dir.mktmpdir("muzeum-cap-hooks")
 $box = MuzeumDeploymentReporting::Outbox.new($local, api: $api)
 
 module MuzeumDeploymentRevision
+  def self.command(*args)
+    $events << [ "github", args[1] ]
+    case args[1]
+    when "release"
+      JSON.generate(tagName: "v0.2.1", isDraft: false, isPrerelease: false, publishedAt: "2026-11-19T06:37:00Z")
+    when "api"
+      $scenario == "sync_mismatch" ? "b" * 40 : "a" * 40
+    end
+  end
+
   def self.resolve!
     { sha: "a" * 40, ci: "https://example.test/ci" }
-  end
-end
-
-module MuzeumPublishedRelease
-  def self.verify!(revision, command:)
-    raise "Fixture expected exact revision and local command" unless revision == "a" * 40 && command.receiver == MuzeumDeploymentRevision
-
-    "v0.2.0"
   end
 end
 
@@ -40,7 +42,10 @@ def self.on(_server)
 end
 
 def self.capture(*args)
-  if args.last == "version"
+  if args.first == :cat
+    $events << [ "remote revision", args.last ]
+    "a" * 40
+  elsif args.last == "version"
     Digest::SHA256.hexdigest(File.binread("ops/deploy/muzeum_deploy.py") + File.binread("ops/deploy/inspect.rb"))
   else
     JSON.generate({ sha: fetch(:approved_revision), token: fetch(:deployment_token), phase: $phase, health: "passed" })
@@ -48,6 +53,11 @@ def self.capture(*args)
 end
 
 def self.execute(*args)
+  if args.first.to_s.end_with?("/ruby")
+    $events << [ "metadata only", *args.drop(1) ]
+    return
+  end
+
   phase = args.fetch(3)
   $events << [ "server", phase ]
   $phase = { "begin" => "prepared_checkout", "prepare" => "ready_to_publish", "finish" => "verified", "complete" => "complete", "fail" => "failed", "cancel" => "cancelled", "preflight" => "unchanged" }.fetch(phase)
@@ -59,8 +69,15 @@ def self.execute(*args)
   end
 end
 
-def self.upload!(input, path)
-  $events << [ "stamp", input.read, path ]
+if %w[sync sync_mismatch].include?($scenario)
+  begin
+    Rake::Task["muzeum:sync_release"].invoke("v0.2.1")
+  rescue RuntimeError => error
+    raise unless $scenario == "sync_mismatch" && error.message.include?("does not match")
+  end
+  puts "HOOK_FIXTURE:" + JSON.generate({ events: $events, creates: $api.creates.size })
+  FileUtils.remove_entry($local)
+  exit 0
 end
 
 if $scenario == "preflight"

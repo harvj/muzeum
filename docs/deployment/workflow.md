@@ -21,9 +21,42 @@ The helper uses the **installed existing** backup/recovery implementation and th
 
 ## Published version in the footer
 
-Preflight reads the latest stable published Muzeum release through the operator’s authenticated GitHub CLI. It resolves the release tag to a commit and checks that the candidate contains that commit. Deploy repeats the verification and stamps the validated tag into `PUBLISHED_RELEASE` in the staged application directory before publication. Rails reads that file at boot. The label describes the latest published release verified at deploy time, while the deployed commit remains in `REVISION` and the deployment receipt.
+The running process pins its own full SHA from its release directory's `REVISION`.
+The footer reads the bounded `shared/PUBLISHED_RELEASE` record on each render and
+shows its stable tag only if the record's commit exactly matches that running SHA.
+Missing, malformed, legacy tag-only and mismatched records omit the tag. A deployment
+can precede publication and its preflight does not require a GitHub release. Rails
+does not contact GitHub.
 
-This adapts Continuum Engine’s publication and tag verification to Muzeum’s local deployment boundary. GitHub Actions and production require no additional production credentials or release synchronization service. Publish a new release separately before deploying if its version should appear on that deployment. A release published after deployment is reflected at the next authorized deploy.
+After publishing a stable GitHub release, reconcile it using the existing operator
+GitHub CLI and Muzeum SSH connection:
+
+```sh
+cap production 'muzeum:sync_release[v0.2.1]'
+```
+
+Pass the actual published tag for the deployed commit. The task checks the GitHub
+release is published and stable and resolves its tag through the exact commit API.
+An older ancestor or a tag for another deployment is rejected. The nonprivileged
+receiver checks the live revision again just before atomically replacing the shared
+SHA/tag record. Any race with a different running release fails closed at the footer
+even if the publication was already written. GitHub or SSH failures before writing
+leave existing metadata in place. Rerun reconciliation after a delayed or missed
+publication. Like Continuum Engine's manual reconciliation, this operation is
+separate from deployment. It does not change application files, restart services,
+or operate on the deployment lock. It requires the new reader and receiver to have
+been deployed once and is explicitly invoked by the operator. The record reflects
+the last successful verification; GitHub changes are not detected on page requests.
+
+Auth binds its staged version to the exact revision and reads it at startup.
+Continuum Engine independently verifies public release metadata and deployment
+identity, persists the publication snapshot, then reads that snapshot in the
+dashboard. Muzeum follows the latter synchronization model through its existing
+local Capistrano boundary, with an exact SHA footer check like Auth's. No new
+GitHub Actions production credential, SSH key, sudo permission or scheduler is
+required. [Auth versioning](https://github.com/harvj/auth/blob/main/docs/release-version.md)
+and [Continuum Engine release synchronization](https://github.com/harvj/self-funding-engine/blob/main/docs/design/operations-p11/release-sync/README.md)
+describe the reference implementations.
 
 ## Reviewing an additive migration
 

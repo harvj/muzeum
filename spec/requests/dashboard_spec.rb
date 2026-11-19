@@ -1,4 +1,5 @@
 require "rails_helper"
+require "tmpdir"
 require_relative "../support/oidc_flow"
 
 RSpec.describe "Listening archive", type: :request do
@@ -27,13 +28,24 @@ RSpec.describe "Listening archive", type: :request do
     expect(User.last.lastfm_username).to be_nil
   end
 
-  it "displays the verified published release tag in the footer when stamped" do
-    allow(Rails.configuration.x).to receive(:published_release_tag).and_return("v0.2.0")
+  it "recognizes delayed publication on the next request and hides a mismatched tag" do
+    Dir.mktmpdir do |directory|
+      path = Pathname(directory).join("PUBLISHED_RELEASE")
+      sha = "a" * 40
+      allow(Rails.configuration.x).to receive(:published_release_path).and_return(path)
+      allow(Rails.configuration.x).to receive(:running_revision).and_return(sha)
 
-    get root_path
+      get root_path
+      expect(Nokogiri::HTML(response.body).at_css(".site-footer").text).not_to include("Muzeum v")
 
-    footer = Nokogiri::HTML(response.body).at_css(".site-footer")
-    expect(footer.text.strip).to eq("© 2026 Jim Harvey · Muzeum v0.2.0")
+      path.write("#{sha} v0.2.1\n")
+      get root_path
+      expect(Nokogiri::HTML(response.body).at_css(".site-footer").text).to include("Muzeum v0.2.1")
+
+      path.write("#{'b' * 40} v0.2.2\n")
+      get root_path
+      expect(Nokogiri::HTML(response.body).at_css(".site-footer").text).not_to include("Muzeum v")
+    end
   end
 
   it "computes statistics from only the user's persisted observations" do
