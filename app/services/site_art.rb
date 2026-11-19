@@ -4,11 +4,6 @@ require "timeout"
 
 class SiteArt
   ORIGIN = "https://art.harvj.com".freeze
-  # The approved crop sizes put text over both extremes of this image.
-  # Re-review the exposed text roles before admitting this artwork.
-  CONTRAST_FALLBACK_DIGESTS = %w[
-    07dd1f70c6c4b422ae52c73223f1b9d9292dacb1bdf5813457200509e91034e8
-  ].freeze
   MANIFEST = URI("#{ORIGIN}/manifest.json").freeze
   REFRESH_INTERVAL = 60
   TIMEOUT = 0.5
@@ -106,7 +101,6 @@ class SiteArt
     IDS.each_with_object({ release: manifest.fetch("release").freeze }) do |(slot, id), snapshot|
       record = assets[id]
       next unless valid_record?(record)
-      next if slot != :favicon && CONTRAST_FALLBACK_DIGESTS.include?(record["sha256"])
 
       snapshot[slot] = if slot == :favicon
         record.fetch("url").freeze

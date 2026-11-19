@@ -136,13 +136,14 @@ RSpec.describe SiteArt do
     expect(cache.snapshot).to eq(release: manifest.fetch("release"), light: { "url" => url })
   end
 
-  it "keeps the bundled background for the limestone crop that fails contrast review" do
-    digest = described_class::CONTRAST_FALLBACK_DIGESTS.first
-    record.merge!("sha256" => digest, "url" => "https://art.harvj.com/assets/#{digest}.jpg")
+  it "accepts the published ivory limestone asset and its treatment" do
+    digest = "07dd1f70c6c4b422ae52c73223f1b9d9292dacb1bdf5813457200509e91034e8"
+    url = "https://art.harvj.com/assets/#{digest}.png"
+    record.merge!("sha256" => digest, "url" => url, "media_type" => "image/png", "presentation" => presentation)
     stub_request(:get, endpoint).to_return(body: manifest.to_json)
     cache.snapshot
     finish_refresh
-    expect(cache.snapshot).to eq(release: manifest.fetch("release"))
+    expect(cache.snapshot).to eq(release: manifest.fetch("release"), light: { "url" => url, "presentation" => presentation })
   end
 
   it "projects the Site Art v1 fixture records with independent optional field validation" do
