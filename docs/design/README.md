@@ -38,3 +38,14 @@ The fixture has 64 observations across two days, 50 displayed observations, and 
 Recording links follow the listener’s existing resolution. An Archive release link requires a unique verified release with the reported title and the resolved recording as a member. A reported edition ID must agree when present. The link shows membership and does not provide per-play release credit. Unresolved observations keep their source names and observation links. The gutter and trailing column leave room for a future marker and play-count treatment. Genre categories, ranks and play bars remain open or deferred as described above.
 
 Warmed local Rails request medians on matched disposable PostgreSQL fixtures with 20,000 observations and a fully resolved recent page were 62.0 → 67.1 ms for Archive, 54.5 → 54.3 ms for release detail, and 14.1 → 13.8 ms for the Resolution observation. Each median uses 15 requests after three warmups. Archive query count grew from 12 to 15, with the added catalog reads batched across the displayed plays.
+
+## Universal footer
+
+Chromium captures from the local browser fixture show the sign-in page at initial load and the Archive scrolled to its final content. The screenshot version is fixture metadata bound to the fixture SHA. The Site Art controller decodes the bundled byte-identical texture files as deterministic image fixtures.
+
+| Page | Desktop, 1440 × 960 | Mobile, 390 × 844 |
+| --- | --- | --- |
+| Short sign-in | [Light](verification/footer/footer-short-desktop-light.webp) | [Dark](verification/footer/footer-short-mobile-dark.webp) |
+| Long Archive | [Light](verification/footer/footer-long-desktop-light.webp) | [Dark](verification/footer/footer-long-mobile-dark.webp) |
+
+The browser regression covers both themes at both viewport sizes. It checks that the short page has no vertical overflow, the long page scrolls, the footer clears the content, and the centered copyright and version have no top separator.

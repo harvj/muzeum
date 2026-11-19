@@ -24,6 +24,11 @@ html[data-appearance=dark]{color-scheme:dark;--card:#232625;--ink:#f1f2ed;--mute
 .candidate select { max-width: 100%; margin-bottom: 12px; }
 .library-card code { overflow-wrap: anywhere; }
 /* Muzeum library presentation */
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
 header {
   position: relative;
   height: auto;
@@ -40,7 +45,7 @@ header .account-nav { position: static; }
 .library-nav { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 1rem; }
 .library-nav a { padding: 3px 0; }
 .library-nav a[aria-current] { font-weight: 700; text-decoration-color: currentColor; }
-main { width: min(1480px, 92vw); margin: 14px auto 44px; }
+main { flex: 1 0 auto; width: min(1480px, 92vw); margin: 14px auto 24px; }
 body:has(.library-nav) main { margin-top: 14px; }
 .intro { margin-bottom: 12px; }
 .intro h1 { font-size: clamp(1.75rem, 4vw, 2.25rem); font-weight: 700; }
@@ -98,7 +103,12 @@ body:has(.library-nav) main { margin-top: 14px; }
   border-radius: 8px;
 }
 .appearance-submenu .controls label { display: block; }
-.site-footer { padding-top: 10px; border-top: 1px solid var(--line); }
+.site-footer {
+  flex: none;
+  margin: 0;
+  padding: 0 4vw max(16px, env(safe-area-inset-bottom));
+  text-align: center;
+}
 @media (max-width: 700px) {
   header { flex-wrap: wrap; padding: 14px 4vw; gap: 8px; }
   .header-navigation { width: 100%; justify-content: space-between; gap: 6px; }

@@ -90,6 +90,76 @@ RSpec.describe "Music table fidelity", type: :system do
     capture("release-desktop-dark", appearance: "dark")
   end
 
+  it "centers the shared footer at the viewport bottom or after long content in either theme" do
+    user, = seed_library
+    allow(SiteArt).to receive(:snapshot).and_return(
+      light: "/environments/stone/limestone.jpg", dark: "/environments/stone/onyx.jpg")
+    revision = "a" * 40
+    metadata = Tempfile.create("muzeum-footer")
+    metadata.write("#{revision} v0.2.1\n")
+    metadata.flush
+    allow(Rails.configuration.x).to receive(:running_revision).and_return(revision)
+    allow(Rails.configuration.x).to receive(:published_release_path).and_return(Pathname(metadata.path))
+    browser = page.driver.browser
+    [ [ "desktop", 1440, 960 ], [ "mobile", 390, 844 ] ].each do |screen, width, height|
+      viewport(width, height)
+      browser.manage.delete_all_cookies
+      visit new_session_path
+      expect(page).to have_css(".login")
+      verify_footer("short", screen, width, height)
+
+      authenticate_fixture(user)
+      visit root_path
+      expect(page).to have_css(".play-row", count: 50)
+      verify_footer("long", screen, width, height)
+    end
+  ensure
+    browser&.execute_cdp("Emulation.clearDeviceMetricsOverride")
+    metadata&.close
+    File.unlink(metadata.path) if metadata
+  end
+
+  def verify_footer(length, screen, width, height)
+    expect(page).to have_css("body > .site-footer", text: "© 2026 Jim Harvey · Muzeum v0.2.1", count: 1, visible: :all)
+    %w[light dark].each do |appearance|
+      page.execute_script(<<~JS, appearance)
+        const control = document.querySelector(".controls select");
+        control.value = arguments[0];
+        control.dispatchEvent(new Event("change", { bubbles: true }));
+        document.documentElement.dataset.still = "true";
+      JS
+      texture = appearance == "light" ? "limestone" : "onyx"
+      expect(page).to have_css("img.site-art-background[src$='#{texture}.jpg']", visible: :all)
+      measurement = page.driver.browser.execute_script(<<~JS)
+        window.scrollTo(0, document.documentElement.scrollHeight);
+        const footer = document.querySelector(".site-footer");
+        const bounds = footer.getBoundingClientRect();
+        const style = getComputedStyle(footer);
+        return {
+          viewport: [innerWidth, innerHeight],
+          overflow: document.documentElement.scrollHeight - innerHeight,
+          horizontalOverflow: document.documentElement.scrollWidth - innerWidth,
+          bottomGap: innerHeight - bounds.bottom,
+          contentGap: bounds.top - document.querySelector("main").getBoundingClientRect().bottom,
+          centerOffset: Math.abs(bounds.left + bounds.width / 2 - innerWidth / 2),
+          alignment: style.textAlign,
+          position: style.position,
+          separator: style.borderTopWidth
+        };
+      JS
+      expect(measurement).to include("viewport" => [ width, height ], "horizontalOverflow" => 0,
+        "alignment" => "center", "position" => "static", "separator" => "0px")
+      expect(measurement.fetch("centerOffset")).to be < 1
+      expect(measurement.fetch("bottomGap").abs).to be < 1
+      expect(measurement.fetch("contentGap")).to be >= 24
+      expect(measurement.fetch("overflow")).to(length == "short" ? eq(0) : be > 0)
+
+      if appearance == (screen == "desktop" ? "light" : "dark")
+        capture("footer-#{length}-#{screen}-#{appearance}", appearance:)
+      end
+    end
+  end
+
   def seed_library
     user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "table-fidelity", lastfm_username: "table-fidelity")
     artist = Artist.create!(name: "The Smashing Pumpkins", mbid: SecureRandom.uuid)
