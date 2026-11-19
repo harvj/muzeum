@@ -1,0 +1,75 @@
+{
+  "fixture_version": 1,
+  "base_record": {
+    "url": "https://art.harvj.com/assets/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.png",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "bytes": 1024,
+    "media_type": "image/png",
+    "rights": "Synthetic conformance fixture"
+  },
+  "legacy_palette": {"light": "#FFFFFF", "dark": "#202020"},
+  "expected_treatments": {
+    "fallback": {},
+    "flat": {"--art-foreground": "#F5EFE3", "--art-text-shadow": "0px 1px 2px rgb(22 20 18 / 40%)"},
+    "top": {"--art-foreground": "#FFFCF6", "--art-text-shadow": "-4px 2px 3px rgb(22 20 18 / 100%)"},
+    "bottom": {"--art-foreground": "#F5F1E9", "--art-text-shadow": "0px 1px 2px rgb(22 20 18 / 40%)"},
+    "backed": {"--art-foreground": "#202020", "--art-text-shadow": "0px 1px 2px rgb(22 20 18 / 40%)", "--art-backing": "rgb(255 255 255 / 50%)"},
+    "disabled": {"--art-foreground": "#202020", "--art-text-shadow": "none", "--art-backing": "transparent"},
+    "color_only": {"--art-foreground": "#ABCDEF"},
+    "legacy": {"--art-foreground": "#202020"}
+  },
+  "assets": {
+    "flat": {
+      "fields": {"foreground": "dark", "presentation": {"foreground": "#F5EFE3", "text_shadow": {"color": "#161412", "opacity_percent": 40, "blur_px": 2, "x_px": 0, "y_px": 1}}},
+      "expected": {"default": "flat", "top": "flat", "bottom": "flat"}
+    },
+    "regional": {
+      "fields": {"presentation": {"foreground": "#F5EFE3", "text_shadow": {"color": "#161412", "opacity_percent": 40, "blur_px": 2, "x_px": 0, "y_px": 1}, "regions": {
+        "top": {"foreground": "#FFFCF6", "text_shadow": {"color": "#161412", "opacity_percent": 100, "blur_px": 3, "x_px": -4, "y_px": 2}},
+        "bottom": {"foreground": "#F5F1E9"}
+      }}},
+      "expected": {"default": "flat", "top": "top", "bottom": "bottom"}
+    },
+    "zero": {
+      "fields": {"foreground": "dark", "presentation": {"text_shadow": {"color": "#161412", "opacity_percent": 40, "blur_px": 2, "x_px": 0, "y_px": 1}, "backing": {"color": "#FFFFFF", "opacity_percent": 50}, "regions": {
+        "top": {"text_shadow": {"color": "#161412", "opacity_percent": 0, "blur_px": 2, "x_px": 0, "y_px": 1}, "backing": {"color": "#FFFFFF", "opacity_percent": 0}}
+      }}},
+      "expected": {"default": "backed", "top": "disabled", "bottom": "backed"}
+    },
+    "unknown": {
+      "fields": {"future_asset_field": true, "presentation": {"foreground": "#aBcDeF", "future_effect": "color:red", "regions": {"middle": {"foreground": "#AA1122"}, "top": {"future_effect": true}}}},
+      "expected": {"default": "color_only", "top": "color_only", "bottom": "color_only"}
+    },
+    "invalid_optional": {
+      "fields": {"foreground": "dark", "presentation": {"foreground": "var(--bad)", "text_shadow": {"color": "#161412", "opacity_percent": 40, "blur_px": 2, "x_px": 0, "y_px": 1}, "backing": {"color": "#FFFFFF", "opacity_percent": 50},
+        "regions": {"top": {"foreground": "#112233\n", "text_shadow": {"color": "#161412", "opacity_percent": 101, "blur_px": 3, "x_px": 0, "y_px": 2}, "backing": {"color": "#FFFFFF", "opacity_percent": 51}},
+          "bottom": {"text_shadow": {"color": "#161412", "opacity_percent": 95, "blur_px": 3, "x_px": 0, "y_px": 2, "spread_px": 1}}}}},
+      "expected": {"default": "backed", "top": "backed", "bottom": "backed"}
+    },
+    "legacy": {
+      "fields": {"foreground": "dark", "presentation": null},
+      "expected": {"default": "legacy", "top": "legacy", "bottom": "legacy"}
+    },
+    "plain": {
+      "fields": {},
+      "expected": {"default": "fallback", "top": "fallback", "bottom": "fallback"}
+    },
+    "invalid_core": {
+      "fields": {"url": "https://art.harvj.com/assets/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.png?bad"},
+      "expected": null
+    },
+    "other_theme": {
+      "fields": {"url": "https://art.harvj.com/assets/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.png", "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
+      "expected": {"default": "fallback", "top": "fallback", "bottom": "fallback"}
+    }
+  },
+  "sequence": [
+    {"event": "initial selection", "select": "flat", "image": "flat", "treatment": "flat", "decodes": 1},
+    {"event": "presentation-only release", "select": "regional", "image": "flat", "treatment": "regional", "decodes": 1},
+    {"event": "manifest rollback", "select": "flat", "image": "flat", "treatment": "flat", "decodes": 1},
+    {"event": "switch theme", "select": "other_theme", "image": "other_theme", "treatment": "plain", "decodes": 2},
+    {"event": "image decode failure", "select": "regional", "reject_decode": true, "image": null, "treatment": "plain", "decodes": 3},
+    {"event": "restore Site Art", "select": "zero", "image": "zero", "treatment": "zero", "decodes": 4},
+    {"event": "missing asset ID", "select": null, "image": null, "treatment": "plain", "decodes": 4}
+  ]
+}

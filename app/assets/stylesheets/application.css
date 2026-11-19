@@ -213,29 +213,59 @@ body:has(.library-nav) main { margin-top: 14px; }
 .profile-import :disabled { cursor: not-allowed; opacity: .66; }
 
 
+/* Keep remote image sizing in the fingerprinted application stylesheet. */
+body > .stone-environment {
+  --stone-position: center bottom;
+  background-position: var(--stone-position);
+}
+
+.stone-environment > .site-art-background {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--stone-position);
+}
+
+body > :is(header, main, footer) {
+  --art-foreground: initial;
+  --art-text-shadow: initial;
+  --art-backing: initial;
+}
+
 @media (forced-colors: none) {
   header[data-art-treatment] :where(.harvj-wordmark, .entity-link, .account-nav > .controls > label),
   main[data-art-treatment] > .intro > :is(h1, p),
-  footer[data-art-treatment] > span {
-    color: var(--art-foreground);
-    text-shadow: var(--art-shadow, none);
-    background-color: var(--art-scrim, transparent);
-    background-image: linear-gradient(var(--art-backing, transparent), var(--art-backing, transparent));
-    border-radius: 4px;
-    box-shadow: 0 0 0 2px var(--art-scrim, transparent);
+  footer[data-art-treatment] > :is(span, a) {
+    text-shadow: var(--art-text-shadow, none);
   }
-  main[data-art-treatment] > .intro > :is(h1, p) { width: fit-content; }
-  main[data-art-treatment] > .intro a:not(:hover, :focus-visible) { color: inherit; }
-  header[data-art-treatment] :is(.harvj-wordmark, .entity-link):is(:hover, :focus-visible) {
+
+  header[data-art-treatment] .harvj-wordmark { color: var(--art-foreground, var(--harvj-wordmark-color)); }
+  header[data-art-treatment] :is(.entity-link, .account-nav > .controls > label),
+  main[data-art-treatment] > .intro > h1 { color: var(--art-foreground, var(--ink)); }
+  main[data-art-treatment] > .intro > p,
+  footer[data-art-treatment] > :is(span, a) { color: var(--art-foreground, var(--muted)); }
+  main[data-art-treatment] > .intro a:not(:hover, :focus-visible, :active) { color: var(--art-foreground, var(--ink)); }
+  body > header :is(.harvj-wordmark, .entity-link):is(:hover, :focus-visible, :active) {
     color: var(--card);
     background: var(--ink);
     text-shadow: none;
     text-decoration: underline;
-    text-decoration-color: currentColor;
   }
-  header[data-art-treatment] a:focus-visible {
+  body > header :is(.harvj-wordmark, .entity-link):focus-visible {
     outline: 2px solid var(--ink);
     outline-offset: 4px;
     box-shadow: 0 0 0 4px var(--card);
+  }
+}
+
+@media (prefers-contrast: more), (forced-colors: active) {
+  .stone-environment { display: none; }
+  body { background: var(--card); }
+  body > :is(header, main, footer)[data-art-treatment] {
+    --art-foreground: initial !important;
+    --art-text-shadow: initial !important;
+    --art-backing: initial !important;
   }
 }

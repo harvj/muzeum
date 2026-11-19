@@ -4,6 +4,11 @@ require "timeout"
 
 class SiteArt
   ORIGIN = "https://art.harvj.com".freeze
+  # The approved crop sizes put text over both extremes of this image.
+  # Re-review the exposed text roles before admitting this artwork.
+  CONTRAST_FALLBACK_DIGESTS = %w[
+    07dd1f70c6c4b422ae52c73223f1b9d9292dacb1bdf5813457200509e91034e8
+  ].freeze
   MANIFEST = URI("#{ORIGIN}/manifest.json").freeze
   REFRESH_INTERVAL = 60
   TIMEOUT = 0.5
@@ -18,8 +23,8 @@ class SiteArt
     "jpeg" => "image/jpeg", "webp" => "image/webp", "gif" => "image/gif",
     "ico" => "image/vnd.microsoft.icon"
   }.freeze
-  ID_PATTERN = /\A[a-z][a-z0-9-]*\.[a-z][a-z0-9_]*\z/
-  TREATMENT_KEYS = %w[foreground text_shadow backing].freeze
+  SHADOW_BOUNDS = { opacity_percent: 0..100, blur_px: 0..8, x_px: -4..4, y_px: -4..4 }.freeze
+  BACKING_BOUNDS = { opacity_percent: 0..50 }.freeze
   REGIONS = %w[top bottom].freeze
   COLOR_PATTERN = /\A#[0-9a-fA-F]{6}\z/
   SHA_PATTERN = /\A[0-9a-f]{64}\z/
@@ -91,19 +96,17 @@ class SiteArt
 
   def validate(manifest)
     unless manifest.is_a?(Hash) && manifest.keys.sort == %w[assets commit release schema_version] &&
-        manifest["schema_version"].eql?(1) && manifest["commit"].is_a?(String) && manifest["release"].is_a?(String) &&
+        manifest["schema_version"] == 1 && manifest["commit"].is_a?(String) && manifest["release"].is_a?(String) &&
         /\A[0-9a-f]{40}\z/.match?(manifest["commit"]) &&
         SHA_PATTERN.match?(manifest["release"]) && manifest["assets"].is_a?(Hash)
       raise InvalidManifest
     end
 
     assets = manifest.fetch("assets")
-    assets.each do |id, record|
-      raise InvalidManifest unless ID_PATTERN.match?(id) && valid_record?(record)
-    end
     IDS.each_with_object({ release: manifest.fetch("release").freeze }) do |(slot, id), snapshot|
       record = assets[id]
-      next unless record
+      next unless valid_record?(record)
+      next if slot != :favicon && CONTRAST_FALLBACK_DIGESTS.include?(record["sha256"])
 
       snapshot[slot] = if slot == :favicon
         record.fetch("url").freeze
@@ -114,12 +117,15 @@ class SiteArt
   end
 
   def background_record(record)
-    result = record.slice("url", "foreground")
-    if (presentation = record["presentation"])
-      treatment = presentation.slice(*TREATMENT_KEYS)
-      regions = presentation["regions"]&.slice(*REGIONS)&.transform_values { |region| region.slice(*TREATMENT_KEYS) }
-      regions&.reject! { |_, region| region.empty? }
-      treatment["regions"] = regions if regions&.any?
+    result = record.slice("url")
+    result["foreground"] = record["foreground"] if %w[light dark].include?(record["foreground"])
+    if (presentation = record["presentation"]).is_a?(Hash)
+      treatment = valid_treatment_fields(presentation)
+      if (regions = presentation["regions"]).is_a?(Hash)
+        overrides = regions.slice(*REGIONS).transform_values { |region| valid_treatment_fields(region) }
+        overrides.reject! { |_, region| region.empty? }
+        treatment["regions"] = overrides if overrides.any?
+      end
       result["presentation"] = treatment if treatment.any?
     end
     freeze_value(result)
@@ -133,46 +139,32 @@ class SiteArt
   def valid_record?(record)
     return false unless record.is_a?(Hash) && record["url"].is_a?(String)
 
-    keys = record.keys - %w[foreground presentation]
-    return false unless keys.sort == %w[bytes media_type rights sha256 url]
-
     match = URL_PATTERN.match(record["url"])
     match && match[1] == record["sha256"] &&
-      MEDIA_TYPES.key?(match[2]) && MEDIA_TYPES.fetch(match[2]) == record["media_type"] &&
-      record["bytes"].is_a?(Integer) && record["bytes"].between?(1, 25 * 1024 * 1024) &&
-      record["rights"].is_a?(String) && !record["rights"].empty? &&
-      (!record.key?("foreground") || %w[light dark].include?(record["foreground"])) &&
-      (!record.key?("presentation") || valid_presentation?(record["presentation"]))
+      MEDIA_TYPES.key?(match[2]) && MEDIA_TYPES[match[2]] == record["media_type"] &&
+      integral_in_range?(record["bytes"], 1..(25 * 1024 * 1024)) &&
+      record["rights"].is_a?(String) && !record["rights"].empty?
   end
 
-  def valid_presentation?(presentation)
-    return false unless valid_treatment?(presentation)
-    return true unless presentation.key?("regions")
+  def valid_treatment_fields(treatment)
+    return {} unless treatment.is_a?(Hash)
 
-    regions = presentation["regions"]
-    regions.is_a?(Hash) && regions.any? && regions.slice(*REGIONS).values.all? { |region| valid_treatment?(region) }
-  end
-
-  def valid_treatment?(treatment)
-    return false unless treatment.is_a?(Hash) && treatment.any?
-
-    treatment.slice(*TREATMENT_KEYS).all? do |key, value|
+    treatment.slice("foreground", "text_shadow", "backing").select do |key, value|
       case key
       when "foreground" then valid_color?(value)
-      when "text_shadow"
-        valid_effect?(value, opacity_percent: 0..60, blur_px: 0..8, x_px: -4..4, y_px: -4..4)
-      when "backing"
-        valid_effect?(value, opacity_percent: 0..50)
+      when "text_shadow" then valid_effect?(value, SHADOW_BOUNDS)
+      when "backing" then valid_effect?(value, BACKING_BOUNDS)
       end
     end
   end
 
-  def valid_effect?(value, **bounds)
+  def valid_effect?(value, bounds)
     value.is_a?(Hash) && value.keys.sort == [ "color", *bounds.keys.map(&:to_s) ].sort &&
-      valid_color?(value["color"]) && bounds.all? do |name, range|
-        amount = value[name.to_s]
-        amount.is_a?(Integer) && range.cover?(amount)
-      end
+      valid_color?(value["color"]) && bounds.all? { |name, range| integral_in_range?(value[name.to_s], range) }
+  end
+
+  def integral_in_range?(value, range)
+    value.is_a?(Numeric) && range.cover?(value) && value % 1 == 0
   end
 
   def valid_color?(value)

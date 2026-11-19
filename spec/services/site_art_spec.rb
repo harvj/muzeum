@@ -66,11 +66,9 @@ RSpec.describe SiteArt do
       " " * (described_class::MAX_MANIFEST_BYTES + 1),
       manifest.to_json.sub('"schema_version":1', '"schema_version":1,"schema_version":1'),
       manifest.merge("schema_version" => 2).to_json,
-      manifest.to_json.sub("https://art.harvj.com/", "https://art.harvj.com.evil.example/"),
-      manifest.to_json.sub(".jpg", ".jpg?mutable=true"),
-      manifest.to_json.sub(".jpg", ".svg"),
-      manifest.to_json.sub(".jpg", ".html").sub('"image/jpeg"', 'false'),
-      manifest.to_json.sub("/#{digest}", "/#{'d' * 64}")
+      manifest.merge("commit" => "bad").to_json,
+      manifest.merge("release" => "bad").to_json,
+      manifest.merge("assets" => []).to_json
     ]
     invalid_documents.each do |body|
       stub_request(:get, endpoint).to_return(body: body)
@@ -129,32 +127,57 @@ RSpec.describe SiteArt do
         "bottom" => { "backing" => { "color" => "#654321", "opacity_percent" => 20 } } }))
   end
 
-  it "validates metadata on unconsumed records and retains the last known good snapshot" do
-    request = stub_request(:get, endpoint).to_return(body: manifest.to_json)
+  it "accepts additive IDs and treats invalid selected core data as a missing slot" do
+    manifest["assets"]["future.asset"] = { "future" => true }
+    manifest["assets"]["muzeum.background_dark"] = record.merge("url" => "#{url}?mutable=true")
+    stub_request(:get, endpoint).to_return(body: manifest.to_json)
     cache.snapshot
     finish_refresh
-    original = cache.snapshot
-    invalid = [
-      nil, [], {}, { "foreground" => "#123456\n" }, { "foreground" => "white; color: red" },
-      { "regions" => [] }, { "regions" => {} }, { "regions" => { "top" => {} } },
-      { "regions" => { "bottom" => { "foreground" => "red" } } },
-      { "backing" => { "color" => "#123456", "opacity_percent" => 51 } },
-      { "backing" => { "color" => "#123456", "opacity_percent" => 20.0 } },
-      { "backing" => { "color" => "#12345678", "opacity_percent" => 20 } },
-      { "text_shadow" => presentation.fetch("text_shadow").merge("blur_px" => 9) },
-      { "text_shadow" => presentation.fetch("text_shadow").merge("x_px" => -5) },
-      { "text_shadow" => presentation.fetch("text_shadow").merge("y_px" => 5) },
-      { "text_shadow" => presentation.fetch("text_shadow").merge("opacity_percent" => 61) },
-      { "text_shadow" => presentation.fetch("text_shadow").except("y_px") }
-    ]
-    invalid.each do |value|
-      manifest["assets"]["other.background"] = record.merge("presentation" => value)
-      request.to_return(body: manifest.to_json)
-      time[0] += 60
-      cache.snapshot
-      finish_refresh
-      expect(cache.snapshot).to be(original), "accepted malformed presentation #{value.inspect}"
+    expect(cache.snapshot).to eq(release: manifest.fetch("release"), light: { "url" => url })
+  end
+
+  it "keeps the bundled background for the limestone crop that fails contrast review" do
+    digest = described_class::CONTRAST_FALLBACK_DIGESTS.first
+    record.merge!("sha256" => digest, "url" => "https://art.harvj.com/assets/#{digest}.jpg")
+    stub_request(:get, endpoint).to_return(body: manifest.to_json)
+    cache.snapshot
+    finish_refresh
+    expect(cache.snapshot).to eq(release: manifest.fetch("release"))
+  end
+
+  it "projects the Site Art v1 fixture records with independent optional field validation" do
+    fixtures = JSON.parse(file_fixture("site_art_presentation_v1.json").read)
+    fixtures.fetch("assets").each do |name, fixture|
+      candidate = fixtures.fetch("base_record").merge(fixture.fetch("fields"))
+      manifest["assets"]["muzeum.background_light"] = candidate
+      projected = cache.send(:validate, manifest)[:light]
+      unless fixture["expected"]
+        expect(projected).to be_nil
+        next
+      end
+
+      expect(projected.fetch("url")).to eq(candidate.fetch("url"))
+      expect(projected.dig("presentation", "regions", "top", "text_shadow", "opacity_percent")).to eq(100) if name == "regional"
+      if name == "invalid_optional"
+        expect(projected.fetch("presentation").keys).to contain_exactly("text_shadow", "backing")
+        expect(projected.fetch("foreground")).to eq("dark")
+      end
+      expect(projected.fetch("presentation")).to eq("foreground" => "#aBcDeF") if name == "unknown"
     end
+  end
+
+  it "validates numeric values after parsing and discards malformed treatment scopes" do
+    record["bytes"] = 10.0
+    record["foreground"] = "invalid"
+    record["presentation"] = presentation.merge(
+      "backing" => { "color" => "#123456", "opacity_percent" => false },
+      "text_shadow" => presentation.fetch("text_shadow").merge("opacity_percent" => 95.0),
+      "regions" => { "top" => [], "bottom" => { "foreground" => "#123456", "text_shadow" => { "x_px" => 0.5 } } })
+    expect(cache.send(:validate, manifest)[:light]).to eq("url" => url, "presentation" => {
+      "foreground" => "#f5EFE3",
+      "text_shadow" => presentation.fetch("text_shadow").merge("opacity_percent" => 95.0),
+      "regions" => { "bottom" => { "foreground" => "#123456" } }
+    })
   end
 
   it "bounds a slow response without delaying the caller" do

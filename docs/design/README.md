@@ -49,3 +49,7 @@ Chromium captures from the local browser fixture show the sign-in page at initia
 | Long Archive | [Light](verification/footer/footer-long-desktop-light.webp) | [Dark](verification/footer/footer-long-mobile-dark.webp) |
 
 The browser regression covers both themes at both viewport sizes. It checks that the short page has no vertical overflow, the long page scrolls, the footer clears the content, and the centered copyright and version have no top separator.
+
+## Site Art v1
+
+The [approval preview](site-art-v1.md) shows the corrected reader with current Site Art artwork on desktop and mobile, including the light-theme contrast fallback and the limestone treatment under review.

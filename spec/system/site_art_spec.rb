@@ -22,7 +22,7 @@ RSpec.describe "Site Art appearance", type: :system do
     expect(page).to have_css("img.site-art-background[src='#{light}']", visible: :all)
     expect(page).to have_css("link[rel=icon][href='/icon.svg']", visible: :all)
 
-    [ [ 1440, 960 ], [ 390, 844 ] ].each do |width, height|
+    [ [ 1440, 960 ], [ 1408, 1118 ], [ 390, 844 ], [ 1920, 800 ] ].each do |width, height|
       browser.execute_cdp("Emulation.setDeviceMetricsOverride", width:, height:, deviceScaleFactor: 1, mobile: width < 700)
       { "light" => light, "dark" => dark }.each do |theme, source|
         browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "prefers-color-scheme", value: theme } ])
@@ -32,8 +32,10 @@ RSpec.describe "Site Art appearance", type: :system do
           const image = document.querySelector(".site-art-background")
           const style = getComputedStyle(image)
           const fallback = getComputedStyle(image.parentElement)
+          const bounds = image.getBoundingClientRect()
           return [style.objectFit, style.objectPosition, fallback.backgroundSize, fallback.backgroundPosition,
-            fallback.backgroundRepeat, image.clientWidth === innerWidth, image.clientHeight === innerHeight]
+            fallback.backgroundRepeat, bounds.left === 0 && bounds.right === innerWidth,
+            bounds.top === 0 && bounds.bottom === innerHeight]
         JS
       end
     end
@@ -53,16 +55,18 @@ RSpec.describe "Site Art appearance", type: :system do
     backing = { color: "#FFF8E9", opacity_percent: 12 }
     snapshot = { release: "a" * 64,
       light: { url: light, foreground: "light", presentation: { foreground: "#292725", text_shadow: shadow, backing:,
-        regions: { top: { foreground: "#222222" }, bottom: { foreground: "#F5F1E9", backing: { color: "#161412", opacity_percent: 20 } } } } },
+        regions: { top: { foreground: "#222222", text_shadow: shadow.merge(opacity_percent: 95, y_px: 2, blur_px: 3) }, bottom: { foreground: "#F5F1E9", backing: { color: "#161412", opacity_percent: 20 } } } } },
       dark: { url: dark, presentation: { foreground: "#F5EFE3" } } }
     allow(SiteArt).to receive(:snapshot) { snapshot }
     browser = page.driver.browser
     browser.execute_cdp("Page.addScriptToEvaluateOnNewDocument", source: <<~JS)
-      const repeat = window.setInterval;
-      window.setInterval = (callback, delay, ...args) => {
-        if (delay === 60000) window.refreshArtwork = callback;
-        return repeat(callback, delay, ...args);
-      };
+      {
+        const repeat = window.setInterval;
+        window.setInterval = (callback, delay, ...args) => {
+          if (delay === 60000) window.refreshArtwork = callback;
+          return repeat(callback, delay, ...args);
+        };
+      }
     JS
     browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "prefers-color-scheme", value: "light" } ])
     visit root_path
@@ -72,9 +76,10 @@ RSpec.describe "Site Art appearance", type: :system do
     expect(overlay_property("color", "main .intro h1")).to eq("rgb(41, 39, 37)")
     expect(overlay_property("color", "footer span")).to eq("rgb(245, 241, 233)")
     expect(overlay_property("textShadow", "footer span")).to include("rgba(255, 248, 233, 0.3)")
-    expect(overlay_property("backgroundImage", "footer span")).to include("rgba(22, 20, 18, 0.2)")
-    expect(overlay_property("textShadow")).to include("rgba(255, 248, 233, 0.3)")
-    expect(overlay_property("backgroundImage")).to include("rgba(255, 248, 233, 0.12)")
+    expect(overlay_property("backgroundImage", "footer span")).to eq("none")
+    expect(overlay_property("textShadow")).to eq("rgba(255, 248, 233, 0.95) 0px 2px 3px")
+    expect(overlay_property("backgroundImage")).to eq("none")
+    expect(overlay_property("boxShadow")).to eq("none")
     find(".harvj-wordmark").hover
     expect(overlay_property("color")).to eq("rgb(255, 255, 255)")
     expect(overlay_property("backgroundColor")).to eq("rgb(41, 45, 44)")
@@ -85,12 +90,41 @@ RSpec.describe "Site Art appearance", type: :system do
     browser.execute_script("document.activeElement.blur()")
 
     browser.execute_script("window.originalArtwork = document.querySelector('.site-art-background')")
-    snapshot = snapshot.merge(release: "b" * 64, light: { url: light, presentation: { foreground: "#202020" } })
+    original = snapshot
+    snapshot = snapshot.merge(release: "b" * 64, light: { url: light, presentation: { foreground: "#202020",
+      text_shadow: shadow, regions: { top: { text_shadow: shadow.merge(opacity_percent: 0) } } } })
     browser.execute_script("window.refreshArtwork()")
     expect(page).to have_css("header[style*='#202020']")
     expect(overlay_property("color")).to eq("rgb(32, 32, 32)")
     expect(page.evaluate_script("document.querySelector('.site-art-background') === window.originalArtwork")).to be(true)
     expect(overlay_property("textShadow")).to eq("none")
+
+    snapshot = original
+    browser.execute_script("window.refreshArtwork()")
+    expect(page).to have_css("header[style*='#222222']")
+    expect(page.evaluate_script("document.querySelector('.site-art-background') === window.originalArtwork")).to be(true)
+
+    browser.execute_script(<<~JS, dark)
+      const decode = HTMLImageElement.prototype.decode;
+      const darkURL = arguments[0];
+      HTMLImageElement.prototype.decode = function () {
+        if (this.getAttribute("src") !== darkURL) return decode.call(this);
+        return new Promise(resolve => {
+          window.finishObsoleteDecode = resolve;
+          document.body.dataset.decodePending = "";
+        });
+      };
+      window.restoreDecode = () => { HTMLImageElement.prototype.decode = decode; };
+    JS
+    select "Dark", from: "Appearance"
+    expect(page).to have_css("body[data-decode-pending]")
+    expect(page).to have_css("img.site-art-background[src='#{light}']", visible: :all)
+    expect(overlay_property("color")).to eq("rgb(34, 34, 34)")
+    select "Light", from: "Appearance"
+    expect(page).to have_css("html[data-appearance='light']", visible: :all)
+    browser.execute_async_script("window.finishObsoleteDecode(); window.restoreDecode(); requestAnimationFrame(arguments[0]);")
+    expect(page).to have_css("img.site-art-background[src='#{light}']", visible: :all)
+    expect(page.evaluate_script("document.querySelector('.site-art-background') === window.originalArtwork")).to be(true)
 
     select "Dark", from: "Appearance"
     expect(page).to have_css("img.site-art-background[src='#{dark}']", visible: :all)
@@ -111,6 +145,78 @@ RSpec.describe "Site Art appearance", type: :system do
     expect(page).to have_css("img.site-art-background[src='#{light}']", visible: :all)
     expect(page).to have_css("header[style*='#F0E8DF']")
     expect(overlay_property("color")).to eq("rgb(240, 232, 223)")
+  end
+
+  it "runs the upstream presentation and lifecycle fixtures in the rendered roles" do
+    fixtures = JSON.parse(file_fixture("site_art_presentation_v1.json").read)
+    records = fixtures.fetch("assets")
+    palette = fixtures.fetch("legacy_palette")
+    cache = SiteArt.new
+    release = "f" * 64
+    snapshot = { release: }
+    urls = {
+      "a" * 64 => "/environments/stone/limestone.jpg",
+      "b" * 64 => "/environments/stone/onyx.jpg"
+    }
+    allow(SiteArt).to receive(:snapshot) { snapshot }
+    browser = page.driver.browser
+    browser.execute_cdp("Page.addScriptToEvaluateOnNewDocument", source: <<~JS)
+      {
+        const repeat = window.setInterval;
+        window.setInterval = (callback, delay, ...args) => {
+          if (delay === 60000) window.refreshArtwork = callback;
+          return repeat(callback, delay, ...args);
+        };
+      }
+      const decode = HTMLImageElement.prototype.decode;
+      window.artworkDecodes = 0;
+      HTMLImageElement.prototype.decode = function () {
+        window.artworkDecodes++;
+        if (window.rejectArtworkDecode) return Promise.reject();
+        return decode.call(this);
+      };
+    JS
+    visit root_path
+    select "Light", from: "Appearance"
+
+    sequence = fixtures.fetch("sequence")
+    extra_cases = %w[unknown invalid_optional legacy plain invalid_core].map do |name|
+      missing = name == "invalid_core"
+      { "select" => name, "image" => missing ? nil : "unknown", "treatment" => missing ? "plain" : name,
+        "decodes" => sequence.last.fetch("decodes") + 1 }
+    end
+    (sequence + extra_cases).each do |step|
+      fixture = records[step["select"]]
+      record = fixtures.fetch("base_record").merge(fixture.fetch("fields")) if fixture
+      manifest = { "schema_version" => 1, "commit" => "a" * 40, "release" => release,
+        "assets" => fixture ? { "muzeum.background_light" => record } : {} }
+      snapshot = cache.send(:validate, manifest)
+      snapshot = snapshot.merge(light: snapshot.fetch(:light).merge("url" => urls.fetch(record.fetch("sha256")))) if snapshot[:light]
+      browser.execute_async_script(<<~JS, !!step["reject_decode"])
+        const done = arguments[1];
+        window.rejectArtworkDecode = arguments[0];
+        window.refreshArtwork().then(() => requestAnimationFrame(done));
+      JS
+      if (image = step["image"])
+        digest = records.fetch(image).fetch("fields").fetch("sha256", fixtures.fetch("base_record").fetch("sha256"))
+        expect(page).to have_css(".site-art-background[src='#{urls.fetch(digest)}']", visible: :all)
+      else
+        expect(page).to have_no_css(".site-art-background", visible: :all)
+      end
+      expect(page.evaluate_script("window.artworkDecodes")).to eq(step.fetch("decodes"))
+
+      expected_roles = records.fetch(step.fetch("treatment")).fetch("expected")
+      { "default" => "main", "top" => "header", "bottom" => "footer" }.each do |role, selector|
+        expected = fixtures.fetch("expected_treatments").fetch(expected_roles.fetch(role))
+        %w[--art-foreground --art-text-shadow --art-backing].each do |property|
+          value = expected.fetch(property, "")
+          value = "#292D2C" if property == "--art-foreground" && value == palette.fetch("dark")
+          expect(page.evaluate_script("document.querySelector(arguments[0]).style.getPropertyValue(arguments[1])",
+            selector, property)).to eq(value), "wrong #{property} for #{step["select"]} / #{role}"
+        end
+      end
+      release = release == "f" * 64 ? "a" * 64 : "f" * 64
+    end
   end
 
   def overlay_property(property, selector = ".harvj-wordmark")

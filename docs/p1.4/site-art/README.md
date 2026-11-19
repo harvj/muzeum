@@ -1,5 +1,7 @@
 # Site Art presentation verification
 
+These captures document the earlier scrim-based reader. See the [Site Art v1 approval preview](../../design/site-art-v1.md) for the corrected implementation and current artwork.
+
 The captures use the published limestone and onyx PNGs from manifest release
 `ead56c4ed4eb45d518d7469c874ce381bad42b5c1868c02a15a887c98745d84e`.
 The before views supply the new image URLs with local foreground styles.
