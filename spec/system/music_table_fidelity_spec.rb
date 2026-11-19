@@ -131,17 +131,18 @@ RSpec.describe "Music table fidelity", type: :system do
       texture = appearance == "light" ? "limestone" : "onyx"
       expect(page).to have_css("img.site-art-background[src$='#{texture}.jpg']", visible: :all)
       measurement = page.driver.browser.execute_script(<<~JS)
-        window.scrollTo(0, document.documentElement.scrollHeight);
+        const root = document.documentElement;
+        window.scrollTo(0, root.scrollHeight);
         const footer = document.querySelector(".site-footer");
         const bounds = footer.getBoundingClientRect();
         const style = getComputedStyle(footer);
         return {
           viewport: [innerWidth, innerHeight],
-          overflow: document.documentElement.scrollHeight - innerHeight,
-          horizontalOverflow: document.documentElement.scrollWidth - innerWidth,
-          bottomGap: innerHeight - bounds.bottom,
+          overflow: root.scrollHeight - root.clientHeight,
+          horizontalOverflow: root.scrollWidth - root.clientWidth,
+          bottomGap: root.clientHeight - bounds.bottom,
           contentGap: bounds.top - document.querySelector("main").getBoundingClientRect().bottom,
-          centerOffset: Math.abs(bounds.left + bounds.width / 2 - innerWidth / 2),
+          centerOffset: Math.abs(bounds.left + bounds.width / 2 - root.clientWidth / 2),
           alignment: style.textAlign,
           position: style.position,
           separator: style.borderTopWidth
