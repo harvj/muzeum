@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
-    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <%= tag.link rel: "icon", href: asset_path("muzeum-favicon.svg"), type: "image/svg+xml", sizes: "any" %>
     <link rel="stylesheet" href="/identity/v1/identity.css">
     <link rel="stylesheet" href="/identity/v1/session.css">
     <link rel="stylesheet" href="/environments/stone/environment.css">
@@ -13,7 +13,8 @@
     <%= javascript_importmap_tags %>
   </head>
   <body>
-    <div class="stone-environment" aria-hidden="true"></div>
+    <%= tag.div class: "stone-environment", aria: { hidden: true },
+                data: { controller: "site-art", site_art_urls_value: SiteArt.snapshot } %>
     <header>
       <a class="harvj-wordmark" href="/">muzeum</a>
       <div class="header-navigation">
