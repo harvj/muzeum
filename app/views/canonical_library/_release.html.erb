@@ -3,16 +3,23 @@
   <p><%= [@entry.release_year, @entry.release_month&.to_s&.rjust(2, "0"), @entry.release_day&.to_s&.rjust(2, "0")].compact.join("-").presence || "Date unknown" %>
     · <%= @entry.catalog_country.presence || "Country unknown" %></p>
   <% if @slots.any? %>
-    <table class="catalog-table">
-      <thead><tr><th scope="col">Disc / track</th><th scope="col">Recording</th><th scope="col">Your resolved observations</th></tr></thead>
+    <%= dense_table("Track listing") do %>
+      <thead><tr><th scope="col">Disc / track</th><th scope="col">Recording</th><th scope="col" class="table-number">Resolved plays</th></tr></thead>
       <tbody>
         <% @slots.each do |slot| %>
           <tr><td><%= slot.medium %> / <%= slot.number.presence || slot.position %></td>
-            <td><%= link_to slot.title, recording_path(slot.recording) %></td>
-            <td><%= @archive_available ? @track_counts.fetch(slot.recording_id, 0) : "Unavailable" %></td></tr>
+            <th scope="row"><%= entity_link slot.title, recording_path(slot.recording) %></th>
+            <td class="table-number">
+              <% count = @track_counts.fetch(slot.recording_id, 0) %>
+              <% if @archive_available && count.positive? %>
+                <%= entity_link number_with_delimiter(count), recording_path(slot.recording, anchor: "listening-activity") %>
+              <% else %>
+                <%= @archive_available ? 0 : "Unavailable" %>
+              <% end %>
+            </td></tr>
         <% end %>
       </tbody>
-    </table>
+    <% end %>
   <% elsif @legacy_slots.present? %>
     <p>Earlier catalog listing. Verify the full edition with Import.</p>
     <ol class="catalog-list">

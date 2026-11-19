@@ -6,15 +6,15 @@
     <%= form.submit "Filter", class: "catalog-submit" %>
   <% end %>
   <% if @rows.any? %>
-    <table class="catalog-table">
-      <thead><tr><th scope="col">Observed track</th><th scope="col">Artist and album</th><th scope="col">Observations</th></tr></thead>
+    <%= dense_table("Observed recording surfaces") do %>
+      <thead><tr><th scope="col">Observed track</th><th scope="col">Artist and album</th><th scope="col" class="table-number">Observations</th></tr></thead>
       <tbody>
         <% @rows.each do |id, artist, album, track, count| %>
-          <tr><td><%= link_to(observed_text(track, "Track"), resolution_surface_path(id)) %></td>
-            <td><%= observed_text(artist, "Artist") %><br><span class="muted"><%= observed_text(album, "Album") %></span></td><td><%= count %></td></tr>
+          <tr><th scope="row"><%= entity_link(observed_text(track, "Track"), resolution_surface_path(id)) %></th>
+            <td><%= observed_text(artist, "Artist") %><br><span class="muted"><%= observed_text(album, "Album") %></span></td><td class="table-number"><%= number_with_delimiter(count) %></td></tr>
         <% end %>
       </tbody>
-    </table>
+    <% end %>
   <% else %>
     <p>No surfaces match this view. Imported Last.fm observations will appear here.</p>
   <% end %>

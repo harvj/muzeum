@@ -7,7 +7,7 @@
 <section class="card library-card">
   <h2>Current surface assignment</h2>
   <% if @inherited_head&.recording_id %>
-    <p><%= catalog_link(Recording.find(@inherited_head.recording_id)) %></p>
+    <p><%= catalog_link(@recordings.fetch(@inherited_head.recording_id)) %></p>
   <% else %>
     <p><%= @inherited_head&.mode == "unresolved" ? "Explicitly unresolved" : "Unresolved" %></p>
   <% end %>
@@ -59,18 +59,19 @@
 
 <section class="card library-card">
   <h2>Matching observations</h2>
-  <table class="catalog-table">
+  <%= dense_table("Matching observations") do %>
     <thead><tr><th scope="col">Played at</th><th scope="col">Effective recording</th><th scope="col">Scope</th></tr></thead>
     <tbody>
       <% @scrobbles.each do |play| %>
         <% head = @exception_heads[play.id] %>
-        <tr><td><%= browser_time(play.played_at) %></td>
-          <td><%= @recording_titles[play.effective_recording_id] || "Unresolved" %></td>
-          <td><%= link_to(head && head.mode != "inherit" ? "Review exception" : "Review this observation",
-            resolution_surface_path(@observation, play: play.id, assessment: @assessment&.id)) %></td></tr>
+        <tr>
+          <th scope="row"><%= entity_link browser_time(play.played_at), resolution_surface_path(@observation, play: play.id, assessment: @assessment&.id) %></th>
+          <td><%= @recordings[play.effective_recording_id] ? catalog_link(@recordings.fetch(play.effective_recording_id)) : "Unresolved" %></td>
+          <td class="compact-meta"><%= head && head.mode != "inherit" ? "One observation" : "Inherited" %></td>
+        </tr>
       <% end %>
     </tbody>
-  </table>
+  <% end %>
   <% if @next_scrobble %><p><%= link_to "Older observations", resolution_surface_path(@observation, before: @next_scrobble) %></p><% end %>
 </section>
 
@@ -81,7 +82,7 @@
       <% @history.each do |decision| %>
         <li><%= browser_time(decision.created_at) %> · <%= decision.user_id ? "Your decision" : "Automatic decision" %>
           · <%= decision.scrobble_id ? "One observation" : "Surface" %> · <%= decision.mode.humanize %>
-          <% if decision.recording_id %> · <%= catalog_link(Recording.find(decision.recording_id)) %><% end %>
+          <% if decision.recording_id %> · <%= catalog_link(@recordings.fetch(decision.recording_id)) %><% end %>
           <% if decision.assessment_id %> · <%= link_to "Assessment", resolution_surface_path(@observation, assessment: decision.assessment_id, play: decision.scrobble_id) %><% end %>
           <br><%= decision.reason %></li>
       <% end %>

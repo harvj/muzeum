@@ -6,16 +6,21 @@
     <p>Release association pending. Use a resolution observation to verify an eligible release.</p>
   </section>
 <% end %>
-<section class="card library-card">
+<section class="card library-card" id="listening-activity">
   <h2>Listening activity</h2>
   <p>Recording duration <%= recording_duration(@entry.duration_ms) %></p>
   <% if @archive_available %>
     <p><%= pluralize(@observation_count, "resolved listening observation") %>.</p>
     <% if @unresolved_available %><p class="muted">Your archive contains unresolved observations that are outside this count.</p><% end %>
     <% if @plays.any? %>
-      <ul class="catalog-list">
-        <% @plays.each do |play| %><li><%= browser_time(play.played_at) %> · <%= link_to "Review observation", resolution_surface_path(play, play: play.id) %></li><% end %>
-      </ul>
+      <%= dense_table("Listening activity") do %>
+        <thead><tr><th scope="col">Played at</th></tr></thead>
+        <tbody>
+          <% @plays.each do |play| %>
+            <tr><th scope="row"><%= entity_link browser_time(play.played_at), resolution_surface_path(play, play: play.id) %></th></tr>
+          <% end %>
+        </tbody>
+      <% end %>
       <% if @next_page %><p><%= link_to "Older observations", recording_path(@entry, before: @next_page) %></p><% end %>
     <% end %>
   <% else %>

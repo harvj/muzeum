@@ -4,7 +4,7 @@ module CanonicalLibraryHelper
   end
 
   def catalog_link(entry)
-    link_to catalog_title(entry), polymorphic_path(entry)
+    entity_link catalog_title(entry), polymorphic_path(entry)
   end
 
   def catalog_index_path(section, **options)
@@ -25,7 +25,7 @@ module CanonicalLibraryHelper
 
   def catalog_artists(entry)
     credits = entry.is_a?(Release) ? entry.release_artists : entry.recording_artists
-    safe_join(credits.includes(:artist).order(Arel.sql("position ASC NULLS LAST"), :id).map { |credit| catalog_link(credit.artist) }, ", ")
+    safe_join(credits.sort_by { |credit| [ credit.position || Float::INFINITY, credit.id ] }.map { |credit| catalog_link(credit.artist) }, ", ")
   end
 
   def import_status(request, verified: false)
@@ -53,8 +53,8 @@ module CanonicalLibraryHelper
     value
   end
 
-  def browser_time(time)
+  def browser_time(time, clock: false)
     content_tag(:time, time.utc.strftime("%Y-%m-%d %H:%M UTC"),
-      datetime: time.utc.iso8601, data: { controller: "local-time" })
+      datetime: time.utc.iso8601, data: { controller: "local-time", local_time_clock_value: clock })
   end
 end

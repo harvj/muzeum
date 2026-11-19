@@ -22,17 +22,34 @@ RSpec.describe "Dashboard appearance", type: :system do
     visit root_path
     expect(page).to have_content("fixture-listener")
     expect(page).to have_content("Observed artists")
-    output = Rails.root.join("docs/p1.1d/previews")
+    expect(page).to have_css(".listening-day", count: 3)
+    expect(page).to have_content("© 2026 Jim Harvey")
+    observation = user.scrobbles.order(:played_at).last
+    expect(page).to have_link("Fixture track 2", href: resolution_surface_path(observation, play: observation.id))
+    output = Pathname(ENV.fetch("P14_PREVIEW_DIR", Rails.root.join("docs/p1.1d/previews")))
     FileUtils.mkdir_p(output) if ENV["CAPTURE_PREVIEWS"] == "1"
     [ [ "desktop", 1440, 960 ], [ "mobile", 390, 844 ] ].each do |size, width, height|
       page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: width, height: height, deviceScaleFactor: 1, mobile: size == "mobile")
       %w[light dark].each do |mode|
+        find("summary[aria-label='Session menu']").send_keys(:enter)
+        if size == "desktop"
+          find(".appearance-submenu summary").hover
+          expect(page).to have_css(".appearance-submenu[open]")
+          expect(page.evaluate_script(<<~JS)).to be(true)
+            document.querySelector(".appearance-submenu .controls").getBoundingClientRect().right <=
+              document.querySelector(".appearance-submenu summary").getBoundingClientRect().left
+          JS
+          page.save_screenshot(output.join("desktop-appearance-menu.png")) if ENV["CAPTURE_PREVIEWS"] == "1"
+        else
+          find(".appearance-submenu summary").send_keys(:enter) unless has_css?(".appearance-submenu[open]", wait: 0)
+        end
         select mode.capitalize, from: "Appearance"
+        find("summary[aria-label='Session menu']").send_keys(:enter)
         expect(page.evaluate_script("document.documentElement.dataset.appearance")).to eq(mode)
         page.execute_script("document.documentElement.dataset.still = 'true'")
         page.execute_script("return document.fonts.ready")
         expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
-        expect(page.evaluate_script("getComputedStyle(document.querySelector('.card')).borderRadius")).to eq("14px")
+        expect(page.evaluate_script("getComputedStyle(document.querySelector('.card')).borderRadius")).to eq("10px")
         page.save_screenshot(output.join("#{size}-#{mode}.png")) if ENV["CAPTURE_PREVIEWS"] == "1"
       end
     end
@@ -42,10 +59,12 @@ RSpec.describe "Dashboard appearance", type: :system do
     Lastfm::HistoricalImporter.new(import, client: client).page!
     using_wait_time 15 do
       within(".stat", text: "Imported scrobbles") { expect(page).to have_content("4") }
+      expect(page).to have_link("New completion")
     end
     find("summary[aria-label='Session menu']").click
     expect(page).to have_link("Continuum Engine", href: "https://funding.harvj.com/")
-    expect(page).to have_link("Muzeum", href: "https://muzeum.fm/")
+    expect(page).to have_link("Auth", href: "https://auth.harvj.com/")
+    expect(page).not_to have_link("Muzeum", href: "https://muzeum.fm/")
     expect(page).not_to have_link("User management")
     page.save_screenshot(output.join("mobile-session-menu.png")) if ENV["CAPTURE_PREVIEWS"] == "1"
     page.driver.browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "prefers-reduced-motion", value: "reduce" } ])

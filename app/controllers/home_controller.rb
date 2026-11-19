@@ -15,6 +15,7 @@ class HomeController < ApplicationController
   def load_dashboard
     @account ||= current_user.source_account
     observations = @account ? current_user.archive_observations.where(lastfm_account: @account) : Scrobble.none
+    @recent = observations.order(played_at: :desc, id: :desc).limit(50).select(:id, :played_at, :payload).to_a
     @count = observations.count
     @earliest = observations.minimum(:played_at)
     @latest = observations.maximum(:played_at)

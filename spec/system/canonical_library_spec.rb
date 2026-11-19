@@ -42,6 +42,14 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     expect(all("tbody tr").length).to eq(3)
     expect(page).to have_text("2 / 1")
     verify_appearances("release")
+    find_link("Different Song").hover
+    expect(inverted_link?).to be(true)
+    capture_link_state("hover")
+    page.execute_script("document.querySelector('h1').scrollIntoView()")
+    find(".library-nav a", text: "Archive").hover
+    page.execute_script("document.querySelector('.catalog-table a').focus()")
+    expect(inverted_link?).to be(true)
+    capture_link_state("focus")
 
     click_link "Different Song"
     expect(page).to have_text("0 resolved listening observations")
@@ -59,6 +67,24 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     verify_appearances("resolution")
   end
 
+  def inverted_link?
+    page.evaluate_script(<<~JS)
+      (() => {
+        const link = document.querySelector(".catalog-table a:hover, .catalog-table a:focus-visible");
+        if (!link) return false;
+        const style = getComputedStyle(link);
+        const normal = getComputedStyle(document.querySelector(".library-card"));
+        return style.color === normal.backgroundColor && style.backgroundColor === normal.color;
+      })()
+    JS
+  end
+
+  def capture_link_state(state)
+    return unless ENV["P13B_PREVIEW_DIR"]
+
+    page.save_screenshot(File.join(ENV.fetch("P13B_PREVIEW_DIR"), "release-#{state}.png"))
+  end
+
   def sign_in(user)
     session = user.sessions.create!(expires_at: 7.days.from_now, last_seen_at: Time.current, verified_at: Time.current,
       grant_token: "browser-test-fixture")
@@ -72,12 +98,15 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     [ [ "desktop", 1440, 960 ], [ "mobile", 390, 844 ] ].each do |size, width, height|
       page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width:, height:, deviceScaleFactor: 1, mobile: size == "mobile")
       %w[light dark].each do |mode|
+        find("summary[aria-label='Session menu']").send_keys(:enter)
+        find(".appearance-submenu summary").send_keys(:enter) unless has_css?(".appearance-submenu[open]", wait: 0)
         select mode.capitalize, from: "Appearance"
+        find("summary[aria-label='Session menu']").send_keys(:enter)
         expect(page.evaluate_script("document.documentElement.dataset.appearance")).to eq(mode)
         expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
         expect(page.evaluate_script(<<~JS)).to be(true)
-          document.querySelector(".library-nav").getBoundingClientRect().top >=
-            document.querySelector(".account-nav").getBoundingClientRect().bottom
+          document.querySelector(".library-nav").getBoundingClientRect().right <=
+            document.querySelector(".account-nav").getBoundingClientRect().left
         JS
         expect(page.evaluate_script(<<~'JS')).to be >= 4.5
           (() => {

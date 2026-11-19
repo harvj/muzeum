@@ -7,9 +7,7 @@
     <%= form.submit "Search", class: "catalog-submit" %>
   <% end %>
   <% if @entries.any? %>
-    <ul class="catalog-list">
-      <% @entries.each do |entry| %><li><%= catalog_link(entry) %></li><% end %>
-    </ul>
+    <%= render "entries", title: @section.capitalize, items: @entries %>
   <% elsif @query.present? %>
     <p>No <%= @section %> match this search.</p>
   <% else %>

@@ -16,27 +16,25 @@
     <div class="stone-environment" aria-hidden="true"></div>
     <header>
       <a class="harvj-wordmark" href="/">muzeum</a>
-      <nav class="account-nav" aria-label="Appearance and account">
-        <div class="controls" data-controller="appearance">
-          <label for="appearance">Appearance</label>
-          <select id="appearance" data-action="appearance#change"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select>
-          <button type="button" data-action="appearance#toggleMotion" aria-pressed="false">Pause light</button>
-        </div>
-        <% if current_user %><%= render "shared/session_dropdown" %><% end %>
-      </nav>
-      <% if current_user %>
-        <nav class="library-nav" aria-label="Music library">
-          <% { "Archive" => root_path, "Artists" => artists_path, "Releases" => releases_path,
-               "Recordings" => recordings_path, "Resolution" => resolution_surfaces_path }.each do |label, path| %>
-            <% active = path == root_path ? current_page?(path) : request.path.start_with?(path) %>
-            <%= link_to label, path, aria: { current: active ? "page" : nil } %>
-          <% end %>
-        </nav>
-      <% end %>
+      <div class="header-navigation">
+        <% if current_user %>
+          <nav class="library-nav" aria-label="Music library">
+            <% { "Recordings" => recordings_path, "Releases" => releases_path, "Artists" => artists_path,
+                 "Archive" => root_path, "Resolution" => resolution_surfaces_path }.each do |label, path| %>
+              <% active = path == root_path ? current_page?(path) : request.path.start_with?(path) %>
+              <%= link_to label, path, class: "entity-link", aria: { current: active ? "page" : nil } %>
+            <% end %>
+          </nav>
+          <div class="account-nav" aria-label="Profile"><%= render "shared/session_dropdown" %></div>
+        <% else %>
+          <div class="account-nav"><%= render "shared/appearance" %></div>
+        <% end %>
+      </div>
     </header>
     <main>
       <% flash.each do |_, message| %><p class="card flash" role="status"><%= message %></p><% end %>
       <%= yield %>
+      <footer class="site-footer">© 2026 Jim Harvey</footer>
     </main>
   </body>
 </html>

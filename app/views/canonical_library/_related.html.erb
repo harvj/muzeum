@@ -1,9 +1,7 @@
 <section class="card library-card">
   <h2><%= title %></h2>
   <% if items.any? %>
-    <ul class="catalog-list">
-      <% items.each do |item| %><li><%= catalog_link(item) %></li><% end %>
-    </ul>
+    <%= render "entries", title: title, items: items %>
   <% else %>
     <p>No <%= title.downcase %> in the library for this entry yet.</p>
   <% end %>

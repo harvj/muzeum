@@ -44,9 +44,10 @@ class ResolutionWorkspaceController < ApplicationController
     end
     @current_recording_id = @selected_effective ? @selected_effective.effective_recording_id : @inherited_head&.recording_id
     @current_recording = Recording.find_by(id: @current_recording_id) if @current_recording_id
-    @recording_titles = Recording.where(id: @scrobbles.map(&:effective_recording_id).compact).pluck(:id, :title).to_h
     @history = @history.where("id < ?", params[:history_before].to_i) if params[:history_before].to_i.positive?
     @history = @history.limit(21).to_a
+    recording_ids = @scrobbles.map(&:effective_recording_id) + @history.map(&:recording_id) + [ @inherited_head&.recording_id ]
+    @recordings = Recording.where(id: recording_ids.compact.uniq).index_by(&:id)
     @next_history = @history.pop && @history.last.id if @history.size > 20
   end
 

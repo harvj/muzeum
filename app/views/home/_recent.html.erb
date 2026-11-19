@@ -1,0 +1,23 @@
+<section class="card library-card">
+  <h2>Recent plays</h2>
+  <% if @recent.any? %>
+    <%= dense_table("Recent Last.fm observations", classes: "plays-table") do %>
+      <thead>
+        <tr><th scope="col">Played at</th><th scope="col">Artist</th><th scope="col">Recording</th><th scope="col">Release</th></tr>
+      </thead>
+      <tbody data-controller="listening-days">
+        <% @recent.each do |play| %>
+          <tr>
+            <td class="table-time"><%= entity_link browser_time(play.played_at, clock: true), resolution_surface_path(play, play: play.id) %></td>
+            <td><%= observed_text(play.payload["artist_name"], "Artist") %></td>
+            <th scope="row"><%= entity_link observed_text(play.payload["track_name"], "Track"), resolution_surface_path(play, play: play.id) %></th>
+            <td><%= observed_text(play.payload["album_name"], "Album") %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    <% end %>
+    <p class="compact-meta">Names as reported by Last.fm.</p>
+  <% else %>
+    <p>No listening observations yet.</p>
+  <% end %>
+</section>
