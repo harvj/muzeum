@@ -26,12 +26,19 @@ class LastfmAccount < ApplicationRecord
         raise Lastfm::AccountConflict, "Reserved prior username requires operator reconciliation"
       end
       account ||= create!(username: username, lookup_key: key, identity_key: key, archive_user: user)
-      LastfmAccountName.find_or_create_by!(lookup_key: key) do |record|
-        record.lastfm_account = account
-        record.reason = "public username association; ownership unverified"
+      account.with_lock do
+        membership = UserLastfmAccount.find_by(user:, lastfm_account: account)
+        if !membership && ListeningProfile.where(lastfm_account: account).where.not(owner: user).exists?
+          raise Lastfm::AccountConflict, "An owned archive requires an existing grant"
+        end
+
+        LastfmAccountName.find_or_create_by!(lookup_key: key) do |record|
+          record.lastfm_account = account
+          record.reason = "public username association; ownership unverified"
+        end
+        membership ||= UserLastfmAccount.create!(user:, lastfm_account: account)
+        raise Lastfm::AccountConflict, "Revoked association requires explicit reinstatement" if membership.revoked_at
       end
-      membership = UserLastfmAccount.find_or_create_by!(user: user, lastfm_account: account)
-      raise Lastfm::AccountConflict, "Revoked association requires explicit reinstatement" if membership.revoked_at
       account
     end
   end

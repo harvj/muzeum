@@ -1,0 +1,8 @@
+<section class="intro">
+  <h1><%= @public_profile.lastfm_account.username %></h1>
+  <p>Public listening archive</p>
+</section>
+<%= render "home/recent" %>
+<% if @next_page %>
+  <p><%= link_to "Older plays", public_profile_path(@public_profile, before: @next_page) %></p>
+<% end %>

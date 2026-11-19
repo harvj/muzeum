@@ -4,14 +4,22 @@ module CanonicalLibraryHelper
   end
 
   def catalog_link(entry)
-    entity_link catalog_title(entry), polymorphic_path(entry)
+    entity_link catalog_title(entry), catalog_entry_path(entry)
+  end
+
+  def catalog_entry_path(entry, **options)
+    if @public_profile
+      public_send("public_profile_#{entry.model_name.singular_route_key}_path", @public_profile, entry, **options)
+    else
+      polymorphic_path(entry, **options)
+    end
   end
 
   def catalog_index_path(section, **options)
-    case section
-    when "artists" then artists_path(**options)
-    when "releases" then releases_path(**options)
-    when "recordings" then recordings_path(**options)
+    if @public_profile
+      public_send("public_profile_#{section}_path", @public_profile, **options)
+    else
+      public_send("#{section}_path", **options)
     end
   end
 

@@ -24,6 +24,8 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
       get path
       expect(response).to redirect_to(new_session_path)
     end
+    get artists_path(profile: "qalephd", action_name: "index")
+    expect(response).to redirect_to(new_session_path)
     post import_artist_path(1)
     expect(response).to redirect_to(new_session_path)
   end

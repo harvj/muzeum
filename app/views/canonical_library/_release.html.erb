@@ -10,12 +10,12 @@
       <tbody>
         <% @slots.each.with_index(1) do |slot, number| %>
           <tr><td class="track-number"><%= number %></td>
-            <th scope="row"><span class="play-name" data-overflow-name><%= entity_link slot.title, recording_path(slot.recording) %></span></th>
+            <th scope="row"><span class="play-name" data-overflow-name><%= entity_link slot.title, catalog_entry_path(slot.recording) %></span></th>
             <td class="table-number"><%= recording_duration(slot.recording.duration_ms) if slot.recording.duration_ms %></td>
             <td class="table-number">
               <% count = @track_counts.fetch(slot.recording_id, 0) %>
               <% if @archive_available && count.positive? %>
-                <%= entity_link number_with_delimiter(count), recording_path(slot.recording, anchor: "listening-activity") %>
+                <%= entity_link number_with_delimiter(count), catalog_entry_path(slot.recording, anchor: "listening-activity") %>
               <% else %>
                 <%= @archive_available ? 0 : "Unavailable" %>
               <% end %>

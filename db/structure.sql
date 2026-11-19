@@ -644,6 +644,45 @@ ALTER SEQUENCE public.lastfm_accounts_id_seq OWNED BY public.lastfm_accounts.id;
 
 
 --
+-- Name: listening_profiles; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.listening_profiles (
+    id bigint NOT NULL,
+    lastfm_account_id bigint NOT NULL,
+    owner_id bigint NOT NULL,
+    ownership_basis character varying NOT NULL,
+    ownership_reference text NOT NULL,
+    published_lookup_key character varying,
+    owner_consented_at timestamp(6) without time zone,
+    provider_approval_reference character varying,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT listening_profiles_administrative_ownership CHECK ((((ownership_basis)::text = 'administrative'::text) AND (btrim(ownership_reference) <> ''::text))),
+    CONSTRAINT listening_profiles_provider_reference CHECK (((provider_approval_reference IS NULL) OR (btrim((provider_approval_reference)::text) <> ''::text)))
+);
+
+
+--
+-- Name: listening_profiles_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.listening_profiles_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: listening_profiles_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.listening_profiles_id_seq OWNED BY public.listening_profiles.id;
+
+
+--
 -- Name: oidc_attempts; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1501,6 +1540,13 @@ ALTER TABLE ONLY public.lastfm_accounts ALTER COLUMN id SET DEFAULT nextval('pub
 
 
 --
+-- Name: listening_profiles id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.listening_profiles ALTER COLUMN id SET DEFAULT nextval('public.listening_profiles_id_seq'::regclass);
+
+
+--
 -- Name: oidc_attempts id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -1699,6 +1745,14 @@ ALTER TABLE ONLY public.lastfm_account_names
 
 ALTER TABLE ONLY public.lastfm_accounts
     ADD CONSTRAINT lastfm_accounts_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: listening_profiles listening_profiles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.listening_profiles
+    ADD CONSTRAINT listening_profiles_pkey PRIMARY KEY (id);
 
 
 --
@@ -2165,6 +2219,20 @@ CREATE UNIQUE INDEX index_lastfm_accounts_on_lookup_key ON public.lastfm_account
 
 
 --
+-- Name: index_listening_profiles_on_lastfm_account_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_listening_profiles_on_lastfm_account_id ON public.listening_profiles USING btree (lastfm_account_id);
+
+
+--
+-- Name: index_listening_profiles_on_owner_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_listening_profiles_on_owner_id ON public.listening_profiles USING btree (owner_id);
+
+
+--
 -- Name: index_oidc_attempts_on_state; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2316,6 +2384,13 @@ CREATE INDEX index_releases_on_release_group_mbid ON public.releases USING btree
 --
 
 CREATE INDEX index_scrobbles_archive_keyset ON public.scrobbles USING btree (lastfm_account_id, id);
+
+
+--
+-- Name: index_scrobbles_on_archive_and_exact_surface; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_scrobbles_on_archive_and_exact_surface ON public.scrobbles USING btree (lastfm_account_id, public.resolution_surface_key((payload ->> 'artist_name'::text), (payload ->> 'album_name'::text), (payload ->> 'track_name'::text)));
 
 
 --
@@ -2861,6 +2936,14 @@ ALTER TABLE ONLY public.source_fetches
 
 
 --
+-- Name: listening_profiles fk_rails_4d632b423f; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.listening_profiles
+    ADD CONSTRAINT fk_rails_4d632b423f FOREIGN KEY (owner_id) REFERENCES public.users(id);
+
+
+--
 -- Name: scrobbles fk_rails_4e5508c5bb; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3026,6 +3109,14 @@ ALTER TABLE ONLY public.ingestion_issues
 
 ALTER TABLE ONLY public.scrobbles
     ADD CONSTRAINT fk_rails_b3495516b0 FOREIGN KEY (lastfm_account_id) REFERENCES public.lastfm_accounts(id);
+
+
+--
+-- Name: listening_profiles fk_rails_bca1665695; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.listening_profiles
+    ADD CONSTRAINT fk_rails_bca1665695 FOREIGN KEY (lastfm_account_id) REFERENCES public.lastfm_accounts(id);
 
 
 --
@@ -3195,6 +3286,8 @@ ALTER TABLE ONLY public.resolution_work
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261119150100'),
+('20261119150000'),
 ('20261118120200'),
 ('20261118120100'),
 ('20261118120000'),

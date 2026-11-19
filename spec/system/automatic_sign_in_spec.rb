@@ -23,12 +23,12 @@ RSpec.describe "Shared Auth browser navigation", type: :system do
       request = Rack::Request.new(env)
       headers = { "content-type" => "text/html" }
       if request.path == "/ce"
-        [ 200, headers, [ "<a href='#{application_url}/'>Muzeum</a>" ] ]
+        [ 200, headers, [ "<a href='#{application_url}/archive'>Muzeum</a>" ] ]
       elsif request.path == "/authorize"
         @authorizations += 1 unless request.params["signed_in"]
         callback = "#{request.params.fetch('redirect_uri')}?#{URI.encode_www_form(state: request.params.fetch('state'), code: 'browser-code')}"
         if @provider_mode == :denied
-          [ 403, headers, [ "Application access denied. <a href='#{application_url}/'>Return to Muzeum</a>" ] ]
+          [ 403, headers, [ "Application access denied. <a href='#{application_url}/archive'>Return to Muzeum</a>" ] ]
         elsif @provider_mode == :fresh && !request.params["signed_in"]
           continuation = "#{request.path}?#{URI.encode_www_form(request.params.merge('signed_in' => 'yes'))}"
           [ 200, headers, [ "<h1>Test Auth login</h1><a href='#{ERB::Util.html_escape(continuation)}'>Sign in to test Auth</a>" ] ]
@@ -74,7 +74,7 @@ RSpec.describe "Shared Auth browser navigation", type: :system do
   it "reaches the dashboard from another application with an existing Auth SSO session" do
     navigate_from_ce(:sso)
     expect(page).to have_content("Observed artists")
-    expect(page).to have_current_path(root_path)
+    expect(page).to have_current_path(archive_path)
     expect(@authorizations).to eq(1)
     expect(User.sole.oidc_subject).to eq(@subject)
     page.refresh
@@ -102,7 +102,7 @@ RSpec.describe "Shared Auth browser navigation", type: :system do
   it "offers manual retry after failed authentication" do
     navigate_from_ce(:failed)
     expect(page).to have_content("Sign-in could not be verified")
-    visit "#{@application_url}/"
+    visit "#{@application_url}/archive"
     expect(page).to have_button("Continue with harvj Auth")
     expect(@authorizations).to eq(1)
     expect(Session.count).to eq(0)
@@ -114,7 +114,7 @@ RSpec.describe "Shared Auth browser navigation", type: :system do
     find("summary[aria-label='Session menu']").click
     click_button "Log out"
     expect(page).to have_button("Continue with harvj Auth")
-    visit "#{@application_url}/"
+    visit "#{@application_url}/archive"
     expect(page).to have_button("Continue with harvj Auth")
     expect(@authorizations).to eq(1)
     expect(Session.count).to eq(0)

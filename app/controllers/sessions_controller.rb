@@ -58,7 +58,7 @@ class SessionsController < ApplicationController
   def sign_in_destination
     value = session[:oidc_return_to]
     # The dashboard is currently the only interactive protected GET destination.
-    value.is_a?(String) && value.match?(/\A\/(?:\?[^\r\n]*)?\z/) ? value : root_path
+    value.is_a?(String) && value.match?(/\A\/archive(?:\?[^\r\n]*)?\z/) ? value : archive_path
   end
 
   def sign_in_rate_limited

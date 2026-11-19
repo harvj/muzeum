@@ -12,6 +12,11 @@ class User < ApplicationRecord
     lastfm_accounts.where(user_lastfm_accounts: { revoked_at: nil }).first
   end
 
+  def managed_archive_grants
+    owned_elsewhere = ListeningProfile.where.not(owner_id: id).select(:lastfm_account_id)
+    user_lastfm_accounts.active.where.not(lastfm_account_id: owned_elsewhere)
+  end
+
   def archive_observations
     Scrobble.where(lastfm_account_id: user_lastfm_accounts.active.select(:lastfm_account_id))
   end

@@ -3,7 +3,7 @@ class ImportsController < ApplicationController
     account = current_user.source_account or raise ActiveRecord::RecordNotFound
     account.with_lock do
       account.authorize!
-      grant = current_user.user_lastfm_accounts.active.find_by!(lastfm_account: account, import_allowed: true)
+      grant = current_user.managed_archive_grants.find_by!(lastfm_account: account, import_allowed: true)
       run = account.import_runs.where(status: %i[pending running paused failed]).order(:created_at).last
       restart_bounds = nil
       if run && params[:restart] == "1"
@@ -24,8 +24,8 @@ class ImportsController < ApplicationController
       end
       HistoricalImportJob.perform_later(run.id)
     end
-    redirect_to root_path, notice: "Import queued. Progress is saved independently of this page."
+    redirect_to archive_path, notice: "Import queued. Progress is saved independently of this page."
   rescue Lastfm::PermissionDenied
-    redirect_to root_path, alert: "An active source import grant is required."
+    redirect_to archive_path, alert: "An active source import grant is required."
   end
 end

@@ -1,0 +1,23 @@
+<section class="intro">
+  <h1>Muzeum</h1>
+  <p>Explore listening histories and the artists, recordings, and releases behind them.</p>
+</section>
+<div class="columns">
+  <section class="card library-card" aria-labelledby="import-heading">
+    <h2 id="import-heading">Import your Last.fm history</h2>
+    <p id="import-status" class="muted">Coming soon</p>
+    <div class="field-row profile-import">
+      <label for="future-lastfm-username">Last.fm username</label>
+      <input id="future-lastfm-username" type="text" aria-describedby="import-status" disabled>
+      <button type="button" aria-describedby="import-status" disabled>Get Started</button>
+    </div>
+  </section>
+  <section class="card library-card" aria-labelledby="explore-heading">
+    <h2 id="explore-heading">Explore a public profile</h2>
+    <% if @featured_profile %>
+      <p><%= link_to @featured_profile.lastfm_account.username, public_profile_path(@featured_profile) %></p>
+    <% else %>
+      <p class="muted">No public profiles are available yet.</p>
+    <% end %>
+  </section>
+</div>

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
+    <% if @public_profile || controller_name == "landing" %><meta name="turbo-cache-control" content="no-cache"><% end %>
     <%= tag.link rel: "icon", href: asset_path("muzeum-favicon.svg"), type: "image/svg+xml", sizes: "any" %>
     <link rel="stylesheet" href="/identity/v1/identity.css">
     <link rel="stylesheet" href="/identity/v1/session.css">
@@ -18,17 +19,28 @@
     <header>
       <a class="harvj-wordmark" href="/">muzeum</a>
       <div class="header-navigation">
-        <% if current_user %>
+        <% if @public_profile %>
+          <nav class="library-nav" aria-label="Public profile">
+            <%= link_to "Archive", public_profile_path(@public_profile), class: "entity-link" %>
+            <% %w[artists releases recordings].each do |section| %>
+              <%= link_to section.capitalize, catalog_index_path(section), class: "entity-link" %>
+            <% end %>
+          </nav>
+          <div class="account-nav"><%= render "shared/appearance" %></div>
+        <% elsif current_user %>
           <nav class="library-nav" aria-label="Music library">
             <% { "Recordings" => recordings_path, "Releases" => releases_path, "Artists" => artists_path,
-                 "Archive" => root_path, "Resolution" => resolution_surfaces_path }.each do |label, path| %>
-              <% active = path == root_path ? current_page?(path) : request.path.start_with?(path) %>
+                 "Archive" => archive_path, "Resolution" => resolution_surfaces_path }.each do |label, path| %>
+              <% active = request.path.start_with?(path) %>
               <%= link_to label, path, class: "entity-link", aria: { current: active ? "page" : nil } %>
             <% end %>
           </nav>
           <div class="account-nav" aria-label="Profile"><%= render "shared/session_dropdown" %></div>
         <% else %>
-          <div class="account-nav"><%= render "shared/appearance" %></div>
+          <div class="account-nav">
+            <%= link_to "Sign in", archive_path, class: "entity-link" unless controller_name == "sessions" %>
+            <%= render "shared/appearance" %>
+          </div>
         <% end %>
       </div>
     </header>

@@ -3,7 +3,7 @@
 <% else %>
   <section class="card library-card">
     <h2>Release appearances</h2>
-    <p>Release association pending. Use a resolution observation to verify an eligible release.</p>
+    <p>Release association pending.<%= " Use a resolution observation to verify an eligible release." unless @public_profile %></p>
   </section>
 <% end %>
 <section class="card library-card" id="listening-activity">
@@ -17,11 +17,15 @@
         <thead><tr><th scope="col">Played at</th></tr></thead>
         <tbody>
           <% @plays.each do |play| %>
-            <tr><th scope="row"><%= entity_link browser_time(play.played_at), resolution_surface_path(play, play: play.id) %></th></tr>
+            <tr><th scope="row"><% if @public_profile %>
+              <%= browser_time(play.played_at) %>
+            <% else %>
+              <%= entity_link browser_time(play.played_at), resolution_surface_path(play, play: play.id) %>
+            <% end %></th></tr>
           <% end %>
         </tbody>
       <% end %>
-      <% if @next_page %><p><%= link_to "Older observations", recording_path(@entry, before: @next_page) %></p><% end %>
+      <% if @next_page %><p><%= link_to "Older observations", catalog_entry_path(@entry, before: @next_page) %></p><% end %>
     <% end %>
   <% else %>
     <p>Listening activity is unavailable until you connect a Last.fm archive.</p>

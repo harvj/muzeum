@@ -7,7 +7,7 @@ RSpec.describe "OIDC authentication", type: :request do
   after { restore_oidc }
 
   it "protects routes and Turbo frames while leaving liveness public" do
-    get root_path, headers: { "Turbo-Frame" => "private" }
+    get archive_path, headers: { "Turbo-Frame" => "private" }
     expect(response).to redirect_to(new_session_path)
     patch lastfm_account_path, params: { lastfm_username: "someone" }
     expect(response).to redirect_to(new_session_path)
@@ -19,21 +19,21 @@ RSpec.describe "OIDC authentication", type: :request do
 
   it "validates an issued token, persists subject identity, continues sessions and logs out" do
     state = finish_oidc
-    expect(response).to redirect_to(root_path)
+    expect(response).to redirect_to(archive_path)
     expect(response.headers["Referrer-Policy"]).to eq("no-referrer")
     user = User.find_by!(oidc_subject: @subject)
     expect(user.oidc_issuer).to eq(OidcClient::ISSUER)
     expect(user.password_digest).to be_nil
     expect(user.sessions.count).to eq(1)
     expect(Session.connection.select_value("SELECT grant_token FROM sessions LIMIT 1")).not_to include("revocable-grant")
-    get root_path
+    get archive_path
     expect(response).to have_http_status(:ok)
     expect(response.headers["Cache-Control"]).to include("no-store")
     get "/oidc/callback", params: { state: state, code: "one-use-code" }
     expect(response).to redirect_to(new_session_path)
     delete session_path
     expect(user.sessions.count).to eq(0)
-    get root_path
+    get archive_path
     expect(response).to redirect_to(new_session_path)
   end
 
@@ -77,11 +77,11 @@ RSpec.describe "OIDC authentication", type: :request do
   it "bounds inactivity, absolute lifetime and disabled identities" do
     finish_oidc
     Session.update_all(last_seen_at: 13.hours.ago)
-    get root_path
+    get archive_path
     expect(response).to redirect_to(new_session_path)
     finish_oidc
     User.find_by!(oidc_subject: @subject).update!(disabled_at: Time.current)
-    get root_path
+    get archive_path
     expect(response).to redirect_to(new_session_path)
   end
 
@@ -89,11 +89,11 @@ RSpec.describe "OIDC authentication", type: :request do
     finish_oidc
     Session.update_all(verified_at: 61.seconds.ago)
     stub_request(:post, "https://auth.harvj.com/introspect").to_return(status: 503)
-    get root_path
+    get archive_path
     expect(response).to redirect_to(new_session_path)
     expect(Session.count).to eq(1)
     stub_request(:post, "https://auth.harvj.com/introspect").to_return(body: { active: false }.to_json)
-    get root_path
+    get archive_path
     expect(Session.count).to eq(0)
   end
 
@@ -101,7 +101,7 @@ RSpec.describe "OIDC authentication", type: :request do
     finish_oidc
     Session.update_all(verified_at: 6.minutes.ago, created_at: 6.minutes.ago)
     stub_request(:post, "https://auth.harvj.com/introspect").to_return(body: { active: true, client_id: "muzeum-test" }.to_json)
-    get root_path
+    get archive_path
     expect(response).to have_http_status(:ok)
   end
 
@@ -109,12 +109,12 @@ RSpec.describe "OIDC authentication", type: :request do
     finish_oidc
     Session.update_all(verified_at: 61.seconds.ago)
     stub_request(:post, "https://auth.harvj.com/introspect").to_return(body: { active: true, client_id: "wrong" }.to_json)
-    get root_path
+    get archive_path
     expect(Session.count).to eq(0)
     finish_oidc
     Session.update_all(verified_at: 61.seconds.ago)
     stub_request(:post, "https://auth.harvj.com/introspect").to_return(body: { active: true, client_id: "muzeum-test", sub: "wrong" }.to_json)
-    get root_path
+    get archive_path
     expect(Session.count).to eq(0)
   end
 
@@ -133,7 +133,7 @@ RSpec.describe "OIDC authentication", type: :request do
 
   it "rejects forged cookies and enforces CSRF" do
     cookies[:session_id] = "1"
-    get root_path
+    get archive_path
     expect(response).to redirect_to(new_session_path)
     old = ActionController::Base.allow_forgery_protection
     ActionController::Base.allow_forgery_protection = true

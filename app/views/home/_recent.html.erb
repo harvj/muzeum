@@ -5,7 +5,7 @@
       <button type="button" aria-controls="recent-plays" aria-pressed="false" data-action="play-titles#toggle">Full names</button>
     </div>
     <div class="plays-tooltip" popover="manual" aria-hidden="true" data-play-titles-target="tooltip"></div>
-    <%= dense_table("Recent plays", classes: "plays-table") do %>
+    <%= dense_table(@public_profile ? "Listening history" : "Recent plays", classes: "plays-table") do %>
       <colgroup><col class="played-column"><col class="artist-column"><col class="length-column"><col class="recording-column"><col><col class="year-column"></colgroup>
       <thead role="rowgroup">
         <tr role="row">
@@ -17,12 +17,18 @@
         <% @recent.each do |play| %>
           <% recording = @recent_recordings[play.id] %>
           <% release = @recent_releases[play.id] %>
-          <% observation = resolution_surface_path(play, play: play.id) %>
+          <% observation = resolution_surface_path(play, play: play.id) unless @public_profile %>
           <tr class="play-row" role="row">
-            <td role="cell" class="table-time"><%= entity_link browser_time(play.played_at, clock: true), observation %></td>
+            <td role="cell" class="table-time"><%= observation ? entity_link(browser_time(play.played_at, clock: true), observation) : browser_time(play.played_at, clock: true) %></td>
             <td role="cell" class="play-artist"><span class="play-name" data-overflow-name><%= (catalog_artists(recording).presence if recording) || observed_text(play.payload["artist_name"], "Artist") %></span></td>
             <td role="cell" class="play-length table-number"><%= recording_duration(recording.duration_ms) if recording&.duration_ms %></td>
-            <th scope="row" role="rowheader" class="play-recording"><span class="play-name" data-overflow-name><%= recording ? catalog_link(recording) : entity_link(observed_text(play.payload["track_name"], "Track"), observation) %></span></th>
+            <th scope="row" role="rowheader" class="play-recording"><span class="play-name" data-overflow-name><% if recording %>
+              <%= catalog_link(recording) %>
+            <% elsif observation %>
+              <%= entity_link observed_text(play.payload["track_name"], "Track"), observation %>
+            <% else %>
+              <%= observed_text(play.payload["track_name"], "Track") %> <small class="muted">Unresolved</small>
+            <% end %></span></th>
             <td role="cell" class="play-release"><span class="play-name" data-overflow-name><%= release ? catalog_link(release) : observed_text(play.payload["album_name"], "Album") %></span></td>
             <td role="cell" class="play-year table-number"><%= release&.release_year %></td>
           </tr>

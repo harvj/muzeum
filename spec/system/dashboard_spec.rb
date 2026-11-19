@@ -19,7 +19,7 @@ RSpec.describe "Dashboard appearance", type: :system do
     jar = ActionDispatch::TestRequest.create.cookie_jar
     jar.signed[:session_id] = session.id
     page.driver.browser.manage.add_cookie(name: "session_id", value: jar[:session_id], path: "/", http_only: true)
-    visit root_path
+    visit archive_path
     expect(page).to have_content("fixture-listener")
     expect(page).to have_content("Observed artists")
     expect(page).to have_css(".listening-day", count: 3)
@@ -71,7 +71,7 @@ RSpec.describe "Dashboard appearance", type: :system do
     expect(page.evaluate_script("getComputedStyle(document.querySelector('.stone-environment'), '::after').animationName")).to eq("none")
     click_button "Log out"
     expect(page).to have_content("Sign in to Muzeum")
-    visit root_path
+    visit archive_path
     expect(page).to have_current_path(new_session_path)
   end
 end

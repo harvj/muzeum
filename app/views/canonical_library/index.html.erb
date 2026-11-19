@@ -10,6 +10,8 @@
     <%= render "entries", title: @section.capitalize, items: @entries %>
   <% elsif @query.present? %>
     <p>No <%= @section %> match this search.</p>
+  <% elsif @public_profile %>
+    <p>No canonical <%= @section %> in this public profile yet.</p>
   <% else %>
     <p>No canonical <%= @section %> yet. Resolve a recording to start building the library.</p>
     <p><%= link_to "Review Last.fm recordings", resolution_surfaces_path %></p>

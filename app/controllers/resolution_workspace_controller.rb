@@ -1,6 +1,7 @@
 class ResolutionWorkspaceController < ApplicationController
   before_action :workspace
   before_action :observation, except: :index
+  before_action :authorize_management, only: %i[investigate decide admit]
 
   def index
     @filter = params[:filter].presence_in(RecordingResolution::Workspace::FILTERS)
@@ -10,6 +11,7 @@ class ResolutionWorkspaceController < ApplicationController
   end
 
   def show
+    @may_manage_observation = current_user.managed_archive_grants.exists?(lastfm_account_id: @observation.lastfm_account_id)
     @surface = @workspace.surface(@observation)
     ids, @observations_count = @workspace.matching_page(@observation, before_id: params[:before].to_i)
     @next_scrobble = ids.pop && ids.last if ids.size > RecordingResolution::Workspace::PAGE
@@ -51,7 +53,7 @@ class ResolutionWorkspaceController < ApplicationController
   def investigate
     request = nil
     ActiveRecord::Base.transaction do
-      current_user.user_lastfm_accounts.active.lock.find_by!(lastfm_account_id: @observation.lastfm_account_id)
+      current_user.managed_archive_grants.lock.find_by!(lastfm_account_id: @observation.lastfm_account_id)
       surface = RecordingResolution::Ledger.attach!(@observation)
       request = CatalogImport.request!("assessment", surface.id, "observation_id" => @observation.id, "requester_id" => current_user.id)
     end
@@ -70,6 +72,8 @@ class ResolutionWorkspaceController < ApplicationController
     assessment = @workspace.assessments(surface).find(params[:assessment_id]) if params[:assessment_id].present?
     request = nil
     ActiveRecord::Base.transaction do
+      current_user.lock!
+      current_user.managed_archive_grants.lock.find_by!(lastfm_account_id: target.lastfm_account_id)
       recording, context = selection(assessment, target) if mode == "resolved"
       RecordingResolution::Ledger.record!(listener: current_user, scrobble: target, scope:, mode:, reason:, recording:,
         assessment:, expected_head: params[:head].presence&.then { |value| Integer(value) })
@@ -89,7 +93,7 @@ class ResolutionWorkspaceController < ApplicationController
     target = params[:play_id].present? ? @workspace.matching(@observation).find(params[:play_id]) : @observation
     request = nil
     ActiveRecord::Base.transaction do
-      current_user.user_lastfm_accounts.active.lock.find_by!(lastfm_account_id: target.lastfm_account_id)
+      current_user.managed_archive_grants.lock.find_by!(lastfm_account_id: target.lastfm_account_id)
       surface = @workspace.surface(target)
       surface&.lock!
       assessment = @workspace.assessments(surface).find(params[:assessment_id])
@@ -120,6 +124,10 @@ class ResolutionWorkspaceController < ApplicationController
   end
 
   private
+
+  def authorize_management
+    head :forbidden unless current_user.managed_archive_grants.exists?(lastfm_account_id: @observation.lastfm_account_id)
+  end
 
   def workspace
     @workspace = RecordingResolution::Workspace.new(current_user)

@@ -18,6 +18,18 @@
       "risk": "additive",
       "quiesce": true,
       "review": "Adds empty catalog import, revision and ordered track-slot tables with indexes and constraints, plus two nullable release metadata columns. Foreign keys and nullable columns briefly lock referenced catalog tables. Preserves all existing rows, legacy memberships, interpretation history and source definitions. Require the reviewed Muzeum-only quiescence and encrypted four-database recovery gates."
+    },
+    "db/migrate/20261119150000_create_listening_profiles.rb": {
+      "sha256": "418c33f4b4fbec821c32823fa144d921d1fcf257990fc5022a66a8b5d4a8f360",
+      "risk": "additive",
+      "quiesce": true,
+      "review": "Adds an empty ownership and publication table with unique archive, foreign keys and check constraints. No data backfill, changes to source observations, or existing identity rewrites. Foreign keys briefly lock the referenced archive and user tables. Require guarded quiescence and four-database recovery."
+    },
+    "db/migrate/20261119150100_index_scrobble_exact_surfaces.rb": {
+      "sha256": "7e8407391ab4141bd059ba4bda67d974db854ac7f6e1e39340e9385d4c48cb05",
+      "risk": "additive",
+      "quiesce": true,
+      "review": "Adds a B-tree expression index on existing archive ID and immutable exact-surface digest. Scans observations for index build while writers are quiescent and does not rewrite observations or modify source identity. Require guarded quiescence, disk headroom and four-database recovery."
     }
   }
 }

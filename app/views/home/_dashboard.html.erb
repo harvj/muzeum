@@ -6,7 +6,11 @@
     <h2>Last.fm account</h2>
     <% if @account.present? %>
       <p class="source-name"><%= @account.username %></p>
-      <p class="muted">Associated public archive · ownership unverified</p>
+      <% if @ownership %>
+        <p class="muted">Ownership recorded by Muzeum administration.</p>
+      <% else %>
+        <p class="muted">Associated public archive · ownership unverified</p>
+      <% end %>
     <% else %>
       <p class="muted">Associate a public username to begin. No Last.fm password is needed.</p>
       <%= form_with url: lastfm_account_path, method: :patch do |form| %>
@@ -15,6 +19,7 @@
       <% end %>
     <% end %>
   </section>
+  <% if @can_manage_account || @account.nil? %>
   <section class="card">
     <h2>Import status</h2>
     <% if @run %>
@@ -39,6 +44,7 @@
     <% end %>
     <p class="muted">Committed updates appear automatically while this page is open.</p>
   </section>
+  <% end %>
 </div>
 <section class="card library-card" aria-labelledby="archive-summary">
   <h2 id="archive-summary">Archive summary</h2>

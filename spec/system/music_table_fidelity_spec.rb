@@ -17,7 +17,7 @@ RSpec.describe "Music table fidelity", type: :system do
     user, album, recordings = seed_library
     authenticate_fixture(user)
     viewport(1440, 960)
-    visit root_path
+    visit archive_path
     expect(page).to have_css(".listening-day", count: 2)
     capture("archive-desktop-light")
     measure_rows("archive")
@@ -109,7 +109,7 @@ RSpec.describe "Music table fidelity", type: :system do
       verify_footer("short", screen, width, height)
 
       authenticate_fixture(user)
-      visit root_path
+      visit archive_path
       expect(page).to have_css(".play-row", count: 50)
       verify_footer("long", screen, width, height)
     end

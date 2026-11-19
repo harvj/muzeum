@@ -2,6 +2,7 @@ module RecordingResolution
   class Ledger
     VERSION = "exact-surface-v1"
     PAYLOAD_FIELDS = %w[artist_name album_name track_name].freeze
+    EXACT_KEY_SQL = "resolution_surface_key(scrobbles.payload->>'artist_name', scrobbles.payload->>'album_name', scrobbles.payload->>'track_name')".freeze
 
     def self.attach!(scrobble)
       artist, album, track = scrobble.payload.values_at(*PAYLOAD_FIELDS)
@@ -70,8 +71,7 @@ module RecordingResolution
           AND resolution_listener.disabled_at IS NULL AND resolution_listener.oidc_issuer = :issuer
           AND resolution_listener.oidc_subject IS NOT NULL AND resolution_listener.oidc_subject <> ''
         LEFT JOIN resolution_surfaces exact_surface ON exact_surface.lastfm_account_id = scrobbles.lastfm_account_id
-          AND exact_surface.exact_key = resolution_surface_key(
-            scrobbles.payload->>'artist_name', scrobbles.payload->>'album_name', scrobbles.payload->>'track_name')
+          AND exact_surface.exact_key = #{EXACT_KEY_SQL}
           AND (exact_surface.artist, exact_surface.album, exact_surface.track) IS NOT DISTINCT FROM
             (scrobbles.payload->>'artist_name', scrobbles.payload->>'album_name', scrobbles.payload->>'track_name')
         LEFT JOIN LATERAL (

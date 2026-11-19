@@ -9,13 +9,14 @@
   <% end %>
 </section>
 <%= render "release" if @entry.is_a?(Release) %>
+<% unless @public_profile %>
 <section class="card library-card">
   <h2>Catalog import</h2>
   <p role="status"><%= import_status(@import_request, verified: @revision.present?) %></p>
   <% if @import_request&.active? && !CatalogImport.worker_enabled? %><p>Background imports are paused in this environment.</p><% end %>
   <% if @import_request&.failure.present? %><p><%= @import_request.failure %></p><% end %>
   <%= button_to (@import_request&.state == "failed" ? "Retry import" : "Import"),
-      catalog_import_path(@entry) %>
+      catalog_import_path(@entry) if @may_import %>
   <% if @revision %>
     <details>
       <summary>Metadata provenance</summary>
@@ -24,6 +25,7 @@
     </details>
   <% end %>
 </section>
+<% end %>
 <% case @entry
    when Artist %><%= render "artist" %>
 <% when Recording %><%= render "recording" %>

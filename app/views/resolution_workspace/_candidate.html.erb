@@ -15,6 +15,7 @@
   <% else %>
     <p class="muted">No verified slot for this candidate in the checked observed edition.</p>
   <% end %>
+  <% if @may_manage_observation %>
   <%= form_with url: decide_resolution_surface_path(@observation) do |form| %>
     <%= form.hidden_field :recording_mbid, value: mbid %>
     <%= form.hidden_field :assessment_id, value: @assessment.id %>
@@ -45,5 +46,6 @@
     <% end %>
   <% else %>
     <p>Confirm the recording first. Muzeum checks for a supported release in the background and can keep the recording assignment if the release remains uncertain.</p>
+  <% end %>
   <% end %>
 </details>

@@ -1,6 +1,6 @@
 # Muzeum numbered roadmap
 
-Canonical roadmap, updated 2026-11-18. This file supersedes milestone ordering and authentication requirements in the dated repository assessment, January notes, P1.0 proposals and original P1.1 plan. Those documents remain historical evidence. Muzeum is the application; no legacy Muzeus database migration is planned.
+Canonical roadmap, updated 2026-11-19. This file supersedes milestone ordering and authentication requirements in the dated repository assessment, January notes, P1.0 proposals and original P1.1 plan. Those documents remain historical evidence. Muzeum is the application; no legacy Muzeus database migration is planned.
 
 
 ## Product direction
@@ -30,9 +30,17 @@ The authoritative, living domain rules are [principles](domain/principles.md), [
    - **P1.4 Footer positioning (candidate).** A shared flex layout centers the footer at the viewport bottom on short pages and after the content on long pages. [Browser evidence](design/README.md#universal-footer).
    - **P1.4 Site Art integration (candidate).** Browser-decoded backgrounds and favicon from the Site Art manifest, with bundled fallbacks and asynchronous refresh. [Issue #27](https://github.com/harvj/muzeum/issues/27).
    - **P1.4 Published release metadata (candidate).** Synchronize the footer independently of application deployment and show a tag only for the exact running SHA. [Deployment workflow](deployment/workflow.md#published-version-in-the-footer).
+   - **P1.4a — Public experience and administrative profile ownership (candidate).** [Issue #30](https://github.com/harvj/muzeum/issues/30) separates the public homepage and opt-in read-only browsing from the protected archive. Initial production association and publication require separate approval. [Evidence and activation gates](p1.4/public-profiles/README.md).
+   - **P1.4b — Robust recording resolution (next).** [Issue #28](https://github.com/harvj/muzeum/issues/28) follows the public/private foundation.
    - **Open — Genre buckets.** Muzeus used explicitly edited category values, with category inheritance at artist/release import and edit points. Its palette was black, brown, salmon, pink, orange, yellow, green, forest, blue, purple, grey and ground. Muzeum has no equivalent classification field or reviewed source. Decide how listeners will establish and maintain those buckets before showing the historical colors on catalog rows.
 8. **P1.5 — Richer reporting and refinements (tentative).** Add rebuildable, scoped aggregates, charts, durations and rankings as the interpretation contracts stabilize. Generic external recommendations, Spotify, playlists, streaming and social features remain deferred; **choosing and rediscovering from one's own shelf is not deferred**.
 
-9. **P2.0 — Temporal musical knowledge and shelf queries (future, exploratory).** Represent recording contributors, instruments, roles, time-bounded musical events and coordinated/overlapping passages with provenance and annotation coverage. Enable queries such as "my favorite songs with dual guitar solos" and "how many scrobbles of recordings with two guitar solos?" without claiming complete playback or treating missing annotations as negative evidence. Design and sequence only after the near-term canonical library is useful; no implementation authorization implied.
+9. **P1.6 — Profile onboarding (tentative).**
+   - **P1.6a — Last.fm authentication and verified username.** Use Last.fm web authorization and bind only the returned username.
+   - **P1.6b — Self-service account linking.** Resolve duplicate claims, relinking and provider session security.
+   - **P1.6c — Additional-user archive imports.** Validate initial and incremental ingestion under the shared provider budget.
+   - **P1.6d — Profile visibility management and revocation.** Provide owner-controlled settings and a verifiable withdrawal flow under the provider publication policy.
+
+10. **P2.0 — Temporal musical knowledge and shelf queries (future, exploratory).** Represent recording contributors, instruments, roles, time-bounded musical events and coordinated/overlapping passages with provenance and annotation coverage. Enable queries such as "my favorite songs with dual guitar solos" and "how many scrobbles of recordings with two guitar solos?" without claiming complete playback or treating missing annotations as negative evidence. Design and sequence only after the near-term canonical library is useful; no implementation authorization implied.
 
 The primary security boundary is the local issuer/subject profile and its authenticated session. Last.fm association grants access to a public archive and does not prove source-account ownership. Identical same-second deliveries lack upstream durable event IDs; report this limitation rather than inventing certainty. Unresolved observed names are never canonical MusicBrainz artist/album/track entities.

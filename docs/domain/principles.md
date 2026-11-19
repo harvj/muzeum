@@ -46,6 +46,8 @@ Status: **Authoritative product policy**, 2026-11-17. These rules describe inten
 
 **DOM-019 — Catalog membership does not create listening history or credit.** An imported recording may have zero scrobbles. Release track membership does not assign the listener's historical scrobbles to that release for rankings. Listener-scoped recording resolution, shared catalog admission, and per-play credited release remain separate decisions; no import may overwrite explicit listener assignments.
 
+**DOM-020 — Profile ownership and publication are distinct.** An administrative association records local ownership provenance separately from provider verification and archive access. A public profile requires explicit owner consent and provider approval. Public browsing projects only the published archive and its catalog context. It confers no mutation rights and exposes no private interpretation history or account settings.
+
 ## Product-facing vocabulary
 
 - **Observation / scrobble:** Immutable Last.fm evidence of a listening event.

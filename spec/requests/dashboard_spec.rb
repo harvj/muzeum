@@ -35,15 +35,15 @@ RSpec.describe "Listening archive", type: :request do
       allow(Rails.configuration.x).to receive(:published_release_path).and_return(path)
       allow(Rails.configuration.x).to receive(:running_revision).and_return(sha)
 
-      get root_path
+      get archive_path
       expect(Nokogiri::HTML(response.body).at_css(".site-footer").text).not_to include("Muzeum v")
 
       path.write("#{sha} v0.2.1\n")
-      get root_path
+      get archive_path
       expect(Nokogiri::HTML(response.body).at_css(".site-footer").text).to include("Muzeum v0.2.1")
 
       path.write("#{'b' * 40} v0.2.2\n")
-      get root_path
+      get archive_path
       expect(Nokogiri::HTML(response.body).at_css(".site-footer").text).not_to include("Muzeum v")
     end
   end
@@ -55,7 +55,7 @@ RSpec.describe "Listening archive", type: :request do
     user.scrobbles.create!(played_at: Time.utc(2021), payload: { artist_name: "Artist", album_name: "", track_name: "Other" })
     other = User.create!(lastfm_username: "other")
     other.scrobbles.create!(played_at: Time.utc(1999), payload: { artist_name: "Private Artist" })
-    get root_path
+    get archive_path
     expect(response.body).to include("01 Jan 2020", "01 Jan 2021", "Observed artists", "Observed albums", "Observed tracks")
     expect(response.body).not_to include("1999", "Private Artist", "User management")
     expect(response.body).to include("https://funding.harvj.com/", "harvj-session")
