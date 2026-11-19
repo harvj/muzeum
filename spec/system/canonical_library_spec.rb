@@ -40,7 +40,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     click_link "Night Drive"
     expect(page).to have_text("Track listing")
     expect(all("tbody tr").length).to eq(3)
-    expect(page).to have_text("2 / 1")
+    expect(all(".track-number", minimum: 4).map(&:text)).to eq([ "#", "1", "2", "3" ])
     verify_appearances("release")
     find_link("Different Song").hover
     expect(inverted_link?).to be(true)

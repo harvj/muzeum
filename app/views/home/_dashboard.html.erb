@@ -1,7 +1,5 @@
 <div id="archive_dashboard" data-controller="dashboard-sync" data-dashboard-sync-url-value="<%= dashboard_updates_path %>" data-dashboard-sync-version-value="<%= @account&.updated_at&.iso8601(6) %>">
-<section class="intro">
-  <h1>Listening archive</h1>
-</section>
+<h1 class="archive-heading">Listening archive</h1>
 <%= render "home/recent" %>
 <div class="columns archive-settings">
   <section class="card">

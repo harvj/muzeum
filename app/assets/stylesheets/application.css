@@ -68,7 +68,6 @@ body:has(.library-nav) main { margin-top: 14px; }
 .catalog-table .table-number { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .table-time, .catalog-table time { font-variant-numeric: tabular-nums; white-space: nowrap; }
 .catalog-table .listening-day th { padding-top: 9px; border-bottom: 1px solid var(--line); font-size: .8125rem; font-weight: 700; }
-.plays-table .table-time { width: 1%; }
 .archive-settings { margin: 0 0 16px; gap: 12px; }
 .archive-summary { margin: 6px 0; gap: 6px 14px; }
 .archive-summary .stat strong { margin: 0; font-size: 1.35rem; font-variant-numeric: tabular-nums; }
@@ -107,4 +106,89 @@ body:has(.library-nav) main { margin-top: 14px; }
   main { margin-inline: auto; }
   .appearance-submenu .controls { position: static; }
   .card.library-card, .archive-settings .card { padding: 12px; }
+}
+
+/* Listening and release sheets */
+.archive-heading { margin: 0 0 6px; font-size: 1.375rem; font-weight: 700; letter-spacing: -.5px; }
+.card.music-sheet { padding: 6px 10px; border-radius: 5px; }
+.music-sheet .catalog-table { margin-top: 0; }
+.music-sheet .catalog-table :is(th, td) { padding: 2px 5px; line-height: 1.2; }
+.music-sheet .catalog-table thead th { padding-block: 3px; }
+.plays-table { table-layout: fixed; }
+.plays-table .played-column { width: 7.25rem; }
+.plays-table .artist-column { width: 24%; }
+.plays-table .length-column { width: 4.5rem; }
+.plays-table .recording-column { width: 28%; }
+.plays-table .year-column { width: 10%; }
+.plays-table .table-time,
+.plays-table .listening-day th { padding-left: 16px; }
+.plays-table :is(.table-time time, .play-length, .play-year),
+.release-tracks .track-number { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-variant-numeric: tabular-nums; }
+.plays-table .play-year, .plays-table thead th:last-child { text-align: left; }
+.plays-table .listening-day th { padding-top: 6px; font-size: .9375rem; }
+.day-count { margin-left: .55em; color: var(--muted); font-size: .75rem; font-weight: 400; }
+.play-name, .play-name > a:only-child, .plays-table .table-time a {
+  display: block;
+  overflow: clip;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.play-name > a:only-child { width: fit-content; max-width: 100%; }
+.play-name:focus-visible { outline-offset: -1px; }
+.play-row a:focus-visible { outline-offset: -1px; }
+.plays-tools { display: none; }
+.plays-tooltip {
+  position: fixed;
+  inset: auto;
+  z-index: 30;
+  margin: 0;
+  max-width: min(32rem, calc(100vw - 16px));
+  padding: 5px 9px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--card);
+  color: var(--ink);
+  font-size: .875rem;
+  overflow-wrap: anywhere;
+}
+.music-sheet h2 { margin-bottom: 2px; font-size: 1rem; }
+.music-sheet h2 + p { margin: 0 0 4px; color: var(--muted); font-size: .875rem; }
+.release-heading h1 { font-size: clamp(1.4rem, 3vw, 1.85rem); }
+.release-heading h1 span { margin-left: .2em; font-weight: 400; }
+.release-tracks { table-layout: fixed; }
+.release-tracks .track-number { width: 3.25rem; }
+.release-tracks .table-number { width: 7.5rem; }
+
+@media (max-width: 700px) {
+  .card.music-sheet { padding: 5px 7px; }
+  .plays-tools { display: flex; justify-content: flex-end; }
+  .plays-tools button { min-height: 30px; padding: 3px 7px; }
+  .plays-tools button[aria-pressed="true"] { background: var(--ink); color: var(--card); }
+  .plays-table { display: block; }
+  .plays-table colgroup { display: none; }
+  .plays-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .plays-table tbody, .plays-table .listening-day { display: block; }
+  .plays-table .play-row {
+    display: grid;
+    grid-template-columns: 3.7rem minmax(0, 1fr) auto;
+    grid-template-areas: "time artist length" "time recording recording" "time release year";
+    padding-block: 3px;
+    border-bottom: 1px solid var(--line);
+  }
+  .plays-table .play-row > * { padding-block: 1px; min-width: 0; }
+  .plays-table .table-time { grid-area: time; padding-left: 5px; }
+  .play-artist { grid-area: artist; }
+  .play-length { grid-area: length; }
+  .play-recording { grid-area: recording; }
+  .play-release { grid-area: release; color: var(--muted); font-size: .875rem; }
+  .play-year { grid-area: year; }
+  :is(.full-play-names, .release-tracks) :is(.play-name, .play-name > a:only-child) { white-space: normal; }
+  .release-tracks .track-number { width: 2rem; }
+  .release-tracks .table-number { width: 4.25rem; white-space: normal; }
 }

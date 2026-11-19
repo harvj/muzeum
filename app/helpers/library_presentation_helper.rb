@@ -1,7 +1,7 @@
 module LibraryPresentationHelper
   def dense_table(label, classes: nil, &block)
     tag.div(class: "table-scroll") do
-      tag.table(capture(&block), class: [ "catalog-table", classes ], aria: { label: })
+      tag.table(capture(&block), class: [ "catalog-table", classes ], role: "table", aria: { label: })
     end
   end
 

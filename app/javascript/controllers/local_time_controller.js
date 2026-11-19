@@ -8,6 +8,6 @@ export default class extends Controller {
     if (Number.isNaN(timestamp.getTime())) return
 
     this.element.textContent = new Intl.DateTimeFormat(undefined, this.clockValue ?
-      { timeStyle: "short" } : { dateStyle: "medium", timeStyle: "short" }).format(timestamp)
+      { hour: "2-digit", minute: "2-digit", hourCycle: "h23" } : { dateStyle: "medium", timeStyle: "short" }).format(timestamp)
   }
 }

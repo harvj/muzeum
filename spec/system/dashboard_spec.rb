@@ -49,7 +49,7 @@ RSpec.describe "Dashboard appearance", type: :system do
         page.execute_script("document.documentElement.dataset.still = 'true'")
         page.execute_script("return document.fonts.ready")
         expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
-        expect(page.evaluate_script("getComputedStyle(document.querySelector('.card')).borderRadius")).to eq("10px")
+        expect(page.evaluate_script("getComputedStyle(document.querySelector('.card')).borderRadius")).to eq("5px")
         page.save_screenshot(output.join("#{size}-#{mode}.png")) if ENV["CAPTURE_PREVIEWS"] == "1"
       end
     end
