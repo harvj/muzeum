@@ -1,0 +1,20 @@
+# P1.5.2 Learning from manual recording decisions
+
+The initial slice measures what the append-only review ledger can tell us about its contemporaneous ranked choices. The bounded, offline baseline reads one fixture listener at a time under existing archive grants. It counts actions and superseded events, separates no-change deferrals from confirmations, and compares a selected MBID with the candidate scores stored when that decision was made. The report contains aggregates and a paging cursor.
+
+Run against disposable data with `bin/rails runner script/resolution_manual_review_baseline.rb LISTENER_ID [BEFORE_DECISION_ID]`. Each page uses the existing Resolution page size. Older decisions without a stored ranking are reported separately. The baseline writes no review or recording data.
+
+A listener choice is evidence of a review outcome. It may reflect what Muzeum placed first, and a subsequent correction may reverse it. Repeated decisions about the same surface are counted as events here. Before building a held-out evaluation corpus, group compatible evidence and prevent the same identity from appearing in both training and evaluation. Retain competing versions, corrections and unknown outcomes. Use independently reviewed labels for judgments about correctness.
+
+**Open** — Decide how to choose and review the first representative corpus, when two claims safely share a learning example, and which signals should be retained across listeners. Existing exact-surface and individual-observation decisions retain precedence. Future recommendation experiments should compare against the P1.5.1 ranking in shadow mode.
+
+
+## Decision-time evidence
+
+P1.5.1 already captured the actor, timestamp, effective scope, predecessor, comment, reason code, selected recording, assessment reference, ranking version and candidate scores. The assessment was append-only, but the decision did not freeze the evidence-factor snapshot shown in the review, and deferrals did not identify the presented alternatives. P1.5.2 adds versioned evidence inside existing decision JSONB. It records the ordered ranking and inputs, shortlist, recommendation, target candidate, feedback, affected observation count, and the assessment digest, timestamp and provider provenance. The existing exact-surface or observation reference still defines scope. A rejection or deferral records zero assignment changes. Unselected alternatives remain unchosen choices and are never marked rejected. Older decisions retain their existing representation. No historical data is rewritten and no migration is required.
+
+## Offline learner
+
+Run `bin/rails runner script/resolution_manual_review_learning.rb LISTENER_ID UTC_SPLIT_TIME` on disposable data. The runner reads at most 1,000 authorized listener events. It keeps the latest decisive choice per stream within each chronological partition, so later corrections can replace earlier labels while no-change deferrals and rejections remain distinct. It excludes assessments or provider retrievals dated after the corresponding choice. Held-out surfaces and candidate identities are excluded from training. For each training selection, distinguishing observed factor states cast signed pairwise votes. The report counts whether actual recommendations were followed or overridden. It also compares the original ranking with a versioned shadow adjustment on held-out choices. Optional comments and inferred human explanations play no part in ranking.
+
+The synthetic regression includes one eligible training example, two overlap exclusions, two held-out examples, one deferral and one explicit rejection. Agreement with the unique top choice changed from 0 of 2 to 2 of 2. This is a designed conformance case. It does not measure real-world accuracy. No production review corpus was used. Deferrals and rejections are counted separately, and the initial pairwise learner gains votes only from selections with alternatives. The next increment is an independently labeled, version-diverse corpus and a shadow evaluation that accounts for presentation-order bias.

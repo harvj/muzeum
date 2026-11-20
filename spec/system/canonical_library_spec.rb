@@ -83,8 +83,17 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     request = CatalogImport.where(kind: RecordingResolution::Investigation::KIND).sole
     CanonicalCatalog::Processor.new(request, session_factory: ->(*) { CatalogFixtures::Session.new }).call
     click_link "Refresh results"
-    expect(page).to have_text("Muzeum’s recommendation")
+    expect(page).to have_css(".review-candidate.recommended")
     expect(page).to have_text("2 current observations")
+    expect(page).to have_css(".review-candidate[open] .review-tracks li", count: 3)
+    expect(page).to have_css(".review-candidate[open] .review-track-match", count: 2)
+    expect(page).to have_text("🇺🇸 United States, 🇨🇦 Canada · CD")
+    find(".review-score-help").hover
+    expect(page).to have_css("[role=tooltip]", text: "Verified source recording identifier")
+    browser.execute_script("document.querySelector('.review-score-help').focus()")
+    find(".review-credit").hover
+    expect(page).to have_css("[role=tooltip]", text: "Relative evidence score")
+    browser.execute_script("document.activeElement.blur()")
     capture_resolution("ranked-desktop")
 
     assessment = RecordingResolution::Ledger.assessments(user).sole
@@ -101,7 +110,12 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     ])
     visit resolution_surface_path(observation, assessment: ambiguous.id)
     expect(page).to have_text("Ambiguous")
-    expect(page).to have_no_text("Muzeum’s recommendation")
+    expect(page).to have_no_css(".review-candidate.recommended")
+    expect(page).to have_css(".review-candidate[open]", count: 1)
+    all(".review-candidate-summary").last.send_keys(:enter)
+    expect(page).to have_css(".review-candidate:nth-of-type(2)[open]")
+    expect(page).to have_css(".review-candidate[open]", count: 1)
+    expect(page).to have_text("A checked release tracklist is unavailable for this candidate.")
     expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
     capture_resolution("ambiguous-mobile")
 

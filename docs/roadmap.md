@@ -37,6 +37,8 @@ The authoritative, living domain rules are [principles](domain/principles.md), [
 8. **P1.5 — Richer reporting and refinements (tentative).** Add rebuildable, scoped aggregates, charts, durations and rankings as the interpretation contracts stabilize. Generic external recommendations, Spotify, playlists, streaming and social features remain deferred; **choosing and rediscovering from one's own shelf is not deferred**.
 
    - **P1.5.1 — Canonical resolution experience and candidate scoring.** Prioritize recording identity and explained, listener-reviewed candidates ahead of #21. Use local catalog evidence and bounded MusicBrainz investigation, with historical Discogs provenance retained under the #26 decision. Keep automatic assignments in shadow evaluation. [Baseline and design](p1.5.1/resolution.md) · [Issue #28](https://github.com/harvj/muzeum/issues/28).
+   - **P1.5.1a — Resolution Review visual refinement.** Match the approved text-first review layout with a single-open candidate list, explained scores, and verified release context. [Browser previews](p1.5.1a/review.md).
+   - **P1.5.2 — Learning from manual recording decisions.** Preserve the ranked evidence and review action at decision time. Evaluate ranking changes offline against a reproducible held-out set. Production learning and automatic assignment require distinct authorization after independent evaluation. Issue #21 remains deferred. [Learning foundation](p1.5.2/manual-review-learning.md).
 
 9. **P1.6 — Profile onboarding (tentative).**
    - **P1.6a — Last.fm authentication and verified username.** Use Last.fm web authorization and bind only the returned username.

@@ -61,3 +61,10 @@ Synthetic listening and MusicBrainz fixtures with bundled stone textures in Chro
 P1.5.1 uses existing catalog import, assessment, group and decision tables. It introduces no migrations. The new on-open workflow is gated by the existing catalog worker and `MUZEUM_RESOLUTION_INVESTIGATION=1` in production. Activating the latter is an operator decision after deployment review. Deliberate lookups remain available through the existing authorized catalog worker. The existing ingestion and catalog enrichment queues keep their subscriptions. No provider credentials or historical evidence are removed. In-app assessment detail keeps historical Discogs provenance and suppresses the historical comparison display.
 
 The shortlist uses a bounded local lookup and a single bounded MusicBrainz search page, with recording identifier and edition checks where available. No listening duration is inferred. Independent corroboration, a reviewed real-world corpus, safe reuse across differing normalized source claims, separate artist-only assignments and calibrated acceptance rules remain open. The prioritized queue groups exact surfaces and uses frequency first. It does not bulk-enqueue its items. Pending results can be refreshed on the page. #21 remains deferred.
+
+
+### Production activation
+
+On November 20 UTC, the guarded workflow deployed `8e8a38d4f5a39b405bc2daec14c2e09a00dd93a7` with no pending migrations. On-open investigation was then enabled with a targeted Muzeum web restart. The existing catalog worker stayed running. Its subscription and heartbeats passed, and the three-minute post-activation queue check found 182 completed Last.fm jobs, zero unfinished and zero failed.
+
+Opening observation `292992` produced one completed investigation, three MusicBrainz calls with zero counted failures, and one ranked candidate. The listener decision count stayed at one and the automatic decision count stayed at zero. The operational checks were scoped to Muzeum. [GitHub deployment history](https://github.com/harvj/muzeum/deployments)

@@ -124,6 +124,19 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     get resolution_surface_path(second)
     expect(response.body).to include("Inherited from your exact-surface assignment", "Checked the studio version")
     expect(decision.evidence.fetch("candidate_scores").first.fetch("recording_mbid")).to eq(CatalogFixtures::IDS[:studio])
+    snapshot = decision.evidence.fetch("review_snapshot")
+    expect(snapshot).to include("feedback" => "selected", "candidate_mbid" => CatalogFixtures::IDS[:studio],
+      "affected_observation_count" => 2, "ranking" => assessment.evidence.fetch("ranking"))
+    expect(snapshot.fetch("assessment")).to include("id" => assessment.id, "digest" => assessment.digest)
+    expect(snapshot.fetch("ranking").first.dig("inputs", "recording_identifier", "state")).to eq("positive")
+
+    post defer_resolution_surface_path(second), params: { feedback: "rejected", assessment_id: assessment.id,
+      recording_mbid: CatalogFixtures::IDS[:studio], head: decision.id }
+    rejection = RecordingResolution::Decision.last
+    expect(rejection).to have_attributes(predecessor_id: decision.id, recording_id: decision.recording_id, mode: "resolved")
+    expect(rejection.evidence.fetch("review_snapshot")).to include("feedback" => "rejected",
+      "candidate_mbid" => CatalogFixtures::IDS[:studio], "affected_observation_count" => 0)
+    expect(RecordingResolution::Ledger.effective(user).find(second.id).effective_recording_id).to eq(decision.recording_id)
     expect(Scrobble.find(observation.id).payload).to eq(observation.payload)
   end
 

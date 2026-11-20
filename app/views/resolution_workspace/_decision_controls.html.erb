@@ -1,10 +1,12 @@
 <details>
   <summary>Other review actions</summary>
+  <% assessment_id = @assessment&.id if @assessment_matches_claims %>
   <% head = @selected_scrobble ? @selected_head : @surface_head %>
   <%= form_with url: decide_resolution_surface_path(@observation) do |form| %>
     <%= form.hidden_field :scope, value: @selected_scrobble ? "scrobble" : "surface" %>
     <%= form.hidden_field :play_id, value: @selected_scrobble&.id %>
     <%= form.hidden_field :head, value: head&.id %>
+    <%= form.hidden_field :assessment_id, value: assessment_id, id: nil %>
     <%= form.label :comment, "Comment (optional)", for: "resolution-mode-comment" %>
     <%= form.text_field :comment, id: "resolution-mode-comment", maxlength: 500 %>
     <%= form.button "Leave unresolved", name: "mode", value: "unresolved" %>
@@ -12,6 +14,7 @@
   <%= form_with url: defer_resolution_surface_path(@observation) do |form| %>
     <%= form.hidden_field :play_id, value: @selected_scrobble&.id, id: nil %>
     <%= form.hidden_field :head, value: head&.id, id: nil %>
+    <%= form.hidden_field :assessment_id, value: assessment_id, id: nil %>
     <%= form.label :comment, "Deferral comment (optional)", for: "resolution-defer-comment" %>
     <%= form.text_field :comment, id: "resolution-defer-comment", maxlength: 500 %>
     <%= form.submit "Defer review", class: "catalog-submit" %>
@@ -19,6 +22,6 @@
   <% if head && head.mode != "inherit" %>
     <%= button_to "Return to inheritance", decide_resolution_surface_path(@observation),
       params: { mode: "inherit", scope: @selected_scrobble ? "scrobble" : "surface",
-        play_id: @selected_scrobble&.id, head: head.id } %>
+        play_id: @selected_scrobble&.id, head: head.id, assessment_id: } %>
   <% end %>
 </details>

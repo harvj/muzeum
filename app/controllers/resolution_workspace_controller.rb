@@ -115,7 +115,10 @@ class ResolutionWorkspaceController < ApplicationController
       metadata = { "reason_code" => code, "comment" => comment, "scoring_version" => ranking&.first&.fetch("version"),
         "candidate_scores" => ranking&.map { |row| row.slice("recording_mbid", "score") },
         "previous_effective_recording_id" => previous.effective_recording_id, "previous_effective_decision_id" => previous.effective_recording_decision_id,
-        "affected_scope" => scope.to_s }.compact
+        "affected_scope" => scope.to_s,
+        "review_snapshot" => RecordingResolution::ReviewSnapshot.capture(assessment:, ranking: ranking || [],
+          feedback: { "resolved" => "selected", "unresolved" => "unresolved", "inherit" => "inherit" }.fetch(mode),
+          candidate_mbid: recording&.mbid, affected_count: affected_count(target, surface, scope)) }.compact
       RecordingResolution::Ledger.record!(listener: current_user, scrobble: target, scope:, mode:, reason:, recording:,
         assessment:, metadata:, expected_head: params[:head].presence&.then { |value| Integer(value) })
       request = CatalogImport.request!("recording", recording.id, context) if recording
@@ -134,6 +137,10 @@ class ResolutionWorkspaceController < ApplicationController
     comment = params[:comment].to_s.strip.presence
     raise ArgumentError if comment.to_s.length > 500
 
+    feedback = (params[:feedback].presence || "deferred").presence_in(%w[deferred rejected]) || raise(ArgumentError)
+    candidate_mbid = params[:recording_mbid].presence
+    raise ArgumentError if feedback == "rejected" && candidate_mbid.nil?
+
     target = params[:play_id].present? ? @workspace.matching(@observation).find(params[:play_id]) : @observation
     scope = params[:play_id].present? ? :scrobble : :surface
     ActiveRecord::Base.transaction do
@@ -144,12 +151,21 @@ class ResolutionWorkspaceController < ApplicationController
       expected = params[:head].presence&.then { |value| Integer(value) }
       raise ActiveRecord::StaleObjectError.new(head || surface, "defer") unless head&.id == expected
 
+      assessment = @workspace.assessments(surface).find(params[:assessment_id]) if params[:assessment_id].present?
+      ranking = assessment && (assessment.evidence["ranking"] || RecordingResolution::Ranking.call(surface, assessment.evidence))
+      raise ArgumentError if assessment && !assessment_matches_claims?(assessment, target)
+      raise ArgumentError if candidate_mbid && !Array(ranking).any? { |row| row["recording_mbid"] == candidate_mbid }
+      code = feedback == "rejected" ? "rejected_candidate" : "deferred_review"
+      snapshot = RecordingResolution::ReviewSnapshot.capture(assessment:, ranking: ranking || [], feedback:,
+        candidate_mbid:, affected_count: 0)
+
       RecordingResolution::Ledger.record!(listener: current_user, scrobble: target, scope:,
-        mode: head&.mode || "inherit", reason: "Deferred review", recording: Recording.find_by(id: head&.recording_id),
+        mode: head&.mode || "inherit", reason: feedback == "rejected" ? "Rejected candidate" : "Deferred review", recording: Recording.find_by(id: head&.recording_id),
         assessment: RecordingResolution::Assessment.find_by(id: head&.assessment_id), expected_head: expected,
-        metadata: { "reason_code" => "deferred_review", "comment" => comment, "previous_decision_id" => head&.id, "affected_scope" => scope.to_s }.compact)
+        metadata: { "reason_code" => code, "comment" => comment, "previous_decision_id" => head&.id,
+          "affected_scope" => scope.to_s, "review_snapshot" => snapshot }.compact)
     end
-    redirect_to resolution_surface_path(@observation, play: params[:play_id].presence), notice: "Review deferred.", status: :see_other
+    redirect_to resolution_surface_path(@observation, play: params[:play_id].presence), notice: feedback == "rejected" ? "Candidate rejected." : "Review deferred.", status: :see_other
   rescue ArgumentError, ActiveRecord::StaleObjectError
     redirect_to resolution_surface_path(@observation), alert: "This assignment changed. Review the current decision and submit again.", status: :see_other
   end
@@ -200,6 +216,15 @@ class ResolutionWorkspaceController < ApplicationController
 
   def observation
     @observation = @workspace.observations.find(params[:id])
+  end
+
+  def affected_count(target, surface, scope)
+    return 1 if scope == :scrobble
+
+    protected_plays = @workspace.history(surface).where(user_id: current_user.id).where.not(scrobble_id: nil)
+      .where.not(mode: "inherit").where("NOT EXISTS (SELECT 1 FROM resolution_decisions successor WHERE successor.predecessor_id = resolution_decisions.id)")
+      .reorder(nil).select(:scrobble_id)
+    @workspace.matching(target).where.not(id: protected_plays).count
   end
 
   def assessment_matches_claims?(assessment, target)

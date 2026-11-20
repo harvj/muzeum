@@ -1,11 +1,26 @@
-<section class="intro">
+<div class="card library-card resolution-review">
+<section class="intro review-heading">
+  <% review_state = if @current_recording
+      Clients::Musicbrainz::MBID.match?(@current_recording.mbid.to_s) ? "Resolved" : "Partially resolved"
+    else
+      @candidates.many? ? "Ambiguous" : "Unresolved"
+    end %>
+  <strong class="review-state"><%= review_state %></strong>
   <p><%= link_to "Recording resolution", resolution_surfaces_path %></p>
-  <h1><%= observed_text(@observation.payload["track_name"], "Track") %></h1>
+  <h1><%= observed_text(@observation.payload["artist_name"], "Artist") %> — <%= observed_text(@observation.payload["track_name"], "Track") %></h1>
   <p><%= observed_text(@observation.payload["artist_name"], "Artist") %> · <%= observed_text(@observation.payload["album_name"], "Album") %></p>
-  <p><%= pluralize(@observations_count, "observation") %> with these exact Last.fm strings.</p>
+  <p><%= pluralize(@observations_count, "observation") %> with these exact Last.fm strings · Observation <%= (@selected_scrobble || @observation).id %>.</p>
 </section>
-<section class="card library-card" aria-labelledby="recording-status">
-  <h2 id="recording-status">Canonical recording</h2>
+<nav class="review-sections" aria-label="Review sections">
+  <a href="#review-candidates">Candidates</a>
+  <a href="#review-evidence">Evidence</a>
+  <a href="#review-observations">Observations (<%= @observations_count %>)</a>
+  <a href="#review-history">History</a>
+</nav>
+<div class="review-grid">
+<aside class="review-sidebar" aria-label="Resolution and investigation summary">
+<section class="review-sidebar-card" aria-labelledby="recording-status">
+  <h2 id="recording-status">Resolution</h2>
   <% if @current_recording && Clients::Musicbrainz::MBID.match?(@current_recording.mbid.to_s) %>
     <p><strong>Resolved</strong> · <%= catalog_link(@current_recording) %></p>
     <p class="muted"><%= @current_decision&.scrobble_id ? "Direct assignment for this observation" :
@@ -17,14 +32,25 @@
     <p><strong><%= @candidates.many? ? "Ambiguous" : "Unresolved" %></strong>
       <% if @current_decision&.mode == "unresolved" %> · Explicitly left unresolved<% end %></p>
   <% end %>
+  <h3>Decision scope</h3>
   <% if @selected_scrobble %>
     <p>Reviewing the observation at <%= browser_time(@selected_scrobble.played_at) %>.
       <%= link_to "Review the exact surface", resolution_surface_path(@observation) %></p>
   <% else %>
+    <p>Exact matching group · <%= pluralize(@affected_count, "affected observation") %>.</p>
     <p><%= link_to "Review only this observation", resolution_surface_path(@observation, play: @observation.id) %></p>
   <% end %>
 </section>
-<section class="card library-card">
+  <section class="review-sidebar-card">
+    <h2>Summary</h2>
+    <dl>
+      <div><dt>Candidates</dt><dd><%= @candidates.size %></dd></div>
+      <% if @ranking.any? %><div><dt>Best score</dt><dd><%= @ranking.first["score"] %></dd></div><% end %>
+      <% if @assessment_request %><div><dt>Provider calls</dt><dd><%= @assessment_request.request_count %></dd></div><% end %>
+    </dl>
+  </section>
+</aside>
+<section class="review-candidates" id="review-candidates">
   <h2>Candidate recordings</h2>
   <% if @assessment_request&.active? %>
     <p role="status"><%= @assessment_request.state == "refreshing" ? "Investigating" : "Investigation pending" %>.
@@ -44,12 +70,12 @@
   <% if @candidates.any? %>
     <p>Scores rank evidence for review. The scrobble supplies no measured duration for comparison.</p>
     <% @candidates.first(3).each_with_index do |candidate, index| %>
-      <%= render "candidate", candidate:, rank: @ranking[index], recommended: index.zero? && RecordingResolution::Ranking.recommended?(@ranking) %>
+      <%= render "candidate", candidate:, rank: @ranking[index], expanded: index.zero?, recommended: index.zero? && RecordingResolution::Ranking.recommended?(@ranking) %>
     <% end %>
     <% if @candidates.size > 3 %>
       <details><summary>Additional candidates</summary>
         <% @candidates.drop(3).each_with_index do |candidate, index| %>
-          <%= render "candidate", candidate:, rank: @ranking[index + 3], recommended: false %>
+          <%= render "candidate", candidate:, rank: @ranking[index + 3], expanded: false, recommended: false %>
         <% end %>
       </details>
     <% end %>
@@ -83,7 +109,8 @@
   </details>
 </section>
 
-<section class="card library-card">
+</div>
+<section class="review-secondary" id="review-evidence">
   <h2>Observation details</h2>
   <%= render "decision_controls" if @may_manage_observation %>
   <details>
@@ -95,7 +122,7 @@
   </details>
 </section>
 
-<section class="card library-card">
+<section class="review-secondary" id="review-observations">
   <details><summary>Matching observations</summary>
   <%= dense_table("Matching observations") do %>
     <thead><tr><th scope="col">Played at</th><th scope="col">Effective recording</th><th scope="col">Scope</th></tr></thead>
@@ -114,7 +141,7 @@
 </details>
 </section>
 
-<section class="card library-card">
+<section class="review-secondary" id="review-history">
   <details><summary>Decision history</summary>
   <% if @history.any? %>
     <ul class="catalog-list">
@@ -130,3 +157,4 @@
   <% else %><p>No decisions yet.</p><% end %>
 </details>
 </section>
+</div>
