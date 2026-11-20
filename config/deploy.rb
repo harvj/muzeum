@@ -108,6 +108,13 @@ namespace :muzeum do
     set :branch, approval.fetch(:sha)
     set :deployment_token, SecureRandom.hex(16)
     puts "Muzeum immutable revision #{fetch(:approved_revision)}; CI #{approval.fetch(:ci)}"
+    command = ENV.fetch("APPLICATION_SHELL_PREFLIGHT", "application-shell-preflight")
+    review = ENV.fetch("APPLICATION_SHELL_REVIEW") do
+      raise "Set APPLICATION_SHELL_REVIEW to the exact candidate Application Shell review"
+    end
+    unless system(command, "--app", "muzeum", "--revision", fetch(:approved_revision), "--review", review)
+      raise "Application Shell preflight failed. Resolve the reported checks before retrying."
+    end
     outbox = muzeum_reporting
     outbox.check_clear!
     muzeum_verify_helper

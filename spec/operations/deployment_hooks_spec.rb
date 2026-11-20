@@ -37,6 +37,13 @@ RSpec.describe "Capistrano deployment/reporting integration" do
     expect(result["phase"]).to eq("complete")
   end
 
+  it "stops before contacting the server when Application Shell preflight fails" do
+    result = rehearse("shell_blocked")
+    expect(result["error"]).to include("Application Shell preflight failed")
+    expect(result["events"]).to be_empty
+    expect(result["creates"]).to eq(0)
+  end
+
   it "cancels untouched server preparation when GitHub initiation fails" do
     result = rehearse("before_api")
     expect(result["events"].select { |kind, _| kind == "server" }.map(&:last)).to eq(%w[begin cancel])

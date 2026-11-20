@@ -13,6 +13,19 @@ $api = DeploymentApiFixture.new
 $local = Dir.mktmpdir("muzeum-cap-hooks")
 $box = MuzeumDeploymentReporting::Outbox.new($local, api: $api)
 
+# Exercise the local command boundary without contacting the publisher.
+preflight = File.join($local, "application-shell-preflight")
+File.write(preflight, <<~SH)
+  #!/bin/sh
+  test "$#" -eq 6 &&
+    test "$1 $2 $3 $4 $5 $6" = "--app muzeum --revision #{"a" * 40} --review $APPLICATION_SHELL_REVIEW" ||
+    exit 2
+  exit #{$scenario == "shell_blocked" ? 1 : 0}
+SH
+File.chmod(0o700, preflight)
+ENV["APPLICATION_SHELL_PREFLIGHT"] = preflight
+ENV["APPLICATION_SHELL_REVIEW"] = File.join($local, "review.json")
+
 module MuzeumDeploymentRevision
   def self.command(*args)
     $events << [ "github", args[1] ]
@@ -94,20 +107,22 @@ begin
   Rake::Task["muzeum:prepare"].invoke
   Rake::Task["muzeum:finish"].invoke
   Rake::Task["muzeum:complete"].invoke
-rescue StandardError
-  error = "expected synthetic failure"
+rescue StandardError => failure
+  error = failure.message
   begin
     Rake::Task["muzeum:failed"].invoke
   rescue StandardError
     nil
   end
 end
-before_retry = $box.read(fetch(:deployment_token))
+token = fetch(:deployment_token)
+report_started = fetch(:deployment_reporting_started, false)
+before_retry = $box.read(token) if report_started
 if $scenario == "after_api"
   2.times do
     Rake::Task["muzeum:report"].reenable
     Rake::Task["muzeum:report"].invoke(fetch(:deployment_token))
   end
 end
-puts "HOOK_FIXTURE:" + JSON.generate({ events: $events, phase: $phase, error: error, before_retry: before_retry, final: $box.read(fetch(:deployment_token)), states: $api.states, creates: $api.creates.size })
+puts "HOOK_FIXTURE:" + JSON.generate({ events: $events, phase: $phase, error: error, before_retry: before_retry, final: report_started ? $box.read(token) : nil, states: $api.states, creates: $api.creates.size })
 FileUtils.remove_entry($local)
