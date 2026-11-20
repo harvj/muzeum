@@ -1,7 +1,7 @@
 class ResolutionWorkspaceController < ApplicationController
   before_action :workspace
   before_action :observation, except: :index
-  before_action :authorize_management, only: %i[investigate decide admit defer]
+  before_action :authorize_management, only: %i[investigate decide admit defer release_batch confirm_release_batch]
 
   def index
     @filter = params[:filter].presence_in(RecordingResolution::Workspace::FILTERS)
@@ -50,6 +50,13 @@ class ResolutionWorkspaceController < ApplicationController
       []
     end
     @assessment_matches_claims = params[:assessment].blank? || assessment_matches_claims?(@assessment, target)
+    if @may_manage_observation && @assessment && @assessment_matches_claims
+      review = RecordingResolution::ListenerReleaseReview.new(current_user, target, @assessment)
+      if (ranking = review.ranked(@surface))
+        @ranking = ranking
+        @listener_ranking_token = review.token(@ranking)
+      end
+    end
     legacy_candidates = RecordingResolution::Workspace.candidates(@assessment).index_by { |candidate| candidate["id"] }
     @candidates = @ranking.filter_map { |rank| legacy_candidates[rank["recording_mbid"]] }
     current = @scrobbles.find { |play| play.id == target.id } || RecordingResolution::Ledger.effective(current_user).find(target.id)
@@ -67,6 +74,10 @@ class ResolutionWorkspaceController < ApplicationController
     @affected_count = @observations_count - @history.where(user_id: current_user.id).where.not(scrobble_id: nil)
       .where.not(mode: "inherit").where("NOT EXISTS (SELECT 1 FROM resolution_decisions successor WHERE successor.predecessor_id = resolution_decisions.id)").count
     @current_recording = Recording.find_by(id: @current_recording_id) if @current_recording_id
+    if @may_manage_observation && @current_recording && @current_decision&.user_id == current_user.id &&
+        !@current_decision.evidence.key?("release_batch")
+      @batch_releases = @current_recording.admitted_releases.where.not(catalog_verified_at: nil).order(:id).limit(5)
+    end
     @history = @history.where("id < ?", params[:history_before].to_i) if params[:history_before].to_i.positive?
     @history = @history.limit(21).to_a
     recording_ids = @scrobbles.map(&:effective_recording_id) + @history.map(&:recording_id) + [ @inherited_head&.recording_id ]
@@ -104,7 +115,7 @@ class ResolutionWorkspaceController < ApplicationController
       current_user.managed_archive_grants.lock.find_by!(lastfm_account_id: target.lastfm_account_id)
       recording, context = selection(assessment, target) if mode == "resolved"
       previous = RecordingResolution::Ledger.effective(current_user).find(target.id)
-      ranking = assessment && (assessment.evidence["ranking"] || RecordingResolution::Ranking.call(surface, assessment.evidence))
+      ranking = decision_ranking(assessment, surface, target)
       selected_rank = ranking&.find { |entry| entry["recording_mbid"] == recording&.mbid }
       if code == "verified_identifier" && selected_rank&.dig("inputs", "recording_identifier", "state") != "positive"
         raise ArgumentError
@@ -152,7 +163,7 @@ class ResolutionWorkspaceController < ApplicationController
       raise ActiveRecord::StaleObjectError.new(head || surface, "defer") unless head&.id == expected
 
       assessment = @workspace.assessments(surface).find(params[:assessment_id]) if params[:assessment_id].present?
-      ranking = assessment && (assessment.evidence["ranking"] || RecordingResolution::Ranking.call(surface, assessment.evidence))
+      ranking = decision_ranking(assessment, surface, target)
       raise ArgumentError if assessment && !assessment_matches_claims?(assessment, target)
       raise ArgumentError if candidate_mbid && !Array(ranking).any? { |row| row["recording_mbid"] == candidate_mbid }
       code = feedback == "rejected" ? "rejected_candidate" : "deferred_review"
@@ -204,7 +215,42 @@ class ResolutionWorkspaceController < ApplicationController
     redirect_to resolution_surface_path(@observation), alert: "Choose a release for the current recording assignment.", status: :see_other
   end
 
+  def release_batch
+    @batch = build_release_batch
+    @proposals = @batch.proposals
+    @batch_token = @batch.token(@proposals) if @proposals.any?
+  rescue ArgumentError
+    redirect_to resolution_surface_path(@observation), alert: "A verified complete release tracklist is required.", status: :see_other
+  end
+
+  def confirm_release_batch
+    batch = build_release_batch
+    choices = params[:choices]
+    raise ArgumentError unless choices.is_a?(ActionController::Parameters)
+
+    choices = choices.to_unsafe_h
+    saved = batch.confirm!(params[:batch_token], choices, comment: params[:comment].to_s.strip.presence)
+    redirect_to resolution_surface_path(batch.anchor), notice: "Review saved. Confirmed #{view_context.pluralize(saved, 'observation')}.", status: :see_other
+  rescue ArgumentError, ActiveRecord::StaleObjectError
+    redirect_to resolution_surface_path(@observation), alert: "Review changed or expired. Open a fresh batch.", status: :see_other
+  end
+
   private
+
+  def build_release_batch
+    anchor = params[:play].present? ? @workspace.matching(@observation).find(params[:play]) : @observation
+    RecordingResolution::ReleaseBatch.new(current_user, anchor, Release.find(params[:release_id]))
+  end
+
+  def decision_ranking(assessment, surface, target)
+    return unless assessment
+
+    if params[:listener_ranking_token].present?
+      return RecordingResolution::ListenerReleaseReview.new(current_user, target, assessment).read(params[:listener_ranking_token])
+    end
+
+    assessment.evidence["ranking"] || RecordingResolution::Ranking.call(surface, assessment.evidence)
+  end
 
   def authorize_management
     head :forbidden unless current_user.managed_archive_grants.exists?(lastfm_account_id: @observation.lastfm_account_id)

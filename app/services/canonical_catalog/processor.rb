@@ -156,9 +156,13 @@ module CanonicalCatalog
       end
       @local_candidates = RecordingResolution::LocalCandidates.call(surface, @claims)
       local_evidence = { "source_claims" => @claims, "candidates" => @local_candidates, "reasons" => [] }
-      if @local_candidates.any? { |candidate| candidate["verified_local_claim"] } &&
+      local_evidence.merge!(RecordingResolution::LocalCandidates.checked_edition(@claims, @local_candidates))
+      local_ranking = RecordingResolution::Ranking.call(surface, local_evidence)
+      known_identifier = @local_candidates.any? { |candidate| candidate["verified_local_claim"] }
+      unambiguous_slot = @claims["track_mbid"].blank? && local_evidence["edition"].present? && local_ranking.one?
+      if (known_identifier || unambiguous_slot) &&
           @request.context["refresh"] != true &&
-          RecordingResolution::Ranking.recommended?(RecordingResolution::Ranking.call(surface, local_evidence))
+          RecordingResolution::Ranking.recommended?(local_ranking)
         return complete { write_assessment(local_evidence) }
       end
       @evaluator = RecordingResolution::Evaluator.new(@session, discogs: nil, workspace: true)
@@ -193,7 +197,15 @@ module CanonicalCatalog
     end
 
     def write_assessment(evidence)
-      evidence = evidence.merge("candidates" => [ *evidence["candidates"], *@local_candidates ].uniq { |candidate| candidate["id"] })
+      local_contexts = Array(@local_candidates).index_by { |candidate| candidate["id"] }
+      provider_candidates = Array(evidence["candidates"]).map do |candidate|
+        candidate.merge(local_contexts.fetch(candidate["id"], {}).slice("local_release_context"))
+      end
+      verified = evidence["verified_recording"]
+      evidence = evidence.merge("candidates" => [ *provider_candidates, *@local_candidates ].uniq { |candidate| candidate["id"] })
+      if verified && (local = local_contexts[verified["id"]])
+        evidence["verified_recording"] = verified.merge(local.slice("local_release_context"))
+      end
       evidence["ranking"] = RecordingResolution::Ranking.call(@surface, evidence)
       evidence["ranking_version"] = RecordingResolution::Ranking::VERSION
       group = @group || RecordingResolution::Group.create_or_find_by!(surface_id: @surface.id,

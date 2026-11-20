@@ -57,6 +57,13 @@ module RecordingResolution
       factor("duration", nil, 0, 0, nil, nil)
       manual = @evidence["manually_verified_mbid"] == id
       factor("manual_lookup", manual ? true : nil, 0, 0, "MusicBrainz verified the manually entered identifier", nil)
+      context = @candidate["local_release_context"]
+      independent_release_support = context && context["independent_decision_id"]
+      if independent_release_support
+        factor("local_release_history", true, 2, 0,
+          "This stored release contains another recording independently confirmed in your archive", nil)
+        @inputs.fetch("local_release_history")["provenance"] = context
+      end
 
       # Text narrows discovery. A text-only candidate is still a choice for human review.
       return unless verified || slot || manual || (@inputs["title"]["state"] == "positive" &&
@@ -64,12 +71,12 @@ module RecordingResolution
 
       {
         "recording_mbid" => id, "score" => @inputs.values.sum { |factor| factor.fetch("weight") },
-        "version" => VERSION, "inputs" => @inputs,
+        "version" => independent_release_support ? "recording-ranking-v1-local-release-v1" : VERSION, "inputs" => @inputs,
         "provenance" => @candidate.fetch("resolution_candidate_source", "musicbrainz"),
         "source" => { "artist" => @surface.artist, "track" => @surface.track,
           "album" => @surface.album, "claims" => claims },
         "catalog" => @candidate.slice("title", "artist-credit", "length", "disambiguation", "video")
-      }
+      }.tap { |result| result["local_release_context"] = context if context }
     end
 
     private

@@ -24,6 +24,8 @@ Rails.application.routes.draw do
     post :defer, on: :member
     post :decide, on: :member
     post :admit, on: :member
+    get :release_batch, on: :member
+    post :confirm_release_batch, on: :member
   end
   root "landing#show"
 end

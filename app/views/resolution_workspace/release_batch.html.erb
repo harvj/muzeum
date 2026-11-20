@@ -1,0 +1,48 @@
+<section class="card library-card">
+  <p><%= link_to "Back to recording review", resolution_surface_path(@observation, play: params[:play]) %></p>
+  <h1>Review tracks from <%= @batch.tracklist.release.title %></h1>
+  <p>Review up to 50 recent matching observations. Confirmations apply only to the listed plays. Release attribution is separate.</p>
+  <% if @proposals.empty? %>
+    <p>No eligible observations were found in this batch.</p>
+  <% else %>
+    <%= form_with url: confirm_release_batch_resolution_surface_path(@observation, play: params[:play], release_id: @batch.tracklist.release.id) do |form| %>
+      <%= form.hidden_field :batch_token, value: @batch_token %>
+      <% @proposals.each_with_index do |proposal, index| %>
+        <% ranking = proposal.fetch("ranking") %>
+        <% ids = proposal.fetch("observation_ids") %>
+        <fieldset>
+          <legend><%= ranking.first.dig("catalog", "title") %> · <%= pluralize(ids.size, "observation") %></legend>
+          <% ranking.each do |rank| %>
+            <% mbid = rank.fetch("recording_mbid") %>
+            <p><%= rank.dig("catalog", "title") %> · <%= mbid %> · Score <%= rank.fetch("score") %></p>
+            <ul>
+              <% proposal.fetch("positions").select { |slot| slot["recording_mbid"] == mbid }.each do |slot| %>
+                <li>Disc <%= slot.fetch("medium") %>, track <%= slot.fetch("position") %></li>
+              <% end %>
+              <% rank.fetch("inputs").each_value do |factor| %>
+                <% if factor["explanation"] %><li><%= "%+d" % factor.fetch("weight") %> · <%= factor.fetch("explanation") %></li><% end %>
+              <% end %>
+            </ul>
+          <% end %>
+          <details>
+            <summary>Affected observations</summary>
+            <ul><% ids.each do |id| %><li><%= link_to "Observation #{id}", resolution_surface_path(id, play: id) %></li><% end %></ul>
+          </details>
+          <% unless proposal.fetch("selectable") %>
+            <p>Review individually. A conflict, competing version, or missing source identifier prevents batch confirmation.</p>
+          <% end %>
+          <% if proposal.fetch("selectable") || proposal.fetch("rejectable") %>
+            <%= label_tag "batch-choice-#{index}", "Decision for proposal #{index + 1}" %>
+            <% options = [["Leave unselected", ""]] %>
+            <% options << ["Accept", "accept"] if proposal.fetch("selectable") %>
+            <% options << ["Reject top candidate", "reject"] if proposal.fetch("rejectable") %>
+            <%= select_tag "choices[#{index}]", options_for_select(options), id: "batch-choice-#{index}" %>
+          <% end %>
+        </fieldset>
+      <% end %>
+      <%= form.label :comment, "Comment (optional)" %>
+      <%= form.text_field :comment, maxlength: 500 %>
+      <%= form.submit "Confirm selected decisions" %>
+    <% end %>
+  <% end %>
+</section>

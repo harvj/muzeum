@@ -32,6 +32,12 @@
     <p><strong><%= @candidates.many? ? "Ambiguous" : "Unresolved" %></strong>
       <% if @current_decision&.mode == "unresolved" %> · Explicitly left unresolved<% end %></p>
   <% end %>
+  <% if @batch_releases.present? %>
+    <h3>Review other tracks</h3>
+    <ul><% @batch_releases.each do |release| %>
+      <li><%= link_to release.title, release_batch_resolution_surface_path(@observation, release_id: release.id, play: @selected_scrobble&.id), data: { turbo_prefetch: false } %></li>
+    <% end %></ul>
+  <% end %>
   <h3>Decision scope</h3>
   <% if @selected_scrobble %>
     <p>Reviewing the observation at <%= browser_time(@selected_scrobble.played_at) %>.
