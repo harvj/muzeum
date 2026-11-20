@@ -131,6 +131,20 @@ cap production muzeum:preflight
 
 It validates clean synchronized local main/CI, the version handshake and production readiness without creating a GitHub Deployment, acquiring a persistent deployment attempt, running migrations or publishing/restarting a release.
 
+## Reviewed release branches
+
+The default deployment command still requires synchronized `main`. An isolated stable release can use a separate checkout that tracks `origin/release/vX.Y.Z`. Run release commands from the clean, synchronized `main` control checkout. Add an explicit review entry to [the release manifest](../../config/deploy/releases.json) on main with the exact candidate SHA, expected live baseline SHA, and a link to the reviewed scope. The release branch must have a successful push run of the CI workflow for its exact SHA.
+
+Run the read-only combined preflight from main after the reviewed root helper has been installed:
+
+```sh
+cap production 'muzeum:release_preflight[v0.3.2,/absolute/path/to/release-checkout]'
+```
+
+The local guard verifies both checkouts, the approved remote, exact SHA, branch CI, and Git ancestry. The installed helper compares the reviewed baseline with the live revision under the phase and backup locks, refuses a lingering deployment attempt, and runs its ordinary health and recovery checks. The preflight retains no deployment attempt. If production moves, review the new baseline and ancestry before trying again.
+
+After explicit authorization, use `cap production 'muzeum:release_deploy[v0.3.2,/absolute/path/to/release-checkout]'`. It runs the same Capistrano lifecycle and pins the reviewed SHA. The root coordinator verifies the baseline again while acquiring the persistent lock and stores the branch, version, reviewed baseline, scope record and CI URL alongside the SHA and ordinary deployment evidence in its receipt. Publish and synchronize the release only after verifying the exact running SHA and a completed receipt. Reconcile the released changes with main without overwriting subsequent work.
+
 ## Reproduction and limits
 
 Use a dedicated disposable PostgreSQL cluster and fixture credentials only:

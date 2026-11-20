@@ -22,6 +22,9 @@ BACKUPS = Path('/var/lib/harvj-backups/muzeum')
 UNITS = ('muzeum-web.service', 'muzeum-worker.service')
 SHA = re.compile(r'[a-f0-9]{40}')
 TOKEN = re.compile(r'[a-f0-9]{32}')
+RELEASE_VERSION = re.compile(r'v(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)')
+RELEASE_SCOPE = re.compile(r'https://github\.com/harvj/muzeum/issues/[0-9]+#issuecomment-[0-9]+')
+RELEASE_CI = re.compile(r'https://github\.com/harvj/muzeum/actions/runs/[0-9]+')
 ROUTE_HELPER = Path('/usr/local/sbin/harvj-muzeum-route')
 
 
@@ -266,9 +269,32 @@ class Deployment:
         write_json(self.root / (record['token'] + '.json'), record)
         write_json(self.root / 'active.json', record)
 
-    def run(self, phase, sha, token, path=None):
+    def release_preflight(self, baseline):
+        if not SHA.fullmatch(baseline):
+            raise RuntimeError('Immutable production baseline required')
+        self.root.mkdir(mode=0o700, parents=True, exist_ok=True)
+        with (self.root / 'phase.lock').open('a') as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            if (self.root / 'active.json').exists():
+                raise RuntimeError('Deployment lock retained; inspect active.json before operator recovery')
+            with self.host.backup_lock():
+                if self.host.revision() != baseline:
+                    raise RuntimeError('Live production baseline differs from release review')
+                evidence = self.host.preflight()
+                if evidence['revision'] != baseline:
+                    raise RuntimeError('Live production baseline differs from release review')
+                return evidence
+
+    def run(self, phase, sha, token, path=None, release_review=None):
         if not SHA.fullmatch(sha) or not TOKEN.fullmatch(token):
             raise RuntimeError('Immutable SHA and deployment token required')
+        if release_review:
+            version = release_review['version']
+            if (phase != 'begin' or not RELEASE_VERSION.fullmatch(version) or
+                    release_review['branch'] != 'release/' + version or
+                    not SHA.fullmatch(release_review['baseline']) or release_review['baseline'] == sha or
+                    not RELEASE_SCOPE.fullmatch(release_review['scope']) or not RELEASE_CI.fullmatch(release_review['ci'])):
+                raise RuntimeError('Invalid release approval metadata')
         self.root.mkdir(mode=0o700, parents=True, exist_ok=True)
         with (self.root / 'phase.lock').open('a') as lock:
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -276,7 +302,11 @@ class Deployment:
             if phase == 'begin':
                 if active.exists():
                     raise RuntimeError('Deployment lock retained; inspect active.json before operator recovery')
+                if release_review and self.host.revision() != release_review['baseline']:
+                    raise RuntimeError('Live production baseline differs from release review')
                 record = {'sha': sha, 'token': token, 'started_at': now(), 'phase': 'preflight', 'migrating': False, 'withdrawn': False}
+                if release_review:
+                    record['release_review'] = release_review
                 self.save(record)
             else:
                 record = json.loads(active.read_text())
@@ -291,6 +321,8 @@ class Deployment:
                 with self.host.backup_lock():
                     if phase == 'begin':
                         record['baseline'] = self.host.preflight()
+                        if release_review and record['baseline']['revision'] != release_review['baseline']:
+                            raise RuntimeError('Live production baseline differs from release review')
                         record['phase'] = 'prepared_checkout'
                     elif phase == 'prepare':
                         if record['phase'] != 'prepared_checkout':
@@ -405,6 +437,9 @@ def main():
         with host.backup_lock():
             print(json.dumps(host.preflight()))
         return
+    if len(sys.argv) == 3 and sys.argv[1] == 'release-preflight':
+        print(json.dumps(Deployment(Host()).release_preflight(sys.argv[2])))
+        return
     if len(sys.argv) == 4 and sys.argv[1] == 'receipt':
         sha, token = sys.argv[2:]
         if not SHA.fullmatch(sha) or not TOKEN.fullmatch(token):
@@ -412,13 +447,18 @@ def main():
         record = json.loads((STATE / (token + '.json')).read_text())
         if record['sha'] != sha or record['token'] != token:
             raise RuntimeError('Receipt identity mismatch')
-        print(json.dumps({key: record[key] for key in ('sha', 'token', 'phase', 'health') if key in record}))
+        print(json.dumps({key: record[key] for key in ('sha', 'token', 'phase', 'health', 'release_review') if key in record}))
         return
-    if len(sys.argv) not in (4, 5):
-        raise RuntimeError('Expected phase SHA token [release]')
-    record = Deployment(Host()).run(*sys.argv[1:])
+    if len(sys.argv) == 9 and sys.argv[1] == 'begin-release':
+        sha, token, branch, version, baseline, scope, ci = sys.argv[2:]
+        review = {'branch': branch, 'version': version, 'baseline': baseline, 'scope': scope, 'ci': ci}
+        record = Deployment(Host()).run('begin', sha, token, release_review=review)
+    else:
+        if len(sys.argv) not in (4, 5):
+            raise RuntimeError('Expected phase SHA token [release]')
+        record = Deployment(Host()).run(*sys.argv[1:])
     # No subprocess output, environments or opaque grants are published.
-    print(json.dumps({key: record[key] for key in ('sha', 'token', 'phase', 'baseline', 'migrations', 'pre_backup', 'post_backup', 'health', 'safe_state') if key in record}))
+    print(json.dumps({key: record[key] for key in ('sha', 'token', 'phase', 'baseline', 'release_review', 'migrations', 'pre_backup', 'post_backup', 'health', 'safe_state') if key in record}))
 
 
 if __name__ == '__main__':

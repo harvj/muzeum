@@ -141,6 +141,34 @@ class WorkflowTests(unittest.TestCase):
         self.assertFalse({'backup', 'restore', 'withdraw', 'migration'} & set(host.events))
         self.assertFalse((self.root / 'audit/active.json').exists())
 
+    def test_reviewed_release_retains_approval_and_rechecks_baseline_under_lock(self):
+        host, flow = self.workflow()
+        review = {
+            'branch': 'release/v0.3.2', 'version': 'v0.3.2', 'baseline': OLD,
+            'scope': 'https://github.com/harvj/muzeum/issues/32#issuecomment-10',
+            'ci': 'https://github.com/harvj/muzeum/actions/runs/20'
+        }
+        self.assertEqual(flow.release_preflight(OLD)['health'], 'passed')
+        self.assertFalse((flow.root / 'active.json').exists())
+        with self.assertRaisesRegex(RuntimeError, 'Invalid release approval'):
+            flow.run('begin', NEW, self.token, release_review={**review, 'branch': 'main'})
+        host.sha = 'c' * 40
+        with self.assertRaisesRegex(RuntimeError, 'Live production baseline differs'):
+            flow.run('begin', NEW, self.token, release_review=review)
+        self.assertFalse((flow.root / 'active.json').exists())
+        host.sha = OLD
+        flow.run('begin', NEW, self.token, release_review=review)
+        with self.assertRaisesRegex(RuntimeError, 'Deployment lock retained'):
+            flow.release_preflight(OLD)
+        flow.run('prepare', NEW, self.token, str(host.candidate))
+        host.publish()
+        flow.run('finish', NEW, self.token)
+        completed = flow.run('complete', NEW, self.token)
+        saved = json.loads((flow.root / (self.token + '.json')).read_text())
+        self.assertEqual(saved['sha'], NEW)
+        self.assertEqual(saved['release_review'], review)
+        self.assertEqual(completed['health'], 'passed')
+
     def test_additive_migration_has_two_fresh_recovery_gates(self):
         host, flow = self.workflow(True)
         receipt = self.success(host, flow)

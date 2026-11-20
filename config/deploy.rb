@@ -60,6 +60,22 @@ namespace :muzeum do
     end
   end
 
+  desc "Verify the reviewed release checkout and live production baseline without deploying"
+  task :release_preflight, [ :version, :checkout ] do |_, args|
+    approval = MuzeumDeploymentRevision.resolve_release!(args[:version], args[:checkout])
+    puts "Preflight #{approval.fetch(:branch)} at #{approval.fetch(:sha)}; CI #{approval.fetch(:ci)}"
+    muzeum_verify_helper
+    on primary(:app) do
+      execute :sudo, "-n", "/usr/local/sbin/muzeum-deploy", "release-preflight", approval.fetch(:baseline)
+    end
+  end
+
+  desc "Deploy an explicitly reviewed release checkout through the guarded workflow"
+  task :release_deploy, [ :version, :checkout ] do |_, args|
+    set :muzeum_release_selection, [ args[:version], args[:checkout] ]
+    Rake::Task["deploy"].invoke
+  end
+
   desc "Synchronize a published tag with the live SHA without deploying or restarting"
   task :sync_release, [ :tag ] do |_, args|
     tag = args.fetch(:tag).to_s
@@ -80,7 +96,8 @@ namespace :muzeum do
   end
 
   task :authorize do
-    approval = MuzeumDeploymentRevision.resolve!
+    selection = fetch(:muzeum_release_selection, nil)
+    approval = selection ? MuzeumDeploymentRevision.resolve_release!(*selection) : MuzeumDeploymentRevision.resolve!
     set :approved_revision, approval.fetch(:sha)
     set :branch, approval.fetch(:sha)
     set :deployment_token, SecureRandom.hex(16)
@@ -89,7 +106,12 @@ namespace :muzeum do
     outbox.check_clear!
     muzeum_verify_helper
     on primary(:app) do
-      execute :sudo, "-n", "/usr/local/sbin/muzeum-deploy", "begin", fetch(:approved_revision), fetch(:deployment_token)
+      if selection
+        execute :sudo, "-n", "/usr/local/sbin/muzeum-deploy", "begin-release", fetch(:approved_revision),
+          fetch(:deployment_token), *approval.values_at(:branch, :version, :baseline, :scope, :ci)
+      else
+        execute :sudo, "-n", "/usr/local/sbin/muzeum-deploy", "begin", fetch(:approved_revision), fetch(:deployment_token)
+      end
       set :deployment_lock_acquired, true
     end
     begin

@@ -94,4 +94,63 @@ RSpec.describe MuzeumDeploymentRevision do
     @ci = {}
     expect { described_class.resolve! }.to raise_error(/exact SHA must pass/)
   end
+
+  context "with a separate release checkout" do
+    let(:version) { "v0.3.2" }
+    let(:branch) { "release/#{version}" }
+    let(:scope) { "https://github.com/harvj/muzeum/issues/32#issuecomment-123" }
+    let(:release_checkout) { File.expand_path("../release") }
+    let(:manifest) { File.expand_path("../releases.json") }
+
+    before do
+      git("worktree", "add", "-b", branch, release_checkout, @sha)
+      Dir.chdir(release_checkout) do
+        File.write("fixture", "release candidate\n")
+        git("commit", "-am", "Release candidate")
+        git("push", "-u", "origin", branch)
+        @candidate = git("rev-parse", "HEAD")
+      end
+      @ci.merge!("headSha" => @candidate, "headBranch" => branch, "event" => "push")
+      stub_const("MuzeumDeploymentRevision::RELEASES", manifest)
+      write_review
+    end
+
+    def write_review(override = {})
+      File.write(manifest, JSON.generate(version => { sha: @candidate, baseline: @sha, scope: }.merge(override)))
+    end
+
+    it "requires an explicit reviewed release and pins its separate CI and baseline" do
+      expect(described_class.resolve_release!(version, release_checkout)).to eq(
+        sha: @candidate, baseline: @sha, branch:, version:, scope:, ci: @ci["url"]
+      )
+      Dir.chdir(release_checkout) do
+        expect { described_class.resolve! }.to raise_error(/requires local main/)
+      end
+    end
+
+    it "rejects arbitrary branches and unapproved versions" do
+      expect { described_class.resolve_release!("main", release_checkout) }.to raise_error(/stable vX.Y.Z/)
+      expect { described_class.resolve_release!("v0.3.3", release_checkout) }.to raise_error(/not reviewed/)
+      expect { described_class.resolve_release!(version, Dir.pwd) }.to raise_error(/requires local release/)
+    end
+
+    it "rejects a dirty release checkout and a reviewed SHA mismatch" do
+      dirty = File.join(release_checkout, "untracked")
+      File.write(dirty, "unreviewed")
+      expect { described_class.resolve_release!(version, release_checkout) }.to raise_error(/clean checkout/)
+      File.delete(dirty)
+      write_review(sha: "0" * 40)
+      expect { described_class.resolve_release!(version, release_checkout) }.to raise_error(/reviewed SHA/)
+    end
+
+    it "rejects a missing baseline and absent or cross-branch CI" do
+      write_review(baseline: "0" * 40)
+      expect { described_class.resolve_release!(version, release_checkout) }.to raise_error(/preflight command failed/)
+      write_review
+      @ci["headBranch"] = "main"
+      expect { described_class.resolve_release!(version, release_checkout) }.to raise_error(/selected branch push/)
+      @ci = {}
+      expect { described_class.resolve_release!(version, release_checkout) }.to raise_error(/exact SHA must pass/)
+    end
+  end
 end
