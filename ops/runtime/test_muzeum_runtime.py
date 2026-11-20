@@ -1,5 +1,9 @@
 import hashlib
 import json
+import os
+import pwd
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -38,6 +42,64 @@ class RuntimeTests(unittest.TestCase):
             link.symlink_to('/usr/bin/true')
             with self.assertRaisesRegex(RuntimeError, 'Untrusted'):
                 selection.protected(link)
+
+    @unittest.skipUnless(sys.platform == 'linux' and os.geteuid() == 0, 'requires disposable Linux root fixture')
+    def test_installed_layout_is_readable_but_not_writable_after_dropping_privileges(self):
+        account = pwd.getpwnam('nobody')
+        with tempfile.TemporaryDirectory(dir='/opt') as work:
+            parent = Path(work)
+            parent.chmod(0o755)
+            secure = parent / 'runtime'
+            secure.mkdir(mode=0o755)
+            manifest = secure / 'runtime-sha256.json'
+            manifest.write_text('{}')
+            manifest.chmod(0o644)
+            probe = """
+import os
+from pathlib import Path
+import sys
+sys.path.insert(0, sys.argv[1])
+import muzeum_runtime as selection
+manifest = Path(sys.argv[2])
+selection.protected(manifest, service_manifest=True)
+assert manifest.read_text() == '{}'
+if os.geteuid():
+    assert not os.access(manifest, os.W_OK)
+    assert not os.access(manifest.parent, os.W_OK)
+    try:
+        manifest.open('a')
+    except PermissionError:
+        pass
+    else:
+        raise AssertionError('Unprivileged writer opened manifest')
+"""
+            module = secure / 'muzeum_runtime.py'
+            module.write_bytes(Path(selection.__file__).read_bytes())
+            module.chmod(0o644)
+            arguments = [sys.executable, '-B', '-c', probe, str(secure), str(manifest)]
+            subprocess.run(arguments, check=True, capture_output=True)
+            subprocess.run(arguments, user=account.pw_uid, group=account.pw_gid, extra_groups=[],
+                           check=True, capture_output=True)
+
+            secure.chmod(0o700)
+            with self.assertRaisesRegex(RuntimeError, 'service-traversable'):
+                selection.protected(manifest, service_manifest=True)
+            secure.chmod(0o775)
+            with self.assertRaisesRegex(RuntimeError, 'Untrusted'):
+                selection.protected(manifest, service_manifest=True)
+            secure.chmod(0o755)
+            manifest.chmod(0o600)
+            with self.assertRaisesRegex(RuntimeError, 'mode 0644'):
+                selection.protected(manifest, service_manifest=True)
+            manifest.chmod(0o644)
+            os.chown(manifest, account.pw_uid, 0)
+            with self.assertRaisesRegex(RuntimeError, 'Untrusted'):
+                selection.protected(manifest, service_manifest=True)
+            os.chown(manifest, 0, 0)
+            link = parent / 'link'
+            link.symlink_to(secure, target_is_directory=True)
+            with self.assertRaisesRegex(RuntimeError, 'Untrusted'):
+                selection.protected(link / manifest.name, service_manifest=True)
 
     def test_environment_ignores_interpreter_and_bundle_overrides(self):
         environment = selection.runtime_environment({

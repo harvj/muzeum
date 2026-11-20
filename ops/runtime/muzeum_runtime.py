@@ -9,15 +9,21 @@ BASELINE = '024ed4aecd98984c00323377389cde5a6a35d16d'
 FORWARD = '641e09ec4a6de94f0043e3a7314d28674901485c'
 ROLLBACK = '1abfe5a791c254a03e5e03a2ae4c4ecfe8459cd1'
 PATCHED = Path('/opt/muzeum/ruby-3.4.13/bin')
-MANIFEST = Path('/etc/muzeum/runtime-sha256.json')
+MANIFEST = Path('/usr/local/lib/muzeum-runtime/runtime-sha256.json')
 APP = Path('/var/www/muzeum')
 
 
-def protected(path):
+def protected(path, *, service_manifest=False):
     for component in (path, *path.parents):
         info = component.lstat()
         if info.st_uid != 0 or stat.S_ISLNK(info.st_mode) or info.st_mode & 0o022:
             raise RuntimeError('Untrusted Muzeum runtime path')
+        if service_manifest and component != path and not info.st_mode & stat.S_IXOTH:
+            raise RuntimeError('Muzeum runtime manifest parent must be service-traversable')
+    if service_manifest:
+        info = path.lstat()
+        if info.st_gid != 0 or stat.S_IMODE(info.st_mode) != 0o644:
+            raise RuntimeError('Muzeum runtime manifest must be root:root mode 0644')
     if not path.is_file():
         raise RuntimeError('Muzeum runtime file required')
 
@@ -27,7 +33,7 @@ def runtime(sha):
         return Path('/opt/auth/ruby-3.4.12/bin'), APP / 'shared/bundle'
     if sha not in (FORWARD, ROLLBACK):
         raise RuntimeError('Muzeum runtime requires an explicitly reviewed release SHA')
-    protected(MANIFEST)
+    protected(MANIFEST, service_manifest=True)
     checksums = json.loads(MANIFEST.read_text())
     if set(checksums) != {'ruby', 'bundle'}:
         raise RuntimeError('Expected reviewed Muzeum runtime manifest')

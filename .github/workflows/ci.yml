@@ -36,7 +36,7 @@ jobs:
       - name: Verify backup helper tests
         run: python3 -m unittest discover -s ops/backups -p 'test_*.py'
       - name: Verify Muzeum runtime selection
-        run: python3 -m unittest discover -s ops/runtime -p 'test_*.py'
+        run: sudo python3 -B -m unittest discover -s ops/runtime -p 'test_*.py'
       - name: Verify catalog readiness diagnostics
         run: python3 -m unittest discover -s ops/catalog -p 'test_*.py'
       - name: Install disposable recovery-test dependency
