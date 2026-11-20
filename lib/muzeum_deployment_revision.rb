@@ -71,7 +71,8 @@ module MuzeumDeploymentRevision
       raise "Release requires a pinned SHA, production baseline and reviewed scope record"
     end
 
-    use_main_ci = version == "v0.3.4" && sha == V034_SHA
+    use_main_ci = version == "v0.3.4"
+    raise "v0.3.4 review must retain the pinned forward SHA" if use_main_ci && sha != V034_SHA
     control_sha = checkout!(use_main_ci ? V034_CONTROLS : "main")
     ci!(control_sha, branch: V034_CONTROLS, required_jobs: true) if use_main_ci
     branch = "release/#{version}"

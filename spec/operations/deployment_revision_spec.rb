@@ -210,6 +210,13 @@ RSpec.describe MuzeumDeploymentRevision do
       expect { described_class.resolve_release!(version, release_checkout) }.to raise_error(/Required CI jobs/)
     end
 
+    it "rejects a modified v0.3.4 review SHA" do
+      review = JSON.parse(File.read(manifest))
+      review.fetch(version)["sha"] = @control_sha
+      File.write(manifest, JSON.generate(review))
+      expect { described_class.resolve_release!(version, release_checkout) }.to raise_error(/pinned forward SHA/)
+    end
+
     it "rejects a non-main forward run and an unauthorized control branch" do
       @forward_run[:headBranch] = release
       expect { described_class.resolve_release!(version, release_checkout) }.to raise_error(/selected branch push/)
