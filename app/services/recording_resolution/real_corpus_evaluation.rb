@@ -2,7 +2,7 @@ require "time"
 
 module RecordingResolution
   class RealCorpusEvaluation
-    VERSION = "public-catalog-replay-v1"
+    VERSION = "public-catalog-replay-v2"
     MAX_CASES = 100
     Observation = Data.define(:artist, :album, :track)
 
@@ -41,6 +41,12 @@ module RecordingResolution
         "shadow" => comparisons.map { |row| row.fetch("shadow") }.tally,
         "baseline_top" => comparisons.map { |row| row.fetch("baseline_top") }.tally,
         "shadow_top" => comparisons.map { |row| row.fetch("shadow_top") }.tally,
+        "discovery" => { "reviewed_cases" => comparisons.count { |row| row["reviewed_recording"] },
+          "surfaced" => comparisons.count { |row| row["reviewed_candidate_surfaced"] },
+          "missing" => comparisons.count { |row| row["reviewed_candidate_surfaced"] == false } },
+        "offline_identifier_edition_conflict_probe" => comparisons.select { |row| row["checked_edition_conflict"] }.map do |row|
+          row.slice("case", "baseline", "shadow")
+        end,
         "simulated_corrections" => @cases.count { |row| row["initial_choice_ref"] && row["initial_choice_ref"] != row["reviewed_ref"] },
         "rank_order_controls" => order_controls,
         "cases" => comparisons
@@ -79,11 +85,15 @@ module RecordingResolution
         refs = example.fetch("candidate_refs")
         raise ArgumentError, "Candidate pool outside bounds" unless (1..25).cover?(refs.size)
 
-        %w[checked_slot_ref verified_identifier_ref reviewed_ref initial_choice_ref].each do |field|
+        %w[checked_slot_ref verified_identifier_ref initial_choice_ref].each do |field|
           ref = example[field]
           raise ArgumentError, "Reference outside candidate pool" if ref && !refs.include?(ref)
         end
-        refs.map { |ref| mbid(ref) }
+        reviewed = example["reviewed_ref"]
+        if reviewed && !refs.include?(reviewed) && !(example["partition"] == "held_out" && example["discovery_miss"] == true)
+          raise ArgumentError, "Reference outside candidate pool"
+        end
+        (refs + [ reviewed ].compact).map { |ref| mbid(ref) }
       end.to_set
     end
 
@@ -110,6 +120,8 @@ module RecordingResolution
     end
 
     def replay(example, sequence, time)
+      return [] if example["discovery_miss"]
+
       captured = snapshots.fetch(example.fetch("id"))
       target = example["reviewed_ref"]
       initial = example["initial_choice_ref"]
@@ -137,11 +149,14 @@ module RecordingResolution
       shadow = ranks.map { |row| row.merge("score" => ManualReviewLearning.adjusted_score(row, weights)) }
         .sort_by { |row| [ -row.fetch("score"), row.fetch("recording_mbid") ] }
       target = mbid(example["reviewed_ref"])
+      checked = mbid(example["checked_slot_ref"])
+      verified = mbid(example["verified_identifier_ref"])
       {
         "case" => example.fetch("id"), "tags" => example.fetch("tags"),
         "reviewed_recording" => target, "baseline_recommendation" => recommendation(ranks),
         "shadow_recommendation" => recommendation(shadow),
         "reviewed_candidate_surfaced" => target && ranks.any? { |rank| rank["recording_mbid"] == target },
+        "checked_edition_conflict" => !!(checked && verified && checked != verified),
         "baseline" => outcome(ranks, recommendation(ranks), target),
         "shadow" => outcome(shadow, recommendation(shadow), target),
         "baseline_top" => outcome(ranks, unique_top(ranks), target),

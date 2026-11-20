@@ -317,5 +317,90 @@
     "verified_identifier_ref": null,
     "reviewed_ref": null,
     "initial_choice_ref": null
+  },
+  {
+    "id": "montreal-discovery-miss",
+    "observation_group": "bohemian-rhapsody",
+    "partition": "held_out",
+    "surface": {
+      "artist": "Queen",
+      "album": "Queen Rock Montreal",
+      "track": "Bohemian Rhapsody"
+    },
+    "reviewed_ref": "queen_montreal",
+    "candidate_refs": [
+      "queen_studio",
+      "queen_live"
+    ],
+    "tags": [
+      "live",
+      "discovery-miss",
+      "missing-checked-edition"
+    ],
+    "discovery_miss": true
+  },
+  {
+    "id": "montreal-checked-slot",
+    "observation_group": "bohemian-rhapsody",
+    "partition": "held_out",
+    "surface": {
+      "artist": "Queen",
+      "album": "Queen Rock Montreal",
+      "track": "Bohemian Rhapsody"
+    },
+    "reviewed_ref": "queen_montreal",
+    "candidate_refs": [
+      "queen_studio",
+      "queen_live",
+      "queen_montreal"
+    ],
+    "tags": [
+      "live",
+      "alternate-version",
+      "incomplete-identifier"
+    ],
+    "checked_slot_ref": "queen_montreal"
+  },
+  {
+    "id": "wembley-misleading-studio-only",
+    "observation_group": "bohemian-rhapsody",
+    "partition": "held_out",
+    "surface": {
+      "artist": "Queen",
+      "album": "Live at Wembley ’86",
+      "track": "Bohemian Rhapsody"
+    },
+    "reviewed_ref": "queen_live",
+    "candidate_refs": [
+      "queen_studio"
+    ],
+    "tags": [
+      "live",
+      "discovery-miss",
+      "misleading-id"
+    ],
+    "verified_identifier_ref": "queen_studio",
+    "discovery_miss": true
+  },
+  {
+    "id": "pressure-missing-live-candidate",
+    "observation_group": "under-pressure",
+    "partition": "held_out",
+    "surface": {
+      "artist": "Queen",
+      "album": "Live at Wembley ’86",
+      "track": "Under Pressure"
+    },
+    "reviewed_ref": "pressure_live",
+    "candidate_refs": [
+      "pressure_studio",
+      "pressure_tribute"
+    ],
+    "tags": [
+      "competing-credits",
+      "discovery-miss",
+      "incomplete-evidence"
+    ],
+    "discovery_miss": true
   }
 ]

@@ -37,3 +37,33 @@ RAILS_ENV=test bin/rails runner script/resolution_real_corpus.rb --order-packets
 ```
 
 The benchmark uses `public-catalog-replay-v1`, `recording-ranking-v1`, and `pairwise-factor-sign-v1`. It is offline and has no connection to the P1.5.1a review UI. The next increment is a larger, independently adjudicated corpus with realistic discovery misses and a counterbalanced review study. Keep Issue #21 deferred and require separate authorization for any production learning activation or automatic assignment.
+
+## Human validation preparation and discovery stress cases
+
+Replay v2 adds four held-out cases, including three deliberately withheld correct candidates and a second live Queen performance. Catalog review linked Montreal to disc 2, track 9 and to the distinct recording MBID. The label independently confirms the Montreal performance and track title. The new fixture records the catalog page used for this inspection and the label cross-check. It does not claim an API response hash for the manually projected entry. The reference label is kept outside decision-time evidence whenever discovery misses it. The cross-partition check covers both surfaced candidates and undiscovered reviewed identities. [MusicBrainz edition](https://musicbrainz.org/release/1586bf99-c5dd-4b0b-9c1e-a94cf3925e52), [Universal Music tracklist](https://www.universalmusic.ca/2024/03/14/queen-to-release-queen-rock-montreal-on-special-blu-ray-vinyl-and-cd-formats-may-10/).
+
+There are 18 constructed cases, 12 real recording identities, 5 training cases and 13 held-out cases. Three examples qualified for training. Nine earlier held-out results remain in the frozen fixture. Seven of ten labeled held-out identities surfaced. This 70% coverage includes intentionally engineered omissions and does not estimate live discovery recall.
+
+| Held-out outcome | P1.5.1 | Shadow |
+| --- | ---: | ---: |
+| Correct unique top rank (labeled cases, n=10) | 3 | 6 |
+| Incorrect unique top rank (labeled cases) | 5 | 4 |
+| Recommended correct recording | 1 | 1 |
+| Recommended incorrect recording | 2 | 2 |
+| Withheld recommendation (labeled cases) | 7 | 7 |
+| Withheld recommendation (ambiguous cases, n=3) | 3 | 3 |
+
+Three correction sequences remain simulated. The learner adds a point for a checked edition slot, removes one from a matching claimed recording ID, and adds one to the contradictory different-ID factor, softening its penalty. These are fitted feature distinctions. They do not establish how a reviewer made a decision.
+
+The Wembley case illustrates why reweighting alone is insufficient. Studio scores 12 points, including 8 for a source-reported identifier that resolves to a real studio recording. Wembley scores −2 despite a checked live edition slot worth 4. The current scorer subtracts 6 for the conflicting source ID and 4 because the title omits the catalog's live marker. The verified slot, release context, and distinct performance recording are available. A direct link between this play and a performance, such as a trustworthy playback identifier or measured playback evidence, is missing. Catalog duration alone supplies no observation duration. An offline conflict probe flagged this incorrect recommendation and one already-withheld Bowie case. The studio-only discovery miss also recommends incorrectly, and has no checked slot to trigger the probe. A future experiment should test withholding recommendations when a checked edition conflicts with a source ID, plus candidate recovery when that edition was missed. No recommendation rule was activated.
+
+### Blinded study
+
+Assign consenting reviewers to one of six arms before showing the cases. Balance arm counts with a randomized block order and give each reviewer only one arm. Each arm shows the same evidence and only one order per observation family. Candidate scores, recommendation badges, reference answers, and other arms stay hidden. Reviewers select a recording or abstain. No written explanation is requested. Use opaque IDs and keep the ballot file out of Git. Independently adjudicate an expanded holdout before drawing safety conclusions. Keep study responses separate from historical operator decisions.
+
+```sh
+RAILS_ENV=test bin/rails runner script/resolution_real_corpus.rb --study-arm 0
+RAILS_ENV=test bin/rails runner script/resolution_real_corpus.rb --study-results /path/to/disposable-ballots.json
+```
+
+Each ballot row includes the issued `version`, `packet_digest`, `arm`, `packet`, an opaque `reviewer`, and a `choice` equal to a presented MBID or `abstain`. Analysis compares selection when the *same candidate in the same packet* appears first versus later. This controls for candidate preference. Balanced randomized allocation and enough reviewers are still required to estimate a human order effect. The bundled controls changed 5 of 5 always-first choices and zero fixed-identity choices under reversal. No human responses were collected. The empty-ballot run reports zero reviewers without reporting a human effect.

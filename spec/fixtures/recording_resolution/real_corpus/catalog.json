@@ -418,5 +418,41 @@
       "response_sha256": "80b81a1085ccdcda698ff6a4fe2fcdefcfe6188dcdf4d43bae6378b41424c14f",
       "review_url": "https://shop.nirvana.com/products/mtv-unplugged"
     }
+  },
+  "queen_montreal": {
+    "recording": {
+      "id": "cdb01e2a-8dfe-4f66-91f5-4eb0d1aac885",
+      "title": "Bohemian Rhapsody",
+      "artist-credit": [
+        {
+          "name": "Queen",
+          "joinphrase": "",
+          "artist": {
+            "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+            "name": "Queen"
+          }
+        }
+      ],
+      "disambiguation": "live at the Montreal Forum in November 1981"
+    },
+    "release": {
+      "id": "1586bf99-c5dd-4b0b-9c1e-a94cf3925e52",
+      "title": "Queen Rock Montreal",
+      "date": "2020-07-17",
+      "country": "XW"
+    },
+    "slot": {
+      "medium": 2,
+      "position": 9,
+      "title": "Bohemian Rhapsody",
+      "recording_mbid": "cdb01e2a-8dfe-4f66-91f5-4eb0d1aac885",
+      "track_mbid": "8b25e401-f87a-46ff-8c3f-d130f9b05d9e"
+    },
+    "source": {
+      "url": "https://musicbrainz.org/release/1586bf99-c5dd-4b0b-9c1e-a94cf3925e52",
+      "retrieved_at": "2026-11-20T05:19:38Z",
+      "review_url": "https://www.universalmusic.ca/2024/03/14/queen-to-release-queen-rock-montreal-on-special-blu-ray-vinyl-and-cd-formats-may-10/",
+      "capture": "catalog page and linked recording identity"
+    }
   }
 }

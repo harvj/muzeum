@@ -3077,5 +3077,872 @@
     },
     "ranking": [],
     "recommended_mbid": null
+  },
+  "montreal-discovery-miss": {
+    "captured_at": "2026-11-20T03:17:39Z",
+    "sources": [
+      {
+        "url": "https://musicbrainz.org/ws/2/release/5032df80-9baf-44f2-b20f-6058ae79a93d?inc=recordings+artist-credits&fmt=json",
+        "retrieved_at": "2026-11-20T03:17:37Z",
+        "response_sha256": "049f60fdd0c64d95ccb3a0362e5bb49161f20fb493ce3b1230590768a96d2ba8"
+      },
+      {
+        "url": "https://musicbrainz.org/ws/2/release/4fdc0364-5c4f-45aa-91ec-b94a5cc9ec7c?inc=recordings+artist-credits&fmt=json",
+        "retrieved_at": "2026-11-20T03:17:39Z",
+        "response_sha256": "3c77a03e56bcd18fb00c48685950398d430ab8833a68431a1296b45ed6326edd"
+      }
+    ],
+    "evidence": {
+      "candidates": [
+        {
+          "id": "dc6b33ac-c649-414d-bd5d-b6403d23969c",
+          "title": "Bohemian Rhapsody",
+          "disambiguation": "",
+          "length": 332000,
+          "video": false,
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": "",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            }
+          ]
+        },
+        {
+          "id": "35a91a43-a1f7-4068-ad03-e0569a0b372f",
+          "title": "Bohemian Rhapsody",
+          "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK",
+          "length": 350573,
+          "video": false,
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": "",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            }
+          ]
+        }
+      ],
+      "source_claims": {},
+      "verified_recording": null,
+      "edition": null,
+      "slots": []
+    },
+    "ranking": [
+      {
+        "recording_mbid": "dc6b33ac-c649-414d-bd5d-b6403d23969c",
+        "score": 4,
+        "version": "recording-ranking-v1",
+        "inputs": {
+          "recording_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "different_verified_recording": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "title": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Recording title matches after text normalization"
+          },
+          "artist_name": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Artist name or credited name matches"
+          },
+          "artist_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "edition_slot": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "version": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "duration": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "manual_lookup": {
+            "state": "unavailable",
+            "weight": 0
+          }
+        },
+        "provenance": "musicbrainz",
+        "source": {
+          "artist": "Queen",
+          "track": "Bohemian Rhapsody",
+          "album": "Queen Rock Montreal",
+          "claims": {}
+        },
+        "catalog": {
+          "title": "Bohemian Rhapsody",
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": "",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            }
+          ],
+          "length": 332000,
+          "disambiguation": "",
+          "video": false
+        }
+      },
+      {
+        "recording_mbid": "35a91a43-a1f7-4068-ad03-e0569a0b372f",
+        "score": 0,
+        "version": "recording-ranking-v1",
+        "inputs": {
+          "recording_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "different_verified_recording": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "title": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Recording title matches after text normalization"
+          },
+          "artist_name": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Artist name or credited name matches"
+          },
+          "artist_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "edition_slot": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "version": {
+            "state": "contradictory",
+            "weight": -4,
+            "explanation": "Catalog marks a distinct or video version that the source does not confirm"
+          },
+          "duration": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "manual_lookup": {
+            "state": "unavailable",
+            "weight": 0
+          }
+        },
+        "provenance": "musicbrainz",
+        "source": {
+          "artist": "Queen",
+          "track": "Bohemian Rhapsody",
+          "album": "Queen Rock Montreal",
+          "claims": {}
+        },
+        "catalog": {
+          "title": "Bohemian Rhapsody",
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": "",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            }
+          ],
+          "length": 350573,
+          "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK",
+          "video": false
+        }
+      }
+    ],
+    "recommended_mbid": null
+  },
+  "montreal-checked-slot": {
+    "captured_at": "2026-11-20T05:19:38Z",
+    "sources": [
+      {
+        "url": "https://musicbrainz.org/ws/2/release/5032df80-9baf-44f2-b20f-6058ae79a93d?inc=recordings+artist-credits&fmt=json",
+        "retrieved_at": "2026-11-20T03:17:37Z",
+        "response_sha256": "049f60fdd0c64d95ccb3a0362e5bb49161f20fb493ce3b1230590768a96d2ba8"
+      },
+      {
+        "url": "https://musicbrainz.org/ws/2/release/4fdc0364-5c4f-45aa-91ec-b94a5cc9ec7c?inc=recordings+artist-credits&fmt=json",
+        "retrieved_at": "2026-11-20T03:17:39Z",
+        "response_sha256": "3c77a03e56bcd18fb00c48685950398d430ab8833a68431a1296b45ed6326edd"
+      },
+      {
+        "url": "https://musicbrainz.org/release/1586bf99-c5dd-4b0b-9c1e-a94cf3925e52",
+        "retrieved_at": "2026-11-20T05:19:38Z",
+        "capture": "catalog page and linked recording identity"
+      }
+    ],
+    "evidence": {
+      "candidates": [
+        {
+          "id": "dc6b33ac-c649-414d-bd5d-b6403d23969c",
+          "title": "Bohemian Rhapsody",
+          "disambiguation": "",
+          "length": 332000,
+          "video": false,
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": "",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            }
+          ]
+        },
+        {
+          "id": "35a91a43-a1f7-4068-ad03-e0569a0b372f",
+          "title": "Bohemian Rhapsody",
+          "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK",
+          "length": 350573,
+          "video": false,
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": "",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            }
+          ]
+        },
+        {
+          "id": "cdb01e2a-8dfe-4f66-91f5-4eb0d1aac885",
+          "title": "Bohemian Rhapsody",
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": "",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            }
+          ],
+          "disambiguation": "live at the Montreal Forum in November 1981"
+        }
+      ],
+      "source_claims": {},
+      "verified_recording": null,
+      "edition": {
+        "id": "1586bf99-c5dd-4b0b-9c1e-a94cf3925e52",
+        "title": "Queen Rock Montreal",
+        "date": "2020-07-17",
+        "country": "XW"
+      },
+      "slots": [
+        {
+          "medium": 2,
+          "position": 9,
+          "title": "Bohemian Rhapsody",
+          "recording_mbid": "cdb01e2a-8dfe-4f66-91f5-4eb0d1aac885",
+          "track_mbid": "8b25e401-f87a-46ff-8c3f-d130f9b05d9e"
+        }
+      ]
+    },
+    "ranking": [
+      {
+        "recording_mbid": "cdb01e2a-8dfe-4f66-91f5-4eb0d1aac885",
+        "score": 4,
+        "version": "recording-ranking-v1",
+        "inputs": {
+          "recording_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "different_verified_recording": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "title": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Recording title matches after text normalization"
+          },
+          "artist_name": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Artist name or credited name matches"
+          },
+          "artist_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "edition_slot": {
+            "state": "positive",
+            "weight": 4,
+            "explanation": "A checked MusicBrainz edition contains this track slot"
+          },
+          "version": {
+            "state": "contradictory",
+            "weight": -4,
+            "explanation": "Catalog marks a distinct or video version that the source does not confirm"
+          },
+          "duration": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "manual_lookup": {
+            "state": "unavailable",
+            "weight": 0
+          }
+        },
+        "provenance": "musicbrainz",
+        "source": {
+          "artist": "Queen",
+          "track": "Bohemian Rhapsody",
+          "album": "Queen Rock Montreal",
+          "claims": {}
+        },
+        "catalog": {
+          "title": "Bohemian Rhapsody",
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": "",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            }
+          ],
+          "disambiguation": "live at the Montreal Forum in November 1981"
+        }
+      },
+      {
+        "recording_mbid": "dc6b33ac-c649-414d-bd5d-b6403d23969c",
+        "score": 4,
+        "version": "recording-ranking-v1",
+        "inputs": {
+          "recording_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "different_verified_recording": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "title": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Recording title matches after text normalization"
+          },
+          "artist_name": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Artist name or credited name matches"
+          },
+          "artist_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "edition_slot": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "version": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "duration": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "manual_lookup": {
+            "state": "unavailable",
+            "weight": 0
+          }
+        },
+        "provenance": "musicbrainz",
+        "source": {
+          "artist": "Queen",
+          "track": "Bohemian Rhapsody",
+          "album": "Queen Rock Montreal",
+          "claims": {}
+        },
+        "catalog": {
+          "title": "Bohemian Rhapsody",
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": "",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            }
+          ],
+          "length": 332000,
+          "disambiguation": "",
+          "video": false
+        }
+      },
+      {
+        "recording_mbid": "35a91a43-a1f7-4068-ad03-e0569a0b372f",
+        "score": 0,
+        "version": "recording-ranking-v1",
+        "inputs": {
+          "recording_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "different_verified_recording": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "title": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Recording title matches after text normalization"
+          },
+          "artist_name": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Artist name or credited name matches"
+          },
+          "artist_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "edition_slot": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "version": {
+            "state": "contradictory",
+            "weight": -4,
+            "explanation": "Catalog marks a distinct or video version that the source does not confirm"
+          },
+          "duration": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "manual_lookup": {
+            "state": "unavailable",
+            "weight": 0
+          }
+        },
+        "provenance": "musicbrainz",
+        "source": {
+          "artist": "Queen",
+          "track": "Bohemian Rhapsody",
+          "album": "Queen Rock Montreal",
+          "claims": {}
+        },
+        "catalog": {
+          "title": "Bohemian Rhapsody",
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": "",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            }
+          ],
+          "length": 350573,
+          "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK",
+          "video": false
+        }
+      }
+    ],
+    "recommended_mbid": null
+  },
+  "wembley-misleading-studio-only": {
+    "captured_at": "2026-11-20T03:17:37Z",
+    "sources": [
+      {
+        "url": "https://musicbrainz.org/ws/2/release/5032df80-9baf-44f2-b20f-6058ae79a93d?inc=recordings+artist-credits&fmt=json",
+        "retrieved_at": "2026-11-20T03:17:37Z",
+        "response_sha256": "049f60fdd0c64d95ccb3a0362e5bb49161f20fb493ce3b1230590768a96d2ba8"
+      }
+    ],
+    "evidence": {
+      "candidates": [
+        {
+          "id": "dc6b33ac-c649-414d-bd5d-b6403d23969c",
+          "title": "Bohemian Rhapsody",
+          "disambiguation": "",
+          "length": 332000,
+          "video": false,
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": "",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            }
+          ]
+        }
+      ],
+      "source_claims": {
+        "track_mbid": "dc6b33ac-c649-414d-bd5d-b6403d23969c"
+      },
+      "verified_recording": {
+        "id": "dc6b33ac-c649-414d-bd5d-b6403d23969c",
+        "title": "Bohemian Rhapsody",
+        "disambiguation": "",
+        "length": 332000,
+        "video": false,
+        "artist-credit": [
+          {
+            "name": "Queen",
+            "joinphrase": "",
+            "artist": {
+              "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+              "name": "Queen"
+            }
+          }
+        ]
+      },
+      "edition": null,
+      "slots": []
+    },
+    "ranking": [
+      {
+        "recording_mbid": "dc6b33ac-c649-414d-bd5d-b6403d23969c",
+        "score": 12,
+        "version": "recording-ranking-v1",
+        "inputs": {
+          "recording_identifier": {
+            "state": "positive",
+            "weight": 8,
+            "explanation": "Verified source recording identifier"
+          },
+          "different_verified_recording": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "title": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Recording title matches after text normalization"
+          },
+          "artist_name": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Artist name or credited name matches"
+          },
+          "artist_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "edition_slot": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "version": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "duration": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "manual_lookup": {
+            "state": "unavailable",
+            "weight": 0
+          }
+        },
+        "provenance": "musicbrainz",
+        "source": {
+          "artist": "Queen",
+          "track": "Bohemian Rhapsody",
+          "album": "Live at Wembley ’86",
+          "claims": {
+            "track_mbid": "dc6b33ac-c649-414d-bd5d-b6403d23969c"
+          }
+        },
+        "catalog": {
+          "title": "Bohemian Rhapsody",
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": "",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            }
+          ],
+          "length": 332000,
+          "disambiguation": "",
+          "video": false
+        }
+      }
+    ],
+    "recommended_mbid": "dc6b33ac-c649-414d-bd5d-b6403d23969c"
+  },
+  "pressure-missing-live-candidate": {
+    "captured_at": "2026-11-20T03:17:43Z",
+    "sources": [
+      {
+        "url": "https://musicbrainz.org/ws/2/release/eac6d0cd-1ed0-4e17-b5b0-d3cfc40547b2?inc=recordings+artist-credits&fmt=json",
+        "retrieved_at": "2026-11-20T03:17:41Z",
+        "response_sha256": "b17cfbe2b3ddb3a77bd8de53f87bf2fb043af27eaa49d228e635db657cb440ea"
+      },
+      {
+        "url": "https://musicbrainz.org/ws/2/release/a1960a72-3686-41f7-b7fb-a210d3d381e8?inc=recordings+artist-credits&fmt=json",
+        "retrieved_at": "2026-11-20T03:17:43Z",
+        "response_sha256": "03faf5c9d02b6f56de9c0e7efc0d5e7e5d8a0ef00b8096b1ad2a43fa8ff34f3a"
+      }
+    ],
+    "evidence": {
+      "candidates": [
+        {
+          "id": "32c7e292-14f1-4080-bddf-ef852e0a4c59",
+          "title": "Under Pressure",
+          "disambiguation": "",
+          "length": 243000,
+          "video": false,
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": " & ",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            },
+            {
+              "name": "David Bowie",
+              "joinphrase": "",
+              "artist": {
+                "id": "5441c29d-3602-4898-b1a1-b77fa23b8e50",
+                "name": "David Bowie"
+              }
+            }
+          ]
+        },
+        {
+          "id": "7ce4d633-0466-4b76-912b-30e83e2c10e3",
+          "title": "Under Pressure",
+          "disambiguation": "live, 1992-04-20: Wembley Stadium, London, UK",
+          "length": 350000,
+          "video": true,
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": " + ",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            },
+            {
+              "name": "David Bowie",
+              "joinphrase": " and ",
+              "artist": {
+                "id": "5441c29d-3602-4898-b1a1-b77fa23b8e50",
+                "name": "David Bowie"
+              }
+            },
+            {
+              "name": "Annie Lennox",
+              "joinphrase": "",
+              "artist": {
+                "id": "3e30aebd-0557-4cfd-8fb9-3945afa5d72b",
+                "name": "Annie Lennox"
+              }
+            }
+          ]
+        }
+      ],
+      "source_claims": {},
+      "verified_recording": null,
+      "edition": null,
+      "slots": []
+    },
+    "ranking": [
+      {
+        "recording_mbid": "32c7e292-14f1-4080-bddf-ef852e0a4c59",
+        "score": 4,
+        "version": "recording-ranking-v1",
+        "inputs": {
+          "recording_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "different_verified_recording": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "title": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Recording title matches after text normalization"
+          },
+          "artist_name": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Artist name or credited name matches"
+          },
+          "artist_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "edition_slot": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "version": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "duration": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "manual_lookup": {
+            "state": "unavailable",
+            "weight": 0
+          }
+        },
+        "provenance": "musicbrainz",
+        "source": {
+          "artist": "Queen",
+          "track": "Under Pressure",
+          "album": "Live at Wembley ’86",
+          "claims": {}
+        },
+        "catalog": {
+          "title": "Under Pressure",
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": " & ",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            },
+            {
+              "name": "David Bowie",
+              "joinphrase": "",
+              "artist": {
+                "id": "5441c29d-3602-4898-b1a1-b77fa23b8e50",
+                "name": "David Bowie"
+              }
+            }
+          ],
+          "length": 243000,
+          "disambiguation": "",
+          "video": false
+        }
+      },
+      {
+        "recording_mbid": "7ce4d633-0466-4b76-912b-30e83e2c10e3",
+        "score": 0,
+        "version": "recording-ranking-v1",
+        "inputs": {
+          "recording_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "different_verified_recording": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "title": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Recording title matches after text normalization"
+          },
+          "artist_name": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Artist name or credited name matches"
+          },
+          "artist_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "edition_slot": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "version": {
+            "state": "contradictory",
+            "weight": -4,
+            "explanation": "Catalog marks a distinct or video version that the source does not confirm"
+          },
+          "duration": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "manual_lookup": {
+            "state": "unavailable",
+            "weight": 0
+          }
+        },
+        "provenance": "musicbrainz",
+        "source": {
+          "artist": "Queen",
+          "track": "Under Pressure",
+          "album": "Live at Wembley ’86",
+          "claims": {}
+        },
+        "catalog": {
+          "title": "Under Pressure",
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": " + ",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            },
+            {
+              "name": "David Bowie",
+              "joinphrase": " and ",
+              "artist": {
+                "id": "5441c29d-3602-4898-b1a1-b77fa23b8e50",
+                "name": "David Bowie"
+              }
+            },
+            {
+              "name": "Annie Lennox",
+              "joinphrase": "",
+              "artist": {
+                "id": "3e30aebd-0557-4cfd-8fb9-3945afa5d72b",
+                "name": "Annie Lennox"
+              }
+            }
+          ],
+          "length": 350000,
+          "disambiguation": "live, 1992-04-20: Wembley Stadium, London, UK",
+          "video": true
+        }
+      }
+    ],
+    "recommended_mbid": null
   }
 }
