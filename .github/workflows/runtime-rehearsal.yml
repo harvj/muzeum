@@ -1,0 +1,38 @@
+name: Ruby runtime rehearsal
+on:
+  push:
+    branches: [verify/v0.3.4-linux]
+permissions:
+  contents: read
+jobs:
+  native:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        revision:
+          - 641e09ec4a6de94f0043e3a7314d28674901485c
+          - 1abfe5a791c254a03e5e03a2ae4c4ecfe8459cd1
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ matrix.revision }}
+      - run: test "$(git rev-parse HEAD)" = "${{ matrix.revision }}"
+      - run: sudo apt-get update && sudo apt-get install -y libvips42 libvips-tools librsvg2-2
+      - uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+      - name: Verify patched runtime and compile assets
+        run: |
+          bundle check
+          bundle exec ruby -e 'require "pg"; require "puma/puma_http11"; require "openssl"; require "bootsnap"; require "vips"; abort unless RUBY_VERSION == "3.4.13"; p [RUBY_VERSION, Bundler::VERSION, PG.library_version, OpenSSL::OPENSSL_LIBRARY_VERSION, Vips.version_string]'
+          bundle exec rails assets:precompile
+        env:
+          RAILS_ENV: production
+          SECRET_KEY_BASE_DUMMY: '1'
+      - name: Decode and resize actual Wikimedia SVGs
+        run: |
+          directory=$(mktemp -d)
+          curl --fail --silent --show-error --retry 2 --max-time 30 -A 'MuzeumRuntimeVerification/1.0 (https://github.com/harvj/muzeum/issues/28)' 'https://upload.wikimedia.org/wikipedia/commons/1/10/Flag_of_Scotland.svg' -o "$directory/scotland.svg"
+          curl --fail --silent --show-error --retry 2 --max-time 30 -A 'MuzeumRuntimeVerification/1.0 (https://github.com/harvj/muzeum/issues/28)' 'https://upload.wikimedia.org/wikipedia/commons/3/30/Flag_of_Chicago%2C_Illinois.svg' -o "$directory/chicago.svg"
+          bundle exec ruby -rvips -e 'ARGV.each { |path| image = Vips::Image.thumbnail(path, 24); png = Vips::Image.new_from_buffer(image.write_to_buffer(".png"), ""); abort path unless png.width == 24 && png.height > 0; puts "#{File.basename(path)}: #{png.width}x#{png.height}" }' "$directory/scotland.svg" "$directory/chicago.svg"
