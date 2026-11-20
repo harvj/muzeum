@@ -56,6 +56,7 @@ RSpec.describe "Release tracklist review", type: :request do
   it "groups scoped plays at scale and records accepted and explicitly rejected choices without changing observations" do
     seed_archive_at_scale(@listener)
     Release.connection.execute("INSERT INTO releases (title) SELECT 'Unrelated edition ' || n FROM generate_series(1, 10000) AS n")
+    observation("Anchor", @anchor_recording)
     repeated = observation("Candidate", @release.catalog_track_slots.find_by!(position: 2).recording)
     started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     doc = open_batch
@@ -64,6 +65,7 @@ RSpec.describe "Release tracklist review", type: :request do
     end
     legends = doc.css("legend").map(&:text)
     expect(legends).to include("Candidate · 2 observations", "Alternate · 1 observation")
+    expect(legends.grep(/Anchor/)).to be_empty
     expect(doc.text).to include("independently confirmed in your archive", "Disc 1, track 2")
     token = doc.at_css('[name="batch_token"]')["value"]
     choices = legends.each_with_index.to_h { |label, i| [ i.to_s, label.start_with?("Candidate") ? "accept" : "reject" ] }

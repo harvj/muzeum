@@ -107,16 +107,22 @@ module RecordingResolution
 
     def proposal(row, slots)
       return if slots.size > MAX_POSITIONS
+      return if slots.all? { |slot| slot.recording_id == @anchor_decision.recording_id }
 
       source = row.payload.slice(*PilotRunner::CLAIM_FIELDS)
       release_claim = source["album_mbid"]
       return if release_claim.present? && !tracklist.release.ingested_from_release_mbid.casecmp?(release_claim.to_s)
 
       context = { "revision_id" => tracklist.revision.id, "independent_decision_id" => @anchor_decision.id }
-      candidates = slots.map { |slot| ReleaseTracklist.candidate(slot.recording, context) }
+      candidates = slots.map do |slot|
+        support = slot.recording_id == @anchor_decision.recording_id ? context.except("independent_decision_id") : context
+        ReleaseTracklist.candidate(slot.recording, support)
+      end
       claimed = source["track_mbid"]
       id_match = candidates.find { |candidate| candidate["id"].casecmp?(claimed.to_s) }
       return if claimed.present? && !id_match
+      anchor_mbid = slots.find { |slot| slot.recording_id == @anchor_decision.recording_id }&.recording&.mbid
+      return if id_match && id_match["id"] == anchor_mbid
 
       surface = Claims.new(*row.payload.values_at(*Ledger::PAYLOAD_FIELDS))
       evidence = { "source_claims" => source, "candidates" => candidates, "verified_recording" => id_match }
