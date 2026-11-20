@@ -73,12 +73,12 @@ RSpec.describe "Shared Auth browser navigation", type: :system do
 
   it "reaches the dashboard from another application with an existing Auth SSO session" do
     navigate_from_ce(:sso)
-    expect(page).to have_content("Observed artists")
+    expect(page).to have_link("Archive summary")
     expect(page).to have_current_path(archive_path)
     expect(@authorizations).to eq(1)
     expect(User.sole.oidc_subject).to eq(@subject)
     page.refresh
-    expect(page).to have_content("Observed artists")
+    expect(page).to have_link("Archive summary")
     expect(@authorizations).to eq(1)
   end
 
@@ -86,7 +86,7 @@ RSpec.describe "Shared Auth browser navigation", type: :system do
     navigate_from_ce(:fresh)
     expect(page).to have_content("Test Auth login")
     click_link "Sign in to test Auth"
-    expect(page).to have_content("Observed artists")
+    expect(page).to have_link("Archive summary")
     expect(@authorizations).to eq(1)
   end
 
@@ -110,7 +110,7 @@ RSpec.describe "Shared Auth browser navigation", type: :system do
 
   it "logs out without immediately starting a new provider session" do
     navigate_from_ce(:sso)
-    expect(page).to have_content("Observed artists")
+    expect(page).to have_link("Archive summary")
     find("summary[aria-label='Session menu']").click
     click_button "Log out"
     expect(page).to have_button("Continue with harvj Auth")

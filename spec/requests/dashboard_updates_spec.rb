@@ -6,7 +6,7 @@ RSpec.describe "Authenticated dashboard synchronization", type: :request do
   before { prepare_oidc; finish_oidc }
   after { restore_oidc }
 
-  it "returns committed data as Turbo Streams and avoids unchanged expensive statistics" do
+  it "returns committed page rows as Turbo Streams and skips an unchanged version" do
     user = User.find_by!(oidc_subject: @subject)
     account = LastfmAccount.associate!(user, "shared-dashboard")
     get dashboard_updates_path, params: { version: account.updated_at.iso8601(6) }
@@ -15,7 +15,7 @@ RSpec.describe "Authenticated dashboard synchronization", type: :request do
     account.touch
     get dashboard_updates_path, params: { version: "old" }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
     expect(response.media_type).to eq("text/vnd.turbo-stream.html")
-    expect(response.body).to include('target="archive_dashboard"', "shared-dashboard", "01 Jan 2025")
+    expect(response.body).to include('target="archive_dashboard"', "shared-dashboard", "Completion", "2025-01-01T00:00:00Z")
     expect(response.headers["Cache-Control"]).to include("no-store")
   end
 

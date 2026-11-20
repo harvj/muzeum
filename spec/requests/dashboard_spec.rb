@@ -1,9 +1,11 @@
 require "rails_helper"
 require "tmpdir"
 require_relative "../support/oidc_flow"
+require_relative "../support/archive_scale"
 
 RSpec.describe "Listening archive", type: :request do
   include OidcFlow
+  include ArchiveScale
   before { prepare_oidc; finish_oidc }
   after { restore_oidc }
 
@@ -55,12 +57,53 @@ RSpec.describe "Listening archive", type: :request do
     user.scrobbles.create!(played_at: Time.utc(2021), payload: { artist_name: "Artist", album_name: "", track_name: "Other" })
     other = User.create!(lastfm_username: "other")
     other.scrobbles.create!(played_at: Time.utc(1999), payload: { artist_name: "Private Artist" })
-    get archive_path
+    get archive_summary_path
     expect(response.body).to include("01 Jan 2020", "01 Jan 2021", "Observed artists", "Observed albums", "Observed tracks")
     expect(response.body).not_to include("1999", "Private Artist", "User management")
     expect(response.body).to include("https://funding.harvj.com/", "harvj-session")
     expect(controller.instance_variable_get(:@artists)).to eq(1)
     expect(controller.instance_variable_get(:@albums)).to eq(1)
     expect(controller.instance_variable_get(:@tracks)).to eq(2)
+  end
+
+  it "bounds each page and dashboard refresh even with a production-sized archive" do
+    user = User.find_by!(oidc_subject: @subject)
+    LastfmAccount.associate!(user, "archive-scale")
+    seed_archive_at_scale(user)
+    expect(user.archive_observations.count).to eq(ArchiveScale::SIZE)
+    expected = user.archive_observations.order(played_at: :desc, id: :desc).limit(100).ids
+    expect(Scrobble.find(expected[49]).played_at).to eq(Scrobble.find(expected[50]).played_at)
+    statements = []
+    capture = ->(event) { statements << event.payload.fetch(:sql) if event.payload.fetch(:sql).include?('"scrobbles"') }
+
+    ActiveSupport::Notifications.subscribed(capture, "sql.active_record") do
+      get archive_path
+      first = Nokogiri::HTML(response.body)
+      expect(first.at_css('a[data-turbo-prefetch="false"]')["href"]).to eq(archive_summary_path)
+      expect(first.css(".play-row th a").map { |link| link["href"] }).to eq(expected.first(50).map { |id| resolution_surface_path(id, play: id) })
+      older = first.at_xpath('//a[text()="Older plays"]')["href"]
+      get older
+      second = Nokogiri::HTML(response.body)
+      expect(second.css(".play-row th a").map { |link| link["href"] }).to eq(expected.last(50).map { |id| resolution_surface_path(id, play: id) })
+      expect(second.at_css("#archive_dashboard")["data-dashboard-sync-version-value"]).to eq("")
+      get dashboard_updates_path, headers: { "Accept" => "text/vnd.turbo-stream.html" }
+      expect(response).to have_http_status(:ok)
+    end
+
+    reads = statements.grep(/SELECT .*FROM (?:"scrobbles"|jsonb_to_recordset)/)
+    expect(reads.size).to eq(7)
+    expect(reads.grep(/FROM jsonb_to_recordset.* JOIN .*resolution_grant/).size).to eq(3)
+    expect(reads.grep(/ORDER BY "scrobbles"."played_at" DESC, "scrobbles"."id" DESC LIMIT/).size).to eq(3)
+    expect(reads).not_to include(a_string_matching(/COUNT\(|SELECT DISTINCT |OFFSET /i))
+  end
+
+  it "rejects another account's cursor on the private Archive" do
+    other = User.create!(lastfm_username: "other-archive-cursor")
+    observation = other.scrobbles.create!(played_at: Time.current, payload: {})
+    LastfmAccount.associate!(User.find_by!(oidc_subject: @subject), "reader-archive")
+    get archive_path(before: observation.id)
+    expect(response).to have_http_status(:not_found)
+    get archive_path(before: [ observation.id ])
+    expect(response).to have_http_status(:not_found)
   end
 end

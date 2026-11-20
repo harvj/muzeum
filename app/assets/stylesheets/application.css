@@ -74,6 +74,7 @@ body:has(.library-nav) main { margin-top: 14px; }
 .table-time, .catalog-table time { font-variant-numeric: tabular-nums; white-space: nowrap; }
 .catalog-table .listening-day th { padding-top: 9px; border-bottom: 1px solid var(--line); font-size: .8125rem; font-weight: 700; }
 .archive-settings { margin: 0 0 16px; gap: 12px; }
+.archive-pages { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 8px 0 12px; }
 .archive-summary { margin: 6px 0; gap: 6px 14px; }
 .archive-summary .stat strong { margin: 0; font-size: 1.35rem; font-variant-numeric: tabular-nums; }
 .archive-summary .date { margin: 0; font-size: 1.05rem; }

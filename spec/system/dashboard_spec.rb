@@ -21,7 +21,7 @@ RSpec.describe "Dashboard appearance", type: :system do
     page.driver.browser.manage.add_cookie(name: "session_id", value: jar[:session_id], path: "/", http_only: true)
     visit archive_path
     expect(page).to have_content("fixture-listener")
-    expect(page).to have_content("Observed artists")
+    expect(page).to have_link("Archive summary")
     expect(page).to have_css(".listening-day", count: 3)
     expect(page).to have_content("© 2026 Jim Harvey")
     observation = user.scrobbles.order(:played_at).last
@@ -58,9 +58,12 @@ RSpec.describe "Dashboard appearance", type: :system do
     client = double("synthetic source", recent_tracks: "<lfm status='ok'><recenttracks user='fixture-listener' page='1' totalPages='1' total='1'><track><artist>New artist</artist><name>New completion</name><album>Album</album><date uts='1700000000'/></track></recenttracks></lfm>")
     Lastfm::HistoricalImporter.new(import, client: client).page!
     using_wait_time 15 do
-      within(".stat", text: "Imported scrobbles") { expect(page).to have_content("4") }
       expect(page).to have_link("New completion")
     end
+    click_link "Archive summary"
+    within(".stat", text: "Imported scrobbles") { expect(page).to have_content("4") }
+    expect(page).to have_content("Observed artists")
+    click_link "Back to Archive"
     find("summary[aria-label='Session menu']").click
     expect(page).to have_link("Continuum Engine", href: "https://funding.harvj.com/")
     expect(page).to have_link("Auth", href: "https://auth.harvj.com/")

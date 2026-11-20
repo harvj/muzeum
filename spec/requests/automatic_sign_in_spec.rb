@@ -21,7 +21,7 @@ RSpec.describe "Automatic OIDC entry", type: :request do
     expect(response).to redirect_to("/archive?view=import")
     follow_redirect!
     expect(response).to have_http_status(:ok)
-    expect(response.body).to include("Observed artists")
+    expect(response.body).to include("Listening archive")
     get archive_path, headers: navigation
     expect(response).to have_http_status(:ok)
     expect(OidcAttempt.count).to eq(0)
