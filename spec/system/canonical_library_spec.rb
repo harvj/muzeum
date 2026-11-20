@@ -87,7 +87,10 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     expect(page).to have_text("2 current observations")
     expect(page).to have_css(".review-candidate[open] .review-tracks li", count: 3)
     expect(page).to have_css(".review-candidate[open] .review-track-match", count: 2)
-    expect(page).to have_text("🇺🇸 United States, 🇨🇦 Canada · CD")
+    expect(page).to have_text("🇺🇸 United States, 🇨🇦 Canada · CD · Album")
+    expect(page).to have_text("3:10")
+    expect(page).to have_link("MusicBrainz release", href: "https://musicbrainz.org/release/#{CatalogFixtures::IDS[:edition]}")
+    expect(page).to have_no_css(".resolution-review img")
     find(".review-score-help").hover
     expect(page).to have_css("[role=tooltip]", text: "Verified source recording identifier")
     browser.execute_script("document.querySelector('.review-score-help').focus()")

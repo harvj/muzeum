@@ -310,7 +310,12 @@ main .review-candidate.recommended { border-color: #378c48; }
 .review-candidate-title { font-size: 1.35rem; }
 .review-score { min-width: 6rem; align-self: center; }
 .review-score > strong { font: bold 1.65rem Georgia, serif; }
-.review-score meter { display: block; width: 100%; accent-color: #378c48; }
+.review-score meter { display: block; width: 100%; accent-color: #a66a16; }
+.review-score meter::-webkit-meter-optimum-value { background: #a66a16; }
+.review-score meter::-moz-meter-bar { background: #a66a16; }
+.review-candidate.recommended meter { accent-color: #378c48; }
+.review-candidate.recommended meter::-webkit-meter-optimum-value { background: #378c48; }
+.review-candidate.recommended meter::-moz-meter-bar { background: #378c48; }
 .review-score-help { display: inline-block; position: relative; }
 .review-tooltip {
   display: none; position: absolute; right: 0; bottom: calc(100% - .05rem); z-index: 2; width: min(17rem, 66vw);
@@ -332,3 +337,5 @@ main .review-candidate.recommended { border-color: #378c48; }
 .review-state { float: inline-end; margin: .3rem 0 .4rem .8rem; padding: .15rem .5rem; border-radius: .35rem; background: var(--control); }
 .review-candidate-summary::after { content: "⌄"; grid-column: 3; grid-row: 1; align-self: center; font-size: 1rem; }
 .review-candidate[open] > summary::after { content: "⌃"; }
+
+.review-recording-id { overflow-wrap: anywhere; }
