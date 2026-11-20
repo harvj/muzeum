@@ -36,3 +36,18 @@ jobs:
           curl --fail --silent --show-error --retry 2 --max-time 30 -A 'MuzeumRuntimeVerification/1.0 (https://github.com/harvj/muzeum/issues/28)' 'https://upload.wikimedia.org/wikipedia/commons/1/10/Flag_of_Scotland.svg' -o "$directory/scotland.svg"
           curl --fail --silent --show-error --retry 2 --max-time 30 -A 'MuzeumRuntimeVerification/1.0 (https://github.com/harvj/muzeum/issues/28)' 'https://upload.wikimedia.org/wikipedia/commons/9/9b/Flag_of_Chicago%2C_Illinois.svg' -o "$directory/chicago.svg"
           bundle exec ruby -rvips -e 'ARGV.each { |path| image = Vips::Image.thumbnail(path, 24); png = Vips::Image.new_from_buffer(image.write_to_buffer(".png"), ""); abort path unless png.width == 24 && png.height > 0; puts "#{File.basename(path)}: #{png.width}x#{png.height}" }' "$directory/scotland.svg" "$directory/chicago.svg"
+      - uses: actions/checkout@v6
+        with:
+          ref: 1abfe5a791c254a03e5e03a2ae4c4ecfe8459cd1
+          path: baseline-fixture
+      - uses: actions/checkout@v6
+        with:
+          ref: verify/v0.3.4-linux
+          path: verification-control
+      - name: Restore four disposable databases and execute the shipped queue probe
+        run: |
+          test "$(git -C baseline-fixture rev-parse HEAD)" = 1abfe5a791c254a03e5e03a2ae4c4ecfe8459cd1
+          sudo apt-get install -y postgresql-16
+          export BUNDLE_PATH="$PWD/vendor/bundle"
+          export BASELINE_CHECKOUT="$PWD/baseline-fixture"
+          bash verification-control/ops/verification/restore-and-probe.sh
