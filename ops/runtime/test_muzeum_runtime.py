@@ -45,7 +45,7 @@ class RuntimeTests(unittest.TestCase):
 
     @unittest.skipUnless(sys.platform == 'linux' and os.geteuid() == 0, 'requires disposable Linux root fixture')
     def test_installed_layout_is_readable_but_not_writable_after_dropping_privileges(self):
-        account = pwd.getpwnam('nobody')
+        account = pwd.getpwnam(os.environ.get('MUZEUM_RUNTIME_TEST_USER', 'nobody'))
         with tempfile.TemporaryDirectory(dir='/opt') as work:
             parent = Path(work)
             parent.chmod(0o755)
