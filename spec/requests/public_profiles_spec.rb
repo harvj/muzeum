@@ -32,6 +32,26 @@ RSpec.describe "Public listening profiles", type: :request do
     expect(response).to have_http_status(:not_found)
   end
 
+  it "shows the signed-in navigation on the public homepage until the session expires" do
+    finish_oidc
+    user = User.find_by!(oidc_subject: @subject)
+
+    get root_path
+    expect(response).to have_http_status(:ok)
+    expect(response.headers["Cache-Control"]).to include("no-store")
+    html = Nokogiri::HTML(response.body)
+    expect(html.at_css('nav[aria-label="Music library"]')).to be_present
+    expect(html.at_css('summary[aria-label="Session menu"]')).to be_present
+    expect(html.css("header a").map(&:text)).not_to include("Sign in")
+
+    user.sessions.sole.update!(last_seen_at: 13.hours.ago)
+    expect { get root_path }.not_to change(OidcAttempt, :count)
+    expect(response).to have_http_status(:ok)
+    html = Nokogiri::HTML(response.body)
+    expect(html.at_css('summary[aria-label="Session menu"]')).to be_nil
+    expect(html.css("header a").map(&:text)).to include("Sign in")
+  end
+
   it "shows only the published archive and its canonical context to anonymous visitors" do
     authorize_fixture_publication(fixture)
     other = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "private-reader", lastfm_username: "private-name")
