@@ -7,7 +7,7 @@ module RecordingResolution
 
     def initialize(session, discogs:, workspace: false)
       @session = session
-      @discogs = DiscogsEvidence.new(discogs, expanded: workspace)
+      @discogs = DiscogsEvidence.new(discogs, expanded: workspace) if discogs
       @workspace = workspace
       @musicbrainz = Clients::Musicbrainz.new
     end
@@ -64,6 +64,14 @@ module RecordingResolution
         end
       end
 
+      compare_historical_fixture(surface, edition) if @discogs
+      evidence["suggested_mbid"] = recording.fetch("id") if evidence["reasons"].empty?
+      evidence
+    end
+
+    private
+
+    def compare_historical_fixture(surface, edition)
       discogs = evidence["discogs"] = {}
       @discogs.compare(surface, edition, discogs)
       if discogs["incomplete_reasons"].present?
@@ -73,11 +81,7 @@ module RecordingResolution
         reason("discogs_disagreement", "status" => discogs["status"],
           "release_ids" => discogs["releases"].select { |release| release["status"] == "track_absent" }.pluck("release_id"))
       end
-      evidence["suggested_mbid"] = recording.fetch("id") if evidence["reasons"].empty?
-      evidence
     end
-
-    private
 
     def reason(code, details)
       evidence["reasons"] << code

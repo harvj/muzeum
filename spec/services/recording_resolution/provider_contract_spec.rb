@@ -15,7 +15,7 @@ RSpec.describe "Recording resolution HTTP contracts" do
     request.to_return(status:, headers:, body:)
   end
 
-  it "runs the official HTTP endpoints and persists independent budget deferrals between requests" do
+  it "runs MusicBrainz endpoints with budget deferrals and no Discogs HTTP requests" do
     allow(ENV).to receive(:values_at).and_call_original
     allow(ENV).to receive(:values_at).with("DISCOGS_CONSUMER_KEY", "DISCOGS_CONSUMER_SECRET")
       .and_return([ "FixtureKey", "FixtureSecret" ])
@@ -50,15 +50,11 @@ RSpec.describe "Recording resolution HTTP contracts" do
       expect(work.reload.due_at).to eq(1.second.from_now)
       travel 1.second
       processor.call
-      expect(work.reload).to have_attributes(state: "pending", due_at: 3.seconds.from_now)
-      travel 3.seconds
-      processor.call
       expect(work.reload.state).to eq("done")
-      [ search, lookup, edition, discogs_search, discogs_edition ].each do |request|
-        expect(request).to have_been_requested.once
-      end
+      [ search, lookup, edition ].each { |request| expect(request).to have_been_requested.once }
+      [ discogs_search, discogs_edition ].each { |request| expect(request).not_to have_been_requested }
       assessment = RecordingResolution::Assessment.find(work.assessment_id)
-      expect(assessment.evidence.dig("discogs", "status")).to eq("corroborates")
+      expect(assessment.evidence).not_to have_key("discogs")
       expect(assessment.evidence.to_json).not_to include("FixtureSecret", '"tracklist"')
     end
   end

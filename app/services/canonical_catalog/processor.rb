@@ -19,7 +19,7 @@ module CanonicalCatalog
       when "recording" then import_recording
       when "release" then import_release
       when "artist" then import_artist
-      when "assessment" then assess
+      when "assessment", "recording_investigation" then assess
       end
     rescue RecordingResolution::ProviderError => error
       retry_or_fail(error)
@@ -61,7 +61,7 @@ module CanonicalCatalog
     def retry_or_fail(error)
       locked do
         attempts = @request.attempts + (error.deferred ? 0 : 1)
-        stopped = error.terminal || attempts >= MAX_ATTEMPTS
+        stopped = error.terminal || attempts >= MAX_ATTEMPTS || (@request.kind == "recording_investigation" && @request.created_at <= 1.day.ago)
         persist_assessment_failure(error, stopped) if @surface && !error.deferred
         @request.update!(state: stopped ? "failed" : "pending", attempts:, failure: error.deferred ? nil : error.message,
           due_at: retry_due_at(error, attempts), lease_token: nil, lease_until: nil)
@@ -101,12 +101,7 @@ module CanonicalCatalog
       edition = select_edition(data, context)
       return complete("incomplete", "Release association pending. Select a verified edition to continue.") unless edition
 
-      comparison = edition_comparison(edition, mbid)
-      if context["edition_mbid"].blank? && comparison["status"].in?(%w[contradicts mixed])
-        return complete("incomplete", "Release association pending because Discogs editions disagree.")
-      end
-
-      complete { @store.release(edition.data, edition.slots, comparison:) }
+      complete { @store.release(edition.data, edition.slots) }
     end
 
     def select_edition(recording, context)
@@ -141,27 +136,13 @@ module CanonicalCatalog
       Edition.new(@musicbrainz.edition(@session, id, catalog: true), id, recording_mbid:)
     end
 
-    def edition_comparison(edition, mbid)
-      discogs = discogs_client
-      return { "status" => "unavailable" } unless discogs
-
-      data = edition.data
-      selected = edition.slots.find { |slot| slot.dig(:recording, "id") == mbid }
-      credit = Array(data["artist-credit"]).map { |entry| "#{entry["name"]}#{entry["joinphrase"]}" }.join
-      surface = RecordingResolution::Surface.new(artist: credit, album: data["title"], track: selected.fetch(:title))
-      evidence = {}
-      RecordingResolution::DiscogsEvidence.new(discogs, expanded: true).compare(surface, data, evidence)
-      evidence
-    end
-
-    def discogs_client
-      return unless ENV.values_at("DISCOGS_CONSUMER_KEY", "DISCOGS_CONSUMER_SECRET").all?(&:present?)
-
-      Clients::Discogs.new(@session, live: true)
-    end
-
     def assess
-      surface = RecordingResolution::Surface.find(@request.entity_id)
+      if @request.kind == "recording_investigation" && @request.created_at <= 1.day.ago
+        return complete("failed", "Investigation expired before completion.")
+      end
+
+      @group = RecordingResolution::Group.find(@request.entity_id) if @request.kind == "recording_investigation"
+      surface = RecordingResolution::Surface.find(@group ? @group.surface_id : @request.entity_id)
       user = User.find_by(id: @request.context["requester_id"])
       unless user&.login_enabled? && user.user_lastfm_accounts.active.exists?(lastfm_account_id: surface.lastfm_account_id)
         return complete("incomplete", "Archive access ended before this evidence check.")
@@ -170,8 +151,25 @@ module CanonicalCatalog
       observation = Scrobble.where(lastfm_account_id: surface.lastfm_account_id).find(@request.context.fetch("observation_id"))
       @surface = surface
       @claims = observation.payload.slice(*RecordingResolution::PilotRunner::CLAIM_FIELDS)
-      @evaluator = RecordingResolution::Evaluator.new(@session, discogs: discogs_client, workspace: true)
+      if @group && (@group.claims != @claims || !RecordingResolution::Workspace.new(user).surface(observation)&.id.eql?(surface.id))
+        return complete("incomplete", "Observation claims no longer match this investigation.")
+      end
+      @local_candidates = RecordingResolution::LocalCandidates.call(surface, @claims)
+      local_evidence = { "source_claims" => @claims, "candidates" => @local_candidates, "reasons" => [] }
+      if @local_candidates.any? { |candidate| candidate["verified_local_claim"] } &&
+          @request.context["refresh"] != true &&
+          RecordingResolution::Ranking.recommended?(RecordingResolution::Ranking.call(surface, local_evidence))
+        return complete { write_assessment(local_evidence) }
+      end
+      @evaluator = RecordingResolution::Evaluator.new(@session, discogs: nil, workspace: true)
       evidence = @evaluator.call(surface, @claims)
+      if (manual = @request.context["manual_mbid"]).present?
+        result = @musicbrainz.verify_recording(@session, manual, catalog: true)
+        if (recording = result["data"])
+          evidence["candidates"] = [ *evidence["candidates"], recording ]
+          evidence["manually_verified_mbid"] = recording.fetch("id")
+        end
+      end
       edition_slots = Array(evidence["slots"])
       candidates = RecordingResolution::Workspace.candidate_evidence(evidence)
       supported = candidates.select do |candidate|
@@ -195,10 +193,13 @@ module CanonicalCatalog
     end
 
     def write_assessment(evidence)
-      group = RecordingResolution::Group.create_or_find_by!(surface_id: @surface.id,
+      evidence = evidence.merge("candidates" => [ *evidence["candidates"], *@local_candidates ].uniq { |candidate| candidate["id"] })
+      evidence["ranking"] = RecordingResolution::Ranking.call(@surface, evidence)
+      evidence["ranking_version"] = RecordingResolution::Ranking::VERSION
+      group = @group || RecordingResolution::Group.create_or_find_by!(surface_id: @surface.id,
         version: RecordingResolution::Ledger::VERSION, claims: @claims)
       digest = Digest::SHA256.hexdigest(evidence.to_json)
-      RecordingResolution::Assessment.create_or_find_by!(group_id: group.id, version: "workspace-evidence-v1", digest:) do |row|
+      RecordingResolution::Assessment.create_or_find_by!(group_id: group.id, version: "workspace-evidence-v2", digest:) do |row|
         row.actor = "catalog_workspace"
         row.evidence = evidence.merge("requests" => @session.provenance)
       end

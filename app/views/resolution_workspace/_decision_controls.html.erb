@@ -1,14 +1,27 @@
-<%= form_with url: decide_resolution_surface_path(@observation) do |form| %>
-  <%= form.hidden_field :scope, value: @selected_scrobble ? "scrobble" : "surface" %>
-  <%= form.hidden_field :play_id, value: @selected_scrobble&.id %>
-  <%= form.hidden_field :head, value: (@selected_scrobble ? @selected_head : @surface_head)&.id %>
-  <%= form.label :reason, "Reason for this change", for: "resolution-mode-reason" %>
-  <%= form.text_field :reason, id: "resolution-mode-reason", required: true, maxlength: 500 %>
-  <div class="catalog-actions">
+<details>
+  <summary>Other review actions</summary>
+  <% head = @selected_scrobble ? @selected_head : @surface_head %>
+  <%= form_with url: decide_resolution_surface_path(@observation) do |form| %>
+    <%= form.hidden_field :scope, value: @selected_scrobble ? "scrobble" : "surface" %>
+    <%= form.hidden_field :play_id, value: @selected_scrobble&.id %>
+    <%= form.hidden_field :head, value: head&.id %>
+    <%= form.label :reason_code, "Reason to leave unresolved", for: "resolution-mode-reason" %>
+    <%= form.select :reason_code, RecordingResolution::DecisionReasons::OPTIONS.fetch("unresolved").invert.to_a,
+      { include_blank: "Choose a reason" }, id: "resolution-mode-reason", required: true %>
+    <%= form.label :comment, "Comment (optional)", for: "resolution-mode-comment" %>
+    <%= form.text_field :comment, id: "resolution-mode-comment", maxlength: 500 %>
     <%= form.button "Leave unresolved", name: "mode", value: "unresolved" %>
-    <% head = @selected_scrobble ? @selected_head : @surface_head %>
-    <% if head && head.mode != "inherit" %>
-      <%= form.button "Return to inheritance", name: "mode", value: "inherit" %>
-    <% end %>
-  </div>
-<% end %>
+  <% end %>
+  <%= form_with url: defer_resolution_surface_path(@observation) do |form| %>
+    <%= form.hidden_field :play_id, value: @selected_scrobble&.id, id: nil %>
+    <%= form.hidden_field :head, value: head&.id, id: nil %>
+    <%= form.label :comment, "Deferral comment (optional)", for: "resolution-defer-comment" %>
+    <%= form.text_field :comment, id: "resolution-defer-comment", maxlength: 500 %>
+    <%= form.submit "Defer review", class: "catalog-submit" %>
+  <% end %>
+  <% if head && head.mode != "inherit" %>
+    <%= button_to "Return to inheritance", decide_resolution_surface_path(@observation),
+      params: { mode: "inherit", scope: @selected_scrobble ? "scrobble" : "surface",
+        play_id: @selected_scrobble&.id, head: head.id, reason_code: "restore_inheritance" } %>
+  <% end %>
+</details>

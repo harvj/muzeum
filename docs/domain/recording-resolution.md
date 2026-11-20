@@ -8,7 +8,7 @@ Status: **Authoritative principles; candidate algorithms and thresholds are not 
 
 **REC-002 — Keep recording and release decisions independent.** A play's canonical recording can stay fixed when its credited release changes. The recording can appear on multiple releases. Release credit does not determine which recording was heard.
 
-**REC-003 — Suggest candidates automatically.** Muzeum should find and rank plausible MusicBrainz recording candidates for observed artist/title combinations, with Discogs as additional release/track-list evidence. Provide a clear path to review alternatives and correct any play or compatible group. A high textual similarity is not proof of identity.
+**REC-003 — Suggest candidates automatically.** Muzeum should find and rank plausible MusicBrainz recording candidates for observed artist/title combinations, with retained historical Discogs provenance and MusicBrainz as the active external provider. Provide a clear path to review alternatives and correct any play or compatible group. A high textual similarity is not proof of identity.
 
 **REC-004 — Evidence is multidimensional.** Consider reported MBIDs (verified, not blindly trusted), canonical artist/artist credit, normalized and original title, duration when reliably known, release/track context, version markers, neighboring listening context, and provider disagreements. Preserve contradictory evidence. A Discogs track listing alone cannot establish a specific MusicBrainz recording identity.
 
@@ -18,7 +18,7 @@ Status: **Authoritative principles; candidate algorithms and thresholds are not 
 
 **REC-007 — Automation starts conservatively.** Candidate suggestions can be broad. Automatic acceptance requires demonstrated precision and guardrails against contradictory evidence; no unvalidated numeric score or threshold is policy. Preserve unresolved/ambiguous states rather than manufacture a canonical match.
 
-**REC-008 — Resolution is asynchronous.** Do not block Last.fm ingestion on MusicBrainz or Discogs. Trigger bounded downstream investigation from new observations, changed metadata, corrections or provider evidence. Prevent provider outages from interrupting source capture.
+**REC-008 — Resolution is asynchronous.** Do not block Last.fm ingestion on catalog providers. Trigger bounded downstream investigation from new observations, changed metadata, corrections or provider evidence. Prevent provider outages from interrupting source capture.
 
 ## Last.fm surface identity and listener precedence
 
@@ -32,7 +32,7 @@ Status: **Authoritative principles; candidate algorithms and thresholds are not 
 
 **REC-014 — Cross-user learning without cross-user authority.** Another listener's surface resolution may inform candidate ordering or confidence as separately labeled evidence. It is never itself a binding recording decision for the current listener. Do not expose another listener's private history, scrobble details, identity, or correction rationale through such evidence. A shared archive may have one reusable automatic assessment while distinct listeners retain independent surface defaults and event exceptions.
 
-**REC-015 — Assessment is not authority.** New MusicBrainz, Discogs, neighboring-listen, or cross-user evidence may generate a fresh assessment or suggestion, even contradicting an existing manual assignment. Record that disagreement without changing the protected effective choice. Changed evidence with unchanged choice need not create a new decision. Record actual changes and user confirmations/rejections as attributable, append-only events.
+**REC-015 — Assessment is not authority.** New MusicBrainz, neighboring-listen, or cross-user evidence may generate a fresh assessment or suggestion, even contradicting an existing manual assignment. Record that disagreement without changing the protected effective choice. Changed evidence with unchanged choice need not create a new decision. Record actual changes and user confirmations/rejections as attributable, append-only events.
 
 ### Example: one surface, different recordings
 
@@ -63,6 +63,8 @@ Last.fm may deliver the same studio performance under multiple title spellings, 
 - How Spotify track matching and territory availability will work when implemented.
 
 ## Revision history
+
+- 2026-11-19: Retired new Discogs API investigation under #26. Preserve prior Discogs evidence and record its original provider.
 
 - 2026-11-17: Added persistent user-scoped exact-surface defaults, immutable per-scrobble manual exceptions, cross-user evidence boundaries, and deferred resolution decision journal with explicit action scope.
 

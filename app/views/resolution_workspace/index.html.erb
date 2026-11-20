@@ -1,4 +1,6 @@
-<section class="intro"><h1>Recording resolution</h1></section>
+<section class="intro"><h1>Recording resolution</h1>
+  <p><%= link_to "Prioritize unresolved recordings", resolution_surfaces_path(filter: "unresolved") %></p>
+</section>
 <section class="card library-card">
   <%= form_with url: resolution_surfaces_path, method: :get, class: "catalog-filter" do |form| %>
     <div><%= form.label :filter, "Show surfaces" %>
@@ -7,16 +9,30 @@
   <% end %>
   <% if @rows.any? %>
     <%= dense_table("Observed recording surfaces") do %>
-      <thead><tr><th scope="col">Observed track</th><th scope="col">Artist and album</th><th scope="col" class="table-number">Observations</th></tr></thead>
+      <thead><tr><th scope="col">Observed track</th><th scope="col">Artist and album</th><th scope="col" class="table-number">Observations</th><% if @filter == "unresolved" %><th scope="col">Next step</th><% end %></tr></thead>
       <tbody>
-        <% @rows.each do |id, artist, album, track, count| %>
+        <% @rows.each do |id, artist, album, track, count, state, candidates| %>
           <tr><th scope="row"><%= entity_link(observed_text(track, "Track"), resolution_surface_path(id)) %></th>
-            <td><%= observed_text(artist, "Artist") %><br><span class="muted"><%= observed_text(album, "Album") %></span></td><td class="table-number"><%= number_with_delimiter(count) %></td></tr>
+            <td><%= observed_text(artist, "Artist") %><br><span class="muted"><%= observed_text(album, "Album") %></span></td><td class="table-number"><%= number_with_delimiter(count) %></td>
+            <% if @filter == "unresolved" %>
+              <td><%= if CatalogImport::ACTIVE.include?(state)
+                "Investigation pending"
+              elsif candidates
+                "Review candidate evidence"
+              elsif state == "failed"
+                "Provider unavailable"
+              elsif state
+                "No supported candidates"
+              else
+                "Open to investigate"
+              end %></td>
+            <% end %>
+          </tr>
         <% end %>
       </tbody>
     <% end %>
   <% else %>
     <p>No surfaces match this view. Imported Last.fm observations will appear here.</p>
   <% end %>
-  <% if @next_page %><p><%= link_to "Next page", resolution_surfaces_path(before: @next_page, filter: @filter) %></p><% end %>
+  <% if @next_page %><p><%= link_to "Next page", resolution_surfaces_path(before: @next_page, before_count: @next_count, filter: @filter) %></p><% end %>
 </section>

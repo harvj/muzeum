@@ -21,13 +21,13 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     expect(page).to have_text("No canonical releases yet")
     click_link "Resolution"
     click_link "Signals"
-    expect(page).to have_text("Observed edition slot")
+    expect(page).to have_text("A checked MusicBrainz edition contains this track slot")
     within(".candidate", text: "Signals") do
-      fill_in "Reason for this assignment", with: "Album track confirmed"
+      select "Corroborating catalog evidence", from: "Reason for this assignment"
       find_button("Apply to all").send_keys(:enter)
     end
     expect(page).to have_text("Recording decision saved.")
-    expect(page).to have_text("Album track confirmed")
+    expect(page).to have_text("Corroborating catalog evidence")
 
     request = CatalogImport.find_by!(kind: "recording")
     expect(request.state).to eq("pending")
@@ -63,8 +63,68 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
 
     visit resolution_surface_path(observation, play: observation.id)
     expect(page).to have_button("Only this time")
-    expect(page).to have_text("Effective recording for the observation")
+    expect(page).to have_text("Inherited from your exact-surface assignment")
     verify_appearances("resolution")
+  end
+
+  it "shows pending, ranked, ambiguous and resolved identities across desktop and mobile" do
+    user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "resolution-preview", lastfm_username: "resolution-preview")
+    observation = catalog_observation(user, time: Time.utc(2024, 8, 20, 20, 15))
+    catalog_observation(user, time: 1.day.ago)
+    browser = page.driver.browser
+    browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 1440, height: 960, deviceScaleFactor: 1, mobile: false)
+    browser.execute_cdp("Emulation.setEmulatedMedia", features: [
+      { name: "prefers-color-scheme", value: "light" }, { name: "prefers-reduced-motion", value: "reduce" }
+    ])
+    sign_in(user)
+    visit resolution_surface_path(observation)
+    expect(page).to have_text("Investigation pending")
+    capture_resolution("pending-desktop")
+
+    request = CatalogImport.where(kind: RecordingResolution::Investigation::KIND).sole
+    CanonicalCatalog::Processor.new(request, session_factory: ->(*) { CatalogFixtures::Session.new }).call
+    click_link "Refresh results"
+    expect(page).to have_text("Muzeum’s recommendation")
+    expect(page).to have_text("2 current observations")
+    capture_resolution("ranked-desktop")
+
+    assessment = RecordingResolution::Ledger.assessments(user).sole
+    surface = RecordingResolution::Surface.find(RecordingResolution::Group.find(assessment.group_id).surface_id)
+    first = assessment.evidence.fetch("verified_recording")
+    alternate = first.merge("id" => CatalogFixtures::IDS[:other], "disambiguation" => "")
+    evidence = { "candidates" => [ first, alternate ] }
+    evidence["ranking"] = RecordingResolution::Ranking.call(surface, evidence)
+    ambiguous = RecordingResolution::Assessment.create!(group_id: assessment.group_id, version: "fixture", actor: "fixture",
+      digest: SecureRandom.hex(32), evidence:)
+    browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 390, height: 844, deviceScaleFactor: 1, mobile: true)
+    browser.execute_cdp("Emulation.setEmulatedMedia", features: [
+      { name: "prefers-color-scheme", value: "dark" }, { name: "prefers-reduced-motion", value: "reduce" }
+    ])
+    visit resolution_surface_path(observation, assessment: ambiguous.id)
+    expect(page).to have_text("Ambiguous")
+    expect(page).to have_no_text("Muzeum’s recommendation")
+    expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
+    capture_resolution("ambiguous-mobile")
+
+    visit resolution_surface_path(observation, assessment: assessment.id)
+    within(".candidate", text: "Signals") do
+      select "Verified recording identifier", from: "Reason for this assignment"
+      find_button("Apply to all").send_keys(:enter)
+    end
+    expect(page).to have_text("Inherited from your exact-surface assignment")
+    expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
+    capture_resolution("resolved-mobile")
+  ensure
+    browser&.execute_cdp("Emulation.clearDeviceMetricsOverride")
+    browser&.execute_cdp("Emulation.setEmulatedMedia", features: [])
+  end
+
+  def capture_resolution(name)
+    return unless ENV["P151_PREVIEW_DIR"]
+
+    page.evaluate_async_script("const done = arguments[0]; document.fonts.ready.then(() => requestAnimationFrame(() => done(true)))")
+    screenshot = page.driver.browser.execute_cdp("Page.captureScreenshot", format: "webp", quality: 88)
+    File.binwrite(File.join(ENV.fetch("P151_PREVIEW_DIR"), "#{name}.webp"), Base64.decode64(screenshot.fetch("data")))
   end
 
   def inverted_link?

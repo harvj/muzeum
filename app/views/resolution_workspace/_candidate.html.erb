@@ -1,34 +1,46 @@
 <% mbid = candidate.fetch("id") %>
 <% slots = Array(@assessment.evidence["slots"]).select { |slot| slot["recording_mbid"] == mbid } %>
-<% preferred = [@assessment.evidence["suggested_mbid"], @assessment.evidence["review_mbid"]].include?(mbid) %>
-<details class="candidate" <%= "open" if preferred || slots.any? %>>
-  <summary><strong><%= candidate["title"] %></strong>
-    <% if preferred %> · Suggested for review<% end %>
-    <% if slots.any? %> · <%= @assessment.evidence.dig("edition", "title") == @observation.payload["album_name"] ? "Observed edition slot" : "Checked edition slot" %><% end %>
-  </summary>
+<article class="candidate">
+  <h3><%= candidate["title"] %></h3>
   <p><%= Array(candidate["artist-credit"]).map { |credit| "#{credit["name"]}#{credit["joinphrase"]}" }.join.presence || "Artist credit unavailable" %>
-    · <%= recording_duration(candidate["length"]) %><% if candidate["disambiguation"].present? %> · <%= candidate["disambiguation"] %><% end %></p>
-  <p><%= link_to "MusicBrainz recording", "https://musicbrainz.org/recording/#{mbid}" %>
+    <% if candidate["length"] %> · <%= recording_duration(candidate["length"]) %><% end %>
+    <% if candidate["disambiguation"].present? %> · <%= candidate["disambiguation"] %><% end %>
     <% if candidate["video"] %> · Video recording<% end %></p>
+  <p><% if recommended %><strong>Muzeum’s recommendation</strong> · <% end %>
+    Score <%= rank["score"] %> · <%= rank["provenance"] == "local_catalog" ? "Local catalog" : "MusicBrainz" %> ·
+    <%= link_to "Recording #{mbid.last(8)}", "https://musicbrainz.org/recording/#{mbid}", title: mbid %></p>
+  <% positives = rank.fetch("inputs").values.select { |item| item["state"] == "positive" } %>
+  <% conflicts = rank.fetch("inputs").values.select { |item| item["state"] == "contradictory" } %>
+  <p><strong>For</strong> · <%= positives.pluck("explanation").join(" · ") %></p>
+  <p><strong>Against</strong> · <%= conflicts.pluck("explanation").join(" · ").presence || "No conflict in the available evidence" %></p>
+  <% if positives.all? { |item| item["weight"] <= 2 } %><p class="muted">There is no independently verified link from this play to the recording.</p><% end %>
   <% if slots.any? %>
     <p><%= @assessment.evidence.dig("edition", "title") %> · <%= slots.map { |slot| "disc #{slot["medium"]}, track #{slot["position"]}" }.join("; ") %></p>
-  <% else %>
-    <p class="muted">No verified slot for this candidate in the checked observed edition.</p>
   <% end %>
-  <% if @may_manage_observation %>
+  <% if @may_manage_observation && @assessment_matches_claims %>
   <%= form_with url: decide_resolution_surface_path(@observation) do |form| %>
     <%= form.hidden_field :recording_mbid, value: mbid %>
     <%= form.hidden_field :assessment_id, value: @assessment.id %>
     <%= form.hidden_field :scope, value: @selected_scrobble ? "scrobble" : "surface" %>
     <%= form.hidden_field :play_id, value: @selected_scrobble&.id %>
     <%= form.hidden_field :head, value: (@selected_scrobble ? @selected_head : @surface_head)&.id %>
-    <%= form.label :reason, "Reason for this assignment", for: "reason-#{mbid}" %>
-    <%= form.text_field :reason, id: "reason-#{mbid}", required: true, maxlength: 500 %>
+    <%= form.label :reason_code, "Reason for this assignment", for: "reason-#{mbid}" %>
+    <% reasons = RecordingResolution::DecisionReasons::OPTIONS.fetch("resolved").dup
+      reasons.delete("verified_identifier") unless rank.dig("inputs", "recording_identifier", "state") == "positive"
+      reasons.delete("corroborating_evidence") unless rank.dig("inputs", "edition_slot", "state") == "positive"
+      reasons.delete("correction") unless @current_decision
+    %>
+    <%= form.select :reason_code, reasons.invert.to_a, { include_blank: "Choose a reason" }, id: "reason-#{mbid}", required: true %>
+    <details><summary>Add an optional comment</summary>
+      <%= form.label :comment, "Comment (optional)", for: "comment-#{mbid}" %>
+      <%= form.text_field :comment, id: "comment-#{mbid}", maxlength: 500 %>
+    </details>
+    <% unless @selected_scrobble %><p class="muted"><%= pluralize(@affected_count, "current observation") %> affected, plus future exact matches. Individual overrides retain precedence.</p><% end %>
     <div class="catalog-actions">
       <%= form.button(@selected_scrobble ? "Only this time" : "Apply to all", name: "mode", value: "resolved") %>
     </div>
   <% end %>
-  <% if @current_recording&.mbid == mbid %>
+  <% if (@selected_scrobble ? @current_recording_id : @surface_recording_id) && (@selected_scrobble ? @current_recording : @recordings[@surface_recording_id])&.mbid == mbid %>
     <% editions = RecordingResolution::Workspace.editions(candidate, @assessment) %>
     <h3>Release edition</h3>
     <% if editions.any? %>
@@ -44,8 +56,6 @@
     <% else %>
       <p>The available evidence does not distinguish a release edition. You can keep the recording assignment while the release is pending.</p>
     <% end %>
-  <% else %>
-    <p>Confirm the recording first. Muzeum checks for a supported release in the background and can keep the recording assignment if the release remains uncertain.</p>
   <% end %>
   <% end %>
-</details>
+</article>

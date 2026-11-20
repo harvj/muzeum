@@ -21,8 +21,17 @@ module RecordingResolution
     end
 
     def get(provider, path, params: {}, headers: {}, &project)
+      if provider == :discogs && live?
+        raise ProviderError.new("Discogs API has been retired", terminal: true)
+      end
       @current_request = { "provider" => provider.to_s, "endpoint" => path, "parameters" => params.stringify_keys }
-      key = Digest::SHA256.hexdigest([ @catalog ? "catalog-v1" : "v1", (@catalog ? @work.id : @pilot.id), provider, path, params.sort ].to_json)
+      # The public search projection is context-free. Edition and verification requests remain request-scoped.
+      scope = if @catalog && provider == :musicbrainz && path == "/ws/2/recording"
+        "catalog-recording-search-v1"
+      else
+        @catalog ? [ "catalog-v1", @work.id ] : [ "v1", @pilot.id ]
+      end
+      key = Digest::SHA256.hexdigest([ scope, provider, path, params.sort ].to_json)
       cached = RequestCache.find_by(request_key: key, expires_at: Time.current..)
       return remember(provider, path, params, cached.document) if cached
 

@@ -1,13 +1,16 @@
 class ResolutionWorkspaceController < ApplicationController
   before_action :workspace
   before_action :observation, except: :index
-  before_action :authorize_management, only: %i[investigate decide admit]
+  before_action :authorize_management, only: %i[investigate decide admit defer]
 
   def index
     @filter = params[:filter].presence_in(RecordingResolution::Workspace::FILTERS)
-    result = @workspace.list(filter: @filter, before_id: params[:before].to_i)
+    result = @workspace.list(filter: @filter, before_id: params[:before].to_i, before_count: params[:before_count].to_i)
     @rows = result.first(RecordingResolution::Workspace::PAGE)
-    @next_page = @rows.last.first if result.size > @rows.size
+    if result.size > @rows.size
+      @next_page = @rows.last.first
+      @next_count = @rows.last[4] if @filter == "unresolved"
+    end
   end
 
   def show
@@ -35,13 +38,34 @@ class ResolutionWorkspaceController < ApplicationController
     assessment_history = older.positive? ? @assessments.where("id < ?", older) : @assessments
     @assessment_history = assessment_history.select(:id, :created_at).limit(21).to_a
     @next_assessment = @assessment_history.pop && @assessment_history.last.id if @assessment_history.size > 20
-    @assessment_request = CatalogImport.latest("assessment", @surface.id) if @surface
-    @candidates = RecordingResolution::Workspace.candidates(@assessment)
+    target = @selected_scrobble || @observation
+    investigation = RecordingResolution::Investigation.new(current_user, target)
+    group = investigation.group(@surface)
+    @assessment_request = CatalogImport.latest(RecordingResolution::Investigation::KIND, group.id) if group
+    legacy_request = CatalogImport.latest("assessment", @surface.id) if @assessment_request.nil? && @surface
+    @assessment_request ||= legacy_request if legacy_request&.active?
+    @ranking = if @assessment
+      @assessment.evidence["ranking"] || RecordingResolution::Ranking.call(@surface, @assessment.evidence)
+    else
+      []
+    end
+    @assessment_matches_claims = params[:assessment].blank? || assessment_matches_claims?(@assessment, target)
+    legacy_candidates = RecordingResolution::Workspace.candidates(@assessment).index_by { |candidate| candidate["id"] }
+    @candidates = @ranking.filter_map { |rank| legacy_candidates[rank["recording_mbid"]] }
+    current = @scrobbles.find { |play| play.id == target.id } || RecordingResolution::Ledger.effective(current_user).find(target.id)
+    @current_decision = @history.find_by(id: current.effective_recording_decision_id) if current.effective_recording_decision_id
+    if (@assessment.nil? || @assessment.evidence["partial"]) && @assessment_request.nil? && current.effective_recording_id.nil? && @may_manage_observation &&
+        params[:assessment].blank? && params[:before].blank? && params[:history_before].blank?
+      @assessment_request = investigation.request
+    end
+    @assessment_request ||= legacy_request
     if @selected_scrobble
       @selected_head = @history.find_by(user_id: current_user.id, scrobble_id: @selected_scrobble.id)
-      @selected_effective = RecordingResolution::Ledger.effective(current_user).find(@selected_scrobble.id)
     end
-    @current_recording_id = @selected_effective ? @selected_effective.effective_recording_id : @inherited_head&.recording_id
+    @current_recording_id = current.effective_recording_id
+    @surface_recording_id = @inherited_head&.recording_id
+    @affected_count = @observations_count - @history.where(user_id: current_user.id).where.not(scrobble_id: nil)
+      .where.not(mode: "inherit").where("NOT EXISTS (SELECT 1 FROM resolution_decisions successor WHERE successor.predecessor_id = resolution_decisions.id)").count
     @current_recording = Recording.find_by(id: @current_recording_id) if @current_recording_id
     @history = @history.where("id < ?", params[:history_before].to_i) if params[:history_before].to_i.positive?
     @history = @history.limit(21).to_a
@@ -51,32 +75,47 @@ class ResolutionWorkspaceController < ApplicationController
   end
 
   def investigate
-    request = nil
-    ActiveRecord::Base.transaction do
-      current_user.managed_archive_grants.lock.find_by!(lastfm_account_id: @observation.lastfm_account_id)
-      surface = RecordingResolution::Ledger.attach!(@observation)
-      request = CatalogImport.request!("assessment", surface.id, "observation_id" => @observation.id, "requester_id" => current_user.id)
+    manual = params[:manual_mbid].to_s.strip.presence
+    if manual && !Clients::Musicbrainz::MBID.match?(manual)
+      return redirect_to resolution_surface_path(@observation), alert: "Enter a MusicBrainz recording identifier.", status: :see_other
     end
-    request.dispatch
-    redirect_to resolution_surface_path(@observation), status: :see_other
+    RecordingResolution::Investigation.new(current_user, @observation).request(refresh: true, manual_mbid: manual)
+    redirect_to resolution_surface_path(@observation, play: params[:play].presence), status: :see_other
   end
 
   def decide
     scope = { "surface" => :surface, "scrobble" => :scrobble }.fetch(params[:scope]) { raise ArgumentError }
     mode = params[:mode].presence_in(%w[resolved unresolved inherit]) || raise(ArgumentError)
-    reason = params[:reason].to_s.strip.presence || raise(ArgumentError)
-    raise ArgumentError if reason.length > 500
+    options = RecordingResolution::DecisionReasons::OPTIONS.fetch(mode)
+    code = params[:reason_code].to_s.presence
+    comment = params[:comment].to_s.strip.presence
+    reason = code ? options.fetch(code) { raise ArgumentError } : params[:reason].to_s.strip.presence
+    raise ArgumentError if reason.blank? || reason.length > 500 || comment.to_s.length > 500
 
     target = scope == :scrobble ? @workspace.matching(@observation).find(params[:play_id]) : @observation
     surface = @workspace.surface(@observation)
     assessment = @workspace.assessments(surface).find(params[:assessment_id]) if params[:assessment_id].present?
+    raise ArgumentError if assessment && !assessment_matches_claims?(assessment, target)
     request = nil
     ActiveRecord::Base.transaction do
       current_user.lock!
       current_user.managed_archive_grants.lock.find_by!(lastfm_account_id: target.lastfm_account_id)
       recording, context = selection(assessment, target) if mode == "resolved"
+      previous = RecordingResolution::Ledger.effective(current_user).find(target.id)
+      ranking = assessment && (assessment.evidence["ranking"] || RecordingResolution::Ranking.call(surface, assessment.evidence))
+      selected_rank = ranking&.find { |entry| entry["recording_mbid"] == recording&.mbid }
+      if code == "verified_identifier" && selected_rank&.dig("inputs", "recording_identifier", "state") != "positive"
+        raise ArgumentError
+      end
+      if code == "corroborating_evidence" && selected_rank&.dig("inputs", "edition_slot", "state") != "positive"
+        raise ArgumentError
+      end
+      metadata = { "reason_code" => code, "comment" => comment, "scoring_version" => ranking&.first&.fetch("version"),
+        "candidate_scores" => ranking&.map { |row| row.slice("recording_mbid", "score") },
+        "previous_effective_recording_id" => previous.effective_recording_id, "previous_effective_decision_id" => previous.effective_recording_decision_id,
+        "affected_scope" => scope.to_s }.compact
       RecordingResolution::Ledger.record!(listener: current_user, scrobble: target, scope:, mode:, reason:, recording:,
-        assessment:, expected_head: params[:head].presence&.then { |value| Integer(value) })
+        assessment:, metadata:, expected_head: params[:head].presence&.then { |value| Integer(value) })
       request = CatalogImport.request!("recording", recording.id, context) if recording
     end
     request&.dispatch
@@ -86,7 +125,31 @@ class ResolutionWorkspaceController < ApplicationController
   rescue ActiveRecord::StaleObjectError
     redirect_to resolution_surface_path(@observation), alert: "This assignment changed. Review the current decision and submit again.", status: :see_other
   rescue ArgumentError, CanonicalCatalog::Store::Unverified
-    redirect_to resolution_surface_path(@observation), alert: "Choose a candidate and scope, and provide a reason of up to 500 characters.", status: :see_other
+    redirect_to resolution_surface_path(@observation), alert: "Choose a candidate, scope, and applicable reason. Comments are limited to 500 characters.", status: :see_other
+  end
+
+  def defer
+    comment = params[:comment].to_s.strip.presence
+    raise ArgumentError if comment.to_s.length > 500
+
+    target = params[:play_id].present? ? @workspace.matching(@observation).find(params[:play_id]) : @observation
+    scope = params[:play_id].present? ? :scrobble : :surface
+    ActiveRecord::Base.transaction do
+      current_user.lock!
+      current_user.managed_archive_grants.lock.find_by!(lastfm_account_id: target.lastfm_account_id)
+      surface = RecordingResolution::Ledger.attach!(target)
+      head = @workspace.history(surface).where(user_id: current_user.id, scrobble_id: scope == :scrobble ? target.id : nil).first
+      expected = params[:head].presence&.then { |value| Integer(value) }
+      raise ActiveRecord::StaleObjectError.new(head || surface, "defer") unless head&.id == expected
+
+      RecordingResolution::Ledger.record!(listener: current_user, scrobble: target, scope:,
+        mode: head&.mode || "inherit", reason: "Deferred review", recording: Recording.find_by(id: head&.recording_id),
+        assessment: RecordingResolution::Assessment.find_by(id: head&.assessment_id), expected_head: expected,
+        metadata: { "reason_code" => "deferred_review", "comment" => comment, "previous_decision_id" => head&.id, "affected_scope" => scope.to_s }.compact)
+    end
+    redirect_to resolution_surface_path(@observation, play: params[:play_id].presence), notice: "Review deferred.", status: :see_other
+  rescue ArgumentError, ActiveRecord::StaleObjectError
+    redirect_to resolution_surface_path(@observation), alert: "This assignment changed. Review the current decision and submit again.", status: :see_other
   end
 
   def admit
@@ -137,9 +200,18 @@ class ResolutionWorkspaceController < ApplicationController
     @observation = @workspace.observations.find(params[:id])
   end
 
+  def assessment_matches_claims?(assessment, target)
+    RecordingResolution::Group.find(assessment.group_id).claims ==
+      target.payload.slice(*RecordingResolution::PilotRunner::CLAIM_FIELDS)
+  end
+
   def selection(assessment, target, edition: nil)
     candidate = RecordingResolution::Workspace.candidates(assessment).find { |item| item["id"] == params[:recording_mbid] }
     raise ArgumentError unless candidate
+    if !edition && assessment.evidence.key?("ranking") &&
+        assessment.evidence.fetch("ranking").none? { |entry| entry["recording_mbid"] == candidate["id"] }
+      raise ArgumentError
+    end
 
     if edition && RecordingResolution::Workspace.editions(candidate, assessment).none? { |_, id| id == edition }
       raise ArgumentError

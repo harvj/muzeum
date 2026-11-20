@@ -4,45 +4,71 @@
   <p><%= observed_text(@observation.payload["artist_name"], "Artist") %> · <%= observed_text(@observation.payload["album_name"], "Album") %></p>
   <p><%= pluralize(@observations_count, "observation") %> with these exact Last.fm strings.</p>
 </section>
-<section class="card library-card">
-  <h2>Current surface assignment</h2>
-  <% if @inherited_head&.recording_id %>
-    <p><%= catalog_link(@recordings.fetch(@inherited_head.recording_id)) %></p>
+<section class="card library-card" aria-labelledby="recording-status">
+  <h2 id="recording-status">Canonical recording</h2>
+  <% if @current_recording && Clients::Musicbrainz::MBID.match?(@current_recording.mbid.to_s) %>
+    <p><strong>Resolved</strong> · <%= catalog_link(@current_recording) %></p>
+    <p class="muted"><%= @current_decision&.scrobble_id ? "Direct assignment for this observation" :
+      (@current_decision&.user_id ? "Inherited from your exact-surface assignment" : "Derived from a recorded assessment") %>
+      <% if @current_decision %> · <%= @current_decision.reason %><% end %></p>
+  <% elsif @current_recording %>
+    <p><strong>Partially resolved</strong> · A local recording is assigned. Its provider identity is unverified.</p>
   <% else %>
-    <p><%= @inherited_head&.mode == "unresolved" ? "Explicitly unresolved" : "Unresolved" %></p>
+    <p><strong><%= @candidates.many? ? "Ambiguous" : "Unresolved" %></strong>
+      <% if @current_decision&.mode == "unresolved" %> · Explicitly left unresolved<% end %></p>
   <% end %>
   <% if @selected_scrobble %>
-    <p>Effective recording for the observation at <%= browser_time(@selected_scrobble.played_at) %>
-      · <%= @current_recording ? catalog_link(@current_recording) : "Unresolved" %>.</p>
-    <p><%= link_to "Review the surface instead", resolution_surface_path(@observation) %></p>
+    <p>Reviewing the observation at <%= browser_time(@selected_scrobble.played_at) %>.
+      <%= link_to "Review the exact surface", resolution_surface_path(@observation) %></p>
+  <% else %>
+    <p><%= link_to "Review only this observation", resolution_surface_path(@observation, play: @observation.id) %></p>
   <% end %>
-  <%= render "decision_controls" if @may_manage_observation %>
-  <details>
-    <summary>Original Last.fm claims</summary>
-    <% claims = (@selected_scrobble || @observation).payload.slice(*RecordingResolution::PilotRunner::CLAIM_FIELDS) %>
-    <% if claims.values.any?(&:present?) %>
-      <ul class="catalog-list"><% claims.each do |field, value| %><% if value.present? %><li><%= field.humanize %> <code><%= value %></code></li><% end %><% end %></ul>
-    <% else %><p>No MusicBrainz IDs were supplied.</p><% end %>
-  </details>
 </section>
-
 <section class="card library-card">
   <h2>Candidate recordings</h2>
-  <% if @assessment_request %>
-    <p role="status"><%= import_status(@assessment_request, verified: @assessment.present?) %><% if @assessment_request.failure %> · <%= @assessment_request.failure %><% end %></p>
-  <% end %>
-  <% if @assessment_request&.active? && !CatalogImport.worker_enabled? %><p>Background evidence checks are paused in this environment.</p><% end %>
-  <%= button_to "Check provider evidence", investigate_resolution_surface_path(@selected_scrobble || @observation) if @may_manage_observation %>
-  <% if @assessment %>
-    <p>Assessment <%= browser_time(@assessment.created_at) %>. Applying a candidate requires your decision.</p>
-    <%= render "evidence", assessment: @assessment %>
-  <% end %>
-  <% if @candidates.empty? %>
-    <p>No candidates available.<%= " Check provider evidence for this observation." if @may_manage_observation %></p>
+  <% if @assessment_request&.active? %>
+    <p role="status"><%= @assessment_request.state == "refreshing" ? "Investigating" : "Investigation pending" %>.
+      <%= link_to "Refresh results", resolution_surface_path(@observation, play: @selected_scrobble&.id) %></p>
+  <% elsif @assessment_request&.failure == "Investigation expired before completion." %>
+    <p role="status">Investigation expired. You can request another check.</p>
+  <% elsif @assessment_request&.state == "failed" || @assessment&.evidence&.fetch("partial", false) %>
+    <p role="status">Provider evidence unavailable or incomplete. Any retained candidates are shown below.</p>
+  <% elsif @assessment_request&.state == "incomplete" %>
+    <p role="status">Investigation incomplete. <%= @assessment_request.failure %></p>
+  <% elsif @assessment %>
+    <p>Investigation completed <%= browser_time(@assessment.created_at) %>.</p>
   <% else %>
-    <% @candidates.sort_by { |candidate| Array(@assessment.evidence["slots"]).any? { |slot| slot["recording_mbid"] == candidate["id"] } ? 0 : 1 }.each do |candidate| %>
-      <%= render "candidate", candidate: candidate %>
+    <p>This observation has not been investigated.<%= " Background investigation is paused." unless RecordingResolution::Investigation.enabled? %></p>
+  <% end %>
+  <% if @assessment && !@assessment_matches_claims %><p>This historical assessment used different source ID claims.</p><% end %>
+  <% if @candidates.any? %>
+    <p>Scores rank evidence for review. The scrobble supplies no measured duration for comparison.</p>
+    <% @candidates.first(3).each_with_index do |candidate, index| %>
+      <%= render "candidate", candidate:, rank: @ranking[index], recommended: index.zero? && RecordingResolution::Ranking.recommended?(@ranking) %>
     <% end %>
+    <% if @candidates.size > 3 %>
+      <details><summary>Additional candidates</summary>
+        <% @candidates.drop(3).each_with_index do |candidate, index| %>
+          <%= render "candidate", candidate:, rank: @ranking[index + 3], recommended: false %>
+        <% end %>
+      </details>
+    <% end %>
+  <% elsif @assessment %>
+    <p>No credible candidates in the retained evidence.</p>
+  <% end %>
+  <% if @assessment %>
+    <details><summary>Assessment evidence and provenance</summary><%= render "evidence", assessment: @assessment %></details>
+  <% end %>
+  <% if @may_manage_observation && CatalogImport.worker_enabled? && !@assessment_request&.active? %>
+    <details>
+      <summary>Retry or look up a recording identifier</summary>
+      <%= button_to "Refresh candidate evidence", investigate_resolution_surface_path(@selected_scrobble || @observation, play: @selected_scrobble&.id) %>
+      <%= form_with url: investigate_resolution_surface_path(@selected_scrobble || @observation, play: @selected_scrobble&.id) do |form| %>
+        <%= form.label :manual_mbid, "MusicBrainz recording identifier" %>
+        <%= form.text_field :manual_mbid, maxlength: 36, required: true %>
+        <%= form.submit "Look up recording", class: "catalog-submit" %>
+      <% end %>
+    </details>
   <% end %>
   <details>
     <summary>Recent assessments</summary>
@@ -58,7 +84,19 @@
 </section>
 
 <section class="card library-card">
-  <h2>Matching observations</h2>
+  <h2>Observation details</h2>
+  <%= render "decision_controls" if @may_manage_observation %>
+  <details>
+    <summary>Original Last.fm claims</summary>
+    <% claims = (@selected_scrobble || @observation).payload.slice(*RecordingResolution::PilotRunner::CLAIM_FIELDS) %>
+    <% if claims.values.any?(&:present?) %>
+      <ul class="catalog-list"><% claims.each do |field, value| %><% if value.present? %><li><%= field.humanize %> <code><%= value %></code></li><% end %><% end %></ul>
+    <% else %><p>No MusicBrainz IDs were supplied.</p><% end %>
+  </details>
+</section>
+
+<section class="card library-card">
+  <details><summary>Matching observations</summary>
   <%= dense_table("Matching observations") do %>
     <thead><tr><th scope="col">Played at</th><th scope="col">Effective recording</th><th scope="col">Scope</th></tr></thead>
     <tbody>
@@ -73,10 +111,11 @@
     </tbody>
   <% end %>
   <% if @next_scrobble %><p><%= link_to "Older observations", resolution_surface_path(@observation, before: @next_scrobble) %></p><% end %>
+</details>
 </section>
 
 <section class="card library-card">
-  <h2>Decision history</h2>
+  <details><summary>Decision history</summary>
   <% if @history.any? %>
     <ul class="catalog-list">
       <% @history.each do |decision| %>
@@ -84,9 +123,10 @@
           · <%= decision.scrobble_id ? "One observation" : "Surface" %> · <%= decision.mode.humanize %>
           <% if decision.recording_id %> · <%= catalog_link(@recordings.fetch(decision.recording_id)) %><% end %>
           <% if decision.assessment_id %> · <%= link_to "Assessment", resolution_surface_path(@observation, assessment: decision.assessment_id, play: decision.scrobble_id) %><% end %>
-          <br><%= decision.reason %></li>
+          <br><%= decision.reason %><% if decision.evidence["comment"].present? %> · <%= decision.evidence["comment"] %><% end %></li>
       <% end %>
     </ul>
     <% if @next_history %><p><%= link_to "Earlier decisions", resolution_surface_path(@observation, history_before: @next_history, play: @selected_scrobble&.id) %></p><% end %>
   <% else %><p>No decisions yet.</p><% end %>
+</details>
 </section>

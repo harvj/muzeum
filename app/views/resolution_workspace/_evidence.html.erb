@@ -24,14 +24,6 @@
     </ul>
   </details>
 <% end %>
-<% if discogs["status"] %>
-  <details>
-    <summary>Discogs comparison</summary>
-    <p><%= discogs["status"].humanize %>. <%= pluralize(Array(discogs["releases"]).count { |release| release["status"] == "corroborates" }, "checked edition") %> corroborated the track.</p>
-    <% absent = Array(discogs["releases"]).count { |release| release["status"] == "track_absent" } %>
-    <% if absent.positive? %><p><%= pluralize(absent, "checked edition") %> lacked the exact track title.</p><% end %>
-    <% if discogs["incomplete_reasons"].present? %><p>Unchecked or incomplete evidence remains.</p><% end %>
-    <p><%= Clients::Discogs::NOTICE %></p>
-    <p><%= link_to Clients::Discogs::ATTRIBUTION, "https://www.discogs.com/" %></p>
-  </details>
+<% if discogs["status"] && discogs["status"] != "unavailable" %>
+  <p>Historical Discogs provenance retained with the original assessment.</p>
 <% end %>

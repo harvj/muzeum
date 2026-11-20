@@ -20,6 +20,7 @@ Rails.application.routes.draw do
   end
   resources :resolution_surfaces, path: "resolution", controller: "resolution_workspace", only: %i[index show] do
     post :investigate, on: :member
+    post :defer, on: :member
     post :decide, on: :member
     post :admit, on: :member
   end

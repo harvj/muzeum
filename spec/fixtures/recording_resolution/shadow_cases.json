@@ -1,0 +1,204 @@
+[
+  {
+    "case": "verified studio versus live",
+    "surface": {
+      "artist": "Night Lines",
+      "track": "Signals",
+      "album": "Night Drive"
+    },
+    "reviewed_mbid": "550e8400-e29b-41d4-a716-446655440001",
+    "evidence": {
+      "source_claims": {
+        "track_mbid": "550e8400-e29b-41d4-a716-446655440001"
+      },
+      "verified_recording": {
+        "id": "550e8400-e29b-41d4-a716-446655440001",
+        "title": "Signals",
+        "artist-credit": [
+          {
+            "name": "Night Lines",
+            "artist": {
+              "id": "550e8400-e29b-41d4-a716-446655440004",
+              "name": "Night Lines"
+            }
+          }
+        ]
+      },
+      "candidates": [
+        {
+          "id": "550e8400-e29b-41d4-a716-446655440001",
+          "title": "Signals",
+          "artist-credit": [
+            {
+              "name": "Night Lines",
+              "artist": {
+                "id": "550e8400-e29b-41d4-a716-446655440004",
+                "name": "Night Lines"
+              }
+            }
+          ]
+        },
+        {
+          "id": "550e8400-e29b-41d4-a716-446655440002",
+          "title": "Signals",
+          "artist-credit": [
+            {
+              "name": "Night Lines",
+              "artist": {
+                "id": "550e8400-e29b-41d4-a716-446655440004",
+                "name": "Night Lines"
+              }
+            }
+          ],
+          "disambiguation": "live"
+        }
+      ]
+    }
+  },
+  {
+    "case": "same artist and title for two recordings",
+    "surface": {
+      "artist": "Night Lines",
+      "track": "Signals",
+      "album": "Night Drive"
+    },
+    "reviewed_mbid": null,
+    "evidence": {
+      "candidates": [
+        {
+          "id": "550e8400-e29b-41d4-a716-446655440001",
+          "title": "Signals",
+          "artist-credit": [
+            {
+              "name": "Night Lines",
+              "artist": {
+                "id": "550e8400-e29b-41d4-a716-446655440004",
+                "name": "Night Lines"
+              }
+            }
+          ]
+        },
+        {
+          "id": "550e8400-e29b-41d4-a716-446655440002",
+          "title": "Signals",
+          "artist-credit": [
+            {
+              "name": "Night Lines",
+              "artist": {
+                "id": "550e8400-e29b-41d4-a716-446655440004",
+                "name": "Night Lines"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "case": "alternate artist credit with canonical name",
+    "surface": {
+      "artist": "Night Lines",
+      "track": "Signals",
+      "album": "Night Drive"
+    },
+    "reviewed_mbid": "550e8400-e29b-41d4-a716-446655440001",
+    "evidence": {
+      "candidates": [
+        {
+          "id": "550e8400-e29b-41d4-a716-446655440001",
+          "title": "Signals",
+          "artist-credit": [
+            {
+              "name": "Nightline",
+              "artist": {
+                "id": "550e8400-e29b-41d4-a716-446655440004",
+                "name": "Night Lines"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "case": "source ID conflicts with independently reviewed version",
+    "surface": {
+      "artist": "Night Lines",
+      "track": "Signals",
+      "album": "Night Drive"
+    },
+    "reviewed_mbid": "550e8400-e29b-41d4-a716-446655440002",
+    "evidence": {
+      "source_claims": {
+        "track_mbid": "550e8400-e29b-41d4-a716-446655440001"
+      },
+      "verified_recording": {
+        "id": "550e8400-e29b-41d4-a716-446655440001",
+        "title": "Signals",
+        "artist-credit": [
+          {
+            "name": "Night Lines",
+            "artist": {
+              "id": "550e8400-e29b-41d4-a716-446655440004",
+              "name": "Night Lines"
+            }
+          }
+        ]
+      },
+      "candidates": [
+        {
+          "id": "550e8400-e29b-41d4-a716-446655440001",
+          "title": "Signals",
+          "artist-credit": [
+            {
+              "name": "Night Lines",
+              "artist": {
+                "id": "550e8400-e29b-41d4-a716-446655440004",
+                "name": "Night Lines"
+              }
+            }
+          ]
+        },
+        {
+          "id": "550e8400-e29b-41d4-a716-446655440002",
+          "title": "Signals",
+          "artist-credit": [
+            {
+              "name": "Night Lines",
+              "artist": {
+                "id": "550e8400-e29b-41d4-a716-446655440004",
+                "name": "Night Lines"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "case": "unrelated recording",
+    "surface": {
+      "artist": "Night Lines",
+      "track": "Signals",
+      "album": "Night Drive"
+    },
+    "reviewed_mbid": null,
+    "evidence": {
+      "candidates": [
+        {
+          "id": "550e8400-e29b-41d4-a716-446655440002",
+          "title": "Another Track",
+          "artist-credit": [
+            {
+              "name": "Night Lines",
+              "artist": {
+                "id": "550e8400-e29b-41d4-a716-446655440004",
+                "name": "Night Lines"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+]

@@ -21,7 +21,7 @@ module RecordingResolution
     end
 
     # The caller supplies the authenticated listener. Scope and author come from that identity.
-    def self.record!(listener:, scrobble:, scope:, mode:, reason:, recording: nil, assessment: nil, expected_head: nil)
+    def self.record!(listener:, scrobble:, scope:, mode:, reason:, recording: nil, assessment: nil, metadata: {}, expected_head: nil)
       raise ArgumentError, "Invalid listener decision scope" unless %i[surface scrobble].include?(scope)
       raise ArgumentError, "A reason is required" if reason.blank?
 
@@ -39,7 +39,7 @@ module RecordingResolution
 
         stream.create!(mode:, reason:, recording_id: recording&.id, assessment_id: assessment&.id,
           predecessor_id: head&.id, actor: "listener", version: VERSION,
-          evidence: { "observation_id" => scrobble.id })
+          evidence: metadata.merge("observation_id" => scrobble.id))
       end
     end
 

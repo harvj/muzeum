@@ -15,7 +15,7 @@ module RecordingResolution
       pilot = Pilot.find(@work.pilot_id)
       group = Group.find(@work.group_id)
       session = ProviderSession.new(@work, token, fixture: @fixture || FixtureTransport.new)
-      discogs = Clients::Discogs.new(session, live: pilot.live)
+      discogs = Clients::Discogs.new(session, live: false) unless pilot.live
       evaluator = Evaluator.new(session, discogs:)
       evidence = evaluator.call(Surface.find(group.surface_id), group.claims)
       finish(token, group, evidence, session.provenance)
@@ -91,7 +91,7 @@ module RecordingResolution
         unless error.deferred
           evidence ||= { "source_claims" => group.claims, "reasons" => [], "reason_details" => {} }
           code = error.terminal ? "provider_request_stopped" : "provider_temporarily_unavailable"
-          context = session.current_request || { "provider" => "discogs", "stage" => "configuration" }
+          context = session.current_request || { "provider" => "musicbrainz", "stage" => "configuration" }
           evidence["reasons"] << code
           evidence["reason_details"][code] = context.merge("message" => error.message, "retry_exhausted" => failed && !error.terminal)
           record_assessment(group, evidence, session.provenance)

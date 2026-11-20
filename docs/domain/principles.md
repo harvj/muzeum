@@ -8,7 +8,7 @@ Status: **Authoritative product policy**, 2026-11-17. These rules describe inten
 
 **DOM-002 — Source is evidence, interpretation is separate.** Every imported listening observation is a permanent historical record. Never delete an observation, destructively deduplicate it, or rewrite the original timestamp, reported artist, recording or album text, or source provenance. An observation's identity and provenance are not determined by the current canonical mapping. Source import must function with no MusicBrainz, Discogs, or canonical records. Preserve original identifiers and raw-page lineage. Raw HTTP response bodies are a separate dataset with their own storage and contractual questions. Any change to retained raw responses requires separate explicit authorization.
 
-**DOM-003 — MusicBrainz and Discogs are evidence providers, not product policy.** Muzeum establishes its own canonicalization, release-selection and accounting rules. A provider's classification is not automatically Muzeum's choice. Preserve source identifiers and the evidence/algorithm version behind each decision.
+**DOM-003 — Catalog providers supply evidence. Muzeum owns product policy.** Muzeum establishes its own canonicalization, release-selection and accounting rules. A provider's classification is not automatically Muzeum's choice. Preserve source identifiers and the evidence/algorithm version behind each decision. MusicBrainz is the active external catalog provider. Preserve historical Discogs evidence with its original provenance and make no new Discogs API requests.
 
 **DOM-004 — The listener's experience is decisive.** Muzeum makes intelligent automatic interpretations so routine manual organization is unnecessary. A listener can correct the interpretation of an individual play, including its credited release, and the correction takes precedence over automatic policy for that listener.
 
@@ -30,7 +30,7 @@ Status: **Authoritative product policy**, 2026-11-17. These rules describe inten
 
 **DOM-012 — Deliberate canonical metadata.** Import only fields with a stated purpose in identity verification, relationships, presentation, search, listening analysis or choosing music. Define each field's intended use, provenance, conflict policy and refresh semantics before promoting it into canonical storage. Provider payload availability alone is not a reason to mirror it. Preserve compact audit evidence separately from canonical attributes and respect provider retention/licensing.
 
-**DOM-013 — Repeatable import/refresh.** A canonical artist, release or recording should eventually offer an **Import** action that fetches current MusicBrainz/Discogs evidence by known identifiers, compares selected fields and safely updates the same Muzeum entity. It must be idempotent against unchanged evidence, preserve import/change history, report contradictions, distinguish absent/unknown from explicit correction or removal, and never silently erase useful metadata. Run bounded background work without duplicate concurrent imports; metadata refresh must not rewrite scrobbles, canonical identity, or protected listener recording/release decisions. The initial UI and service belong to a future numbered milestone, not P1.3a.
+**DOM-013 — Repeatable import/refresh.** A canonical artist, release or recording should eventually offer an **Import** action that fetches current MusicBrainz evidence by known identifiers, compares selected fields and safely updates the same Muzeum entity. It must be idempotent against unchanged evidence, preserve import/change history, report contradictions, distinguish absent/unknown from explicit correction or removal, and never silently erase useful metadata. Run bounded background work without duplicate concurrent imports; metadata refresh must not rewrite scrobbles, canonical identity, or protected listener recording/release decisions. The initial UI and service belong to a future numbered milestone, not P1.3a.
 
 **DOM-014 — Queryable musical content.** Eventually model recording contributors (musicians and roles), instruments, and time-bounded musical events (such as solos, entrances, harmonies and transitions) with evidence, uncertainty and optional start/end offsets. Model distinct events and overlapping/coordinated contributions: two successive guitar solos differ from one dual-guitar solo with two participants. Absence of annotation is unknown, not proof of absence. This is a first-class future musical-knowledge capability, not a request to indiscriminately ingest provider fields.
 
@@ -52,7 +52,7 @@ Status: **Authoritative product policy**, 2026-11-17. These rules describe inten
 
 - **Observation / scrobble:** Immutable Last.fm evidence of a listening event.
 - **Recording:** Canonical identity for the particular recorded performance heard, usually associated with a MusicBrainz recording.
-- **Release collection:** Muzeum's representation of a particular collection/ordering of songs, supported by MusicBrainz and Discogs release evidence, independent of physical format/remaster.
+- **Release collection:** Muzeum's representation of a particular collection/ordering of songs, supported by catalog release evidence, independent of physical format/remaster.
 - **Admitted release:** A deliberately selected canonical collection stored in Muzeum; not every provider release appearance.
 - **External release appearance:** Evidence that a recording occurs on a provider release without admitting it to Muzeum's library.
 - **Release membership:** A recording appears on a release collection; many-to-many.
@@ -73,6 +73,8 @@ These documents supersede contradictory *proposals* in dated P1.0 design notes. 
 - How to handle cases where a single song has multiple distinct recordings with ambiguous source metadata.
 
 ## Revision history
+
+- 2026-11-19: Recorded the #26 decision to retire new Discogs API requests and preserve historical provenance.
 
 - 2026-11-17: Added selective release admission, complete track-list import, bounded nonrecursive catalog growth and first-class canonical navigation.
 
