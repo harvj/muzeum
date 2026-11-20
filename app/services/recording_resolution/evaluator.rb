@@ -49,7 +49,12 @@ module RecordingResolution
       if edition_id && surface.album.present?
         edition = @workspace ? @musicbrainz.edition(@session, edition_id, catalog: true) : @musicbrainz.edition(@session, edition_id)
       end
-      evidence["edition"] = edition&.slice("id", "title", "release-group", "country", "date")
+      if edition
+        evidence["edition"] = edition.slice("id", "title", "release-group", "country", "date").merge(
+          "countries" => Array(edition["release-events"]).flat_map { |event| Array(event["country_codes"]) }.uniq,
+          "formats" => Array(edition["media"]).filter_map { |medium| medium["format"].presence }.uniq,
+          "complete_tracklist" => complete_edition?(edition) && Array(edition["media"]).none? { |medium| medium["extra-track-layout"] })
+      end
       evidence["slots"] = edition_slots(edition)
       if verified
         slot_check = {
@@ -138,6 +143,7 @@ module RecordingResolution
 
         tracks.map do |track|
           { "medium" => medium["position"], "position" => track["position"], "track_mbid" => track["id"],
+            "number" => track["number"], "length" => track["length"] || track.dig("recording", "length"),
             "title" => track["title"], "recording_mbid" => track.dig("recording", "id") }
         end
       end

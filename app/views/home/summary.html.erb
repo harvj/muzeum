@@ -1,0 +1,12 @@
+<p><%= link_to "Back to Archive", archive_path %></p>
+<section class="card library-card" aria-labelledby="archive-summary">
+  <h1 id="archive-summary">Archive summary</h1>
+  <div class="grid archive-summary">
+  <% [["Imported scrobbles", @count], ["Observed artists", @artists], ["Observed albums", @albums], ["Observed tracks", @tracks]].each do |label, value| %>
+    <article class="stat"><span><%= label %></span><strong><%= number_with_delimiter(value) %></strong><span><%= label == "Imported scrobbles" ? "Persisted source observations" : "Distinct reported names" %></span></article>
+  <% end %>
+  <article><span class="muted">Earliest scrobble</span><p class="date"><%= @earliest&.utc&.strftime("%d %b %Y") || "No history yet" %></p><p class="muted"><%= @earliest&.utc&.strftime("%H:%M:%S UTC") %></p></article>
+  <article><span class="muted">Latest scrobble</span><p class="date"><%= @latest&.utc&.strftime("%d %b %Y") || "No history yet" %></p><p class="muted"><%= @latest&.utc&.strftime("%H:%M:%S UTC") %></p></article>
+  </div>
+  <p class="muted">Counts describe reported names. Album and track counts include the reported artist.</p>
+</section>

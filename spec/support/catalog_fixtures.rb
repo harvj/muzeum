@@ -51,11 +51,12 @@ module CatalogFixtures
         { "id" => track_id, "title" => recording["title"], "position" => position, "number" => position.to_s, "recording" => recording }
       end
       { "id" => IDS[:edition], "title" => "Night Drive", "date" => "2020-06", "country" => "US", "status" => "Official",
+        "release-events" => [ { "area" => { "iso-3166-1-codes" => [ "US" ] } }, { "area" => { "iso-3166-1-codes" => [ "CA" ] } } ],
         "artist-credit" => [ credit ], "release-group" => { "id" => IDS[:release_group], "primary-type" => "Album",
           "secondary-types" => [], "first-release-date" => "2020-06" },
-        "media" => [ { "position" => 1, "track-count" => 2, "tracks" => [
+        "media" => [ { "position" => 1, "track-count" => 2, "format" => "CD", "tracks" => [
           new_track.call(studio, 1, IDS[:track]), new_track.call(other, 2, IDS[:other])
-        ] }, { "position" => 2, "track-count" => 1, "tracks" => [ new_track.call(studio, 1, IDS[:studio]) ] } ] }
+        ] }, { "position" => 2, "track-count" => 1, "format" => "CD", "tracks" => [ new_track.call(studio, 1, IDS[:studio]) ] } ] }
     end
   end
 end

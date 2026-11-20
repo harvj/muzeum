@@ -6,6 +6,7 @@ Rails.application.routes.draw do
   resource :lastfm_account, only: :update
   resources :imports, only: :create
   get "archive", to: "home#show", as: :archive
+  get "archive/summary", to: "home#summary", as: :archive_summary
   get "profiles/:profile", to: "public_profiles#show", as: :public_profile
   scope "profiles/:profile", as: :public_profile do
     %i[artists releases recordings].each do |section|

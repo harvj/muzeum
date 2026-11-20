@@ -1,29 +1,81 @@
 <% mbid = candidate.fetch("id") %>
 <% slots = Array(@assessment.evidence["slots"]).select { |slot| slot["recording_mbid"] == mbid } %>
-<article class="candidate">
-  <h3><%= candidate["title"] %></h3>
-  <p><%= Array(candidate["artist-credit"]).map { |credit| "#{credit["name"]}#{credit["joinphrase"]}" }.join.presence || "Artist credit unavailable" %>
-    <% if candidate["length"] %> · <%= recording_duration(candidate["length"]) %><% end %>
-    <% if candidate["disambiguation"].present? %> · <%= candidate["disambiguation"] %><% end %>
-    <% if candidate["video"] %> · Video recording<% end %></p>
-  <p><% if recommended %><strong>Muzeum’s recommendation</strong> · <% end %>
-    Score <%= rank["score"] %> · <%= rank["provenance"] == "local_catalog" ? "Local catalog" : "MusicBrainz" %> ·
-    <%= link_to "Recording #{mbid.last(8)}", "https://musicbrainz.org/recording/#{mbid}", title: mbid %></p>
-  <% positives = rank.fetch("inputs").values.select { |item| item["state"] == "positive" } %>
-  <% conflicts = rank.fetch("inputs").values.select { |item| item["state"] == "contradictory" } %>
-  <p><strong>For</strong> · <%= positives.pluck("explanation").join(" · ") %></p>
-  <p><strong>Against</strong> · <%= conflicts.pluck("explanation").join(" · ").presence || "No conflict in the available evidence" %></p>
-  <% if positives.all? { |item| item["weight"] <= 2 } %><p class="muted">There is no independently verified link from this play to the recording.</p><% end %>
-  <% if slots.any? %>
-    <p><%= @assessment.evidence.dig("edition", "title") %> · <%= slots.map { |slot| "disc #{slot["medium"]}, track #{slot["position"]}" }.join("; ") %></p>
-  <% end %>
+<% edition = slots.any? ? @assessment.evidence["edition"] : nil %>
+<% countries = edition ? Array(edition["countries"]).presence || Array(edition["country"]) : [] %>
+<% positives = rank.fetch("inputs").values.select { |item| item["state"] == "positive" } %>
+<% conflicts = rank.fetch("inputs").values.select { |item| item["state"] == "contradictory" } %>
+<% tooltip_id = "score-evidence-#{mbid}" %>
+<details class="candidate review-candidate<%= " recommended" if recommended %>" name="resolution-candidate" <%= "open" if expanded %>>
+  <summary class="review-candidate-summary">
+    <span>
+      <% if recommended %><strong class="review-recommendation" aria-label="Muzeum’s recommendation">Recommended</strong><% end %>
+      <strong class="review-candidate-title"><%= candidate["title"] %></strong>
+      <span class="review-credit"><%= Array(candidate["artist-credit"]).map { |credit| "#{credit["name"]}#{credit["joinphrase"]}" }.join.presence || "Artist credit unavailable" %>
+        <% if candidate["disambiguation"].present? %> · <%= candidate["disambiguation"] %><% end %></span>
+      <span class="review-edition"><%= edition ? edition["title"] : "Supporting release unavailable" %></span>
+      <% if edition %>
+        <span class="compact-meta"><%= edition["date"].presence || "Date unavailable" %>
+          · <%= countries.any? ? nil : "Country unavailable" %>
+          <% countries.each_with_index do |country, index| %><%= ", " if index.positive? %><span data-controller="release-country" data-release-country-code-value="<%= country %>"><%= country %></span><% end %>
+          · <%= Array(edition["formats"]).join(" / ").presence || "Format unavailable" %>
+          <% if edition.dig("release-group", "primary-type").present? %> · <%= edition.dig("release-group", "primary-type") %><% end %></span>
+      <% end %>
+    </span>
+    <span class="review-score">
+      Score <strong><%= rank["score"] %></strong>
+      <span class="review-score-help" tabindex="0" aria-label="Explain score <%= rank["score"] %>" aria-describedby="<%= tooltip_id %>">ⓘ
+        <span id="<%= tooltip_id %>" class="review-tooltip" role="tooltip">
+          <strong>Why <%= rank["score"] %>?</strong>
+          <% (positives + conflicts).each do |item| %><span><%= "%+d" % item["weight"] %> · <%= item["explanation"] %></span><% end %>
+          <span>Relative evidence score</span>
+        </span>
+      </span>
+      <meter min="<%= [0, @ranking.last["score"]].min %>" max="<%= [1, @ranking.first["score"]].max %>"
+        value="<%= rank["score"] %>" aria-label="Score relative to this shortlist"></meter>
+    </span>
+  </summary>
+  <div class="review-candidate-detail">
+    <div>
+      <p class="compact-meta review-recording-id"><%= rank["provenance"] == "local_catalog" ? "Local catalog" : "MusicBrainz" %> ·
+        <%= link_to "Recording #{mbid}", "https://musicbrainz.org/recording/#{mbid}", title: mbid %></p>
+      <% if edition %>
+        <h3>Tracklist · <%= edition["title"] %></h3>
+        <p class="compact-meta">Supporting evidence for recording identity. Release assignment is separate.
+          <% if Clients::Musicbrainz::MBID.match?(edition["id"].to_s) %>
+            <%= link_to "MusicBrainz release", "https://musicbrainz.org/release/#{edition.fetch("id")}" %>
+          <% end %></p>
+        <% unless edition["complete_tracklist"] %><p class="compact-meta">Showing retained track slots. Full tracklist availability is unverified.</p><% end %>
+        <ol class="review-tracks">
+          <% Array(@assessment.evidence["slots"]).each do |slot| %>
+            <li class="<%= "review-track-match" if slot["recording_mbid"] == mbid %>">
+              <span><%= [slot["medium"], slot["number"].presence || slot["position"]].compact.join(".") %></span>
+              <span><%= slot["title"] %><% if slot["recording_mbid"] == mbid %><span class="visually-hidden"> (candidate recording)</span><% end %></span>
+              <span><%= recording_duration(slot["length"]) if slot["length"] %></span>
+            </li>
+          <% end %>
+        </ol>
+      <% else %>
+        <p class="compact-meta">A checked release tracklist is unavailable for this candidate.</p>
+      <% end %>
+    </div>
+    <div class="review-factors">
+      <h3>For</h3>
+      <ul><% positives.each do |item| %><li><%= item["explanation"] %></li><% end %></ul>
+      <h3>Against</h3>
+      <% if conflicts.any? %>
+        <ul><% conflicts.each do |item| %><li><%= item["explanation"] %></li><% end %></ul>
+      <% else %><p>No conflict in the available evidence.</p><% end %>
+      <h3>Uncertainty</h3>
+      <p><%= positives.all? { |item| item["weight"] <= 2 } ? "The available evidence does not independently link this play to the recording." : "The source observation provides no measured duration for comparison." %></p>
+    </div>
+  </div>
   <% if @may_manage_observation && @assessment_matches_claims %>
   <%= form_with url: decide_resolution_surface_path(@observation) do |form| %>
-    <%= form.hidden_field :recording_mbid, value: mbid %>
-    <%= form.hidden_field :assessment_id, value: @assessment.id %>
-    <%= form.hidden_field :scope, value: @selected_scrobble ? "scrobble" : "surface" %>
-    <%= form.hidden_field :play_id, value: @selected_scrobble&.id %>
-    <%= form.hidden_field :head, value: (@selected_scrobble ? @selected_head : @surface_head)&.id %>
+    <%= form.hidden_field :recording_mbid, value: mbid, id: nil %>
+    <%= form.hidden_field :assessment_id, value: @assessment.id, id: nil %>
+    <%= form.hidden_field :scope, value: @selected_scrobble ? "scrobble" : "surface", id: nil %>
+    <%= form.hidden_field :play_id, value: @selected_scrobble&.id, id: nil %>
+    <%= form.hidden_field :head, value: (@selected_scrobble ? @selected_head : @surface_head)&.id, id: nil %>
     <details><summary>Add an optional comment</summary>
       <%= form.label :comment, "Comment (optional)", for: "comment-#{mbid}" %>
       <%= form.text_field :comment, id: "comment-#{mbid}", maxlength: 500 %>
@@ -51,4 +103,4 @@
     <% end %>
   <% end %>
   <% end %>
-</article>
+</details>

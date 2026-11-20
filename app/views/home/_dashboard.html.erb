@@ -1,6 +1,11 @@
-<div id="archive_dashboard" data-controller="dashboard-sync" data-dashboard-sync-url-value="<%= dashboard_updates_path %>" data-dashboard-sync-version-value="<%= @account&.updated_at&.iso8601(6) %>">
+<div id="archive_dashboard" data-controller="dashboard-sync" data-dashboard-sync-url-value="<%= dashboard_updates_path %>" data-dashboard-sync-version-value="<%= @account&.updated_at&.iso8601(6) if @first_page %>">
 <h1 class="archive-heading">Listening archive</h1>
 <%= render "home/recent" %>
+<nav aria-label="Archive pages" class="archive-pages">
+  <% unless @first_page %><%= entity_link "Latest plays", archive_path %><% end %>
+  <% if @next_page %><%= entity_link "Older plays", archive_path(before: @next_page) %><% end %>
+  <%= link_to "Archive summary", archive_summary_path, class: "entity-link", data: { turbo_prefetch: false } %>
+</nav>
 <div class="columns archive-settings">
   <section class="card">
     <h2>Last.fm account</h2>
@@ -42,20 +47,8 @@
       <p class="muted">Coverage lag: <%= @account.synced_through ? "#{[Time.current.to_i - @account.synced_through, 0].max} seconds" : "Historical coverage pending" %> · failures: <%= @account.failure_count %></p>
       <% if @account.last_error %><p class="error" role="alert"><%= @account.last_error %></p><% end %>
     <% end %>
-    <p class="muted">Committed updates appear automatically while this page is open.</p>
+    <% if @first_page %><p class="muted">Committed updates appear automatically while this page is open.</p><% end %>
   </section>
   <% end %>
 </div>
-<section class="card library-card" aria-labelledby="archive-summary">
-  <h2 id="archive-summary">Archive summary</h2>
-  <div class="grid archive-summary">
-  <% [["Imported scrobbles", @count], ["Observed artists", @artists], ["Observed albums", @albums], ["Observed tracks", @tracks]].each do |label, value| %>
-    <article class="stat"><span><%= label %></span><strong><%= number_with_delimiter(value) %></strong><span><%= label == "Imported scrobbles" ? "Persisted source observations" : "Distinct reported names" %></span></article>
-  <% end %>
-  <article><span class="muted">Earliest scrobble</span><p class="date"><%= @earliest&.utc&.strftime("%d %b %Y") || "No history yet" %></p><p class="muted"><%= @earliest&.utc&.strftime("%H:%M:%S UTC") %></p></article>
-  <article><span class="muted">Latest scrobble</span><p class="date"><%= @latest&.utc&.strftime("%d %b %Y") || "No history yet" %></p><p class="muted"><%= @latest&.utc&.strftime("%H:%M:%S UTC") %></p></article>
-  </div>
-  <p class="muted">Counts describe reported names. Album and track counts include the reported artist.</p>
-</section>
-
 </div>

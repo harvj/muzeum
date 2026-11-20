@@ -38,6 +38,10 @@ The authoritative, living domain rules are [principles](domain/principles.md), [
 
    - **P1.5.1 — Canonical resolution experience and candidate scoring.** Prioritize recording identity and explained, listener-reviewed candidates ahead of #21. Use local catalog evidence and bounded MusicBrainz investigation, with historical Discogs provenance retained under the #26 decision. Keep automatic assignments in shadow evaluation. [Baseline and design](p1.5.1/resolution.md) · [Issue #28](https://github.com/harvj/muzeum/issues/28).
 
+   - **P1.5.1a — Resolution Review visual refinement.** Match the approved text-first layout with a single-open candidate list, explained scores, and verified release context. [Issue #28](https://github.com/harvj/muzeum/issues/28) · [Browser previews](p1.5.1a/review.md).
+   - **P1.5 — Archive performance.** Keep chronological page and refresh reads bounded. Move exact source totals to the explicit Archive summary. [Issue #32](https://github.com/harvj/muzeum/issues/32) · [Investigation and measurements](p1.5/archive-performance.md).
+   - **P1.5.2 — Learning from manual recording decisions.** Next development priority. Evaluate ranking changes offline before any proposed production learning. Issue #21 remains deferred.
+
 9. **P1.6 — Profile onboarding (tentative).**
    - **P1.6a — Last.fm authentication and verified username.** Use Last.fm web authorization and bind only the returned username.
    - **P1.6b — Self-service account linking.** Resolve duplicate claims, relinking and provider session security.

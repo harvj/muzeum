@@ -149,15 +149,19 @@ module Clients
 
     def project_edition(data)
       result = data.slice("id", "title", "status", "country", "date")
+      result["release-events"] = Array(data["release-events"]).filter_map do |event|
+        codes = Array(event.dig("area", "iso-3166-1-codes"))
+        { "country_codes" => codes } if codes.any?
+      end
       result["release-group"] = data["release-group"]&.slice("id", "primary-type", "secondary-types", "first-release-date")
       result["artist-credit"] = project_credits(data["artist-credit"])
       result["relations"] = Array(data["relations"]).select { |relation| relation["type"] == "discogs" }.map do |relation|
         { "url" => relation.fetch("url").slice("resource") }
       end
       result["media"] = Array(data["media"]).map do |medium|
-        medium.slice("position", "track-count").merge("extra-track-layout" => medium["pregap"].present? || medium["data-tracks"].present?,
+        medium.slice("position", "track-count", "format").merge("extra-track-layout" => medium["pregap"].present? || medium["data-tracks"].present?,
           "tracks" => medium["tracks"]&.map do |track|
-          track.slice("id", "position", "number", "title").merge(
+          track.slice("id", "position", "number", "title", "length").merge(
             "artist-credit" => project_credits(track["artist-credit"]),
             "recording" => track["recording"] && project_recording(track["recording"]).except("releases"))
         end)
