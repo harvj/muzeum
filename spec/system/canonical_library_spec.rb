@@ -23,11 +23,10 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     click_link "Signals"
     expect(page).to have_text("A checked MusicBrainz edition contains this track slot")
     within(".candidate", text: "Signals") do
-      select "Corroborating catalog evidence", from: "Reason for this assignment"
       find_button("Apply to all").send_keys(:enter)
     end
     expect(page).to have_text("Recording decision saved.")
-    expect(page).to have_text("Corroborating catalog evidence")
+    expect(page).to have_text("Confirmed candidate")
 
     request = CatalogImport.find_by!(kind: "recording")
     expect(request.state).to eq("pending")
@@ -108,7 +107,6 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
 
     visit resolution_surface_path(observation, assessment: assessment.id)
     within(".candidate", text: "Signals") do
-      select "Verified recording identifier", from: "Reason for this assignment"
       find_button("Apply to all").send_keys(:enter)
     end
     expect(page).to have_text("Inherited from your exact-surface assignment")

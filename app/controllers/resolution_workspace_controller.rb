@@ -89,8 +89,10 @@ class ResolutionWorkspaceController < ApplicationController
     options = RecordingResolution::DecisionReasons::OPTIONS.fetch(mode)
     code = params[:reason_code].to_s.presence
     comment = params[:comment].to_s.strip.presence
-    reason = code ? options.fetch(code) { raise ArgumentError } : params[:reason].to_s.strip.presence
-    raise ArgumentError if reason.blank? || reason.length > 500 || comment.to_s.length > 500
+    legacy_reason = params[:reason].to_s.strip.presence
+    code ||= RecordingResolution::DecisionReasons::DEFAULTS.fetch(mode) unless legacy_reason
+    reason = code ? options.fetch(code) { raise ArgumentError } : legacy_reason
+    raise ArgumentError if reason.length > 500 || comment.to_s.length > 500
 
     target = scope == :scrobble ? @workspace.matching(@observation).find(params[:play_id]) : @observation
     surface = @workspace.surface(@observation)
@@ -125,7 +127,7 @@ class ResolutionWorkspaceController < ApplicationController
   rescue ActiveRecord::StaleObjectError
     redirect_to resolution_surface_path(@observation), alert: "This assignment changed. Review the current decision and submit again.", status: :see_other
   rescue ArgumentError, CanonicalCatalog::Store::Unverified
-    redirect_to resolution_surface_path(@observation), alert: "Choose a candidate, scope, and applicable reason. Comments are limited to 500 characters.", status: :see_other
+    redirect_to resolution_surface_path(@observation), alert: "Check the candidate and scope. Optional comments are limited to 500 characters.", status: :see_other
   end
 
   def defer

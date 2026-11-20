@@ -24,13 +24,6 @@
     <%= form.hidden_field :scope, value: @selected_scrobble ? "scrobble" : "surface" %>
     <%= form.hidden_field :play_id, value: @selected_scrobble&.id %>
     <%= form.hidden_field :head, value: (@selected_scrobble ? @selected_head : @surface_head)&.id %>
-    <%= form.label :reason_code, "Reason for this assignment", for: "reason-#{mbid}" %>
-    <% reasons = RecordingResolution::DecisionReasons::OPTIONS.fetch("resolved").dup
-      reasons.delete("verified_identifier") unless rank.dig("inputs", "recording_identifier", "state") == "positive"
-      reasons.delete("corroborating_evidence") unless rank.dig("inputs", "edition_slot", "state") == "positive"
-      reasons.delete("correction") unless @current_decision
-    %>
-    <%= form.select :reason_code, reasons.invert.to_a, { include_blank: "Choose a reason" }, id: "reason-#{mbid}", required: true %>
     <details><summary>Add an optional comment</summary>
       <%= form.label :comment, "Comment (optional)", for: "comment-#{mbid}" %>
       <%= form.text_field :comment, id: "comment-#{mbid}", maxlength: 500 %>

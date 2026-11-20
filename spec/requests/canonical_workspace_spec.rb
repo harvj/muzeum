@@ -68,15 +68,17 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     expect { post decide_resolution_surface_path(example), params: choice }.not_to change(RecordingResolution::Decision, :count)
     expect(flash[:alert]).to include("changed")
 
-    post decide_resolution_surface_path(example), params: { scope: "scrobble", play_id: second.id, mode: "unresolved", reason: "Unclear version" }
+    post decide_resolution_surface_path(example), params: { scope: "scrobble", play_id: second.id, mode: "unresolved" }
     head = RecordingResolution::Decision.last
-    expect(head.scrobble_id).to eq(second.id)
+    expect(head).to have_attributes(scrobble_id: second.id, reason: "Left unresolved",
+      evidence: a_hash_including("reason_code" => "left_unresolved"))
     get resolution_surfaces_path(filter: "exceptions")
     expect(response.body).to include("Signals")
     expect(RecordingResolution::Ledger.effective(user).find(second.id).effective_recording_id).to be_nil
     get resolution_surface_path(example, play: second.id)
     expect(response.body).to include("Only this time", "Return to inheritance")
-    post decide_resolution_surface_path(example), params: { scope: "scrobble", play_id: second.id, mode: "inherit", reason: "Same version", head: head.id }
+    post decide_resolution_surface_path(example), params: { scope: "scrobble", play_id: second.id, mode: "inherit", head: head.id }
+    expect(RecordingResolution::Decision.last.evidence.fetch("reason_code")).to eq("restore_inheritance")
     later = catalog_observation(user, time: 1.day.from_now)
     expect(RecordingResolution::Ledger.effective(user).find(later.id).effective_recording_id).to eq(Recording.find_by!(mbid:).id)
     expect(RecordingResolution::Ledger.effective(user).find(second.id).effective_recording_id).to eq(Recording.find_by!(mbid:).id)
@@ -114,12 +116,14 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     assessment = RecordingResolution::Ledger.assessments(user).sole
     post decide_resolution_surface_path(second), params: { mode: "resolved", scope: "surface",
       recording_mbid: CatalogFixtures::IDS[:studio], assessment_id: assessment.id,
-      reason_code: "verified_identifier", comment: "Checked the studio version" }
+      comment: "Checked the studio version" }
     decision = RecordingResolution::Decision.sole
-    expect(decision.evidence).to include("reason_code" => "verified_identifier", "comment" => "Checked the studio version",
+    expect(decision).to have_attributes(reason: "Confirmed candidate", assessment_id: assessment.id, actor: "listener", user_id: user.id)
+    expect(decision.evidence).to include("reason_code" => "confirmed_candidate", "comment" => "Checked the studio version",
       "scoring_version" => RecordingResolution::Ranking::VERSION, "affected_scope" => "surface")
     get resolution_surface_path(second)
     expect(response.body).to include("Inherited from your exact-surface assignment", "Checked the studio version")
+    expect(decision.evidence.fetch("candidate_scores").first.fetch("recording_mbid")).to eq(CatalogFixtures::IDS[:studio])
     expect(Scrobble.find(observation.id).payload).to eq(observation.payload)
   end
 
