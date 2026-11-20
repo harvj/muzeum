@@ -18,7 +18,7 @@ jobs:
         with:
           ref: ${{ matrix.revision }}
       - run: test "$(git rev-parse HEAD)" = "${{ matrix.revision }}"
-      - run: sudo apt-get update && sudo apt-get install -y libvips42 libvips-tools librsvg2-2
+      - run: sudo apt-get update && sudo apt-get install -y libvips-tools librsvg2-2
       - uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
@@ -34,5 +34,5 @@ jobs:
         run: |
           directory=$(mktemp -d)
           curl --fail --silent --show-error --retry 2 --max-time 30 -A 'MuzeumRuntimeVerification/1.0 (https://github.com/harvj/muzeum/issues/28)' 'https://upload.wikimedia.org/wikipedia/commons/1/10/Flag_of_Scotland.svg' -o "$directory/scotland.svg"
-          curl --fail --silent --show-error --retry 2 --max-time 30 -A 'MuzeumRuntimeVerification/1.0 (https://github.com/harvj/muzeum/issues/28)' 'https://upload.wikimedia.org/wikipedia/commons/3/30/Flag_of_Chicago%2C_Illinois.svg' -o "$directory/chicago.svg"
+          curl --fail --silent --show-error --retry 2 --max-time 30 -A 'MuzeumRuntimeVerification/1.0 (https://github.com/harvj/muzeum/issues/28)' 'https://upload.wikimedia.org/wikipedia/commons/9/9b/Flag_of_Chicago%2C_Illinois.svg' -o "$directory/chicago.svg"
           bundle exec ruby -rvips -e 'ARGV.each { |path| image = Vips::Image.thumbnail(path, 24); png = Vips::Image.new_from_buffer(image.write_to_buffer(".png"), ""); abort path unless png.width == 24 && png.height > 0; puts "#{File.basename(path)}: #{png.width}x#{png.height}" }' "$directory/scotland.svg" "$directory/chicago.svg"
