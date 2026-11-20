@@ -2,7 +2,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main, release/v0.3.2]
+    branches: [main, release/v0.3.2, controls/v0.3.4]
 permissions:
   contents: read
 jobs:
@@ -35,6 +35,8 @@ jobs:
       - run: bundle exec rspec
       - name: Verify backup helper tests
         run: python3 -m unittest discover -s ops/backups -p 'test_*.py'
+      - name: Verify Muzeum runtime selection
+        run: python3 -m unittest discover -s ops/runtime -p 'test_*.py'
       - name: Verify catalog readiness diagnostics
         run: python3 -m unittest discover -s ops/catalog -p 'test_*.py'
       - name: Install disposable recovery-test dependency

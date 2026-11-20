@@ -18,13 +18,15 @@ class RuntimeCommandTests(unittest.TestCase):
             names = ('DATABASE_URL', 'CACHE_DATABASE_URL', 'QUEUE_DATABASE_URL', 'CABLE_DATABASE_URL')
             databases = ('muzeum_production', 'muzeum_production_cache', 'muzeum_production_queue', 'muzeum_production_cable')
             (app / 'shared/.env').write_text('\n'.join(key+'=postgresql://muzeum_runtime:fixture@127.0.0.1/'+database for key,database in zip(names,databases)))
+            (app / 'REVISION').write_text('024ed4aecd98984c00323377389cde5a6a35d16d')
+            runtime_library = Path(__file__).resolve().parents[1] / 'runtime/muzeum_runtime.py'
             host = deploy.Host()
             calls = []
             def command(argv, **kwargs):
                 calls.append((argv,kwargs))
                 return 'MUZEUM_DEPLOY_INSPECTION:'+json.dumps({'pending': []})
             host.command = command
-            with patch.object(deploy, 'APP', app):
+            with patch.object(deploy, 'APP', app), patch.object(deploy, 'RUNTIME_LIBRARY', runtime_library):
                 host.inspect(app)
             argv, kwargs = calls[0]
             self.assertEqual(argv[:4], ['/usr/sbin/runuser', '-u', 'muzeum', '--'])

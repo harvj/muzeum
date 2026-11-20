@@ -1,0 +1,22 @@
+#!/usr/bin/python3 -I
+"""Exec the current Muzeum release under its fixed runtime profile."""
+import os
+import re
+import sys
+from pathlib import Path
+
+sys.path.insert(0, '/usr/local/lib/muzeum-runtime')
+from muzeum_runtime import APP, release_runtime, runtime_environment
+
+commands = {'web': ('puma', '-C', 'config/puma.rb'), 'worker': ('ruby', 'bin/jobs')}
+if len(sys.argv) != 2 or sys.argv[1] not in commands or os.geteuid() == 0:
+    raise SystemExit('Invalid Muzeum service invocation')
+release = (APP / 'current').resolve(strict=True)
+if release.parent != APP / 'releases' or not re.fullmatch(r'[0-9]{14}', release.name):
+    raise SystemExit('Unexpected Muzeum release path')
+directory, bundle = release_runtime(release)
+environment = runtime_environment(os.environ, directory, bundle)
+environment.update(RAILS_ENV='production', BUNDLE_DEPLOYMENT='true', BUNDLE_FROZEN='true',
+                   BUNDLE_WITHOUT='development:test', BUNDLE_GEMFILE=str(release / 'Gemfile'))
+os.chdir(release)
+os.execve(directory / 'bundle', ['bundle', 'exec', *commands[sys.argv[1]]], environment)

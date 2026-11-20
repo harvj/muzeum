@@ -3,6 +3,7 @@ import datetime,json,os,re,secrets,shutil,subprocess,time
 from pathlib import Path
 import production_capture
 import monitoring
+import sys
 
 
 
@@ -10,7 +11,7 @@ def recovery_environment(values,targets,release):
     from urllib.parse import urlsplit,urlunsplit
     if set(targets)!=set(production_capture.DATABASES) or any(not re.fullmatch('muzeum_recovery_[a-f0-9]{16}',v) for v in targets.values()):
         raise RuntimeError('Exact isolated recovery targets required')
-    env=dict(values,PATH='/home/muzeum/.rbenv/shims:/opt/auth/ruby-3.4.12/bin:/usr/bin:/bin',HOME='/home/muzeum',
+    env=dict(values,HOME='/home/muzeum',
              BUNDLE_IGNORE_CONFIG='1',BUNDLE_WITHOUT='development:test',BUNDLE_DEPLOYMENT='true',BUNDLE_FROZEN='true',
              BUNDLE_GEMFILE=str(release/'Gemfile'),BOOTSNAP_READONLY='1',PGOPTIONS='-c default_transaction_read_only=on -c statement_timeout=30000')
     for key,source in zip(('DATABASE_URL','CACHE_DATABASE_URL','QUEUE_DATABASE_URL','CABLE_DATABASE_URL'),production_capture.DATABASES):
@@ -35,7 +36,12 @@ def verify_application(restored,targets,metadata,invoke):
     script='''raise 'Unexpected identity' if User.where.not(oidc_subject:nil).any? { |u| !u.login_enabled? && u.disabled_at.nil? }
 Session.find_each { |s| raise 'Session recovery failed' if s.grant_token.blank? }
 puts 'MUZEUM_RECOVERY_PROOF:'+{users:User.count,sessions:Session.count,scrobbles:Scrobble.count,raw_pages:ImportPage.count,grant_decryption_verified:true}.to_json'''
-    result=subprocess.run(['/usr/sbin/runuser','-u','muzeum','--','/opt/auth/ruby-3.4.12/bin/bundle','exec','rails','runner',script],
+    sys.path.insert(0, '/usr/local/lib/muzeum-runtime')
+    from muzeum_runtime import release_runtime, runtime_environment
+    directory, bundle_path = release_runtime(release)
+    env = runtime_environment(env, directory, bundle_path)
+    env.update(BUNDLE_IGNORE_CONFIG='1', BUNDLE_DEPLOYMENT='true', BUNDLE_FROZEN='true', BUNDLE_WITHOUT='development:test', BUNDLE_GEMFILE=str(release/'Gemfile'))
+    result=subprocess.run(['/usr/sbin/runuser','-u','muzeum','--',str(directory / 'bundle'),'exec','rails','runner',script],
                           cwd=release,env=env,capture_output=True,text=True,timeout=60)
     if result.returncode:raise RuntimeError('Isolated application identity/session recovery failed')
     line=next((line for line in result.stdout.splitlines() if line.startswith('MUZEUM_RECOVERY_PROOF:')),None)

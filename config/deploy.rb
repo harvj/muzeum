@@ -32,7 +32,7 @@ end
 def muzeum_verify_helper
   on primary(:app) do
     installed = capture(:sudo, "-n", "/usr/local/sbin/muzeum-deploy", "version").strip
-    expected = Digest::SHA256.hexdigest(File.binread(File.expand_path("../ops/deploy/muzeum_deploy.py", __dir__)) + File.binread(File.expand_path("../ops/deploy/inspect.rb", __dir__)))
+    expected = Digest::SHA256.hexdigest(File.binread(File.expand_path("../ops/deploy/muzeum_deploy.py", __dir__)) + File.binread(File.expand_path("../ops/deploy/inspect.rb", __dir__)) + File.binread(File.expand_path("../ops/runtime/muzeum_runtime.py", __dir__)))
     raise "Reviewed deployment helper version mismatch" unless installed == expected
   end
 end
@@ -66,7 +66,7 @@ namespace :muzeum do
     puts "Preflight #{approval.fetch(:branch)} at #{approval.fetch(:sha)}; CI #{approval.fetch(:ci)}"
     muzeum_verify_helper
     on primary(:app) do
-      execute :sudo, "-n", "/usr/local/sbin/muzeum-deploy", "release-preflight", approval.fetch(:baseline)
+      execute :sudo, "-n", "/usr/local/sbin/muzeum-deploy", "release-preflight", approval.fetch(:baseline), approval.fetch(:sha)
     end
   end
 
@@ -98,6 +98,12 @@ namespace :muzeum do
   task :authorize do
     selection = fetch(:muzeum_release_selection, nil)
     approval = selection ? MuzeumDeploymentRevision.resolve_release!(*selection) : MuzeumDeploymentRevision.resolve!
+    if approval.fetch(:sha) == "641e09ec4a6de94f0043e3a7314d28674901485c"
+      runtime = "/opt/muzeum/ruby-3.4.13/bin"
+      SSHKit.config.command_map[:bundle] = "#{runtime}/bundle"
+      set :default_env, fetch(:default_env).merge("PATH" => "#{runtime}:/usr/bin:/bin",
+        "BUNDLE_PATH" => "/var/www/muzeum/shared/bundle/ruby-3.4.13", "RBENV_VERSION" => "3.4.13")
+    end
     set :approved_revision, approval.fetch(:sha)
     set :branch, approval.fetch(:sha)
     set :deployment_token, SecureRandom.hex(16)

@@ -25,6 +25,8 @@ TOKEN = re.compile(r'[a-f0-9]{32}')
 RELEASE_VERSION = re.compile(r'v(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)')
 RELEASE_SCOPE = re.compile(r'https://github\.com/harvj/muzeum/issues/[0-9]+#issuecomment-[0-9]+')
 RELEASE_CI = re.compile(r'https://github\.com/harvj/muzeum/actions/runs/[0-9]+')
+RUNTIME_LIBRARY = Path('/usr/local/lib/muzeum-runtime/muzeum_runtime.py')
+MIGRATOR_SHA256 = 'f1583c1ad732724270ab654dae796bac9930c76d4584785cc1081b8593856834'
 ROUTE_HELPER = Path('/usr/local/sbin/harvj-muzeum-route')
 
 
@@ -77,7 +79,7 @@ class Host:
         return (APP / 'current').resolve(strict=True) == self.release(release, sha) and self.revision() == sha
 
     def preflight(self):
-        for helper in (Path(__file__).resolve(), Path(__file__).resolve().with_name('inspect.rb'), Path('/usr/local/sbin/muzeum-migrate'), ROUTE_HELPER):
+        for helper in (Path(__file__).resolve(), Path(__file__).resolve().with_name('inspect.rb'), Path('/usr/local/sbin/muzeum-migrate'), RUNTIME_LIBRARY, ROUTE_HELPER):
             info = helper.stat()
             if info.st_uid != 0 or info.st_mode & 0o022:
                 raise RuntimeError('Deployment/migration helpers must be root-owned and immutable to runtime')
@@ -139,13 +141,18 @@ class Host:
             url = urlsplit(values[key])
             if url.hostname != '127.0.0.1' or url.username != 'muzeum_runtime' or url.path != '/' + database:
                 raise RuntimeError('Unexpected runtime database boundary')
-        env = dict(values, PATH='/opt/auth/ruby-3.4.12/bin:/usr/bin:/bin', HOME='/home/muzeum',
+        env = dict(values, HOME='/home/muzeum',
                    BUNDLE_GEMFILE=str(release / 'Gemfile'), BUNDLE_IGNORE_CONFIG='1', BUNDLE_DEPLOYMENT='true',
                    BUNDLE_FROZEN='true', BUNDLE_WITHOUT='development:test', BOOTSNAP_READONLY='1',
                    PGOPTIONS='-c default_transaction_read_only=on -c statement_timeout=120000',
                    MUZEUM_DEPLOY_CHECK_HEALTH='1' if health else '0')
+        sys.path.insert(0, str(RUNTIME_LIBRARY.parent))
+        from muzeum_runtime import release_runtime, runtime_environment
+        directory, bundle_path = release_runtime(release)
+        env = runtime_environment(env, directory, bundle_path)
+        env.update(BUNDLE_IGNORE_CONFIG='1', BUNDLE_DEPLOYMENT='true', BUNDLE_FROZEN='true', BUNDLE_WITHOUT='development:test')
         script = Path(__file__).resolve().with_name('inspect.rb').read_bytes()
-        output = self.command(['/usr/sbin/runuser', '-u', 'muzeum', '--', '/opt/auth/ruby-3.4.12/bin/bundle',
+        output = self.command(['/usr/sbin/runuser', '-u', 'muzeum', '--', str(directory / 'bundle'),
                                'exec', 'rails', 'runner', '-'], cwd=release, env=env, input=script)
         line = next(line for line in output.splitlines() if line.startswith('MUZEUM_DEPLOY_INSPECTION:'))
         return json.loads(line.split(':', 1)[1])
@@ -231,7 +238,7 @@ class Host:
         self.route('withdraw', sha)
 
     def migrate(self, release, sha):
-        expected = hashlib.sha256((release / 'ops/provision/muzeum-migrate').read_bytes()).hexdigest()
+        expected = MIGRATOR_SHA256
         if hashlib.sha256(Path('/usr/local/sbin/muzeum-migrate').read_bytes()).hexdigest() != expected:
             raise RuntimeError('Reviewed migration helper must be installed first')
         self.command(['/usr/local/sbin/muzeum-migrate', str(release), sha])
@@ -261,9 +268,18 @@ def reviewed_migrations(release, pending):
             raise RuntimeError('Pending migration needs a matching additive review manifest')
 
 
+def runtime_proof(sha):
+    sys.path.insert(0, str(RUNTIME_LIBRARY.parent))
+    from muzeum_runtime import BASELINE, MANIFEST, runtime
+    directory, _ = runtime(sha)
+    return {'ruby': str(directory / 'ruby'),
+            'manifest_sha256': None if sha == BASELINE else hashlib.sha256(MANIFEST.read_bytes()).hexdigest()}
+
+
 class Deployment:
-    def __init__(self, host, root=STATE):
+    def __init__(self, host, root=STATE, prove_runtime=None):
         self.host, self.root = host, root
+        self.prove_runtime = prove_runtime
 
     def save(self, record):
         write_json(self.root / (record['token'] + '.json'), record)
@@ -305,6 +321,8 @@ class Deployment:
                 if release_review and self.host.revision() != release_review['baseline']:
                     raise RuntimeError('Live production baseline differs from release review')
                 record = {'sha': sha, 'token': token, 'started_at': now(), 'phase': 'preflight', 'migrating': False, 'withdrawn': False}
+                if self.prove_runtime:
+                    record['runtime'] = self.prove_runtime(sha)
                 if release_review:
                     record['release_review'] = release_review
                 self.save(record)
@@ -312,6 +330,8 @@ class Deployment:
                 record = json.loads(active.read_text())
                 if record['sha'] != sha or record['token'] != token:
                     raise RuntimeError('Deployment lock identity mismatch')
+                if self.prove_runtime and phase not in ('fail', 'cancel') and record.get('runtime') != self.prove_runtime(sha):
+                    raise RuntimeError('Runtime proof changed during deployment')
                 if record['phase'] == 'failed' and phase == 'fail':
                     return record
                 if record['phase'] == 'failed' and phase != 'fail':
@@ -430,14 +450,16 @@ def main():
     if os.geteuid() != 0:
         raise RuntimeError('Root-owned installed helper required')
     if sys.argv[1:] == ['version']:
-        print(hashlib.sha256(Path(__file__).resolve().read_bytes() + Path(__file__).resolve().with_name('inspect.rb').read_bytes()).hexdigest())
+        print(hashlib.sha256(Path(__file__).resolve().read_bytes() + Path(__file__).resolve().with_name('inspect.rb').read_bytes() + RUNTIME_LIBRARY.read_bytes()).hexdigest())
         return
     if sys.argv[1:] == ['preflight']:
         host = Host()
         with host.backup_lock():
             print(json.dumps(host.preflight()))
         return
-    if len(sys.argv) == 3 and sys.argv[1] == 'release-preflight':
+    if len(sys.argv) in (3, 4) and sys.argv[1] == 'release-preflight':
+        if len(sys.argv) == 4:
+            runtime_proof(sys.argv[3])
         print(json.dumps(Deployment(Host()).release_preflight(sys.argv[2])))
         return
     if len(sys.argv) == 4 and sys.argv[1] == 'receipt':
@@ -447,18 +469,18 @@ def main():
         record = json.loads((STATE / (token + '.json')).read_text())
         if record['sha'] != sha or record['token'] != token:
             raise RuntimeError('Receipt identity mismatch')
-        print(json.dumps({key: record[key] for key in ('sha', 'token', 'phase', 'health', 'release_review') if key in record}))
+        print(json.dumps({key: record[key] for key in ('sha', 'token', 'phase', 'health', 'release_review', 'runtime') if key in record}))
         return
     if len(sys.argv) == 9 and sys.argv[1] == 'begin-release':
         sha, token, branch, version, baseline, scope, ci = sys.argv[2:]
         review = {'branch': branch, 'version': version, 'baseline': baseline, 'scope': scope, 'ci': ci}
-        record = Deployment(Host()).run('begin', sha, token, release_review=review)
+        record = Deployment(Host(), prove_runtime=runtime_proof).run('begin', sha, token, release_review=review)
     else:
         if len(sys.argv) not in (4, 5):
             raise RuntimeError('Expected phase SHA token [release]')
-        record = Deployment(Host()).run(*sys.argv[1:])
+        record = Deployment(Host(), prove_runtime=runtime_proof).run(*sys.argv[1:])
     # No subprocess output, environments or opaque grants are published.
-    print(json.dumps({key: record[key] for key in ('sha', 'token', 'phase', 'baseline', 'release_review', 'migrations', 'pre_backup', 'post_backup', 'health', 'safe_state') if key in record}))
+    print(json.dumps({key: record[key] for key in ('sha', 'token', 'phase', 'baseline', 'release_review', 'migrations', 'pre_backup', 'post_backup', 'health', 'safe_state', 'runtime') if key in record}))
 
 
 if __name__ == '__main__':

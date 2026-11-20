@@ -141,6 +141,18 @@ class WorkflowTests(unittest.TestCase):
         self.assertFalse({'backup', 'restore', 'withdraw', 'migration'} & set(host.events))
         self.assertFalse((self.root / 'audit/active.json').exists())
 
+    def test_runtime_change_blocks_preparation_before_inspection(self):
+        host, flow = self.workflow()
+        runtime = {'manifest_sha256': 'before'}
+        flow.prove_runtime = lambda _: dict(runtime)
+        result = flow.run('begin', NEW, self.token)
+        self.assertEqual(result['runtime'], runtime)
+        runtime['manifest_sha256'] = 'after'
+        with self.assertRaisesRegex(RuntimeError, 'Runtime proof changed'):
+            flow.run('prepare', NEW, self.token, str(host.candidate))
+        self.assertNotIn('inspect', host.events)
+        self.assertTrue((flow.root / 'active.json').exists())
+
     def test_reviewed_release_retains_approval_and_rechecks_baseline_under_lock(self):
         host, flow = self.workflow()
         review = {
