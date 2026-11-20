@@ -3,5 +3,10 @@
     "sha": "5b0a0a406a1a96e5c003b68d200060c562261b46",
     "baseline": "87c9d2cc2f1812a3fc9336b12f37e437fc739862",
     "scope": "https://github.com/harvj/muzeum/issues/32#issuecomment-7030348189"
+  },
+  "v0.3.4": {
+    "sha": "641e09ec4a6de94f0043e3a7314d28674901485c",
+    "baseline": "024ed4aecd98984c00323377389cde5a6a35d16d",
+    "scope": "https://github.com/harvj/muzeum/issues/28#issuecomment-7051918597"
   }
 }

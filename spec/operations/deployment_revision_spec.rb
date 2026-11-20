@@ -153,4 +153,68 @@ RSpec.describe MuzeumDeploymentRevision do
       expect { described_class.resolve_release!(version, release_checkout) }.to raise_error(/exact SHA must pass/)
     end
   end
+  context "with the pinned v0.3.4 exception" do
+    let(:version) { "v0.3.4" }
+    let(:controls) { "controls/v0.3.4" }
+    let(:release) { "release/v0.3.4" }
+    let(:release_checkout) { File.expand_path("../release") }
+    let(:manifest) { File.expand_path("../releases.json") }
+
+    before do
+      git("worktree", "add", "-b", release, release_checkout, @sha)
+      Dir.chdir(release_checkout) do
+        File.write("fixture", "forward\n")
+        git("commit", "-am", "Pinned forward candidate")
+        git("push", "-u", "origin", release)
+        @candidate = git("rev-parse", "HEAD")
+      end
+      git("switch", "-c", controls)
+      File.write("fixture", "controls\n")
+      git("commit", "-am", "Reviewed controls")
+      git("push", "-u", "origin", controls)
+      @control_sha = git("rev-parse", "HEAD")
+      stub_const("MuzeumDeploymentRevision::V034_SHA", @candidate)
+      stub_const("MuzeumDeploymentRevision::RELEASES", manifest)
+      File.write(manifest, JSON.generate(version => { sha: @candidate, baseline: @sha,
+        scope: "https://github.com/harvj/muzeum/issues/28#issuecomment-123" }))
+      @job_rows = described_class::REQUIRED_JOBS.map { |name| { name:, status: "completed", conclusion: "success" } }
+      @forward_run = { databaseId: 2, headSha: @candidate, headBranch: "main", event: "push",
+        status: "completed", conclusion: "success", url: "https://example.test/forward-ci" }
+      @control_run = @forward_run.merge(databaseId: 1, headSha: @control_sha, headBranch: controls)
+      allow(described_class).to receive(:command).and_wrap_original do |original, *arguments|
+        case arguments
+        when %w[git remote get-url origin]
+          "git@github.com:harvj/muzeum.git"
+        when ->(args) { args.take(3) == %w[gh run list] }
+          run = arguments.include?(controls) ? @control_run : @forward_run
+          expect(arguments).to include("--commit", "--branch", run.equal?(@control_run) ? controls : "main", "--event", "push")
+          JSON.generate([ run ])
+        when ->(args) { args.take(3) == %w[gh run view] }
+          run = arguments.fetch(3) == "1" ? @control_run : @forward_run
+          JSON.generate(run.merge(jobs: @job_rows))
+        else
+          original.call(*arguments)
+        end
+      end
+    end
+
+    it "keeps the approved release checkout while verifying main push CI and control push CI" do
+      result = described_class.resolve_release!(version, release_checkout)
+      expect(result).to include(sha: @candidate, branch: release, ci: @forward_run[:url])
+    end
+
+    it "rejects missing and failed required jobs even when the run reports success" do
+      missing = @job_rows.pop
+      expect { described_class.resolve_release!(version, release_checkout) }.to raise_error(/Required CI jobs/)
+      @job_rows << missing.merge(conclusion: "failure")
+      expect { described_class.resolve_release!(version, release_checkout) }.to raise_error(/Required CI jobs/)
+    end
+
+    it "rejects a non-main forward run and an unauthorized control branch" do
+      @forward_run[:headBranch] = release
+      expect { described_class.resolve_release!(version, release_checkout) }.to raise_error(/selected branch push/)
+      git("switch", "main")
+      expect { described_class.resolve_release!(version, release_checkout) }.to raise_error(/requires local controls/)
+    end
+  end
 end
