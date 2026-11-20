@@ -1,0 +1,3141 @@
+{
+  "version": "edition-discovery-replay-v1",
+  "sources": {
+    "96fdedfd-ba26-4ff4-a7bc-faf54879f158": {
+      "url": "https://musicbrainz.org/release/96fdedfd-ba26-4ff4-a7bc-faf54879f158",
+      "response_sha256": "f1d818c812bb108c1efb81c8b0ea0340af54f6fc02c01e211b3e7b9b643ec3c7",
+      "captured_at": "2026-11-20T05:36:53+00:00"
+    },
+    "a6d2beb7-6acf-4bfb-a2bf-e2a6249f6504": {
+      "url": "https://musicbrainz.org/release/a6d2beb7-6acf-4bfb-a2bf-e2a6249f6504",
+      "response_sha256": "9089ef71384442b5dec3b8facf52c6afc5df4d027c0f41d73eac84a97221eb56",
+      "captured_at": "2026-11-20T05:36:55+00:00"
+    },
+    "2cb27d8e-6ca6-4cde-861e-53271f993bdb": {
+      "url": "https://musicbrainz.org/release/2cb27d8e-6ca6-4cde-861e-53271f993bdb",
+      "response_sha256": "50af12d00b7974c45f723ca397ec60d482acb64539ed6011d1f7ae4ebeed80f7",
+      "captured_at": "2026-11-20T05:41:15+00:00"
+    },
+    "1586bf99-c5dd-4b0b-9c1e-a94cf3925e52": {
+      "url": "https://musicbrainz.org/release/1586bf99-c5dd-4b0b-9c1e-a94cf3925e52",
+      "response_sha256": "8f3c313f761566c75a5c772d51d6bd33ba30fa79a381375c5d81e29988eb20de",
+      "captured_at": "2026-11-20T05:41:13+00:00"
+    },
+    "617880b5-7a23-4b45-8817-8d3e362ba4f2": {
+      "url": "https://musicbrainz.org/release/617880b5-7a23-4b45-8817-8d3e362ba4f2",
+      "response_sha256": "1491b9533c047ac219739f467d7034664c9ceac90aa30c43e19618270d1faa44",
+      "captured_at": "2026-11-20T05:42:29+00:00"
+    },
+    "016801c0-d623-42b1-8280-6f160343e470": {
+      "url": "https://musicbrainz.org/release/016801c0-d623-42b1-8280-6f160343e470",
+      "response_sha256": "3d9dce9ebad51ab66211decd214b348bff919492d2356625723842cb753374d6",
+      "captured_at": "2026-11-20T05:42:31+00:00"
+    },
+    "wembley": {
+      "url": "https://musicbrainz.org/release/4fdc0364-5c4f-45aa-91ec-b94a5cc9ec7c",
+      "response_sha256": "3c77a03e56bcd18fb00c48685950398d430ab8833a68431a1296b45ed6326edd",
+      "captured_at": "2026-11-20T03:17:39+00:00"
+    },
+    "regent-release-search": {
+      "url": "https://musicbrainz.org/search?type=release&query=There%20Are%20Rules",
+      "response_sha256": "462830df203f8b2701636882900f91ad5acb3d8287031032aa32ae5f90ec6d3e",
+      "captured_at": "2026-11-20T05:40:10+00:00"
+    },
+    "montreal-search": {
+      "url": "https://musicbrainz.org/search?type=release&query=Queen%20Rock%20Montreal",
+      "response_sha256": "79c0f4e3a9bd1daf225121146667dee0539f3e45f480edbb1faecdfa53374e35",
+      "captured_at": "2026-11-20T05:42:13+00:00"
+    },
+    "wembley-search": {
+      "url": "https://musicbrainz.org/search?type=release&query=Live%20at%20Wembley",
+      "response_sha256": "c231fa08955bdbe56b54b36e79da16b8af360c48af404c1e43aeb0f4f80d30c9",
+      "captured_at": "2026-11-20T05:42:14+00:00"
+    }
+  },
+  "cases": [
+    {
+      "id": "regents-court-292999",
+      "surface": {
+        "artist": "The Get Up Kids",
+        "album": "There Are Rules (Deluxe Edition)",
+        "track": "Regent's Court"
+      },
+      "reviewed_mbid": "0772fc8e-567b-47ed-bbcc-15d9c2fa46b6",
+      "candidates": [
+        {
+          "id": "914eb7fc-0faf-4067-87b1-9f74db1d4f99",
+          "title": "Regent’s Court",
+          "video": null,
+          "length": 123000,
+          "releases": [
+            {
+              "id": "637cc60e-9181-4552-943d-202bd9746a06",
+              "date": "2011-04-25",
+              "title": "Daytrotter Session",
+              "country": "XW"
+            }
+          ],
+          "artist-credit": [
+            {
+              "name": "The Get Up Kids",
+              "artist": {
+                "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                "name": "The Get Up Kids"
+              }
+            }
+          ],
+          "first-release-date": "2011-04-25"
+        },
+        {
+          "id": "0772fc8e-567b-47ed-bbcc-15d9c2fa46b6",
+          "title": "Regent’s Court",
+          "video": null,
+          "length": 126093,
+          "releases": [
+            {
+              "id": "96fdedfd-ba26-4ff4-a7bc-faf54879f158",
+              "date": "2021-01-21",
+              "title": "There Are Rules",
+              "country": "XW"
+            }
+          ],
+          "artist-credit": [
+            {
+              "name": "The Get Up Kids",
+              "artist": {
+                "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                "name": "The Get Up Kids"
+              }
+            }
+          ],
+          "first-release-date": "2021-01-21"
+        },
+        {
+          "id": "1a5b8b34-3f99-454d-96d2-82f200cfffe2",
+          "title": "Regent’s Court",
+          "video": null,
+          "length": 126000,
+          "releases": [
+            {
+              "id": "a6d2beb7-6acf-4bfb-a2bf-e2a6249f6504",
+              "date": "2011-01-25",
+              "title": "There Are Rules",
+              "country": "US"
+            },
+            {
+              "id": "2cb27d8e-6ca6-4cde-861e-53271f993bdb",
+              "date": "2011-01-25",
+              "title": "There Are Rules",
+              "country": "AU"
+            }
+          ],
+          "artist-credit": [
+            {
+              "name": "The Get Up Kids",
+              "artist": {
+                "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                "name": "The Get Up Kids"
+              }
+            }
+          ],
+          "first-release-date": "2011-01-25"
+        }
+      ],
+      "release_search": "regent",
+      "independent_source": "https://www.polyvinylrecords.com/products/the-get-up-kids-there-are-rules-deluxe-edition",
+      "claims": {
+        "artist_mbid": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+        "album_mbid": null,
+        "track_mbid": "399d6519-b20b-329b-aac1-0f66a77aa316"
+      }
+    },
+    {
+      "id": "new-bonus-track",
+      "surface": {
+        "artist": "The Get Up Kids",
+        "album": "There Are Rules (Deluxe Edition)",
+        "track": "Neverending"
+      },
+      "reviewed_mbid": "65a4add9-beb2-44de-8cb6-60437b1ea0f9",
+      "candidates": [],
+      "release_search": "regent",
+      "independent_source": "https://www.polyvinylrecords.com/products/the-get-up-kids-there-are-rules-deluxe-edition"
+    },
+    {
+      "id": "earlier-ep-on-deluxe",
+      "surface": {
+        "artist": "The Get Up Kids",
+        "album": "There Are Rules (Deluxe Edition)",
+        "track": "Your Petty Pretty Things"
+      },
+      "reviewed_mbid": "c5f7cfa3-c0b1-4fcb-b6ef-97485d53895b",
+      "candidates": [],
+      "release_search": "regent",
+      "independent_source": "https://www.polyvinylrecords.com/products/the-get-up-kids-there-are-rules-deluxe-edition"
+    },
+    {
+      "id": "original-edition",
+      "surface": {
+        "artist": "The Get Up Kids",
+        "album": "There Are Rules",
+        "track": "Regent's Court"
+      },
+      "reviewed_mbid": "1a5b8b34-3f99-454d-96d2-82f200cfffe2",
+      "candidates": [],
+      "release_search": null,
+      "independent_source": "https://www.polyvinylrecords.com/products/the-get-up-kids-there-are-rules-deluxe-edition",
+      "claims": {
+        "album_mbid": "a6d2beb7-6acf-4bfb-a2bf-e2a6249f6504"
+      }
+    },
+    {
+      "id": "montreal-discovery-miss",
+      "surface": {
+        "artist": "Queen",
+        "album": "Queen Rock Montreal",
+        "track": "Bohemian Rhapsody"
+      },
+      "reviewed_mbid": "cdb01e2a-8dfe-4f66-91f5-4eb0d1aac885",
+      "candidates": [
+        {
+          "id": "dc6b33ac-c649-414d-bd5d-b6403d23969c",
+          "title": "Bohemian Rhapsody",
+          "disambiguation": "",
+          "length": 332000,
+          "video": false,
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": "",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            }
+          ],
+          "releases": [
+            {
+              "id": "5032df80-9baf-44f2-b20f-6058ae79a93d",
+              "title": "Greatest Hits"
+            }
+          ]
+        },
+        {
+          "id": "35a91a43-a1f7-4068-ad03-e0569a0b372f",
+          "title": "Bohemian Rhapsody",
+          "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK",
+          "length": 350573,
+          "video": false,
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": "",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            }
+          ],
+          "releases": [
+            {
+              "id": "4fdc0364-5c4f-45aa-91ec-b94a5cc9ec7c",
+              "title": "Live at Wembley ’86"
+            }
+          ]
+        }
+      ],
+      "release_search": "montreal",
+      "independent_source": "https://www.universalmusic.ca/2024/03/14/queen-to-release-queen-rock-montreal-on-special-blu-ray-vinyl-and-cd-formats-may-10/",
+      "claims": {},
+      "verified_recording": null
+    },
+    {
+      "id": "wembley-misleading-studio-only",
+      "surface": {
+        "artist": "Queen",
+        "album": "Live at Wembley ’86",
+        "track": "Bohemian Rhapsody"
+      },
+      "reviewed_mbid": "35a91a43-a1f7-4068-ad03-e0569a0b372f",
+      "candidates": [
+        {
+          "id": "dc6b33ac-c649-414d-bd5d-b6403d23969c",
+          "title": "Bohemian Rhapsody",
+          "disambiguation": "",
+          "length": 332000,
+          "video": false,
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": "",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            }
+          ],
+          "releases": [
+            {
+              "id": "5032df80-9baf-44f2-b20f-6058ae79a93d",
+              "title": "Greatest Hits"
+            }
+          ]
+        }
+      ],
+      "release_search": "wembley",
+      "independent_source": "https://store.queenonline.com/products/live-at-wembley-86-2cd",
+      "claims": {
+        "track_mbid": "dc6b33ac-c649-414d-bd5d-b6403d23969c"
+      },
+      "verified_recording": {
+        "id": "dc6b33ac-c649-414d-bd5d-b6403d23969c",
+        "title": "Bohemian Rhapsody",
+        "disambiguation": "",
+        "length": 332000,
+        "video": false,
+        "artist-credit": [
+          {
+            "name": "Queen",
+            "joinphrase": "",
+            "artist": {
+              "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+              "name": "Queen"
+            }
+          }
+        ],
+        "releases": [
+          {
+            "id": "5032df80-9baf-44f2-b20f-6058ae79a93d",
+            "title": "Greatest Hits"
+          }
+        ]
+      }
+    },
+    {
+      "id": "pressure-missing-live-candidate",
+      "surface": {
+        "artist": "Queen",
+        "album": "Live at Wembley ’86",
+        "track": "Under Pressure"
+      },
+      "reviewed_mbid": "2bad727b-b7bc-4bae-a2cf-6ad50a218d88",
+      "candidates": [
+        {
+          "id": "32c7e292-14f1-4080-bddf-ef852e0a4c59",
+          "title": "Under Pressure",
+          "disambiguation": "",
+          "length": 243000,
+          "video": false,
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": " & ",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            },
+            {
+              "name": "David Bowie",
+              "joinphrase": "",
+              "artist": {
+                "id": "5441c29d-3602-4898-b1a1-b77fa23b8e50",
+                "name": "David Bowie"
+              }
+            }
+          ],
+          "releases": [
+            {
+              "id": "eac6d0cd-1ed0-4e17-b5b0-d3cfc40547b2",
+              "title": "Under Pressure"
+            }
+          ]
+        },
+        {
+          "id": "7ce4d633-0466-4b76-912b-30e83e2c10e3",
+          "title": "Under Pressure",
+          "disambiguation": "live, 1992-04-20: Wembley Stadium, London, UK",
+          "length": 350000,
+          "video": true,
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": " + ",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            },
+            {
+              "name": "David Bowie",
+              "joinphrase": " and ",
+              "artist": {
+                "id": "5441c29d-3602-4898-b1a1-b77fa23b8e50",
+                "name": "David Bowie"
+              }
+            },
+            {
+              "name": "Annie Lennox",
+              "joinphrase": "",
+              "artist": {
+                "id": "3e30aebd-0557-4cfd-8fb9-3945afa5d72b",
+                "name": "Annie Lennox"
+              }
+            }
+          ],
+          "releases": [
+            {
+              "id": "a1960a72-3686-41f7-b7fb-a210d3d381e8",
+              "title": "Freddie Mercury Tribute Concert"
+            }
+          ]
+        }
+      ],
+      "release_search": "wembley",
+      "independent_source": "https://store.queenonline.com/products/live-at-wembley-86-2cd",
+      "claims": {},
+      "verified_recording": null
+    }
+  ],
+  "searches": {
+    "regent": [
+      {
+        "id": "a6d2beb7-6acf-4bfb-a2bf-e2a6249f6504",
+        "title": "There Are Rules"
+      },
+      {
+        "id": "2cb27d8e-6ca6-4cde-861e-53271f993bdb",
+        "title": "There Are Rules"
+      },
+      {
+        "id": "96fdedfd-ba26-4ff4-a7bc-faf54879f158",
+        "title": "There Are Rules",
+        "disambiguation": "deluxe edition"
+      }
+    ],
+    "montreal": [
+      {
+        "id": "617880b5-7a23-4b45-8817-8d3e362ba4f2",
+        "title": "Queen Rock Montreal"
+      },
+      {
+        "id": "1586bf99-c5dd-4b0b-9c1e-a94cf3925e52",
+        "title": "Queen Rock Montreal"
+      }
+    ],
+    "wembley": [
+      {
+        "id": "4fdc0364-5c4f-45aa-91ec-b94a5cc9ec7c",
+        "title": "Live at Wembley ’86",
+        "disambiguation": "664, PM 616"
+      },
+      {
+        "id": "5279abe7-36af-46b2-a337-f1ab469f478c",
+        "title": "Live at Wembley ’86"
+      },
+      {
+        "id": "eef579b9-b050-3a86-b1b4-a1143f8c2047",
+        "title": "Live at Wembley ’86"
+      },
+      {
+        "id": "7f6feb36-a49a-45ac-aa8a-3b3f1f51e3f1",
+        "title": "Live at Wembley ’86"
+      },
+      {
+        "id": "016801c0-d623-42b1-8280-6f160343e470",
+        "title": "Live at Wembley ’86",
+        "disambiguation": "DADC Austria"
+      }
+    ]
+  },
+  "releases": {
+    "96fdedfd-ba26-4ff4-a7bc-faf54879f158": {
+      "id": "96fdedfd-ba26-4ff4-a7bc-faf54879f158",
+      "title": "There Are Rules",
+      "disambiguation": "deluxe edition",
+      "country": "XW",
+      "date": "2021-01-21",
+      "status": "Official",
+      "release-group": {
+        "primary-type": "Album",
+        "id": "072148a8-16ce-4a50-ab15-19c3ea1c1aec",
+        "artist-credit": [
+          {
+            "name": "The Get Up Kids",
+            "joinphrase": "",
+            "artist": {
+              "sort-name": "Get Up Kids, The",
+              "disambiguation": "",
+              "type": "Group",
+              "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+              "country": "US",
+              "name": "The Get Up Kids",
+              "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b"
+            }
+          }
+        ],
+        "first-release-date": "2011-01-25",
+        "title": "There Are Rules",
+        "secondary-type-ids": [],
+        "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+        "disambiguation": "",
+        "secondary-types": []
+      },
+      "media": [
+        {
+          "position": 1,
+          "track-count": 18,
+          "format": "Digital Media",
+          "tracks": [
+            {
+              "position": 1,
+              "id": "972ce166-c0c3-45e9-bc82-d5961c8565ea",
+              "number": "1",
+              "title": "Tithe",
+              "length": 219667,
+              "recording": {
+                "id": "7df00723-8cf3-491c-b5a0-ea07b9e22ac0",
+                "title": "Tithe",
+                "length": 219667,
+                "video": false,
+                "disambiguation": ""
+              }
+            },
+            {
+              "position": 2,
+              "id": "cbb34ede-5dcc-4ca9-bca8-b364ddcbdcc6",
+              "number": "2",
+              "title": "Regent’s Court",
+              "length": 126093,
+              "recording": {
+                "id": "0772fc8e-567b-47ed-bbcc-15d9c2fa46b6",
+                "title": "Regent’s Court",
+                "length": 126093,
+                "video": false,
+                "disambiguation": "",
+                "artist-credit": [
+                  {
+                    "artist": {
+                      "type": "Group",
+                      "disambiguation": "",
+                      "sort-name": "Get Up Kids, The",
+                      "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                      "name": "The Get Up Kids",
+                      "country": "US",
+                      "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf"
+                    },
+                    "joinphrase": "",
+                    "name": "The Get Up Kids"
+                  }
+                ]
+              }
+            },
+            {
+              "position": 3,
+              "id": "ba07a3a7-4b85-4a75-bb63-0827ca5a86ee",
+              "number": "3",
+              "title": "Shatter Your Lungs",
+              "length": 169440,
+              "recording": {
+                "id": "2ea446a2-ebed-42aa-b730-620973e8c773",
+                "title": "Shatter Your Lungs",
+                "length": 169440,
+                "video": false,
+                "disambiguation": ""
+              }
+            },
+            {
+              "position": 4,
+              "id": "09db5003-366d-48b8-9a1c-1a78bc88fcd6",
+              "number": "4",
+              "title": "Automatic",
+              "length": 175533,
+              "recording": {
+                "id": "effeae20-5b36-4b1d-9a8c-513d9fc198b5",
+                "title": "Automatic",
+                "length": 175533,
+                "video": false,
+                "disambiguation": ""
+              }
+            },
+            {
+              "position": 5,
+              "id": "ee050262-4589-4385-84bb-6e87dfeed1da",
+              "number": "5",
+              "title": "Pararelevant",
+              "length": 217080,
+              "recording": {
+                "id": "fa8f5dd2-b35c-4c33-9c0b-07c68bdf8448",
+                "title": "Pararelevant",
+                "length": 217080,
+                "video": false,
+                "disambiguation": ""
+              }
+            },
+            {
+              "position": 6,
+              "id": "39898f6f-4110-483b-992b-816773fbbd92",
+              "number": "6",
+              "title": "Rally ’Round the Fool",
+              "length": 317000,
+              "recording": {
+                "id": "810f452c-d528-4e0b-9518-8d6f4cc11091",
+                "title": "Rally ’Round the Fool",
+                "length": 317000,
+                "video": false,
+                "disambiguation": ""
+              }
+            },
+            {
+              "position": 7,
+              "id": "480f516d-ed25-4d5d-9af2-2edbd88356c0",
+              "number": "7",
+              "title": "Better Lie",
+              "length": 258920,
+              "recording": {
+                "id": "83d72f66-5d0c-44c1-855f-a8d8818c0dac",
+                "title": "Better Lie",
+                "length": 258920,
+                "video": false,
+                "disambiguation": ""
+              }
+            },
+            {
+              "position": 8,
+              "id": "83e0ebce-a691-4124-aaea-e9891b12a322",
+              "number": "8",
+              "title": "Keith Case",
+              "length": 245347,
+              "recording": {
+                "id": "43c51ea3-6e19-4a81-8e27-320165c103e8",
+                "title": "Keith Case",
+                "length": 245347,
+                "video": false,
+                "disambiguation": ""
+              }
+            },
+            {
+              "position": 9,
+              "id": "86e89bc1-ca4b-4dd3-929c-cc83f8ee47ab",
+              "number": "9",
+              "title": "The Widow Paris",
+              "length": 217213,
+              "recording": {
+                "id": "f249a951-3b49-42b3-aadd-78f68a226e0c",
+                "title": "The Widow Paris",
+                "length": 217213,
+                "video": false,
+                "disambiguation": ""
+              }
+            },
+            {
+              "position": 10,
+              "id": "d410000c-75fb-4af0-b1be-26409627ca69",
+              "number": "10",
+              "title": "Birmingham",
+              "length": 156253,
+              "recording": {
+                "id": "c53bf50e-7480-4ba1-a71b-62831a99d31d",
+                "title": "Birmingham",
+                "length": 156253,
+                "video": false,
+                "disambiguation": ""
+              }
+            },
+            {
+              "position": 11,
+              "id": "91328e78-fca0-44a8-ac63-0574798cebc8",
+              "number": "11",
+              "title": "When It Dies",
+              "length": 244373,
+              "recording": {
+                "id": "2e870970-009e-43e5-9376-c367a124af3c",
+                "title": "When It Dies",
+                "length": 244373,
+                "video": false,
+                "disambiguation": ""
+              }
+            },
+            {
+              "position": 12,
+              "id": "59d75cf0-d8f5-4a8a-8892-0676d57ddca8",
+              "number": "12",
+              "title": "Rememorable",
+              "length": 176560,
+              "recording": {
+                "id": "d6aeae83-f6e2-4426-baec-b8c546a76b5a",
+                "title": "Rememorable",
+                "length": 176560,
+                "video": false,
+                "disambiguation": ""
+              }
+            },
+            {
+              "position": 13,
+              "id": "11f46097-b730-480f-b320-66dbcd8b3cf2",
+              "number": "13",
+              "title": "Your Petty Pretty Things",
+              "length": 208367,
+              "recording": {
+                "id": "c5f7cfa3-c0b1-4fcb-b6ef-97485d53895b",
+                "title": "Your Petty Pretty Things",
+                "length": 208367,
+                "video": false,
+                "disambiguation": "",
+                "artist-credit": [
+                  {
+                    "joinphrase": "",
+                    "name": "The Get Up Kids",
+                    "artist": {
+                      "sort-name": "Get Up Kids, The",
+                      "type": "Group",
+                      "disambiguation": "",
+                      "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                      "country": "US",
+                      "name": "The Get Up Kids",
+                      "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "position": 14,
+              "id": "880bd067-1d2f-4555-b2e8-e9d6d5db13f3",
+              "number": "14",
+              "title": "Tommy Gentle",
+              "length": 151813,
+              "recording": {
+                "id": "01200f39-bb0f-4943-af3b-2157a26c59ac",
+                "title": "Tommy Gentle",
+                "length": 151813,
+                "video": false,
+                "disambiguation": ""
+              }
+            },
+            {
+              "position": 15,
+              "id": "1968dd5a-fec5-4405-855a-e99d31b37625",
+              "number": "15",
+              "title": "How You’re Bound",
+              "length": 362566,
+              "recording": {
+                "id": "265aba89-6b63-4abf-85d5-8648b4eb498c",
+                "title": "How You’re Bound",
+                "length": 362566,
+                "video": false,
+                "disambiguation": ""
+              }
+            },
+            {
+              "position": 16,
+              "id": "72816412-2e86-42e8-978b-8d08974d1989",
+              "number": "16",
+              "title": "Past Is Past",
+              "length": 233013,
+              "recording": {
+                "id": "c0fc8443-9e9f-49eb-879c-eca518eaabd4",
+                "title": "Past Is Past",
+                "length": 233013,
+                "video": false,
+                "disambiguation": ""
+              }
+            },
+            {
+              "position": 17,
+              "id": "cb7153b9-d4a6-47a2-9518-5e28f21aaad7",
+              "number": "17",
+              "title": "Walk ’Em With Grace",
+              "length": 153489,
+              "recording": {
+                "id": "b05c6f37-1f23-488d-974d-5d062dcf1c9e",
+                "title": "Walk ’Em With Grace",
+                "length": 153489,
+                "video": false,
+                "disambiguation": ""
+              }
+            },
+            {
+              "position": 18,
+              "id": "0ad131a1-6d9b-4a55-9c21-0d46edff26f1",
+              "number": "18",
+              "title": "Neverending",
+              "length": 207756,
+              "recording": {
+                "id": "65a4add9-beb2-44de-8cb6-60437b1ea0f9",
+                "title": "Neverending",
+                "length": 207756,
+                "video": false,
+                "disambiguation": "",
+                "artist-credit": [
+                  {
+                    "artist": {
+                      "country": "US",
+                      "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                      "name": "The Get Up Kids",
+                      "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                      "sort-name": "Get Up Kids, The",
+                      "type": "Group",
+                      "disambiguation": ""
+                    },
+                    "joinphrase": "",
+                    "name": "The Get Up Kids"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "a6d2beb7-6acf-4bfb-a2bf-e2a6249f6504": {
+      "id": "a6d2beb7-6acf-4bfb-a2bf-e2a6249f6504",
+      "title": "There Are Rules",
+      "disambiguation": "",
+      "country": "US",
+      "date": "2011-01-25",
+      "status": "Official",
+      "release-group": {
+        "first-release-date": "2011-01-25",
+        "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+        "primary-type": "Album",
+        "disambiguation": "",
+        "secondary-types": [],
+        "id": "072148a8-16ce-4a50-ab15-19c3ea1c1aec",
+        "secondary-type-ids": [],
+        "artist-credit": [
+          {
+            "artist": {
+              "sort-name": "Get Up Kids, The",
+              "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+              "country": "US",
+              "type": "Group",
+              "disambiguation": "",
+              "name": "The Get Up Kids",
+              "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b"
+            },
+            "joinphrase": "",
+            "name": "The Get Up Kids"
+          }
+        ],
+        "title": "There Are Rules"
+      },
+      "media": [
+        {
+          "position": 1,
+          "track-count": 12,
+          "format": "CD",
+          "tracks": [
+            {
+              "position": 1,
+              "id": "23a3ddd4-3778-3c8a-81a5-22ae85cc58f9",
+              "number": "1",
+              "title": "Tithe",
+              "length": 219000,
+              "recording": {
+                "id": "118a74c1-1a94-4a00-892b-30c42724968c",
+                "title": "Tithe",
+                "length": 219000,
+                "video": false,
+                "disambiguation": ""
+              }
+            },
+            {
+              "position": 2,
+              "id": "399d6519-b20b-329b-aac1-0f66a77aa316",
+              "number": "2",
+              "title": "Regent’s Court",
+              "length": 126000,
+              "recording": {
+                "id": "1a5b8b34-3f99-454d-96d2-82f200cfffe2",
+                "title": "Regent’s Court",
+                "length": 126000,
+                "video": false,
+                "disambiguation": "",
+                "artist-credit": [
+                  {
+                    "joinphrase": "",
+                    "artist": {
+                      "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                      "disambiguation": "",
+                      "name": "The Get Up Kids",
+                      "country": "US",
+                      "type": "Group",
+                      "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                      "sort-name": "Get Up Kids, The"
+                    },
+                    "name": "The Get Up Kids"
+                  }
+                ]
+              }
+            },
+            {
+              "position": 3,
+              "id": "71d56b4b-c456-3df5-953b-e0f67f0e2bbd",
+              "number": "3",
+              "title": "Shatter Your Lungs",
+              "length": 169000,
+              "recording": {
+                "id": "a68b9050-bbb1-4e5c-9388-f0f87767c0ad",
+                "title": "Shatter Your Lungs",
+                "length": 169000,
+                "video": false,
+                "disambiguation": ""
+              }
+            },
+            {
+              "position": 4,
+              "id": "fe52495c-0787-3451-98c7-4b3b39b32430",
+              "number": "4",
+              "title": "Automatic",
+              "length": 175000,
+              "recording": {
+                "id": "cf39fb68-193f-4ccb-81c3-e1227f9e6ae7",
+                "title": "Automatic",
+                "length": 175000,
+                "video": false,
+                "disambiguation": ""
+              }
+            },
+            {
+              "position": 5,
+              "id": "acbb0a11-00de-323e-af85-223b547eabd8",
+              "number": "5",
+              "title": "Pararelevant",
+              "length": 217000,
+              "recording": {
+                "id": "a00d4a68-b542-421a-b8f6-9969bfdb17a6",
+                "title": "Pararelevant",
+                "length": 217000,
+                "video": false,
+                "disambiguation": ""
+              }
+            },
+            {
+              "position": 6,
+              "id": "8d836fd3-5c50-3607-aed1-0ab5a10590a2",
+              "number": "6",
+              "title": "Rally ’round the Fool",
+              "length": 317000,
+              "recording": {
+                "id": "e616661d-16ed-4324-82d3-b1ce30cc1891",
+                "title": "Rally ’round the Fool",
+                "length": 317000,
+                "video": false,
+                "disambiguation": ""
+              }
+            },
+            {
+              "position": 7,
+              "id": "c94ee14c-1936-3284-90db-6485a890df51",
+              "number": "7",
+              "title": "Better Lie",
+              "length": 258000,
+              "recording": {
+                "id": "d25bdbe6-ee3f-4789-90b6-c7a964b0891b",
+                "title": "Better Lie",
+                "length": 258000,
+                "video": false,
+                "disambiguation": ""
+              }
+            },
+            {
+              "position": 8,
+              "id": "ad372704-79b5-3db5-84c6-3220cc69d56a",
+              "number": "8",
+              "title": "Keith Case",
+              "length": 245000,
+              "recording": {
+                "id": "5601937a-1266-47b9-861f-e5d4596466fe",
+                "title": "Keith Case",
+                "length": 245000,
+                "video": false,
+                "disambiguation": ""
+              }
+            },
+            {
+              "position": 9,
+              "id": "53cdb9dc-81c7-3781-8a81-03dd934fe000",
+              "number": "9",
+              "title": "The Widow Paris",
+              "length": 217000,
+              "recording": {
+                "id": "64134ef7-6b1a-4f17-83fd-35b886ed9abe",
+                "title": "The Widow Paris",
+                "length": 217000,
+                "video": false,
+                "disambiguation": ""
+              }
+            },
+            {
+              "position": 10,
+              "id": "161e9e24-70e5-3697-93ce-d4e68b1a4e2b",
+              "number": "10",
+              "title": "Birmingham",
+              "length": 156000,
+              "recording": {
+                "id": "8eec314f-2b58-466b-aa0b-6423c047d092",
+                "title": "Birmingham",
+                "length": 156000,
+                "video": false,
+                "disambiguation": ""
+              }
+            },
+            {
+              "position": 11,
+              "id": "00b92063-5e93-37e1-834a-d7d40a0a9012",
+              "number": "11",
+              "title": "When It Dies",
+              "length": 244000,
+              "recording": {
+                "id": "4190aef8-6d1c-4dee-b631-e0aab903c5b7",
+                "title": "When It Dies",
+                "length": 244000,
+                "video": false,
+                "disambiguation": ""
+              }
+            },
+            {
+              "position": 12,
+              "id": "8902305e-ff6a-312e-b566-51fe6ddc5c02",
+              "number": "12",
+              "title": "Rememorable",
+              "length": 179000,
+              "recording": {
+                "id": "138e23cb-2c15-4961-9c35-c261399a3dce",
+                "title": "Rememorable",
+                "length": 179000,
+                "video": false,
+                "disambiguation": ""
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "2cb27d8e-6ca6-4cde-861e-53271f993bdb": {
+      "id": "2cb27d8e-6ca6-4cde-861e-53271f993bdb",
+      "title": "There Are Rules",
+      "disambiguation": "",
+      "country": "AU",
+      "date": "2011-01-25",
+      "status": "Official",
+      "release-group": {
+        "first-release-date": "2011-01-25",
+        "id": "072148a8-16ce-4a50-ab15-19c3ea1c1aec",
+        "primary-type": "Album",
+        "title": "There Are Rules",
+        "secondary-types": [],
+        "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+        "artist-credit": [
+          {
+            "name": "The Get Up Kids",
+            "artist": {
+              "disambiguation": "",
+              "type": "Group",
+              "sort-name": "Get Up Kids, The",
+              "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+              "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+              "name": "The Get Up Kids",
+              "country": "US"
+            },
+            "joinphrase": ""
+          }
+        ],
+        "secondary-type-ids": [],
+        "disambiguation": ""
+      },
+      "media": [
+        {
+          "position": 1,
+          "track-count": 14,
+          "format": "SHM-CD",
+          "tracks": [
+            {
+              "position": 1,
+              "id": "66ffd525-3ed9-40a5-b0b5-a40f62b2b5ea",
+              "number": "1",
+              "title": "Tithe",
+              "length": 219000,
+              "recording": {
+                "id": "118a74c1-1a94-4a00-892b-30c42724968c",
+                "title": "Tithe",
+                "length": 219000,
+                "video": false,
+                "disambiguation": ""
+              }
+            },
+            {
+              "position": 2,
+              "id": "e48d9a93-edca-4ed1-97be-be7a69445929",
+              "number": "2",
+              "title": "Regent’s Court",
+              "length": 126000,
+              "recording": {
+                "id": "1a5b8b34-3f99-454d-96d2-82f200cfffe2",
+                "title": "Regent’s Court",
+                "length": 126000,
+                "video": false,
+                "disambiguation": "",
+                "artist-credit": [
+                  {
+                    "joinphrase": "",
+                    "name": "The Get Up Kids",
+                    "artist": {
+                      "disambiguation": "",
+                      "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                      "name": "The Get Up Kids",
+                      "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                      "sort-name": "Get Up Kids, The",
+                      "type": "Group",
+                      "country": "US"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "position": 3,
+              "id": "3113e8e5-1ab2-417f-af63-e565714e63e5",
+              "number": "3",
+              "title": "Shatter Your Lungs",
+              "length": 169000,
+              "recording": {
+                "id": "a68b9050-bbb1-4e5c-9388-f0f87767c0ad",
+                "title": "Shatter Your Lungs",
+                "length": 169000,
+                "video": false,
+                "disambiguation": ""
+              }
+            },
+            {
+              "position": 4,
+              "id": "819cf925-17c1-4282-8364-14820001c4f4",
+              "number": "4",
+              "title": "Automatic",
+              "length": 175000,
+              "recording": {
+                "id": "cf39fb68-193f-4ccb-81c3-e1227f9e6ae7",
+                "title": "Automatic",
+                "length": 175000,
+                "video": false,
+                "disambiguation": ""
+              }
+            },
+            {
+              "position": 5,
+              "id": "2e902117-efcd-48e1-821e-cfcb66e71fce",
+              "number": "5",
+              "title": "Pararelevant",
+              "length": 217000,
+              "recording": {
+                "id": "a00d4a68-b542-421a-b8f6-9969bfdb17a6",
+                "title": "Pararelevant",
+                "length": 217000,
+                "video": false,
+                "disambiguation": ""
+              }
+            },
+            {
+              "position": 6,
+              "id": "f6019d9c-dc4a-4eb7-ae61-0df570bdc700",
+              "number": "6",
+              "title": "Rally ’round the Fool",
+              "length": 317000,
+              "recording": {
+                "id": "e616661d-16ed-4324-82d3-b1ce30cc1891",
+                "title": "Rally ’round the Fool",
+                "length": 317000,
+                "video": false,
+                "disambiguation": ""
+              }
+            },
+            {
+              "position": 7,
+              "id": "8a9b5802-6795-44a2-be95-857e7ad9369c",
+              "number": "7",
+              "title": "Better Lie",
+              "length": 258000,
+              "recording": {
+                "id": "d25bdbe6-ee3f-4789-90b6-c7a964b0891b",
+                "title": "Better Lie",
+                "length": 258000,
+                "video": false,
+                "disambiguation": ""
+              }
+            },
+            {
+              "position": 8,
+              "id": "791674b5-625d-4961-99ae-c7b82675e805",
+              "number": "8",
+              "title": "Keith Case",
+              "length": 245000,
+              "recording": {
+                "id": "5601937a-1266-47b9-861f-e5d4596466fe",
+                "title": "Keith Case",
+                "length": 245000,
+                "video": false,
+                "disambiguation": ""
+              }
+            },
+            {
+              "position": 9,
+              "id": "41fbe64c-e123-4097-9cd3-a276c6f92553",
+              "number": "9",
+              "title": "The Widow Paris",
+              "length": 217000,
+              "recording": {
+                "id": "64134ef7-6b1a-4f17-83fd-35b886ed9abe",
+                "title": "The Widow Paris",
+                "length": 217000,
+                "video": false,
+                "disambiguation": ""
+              }
+            },
+            {
+              "position": 10,
+              "id": "a8083576-f1cf-4ac6-9d53-52a1b127947b",
+              "number": "10",
+              "title": "Birmingham",
+              "length": 156000,
+              "recording": {
+                "id": "8eec314f-2b58-466b-aa0b-6423c047d092",
+                "title": "Birmingham",
+                "length": 156000,
+                "video": false,
+                "disambiguation": ""
+              }
+            },
+            {
+              "position": 11,
+              "id": "1a43e709-02b4-4134-a549-9fba2305dcac",
+              "number": "11",
+              "title": "When It Dies",
+              "length": 244000,
+              "recording": {
+                "id": "4190aef8-6d1c-4dee-b631-e0aab903c5b7",
+                "title": "When It Dies",
+                "length": 244000,
+                "video": false,
+                "disambiguation": ""
+              }
+            },
+            {
+              "position": 12,
+              "id": "b174d178-f8fb-4789-a96f-070ff8d233fe",
+              "number": "12",
+              "title": "Rememorable",
+              "length": 179000,
+              "recording": {
+                "id": "138e23cb-2c15-4961-9c35-c261399a3dce",
+                "title": "Rememorable",
+                "length": 179000,
+                "video": false,
+                "disambiguation": ""
+              }
+            },
+            {
+              "position": 13,
+              "id": "799feb89-7687-4fef-90ad-87c7f3fd1c30",
+              "number": "13",
+              "title": "Past Is Past",
+              "length": 233000,
+              "recording": {
+                "id": "806aa5ae-c354-4ebf-ab76-f4e45589d9eb",
+                "title": "Past Is Past",
+                "length": 233000,
+                "video": false,
+                "disambiguation": ""
+              }
+            },
+            {
+              "position": 14,
+              "id": "e187a636-6c81-4217-9228-a37c6762e313",
+              "number": "14",
+              "title": "Walk ’em With Grace",
+              "length": 153000,
+              "recording": {
+                "id": "0351574e-2b09-4ee0-92ee-4ea9c12f8be6",
+                "title": "Walk ’em With Grace",
+                "length": 153000,
+                "video": false,
+                "disambiguation": ""
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "1586bf99-c5dd-4b0b-9c1e-a94cf3925e52": {
+      "id": "1586bf99-c5dd-4b0b-9c1e-a94cf3925e52",
+      "title": "Queen Rock Montreal",
+      "disambiguation": "",
+      "country": "XW",
+      "date": "2020-07-17",
+      "status": "Official",
+      "release-group": {
+        "primary-type": "Album",
+        "id": "e0d97e8d-dc9e-3f1b-91a4-ec7df83eecb1",
+        "artist-credit": [
+          {
+            "artist": {
+              "country": "GB",
+              "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+              "name": "Queen",
+              "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+              "sort-name": "Queen",
+              "type": "Group",
+              "disambiguation": "UK rock group"
+            },
+            "name": "Queen",
+            "joinphrase": ""
+          }
+        ],
+        "first-release-date": "1997-12-16",
+        "secondary-type-ids": [
+          "6fd474e2-6b58-3102-9d17-d6f7eb7da0a0"
+        ],
+        "title": "Rock Montreal",
+        "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+        "disambiguation": "",
+        "secondary-types": [
+          "Live"
+        ]
+      },
+      "media": [
+        {
+          "position": 1,
+          "track-count": 13,
+          "format": "Digital Media",
+          "tracks": [
+            {
+              "position": 1,
+              "id": "75fdda26-211f-464c-b831-9a8ddf861092",
+              "number": "1",
+              "title": "Intro",
+              "length": 119320,
+              "recording": {
+                "id": "9ca17530-3e43-4701-9985-ef35fac4b544",
+                "title": "Intro",
+                "length": 119320,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 2,
+              "id": "ea1fc411-fe08-41fb-bc3f-b2e0ba7f6241",
+              "number": "2",
+              "title": "We Will Rock You (Fast)",
+              "length": 186106,
+              "recording": {
+                "id": "9b5335fe-ba9d-439c-b9c3-eb0baa48fcf3",
+                "title": "We Will Rock You (fast)",
+                "length": 186106,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 3,
+              "id": "d230d1c7-d4f4-4a2d-9e1f-5887040537a9",
+              "number": "3",
+              "title": "Let Me Entertain You",
+              "length": 168693,
+              "recording": {
+                "id": "66d90878-3b16-4e84-baa4-fd2a53c1e32f",
+                "title": "Let Me Entertain You",
+                "length": 168693,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 4,
+              "id": "796c8bb8-a74e-4e65-a44e-23f6432031ee",
+              "number": "4",
+              "title": "Play the Game",
+              "length": 237466,
+              "recording": {
+                "id": "d9bd6b39-6bbe-4b7d-ac23-b3b9707f5514",
+                "title": "Play the Game",
+                "length": 237466,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 5,
+              "id": "5bec6b7b-1d6e-449c-af4e-3e873a9c1f3d",
+              "number": "5",
+              "title": "Somebody to Love",
+              "length": 473306,
+              "recording": {
+                "id": "e865a551-0470-45b1-9d8f-127607f3c65f",
+                "title": "Somebody to Love",
+                "length": 473306,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 6,
+              "id": "d99226c9-06e6-452c-9a33-cd0b2bbc6c71",
+              "number": "6",
+              "title": "Killer Queen",
+              "length": 119933,
+              "recording": {
+                "id": "4e723455-916a-4ce2-be7d-36d9c3e7d3af",
+                "title": "Killer Queen",
+                "length": 119933,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 7,
+              "id": "a17eb7fb-c1e2-45d1-94df-ad2702a11521",
+              "number": "7",
+              "title": "I'm in Love With My Car",
+              "length": 123333,
+              "recording": {
+                "id": "ac5c7c81-a305-473d-afdf-d3828fdb956f",
+                "title": "I’m in Love With My Car",
+                "length": 123333,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 8,
+              "id": "b458285a-7011-4ade-8b47-cefb94c15545",
+              "number": "8",
+              "title": "Get Down, Make Love",
+              "length": 285933,
+              "recording": {
+                "id": "f6fa5fcd-7f8a-4c23-a6da-a7d41603b31a",
+                "title": "Get Down Make Love",
+                "length": 285933,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 9,
+              "id": "f455cf53-c92f-4b98-b406-500ee3a4ff51",
+              "number": "9",
+              "title": "Save Me",
+              "length": 254733,
+              "recording": {
+                "id": "5e9a9192-1859-4aca-81d7-226ec60a0b75",
+                "title": "Save Me",
+                "length": 254733,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 10,
+              "id": "abc06748-1892-422d-82e1-bd6a697a72c1",
+              "number": "10",
+              "title": "Now I'm Here",
+              "length": 331600,
+              "recording": {
+                "id": "2c0a303e-1df3-4274-b5ed-38ee5c57d0a4",
+                "title": "Now I’m Here",
+                "length": 331600,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 11,
+              "id": "dfb367ae-e3ad-4d5a-9e2b-3f3ba2b2e40d",
+              "number": "11",
+              "title": "Dragon Attack",
+              "length": 191760,
+              "recording": {
+                "id": "0ab26c59-62c7-4539-9298-2f525bfe6686",
+                "title": "Dragon Attack",
+                "length": 191760,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 12,
+              "id": "07456e38-4cf6-44ef-8231-a425355b9abc",
+              "number": "12",
+              "title": "Now I'm Here (reprise)",
+              "length": 113106,
+              "recording": {
+                "id": "5b1d80f8-fa8d-4aa8-a057-ea2e13964db4",
+                "title": "Now I’m Here (reprise)",
+                "length": 113106,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 13,
+              "id": "9382bb75-6c35-45bb-bac8-3990dcc44371",
+              "number": "13",
+              "title": "Love of My Life",
+              "length": 236573,
+              "recording": {
+                "id": "0208bf08-9626-4f4e-85c7-da505028ca30",
+                "title": "Love of My Life",
+                "length": 236573,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            }
+          ]
+        },
+        {
+          "position": 2,
+          "track-count": 15,
+          "format": "Digital Media",
+          "tracks": [
+            {
+              "position": 1,
+              "id": "6b6c7ded-30f0-44c6-a0ca-d2e39a0beb51",
+              "number": "1",
+              "title": "Under Pressure",
+              "length": 230120,
+              "recording": {
+                "id": "a82f1656-cbb4-407b-86b2-493a5b4445fc",
+                "title": "Under Pressure",
+                "length": 230000,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada",
+                "artist-credit": [
+                  {
+                    "artist": {
+                      "type": "Group",
+                      "disambiguation": "UK rock group",
+                      "sort-name": "Queen",
+                      "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                      "name": "Queen",
+                      "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                      "country": "GB"
+                    },
+                    "joinphrase": "",
+                    "name": "Queen"
+                  }
+                ]
+              }
+            },
+            {
+              "position": 2,
+              "id": "ef1e4e50-1df8-4d62-82a0-df3a40e0ef4a",
+              "number": "2",
+              "title": "Keep Yourself Alive",
+              "length": 209293,
+              "recording": {
+                "id": "37f9346e-cb7b-4bd4-b2bf-70b4971aaf4c",
+                "title": "Keep Yourself Alive",
+                "length": 209293,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 3,
+              "id": "a30991ca-43b8-44e5-800d-5de85d2f470e",
+              "number": "3",
+              "title": "Drum and Tympani Solo",
+              "length": 180066,
+              "recording": {
+                "id": "0638554a-082c-4696-9f0a-f94f9305d0f1",
+                "title": "Drum and Tympani Solo",
+                "length": 180066,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 4,
+              "id": "0b2772c2-3f0d-46b4-b667-d2ef217888fd",
+              "number": "4",
+              "title": "Guitar Solo",
+              "length": 311186,
+              "recording": {
+                "id": "4ebf8f07-5af8-494a-93ea-f3b476acb1e0",
+                "title": "Guitar Solo",
+                "length": 311186,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 5,
+              "id": "bb765ed8-9ce6-443f-b4c6-9707bc7b84fd",
+              "number": "5",
+              "title": "Flash",
+              "length": 131146,
+              "recording": {
+                "id": "3f7b912c-5b3c-48a9-bc21-2c5bef826277",
+                "title": "Flash",
+                "length": 131146,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 6,
+              "id": "447c321b-13da-4336-aa6f-00d095737a80",
+              "number": "6",
+              "title": "The Hero",
+              "length": 111440,
+              "recording": {
+                "id": "60a15747-bb42-4ba7-8b31-f435538d610d",
+                "title": "The Hero",
+                "length": 111440,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 7,
+              "id": "b19ea63f-75eb-402c-b55f-6a9d69dbdd8e",
+              "number": "7",
+              "title": "Crazy Little Thing Called Love",
+              "length": 255600,
+              "recording": {
+                "id": "e29172b7-d32d-4b5f-a2c5-903e5ac96459",
+                "title": "Crazy Little Thing Called Love",
+                "length": 255600,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 8,
+              "id": "ddccebbd-35f9-4f7a-8b2d-010d557b55f2",
+              "number": "8",
+              "title": "Jailhouse Rock",
+              "length": 152600,
+              "recording": {
+                "id": "0e229804-4819-4a90-a2f2-4ad9ecd6520e",
+                "title": "Jailhouse Rock",
+                "length": 152600,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 9,
+              "id": "8b25e401-f87a-46ff-8c3f-d130f9b05d9e",
+              "number": "9",
+              "title": "Bohemian Rhapsody",
+              "length": 328933,
+              "recording": {
+                "id": "cdb01e2a-8dfe-4f66-91f5-4eb0d1aac885",
+                "title": "Bohemian Rhapsody",
+                "length": 328933,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada",
+                "artist-credit": [
+                  {
+                    "name": "Queen",
+                    "joinphrase": "",
+                    "artist": {
+                      "sort-name": "Queen",
+                      "disambiguation": "UK rock group",
+                      "type": "Group",
+                      "country": "GB",
+                      "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                      "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                      "name": "Queen"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "position": 10,
+              "id": "54059426-27e2-4a0f-a64b-139db5c340b8",
+              "number": "10",
+              "title": "Tie Your Mother Down",
+              "length": 232933,
+              "recording": {
+                "id": "1af37538-a007-4414-a272-d6b224a644ed",
+                "title": "Tie Your Mother Down",
+                "length": 232933,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 11,
+              "id": "adb876dd-7331-4f01-8068-9d018473d6d4",
+              "number": "11",
+              "title": "Another One Bites the Dust",
+              "length": 240600,
+              "recording": {
+                "id": "9ec9bfe8-b30c-4d8b-b525-442b6e499f14",
+                "title": "Another One Bites the Dust",
+                "length": 240600,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 12,
+              "id": "dc57f39a-a288-4776-a61c-05ad364ab12d",
+              "number": "12",
+              "title": "Sheer Heart Attack",
+              "length": 233693,
+              "recording": {
+                "id": "c7b79192-c476-4193-ab4c-2dbaaf40e2be",
+                "title": "Sheer Heart Attack",
+                "length": 233693,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 13,
+              "id": "1e5a2300-8213-4979-af86-d12ea9e9981b",
+              "number": "13",
+              "title": "We Will Rock You",
+              "length": 129333,
+              "recording": {
+                "id": "444b5253-c64a-439d-b9cf-c722cd401f3c",
+                "title": "We Will Rock You",
+                "length": 129333,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 14,
+              "id": "412f94c9-8fd6-4ebd-ac20-451f2a298709",
+              "number": "14",
+              "title": "We Are the Champions",
+              "length": 207573,
+              "recording": {
+                "id": "3425a009-43dc-48f2-bf79-7825424fbf56",
+                "title": "We Are the Champions",
+                "length": 207573,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 15,
+              "id": "e70ee2e0-5034-4ccd-b6af-ffff43452b8e",
+              "number": "15",
+              "title": "God Save the Queen",
+              "length": 87506,
+              "recording": {
+                "id": "aa1e2464-801e-4827-b973-dd10288227f1",
+                "title": "God Save the Queen",
+                "length": 87506,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "617880b5-7a23-4b45-8817-8d3e362ba4f2": {
+      "id": "617880b5-7a23-4b45-8817-8d3e362ba4f2",
+      "title": "Queen Rock Montreal",
+      "disambiguation": "",
+      "country": "CA",
+      "date": "",
+      "status": "Official",
+      "release-group": {
+        "secondary-types": [
+          "Live"
+        ],
+        "title": "Rock Montreal",
+        "primary-type": "Album",
+        "id": "e0d97e8d-dc9e-3f1b-91a4-ec7df83eecb1",
+        "first-release-date": "1997-12-16",
+        "disambiguation": "",
+        "secondary-type-ids": [
+          "6fd474e2-6b58-3102-9d17-d6f7eb7da0a0"
+        ],
+        "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+        "artist-credit": [
+          {
+            "name": "Queen",
+            "artist": {
+              "country": "GB",
+              "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+              "sort-name": "Queen",
+              "name": "Queen",
+              "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+              "type": "Group",
+              "disambiguation": "UK rock group"
+            },
+            "joinphrase": ""
+          }
+        ]
+      },
+      "media": [
+        {
+          "position": 1,
+          "track-count": 13,
+          "format": "Digital Media",
+          "tracks": [
+            {
+              "position": 1,
+              "id": "e73ee617-5324-4d78-88a3-44fbc86f178c",
+              "number": "1",
+              "title": "Intro",
+              "length": 119320,
+              "recording": {
+                "id": "9ca17530-3e43-4701-9985-ef35fac4b544",
+                "title": "Intro",
+                "length": 119320,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 2,
+              "id": "4411090f-7998-4ba5-bc96-61d664745db1",
+              "number": "2",
+              "title": "We Will Rock You (Fast)",
+              "length": 186106,
+              "recording": {
+                "id": "9b5335fe-ba9d-439c-b9c3-eb0baa48fcf3",
+                "title": "We Will Rock You (fast)",
+                "length": 186106,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 3,
+              "id": "b7804023-0848-47d4-beee-46ae907ce475",
+              "number": "3",
+              "title": "Let Me Entertain You",
+              "length": 168693,
+              "recording": {
+                "id": "66d90878-3b16-4e84-baa4-fd2a53c1e32f",
+                "title": "Let Me Entertain You",
+                "length": 168693,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 4,
+              "id": "0219282f-bfb3-4611-b3c4-5c38dd316ef8",
+              "number": "4",
+              "title": "Play the Game",
+              "length": 237466,
+              "recording": {
+                "id": "d9bd6b39-6bbe-4b7d-ac23-b3b9707f5514",
+                "title": "Play the Game",
+                "length": 237466,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 5,
+              "id": "cfc23490-a99e-4e01-8207-ef1f94ce07ec",
+              "number": "5",
+              "title": "Somebody to Love",
+              "length": 473306,
+              "recording": {
+                "id": "e865a551-0470-45b1-9d8f-127607f3c65f",
+                "title": "Somebody to Love",
+                "length": 473306,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 6,
+              "id": "14b141aa-1ef5-45a8-817b-7fd30bdd29a3",
+              "number": "6",
+              "title": "Killer Queen",
+              "length": 119933,
+              "recording": {
+                "id": "4e723455-916a-4ce2-be7d-36d9c3e7d3af",
+                "title": "Killer Queen",
+                "length": 119933,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 7,
+              "id": "50f2f4fd-a72e-4cc9-b6be-35633e2d28e9",
+              "number": "7",
+              "title": "I’m in Love With My Car",
+              "length": 123333,
+              "recording": {
+                "id": "ac5c7c81-a305-473d-afdf-d3828fdb956f",
+                "title": "I’m in Love With My Car",
+                "length": 123333,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 8,
+              "id": "34660aad-1152-4920-89f2-9a60e0fcfb0b",
+              "number": "8",
+              "title": "Get Down, Make Love",
+              "length": 285933,
+              "recording": {
+                "id": "f6fa5fcd-7f8a-4c23-a6da-a7d41603b31a",
+                "title": "Get Down Make Love",
+                "length": 285933,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 9,
+              "id": "327157c8-5210-4ba7-96e1-99ce7ea6bedb",
+              "number": "9",
+              "title": "Save Me",
+              "length": 254733,
+              "recording": {
+                "id": "5e9a9192-1859-4aca-81d7-226ec60a0b75",
+                "title": "Save Me",
+                "length": 254733,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 10,
+              "id": "36e8378f-d27b-41ba-84e6-53628308d527",
+              "number": "10",
+              "title": "Now I’m Here",
+              "length": 331600,
+              "recording": {
+                "id": "2c0a303e-1df3-4274-b5ed-38ee5c57d0a4",
+                "title": "Now I’m Here",
+                "length": 331600,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 11,
+              "id": "ac93e179-9783-4c36-98a2-4cbe7be67381",
+              "number": "11",
+              "title": "Dragon Attack",
+              "length": 191760,
+              "recording": {
+                "id": "0ab26c59-62c7-4539-9298-2f525bfe6686",
+                "title": "Dragon Attack",
+                "length": 191760,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 12,
+              "id": "97ebfa66-9da6-4cf7-b1c8-81b123777251",
+              "number": "12",
+              "title": "Now I’m Here (reprise)",
+              "length": 113106,
+              "recording": {
+                "id": "5b1d80f8-fa8d-4aa8-a057-ea2e13964db4",
+                "title": "Now I’m Here (reprise)",
+                "length": 113106,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 13,
+              "id": "a4b55ec7-9ea8-4c57-889a-0a328e3f26d9",
+              "number": "13",
+              "title": "Love of My Life",
+              "length": 236573,
+              "recording": {
+                "id": "0208bf08-9626-4f4e-85c7-da505028ca30",
+                "title": "Love of My Life",
+                "length": 236573,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            }
+          ]
+        },
+        {
+          "position": 2,
+          "track-count": 15,
+          "format": "Digital Media",
+          "tracks": [
+            {
+              "position": 1,
+              "id": "06e53c7c-d41f-41de-ae83-b4ef6d9016b0",
+              "number": "1",
+              "title": "Under Pressure",
+              "length": 229280,
+              "recording": {
+                "id": "a82f1656-cbb4-407b-86b2-493a5b4445fc",
+                "title": "Under Pressure",
+                "length": 230000,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada",
+                "artist-credit": [
+                  {
+                    "joinphrase": "",
+                    "artist": {
+                      "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                      "name": "Queen",
+                      "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                      "sort-name": "Queen",
+                      "type": "Group",
+                      "country": "GB",
+                      "disambiguation": "UK rock group"
+                    },
+                    "name": "Queen"
+                  }
+                ]
+              }
+            },
+            {
+              "position": 2,
+              "id": "d3b929e7-bfa1-4427-bbff-024937acd410",
+              "number": "2",
+              "title": "Keep Yourself Alive",
+              "length": 209293,
+              "recording": {
+                "id": "37f9346e-cb7b-4bd4-b2bf-70b4971aaf4c",
+                "title": "Keep Yourself Alive",
+                "length": 209293,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 3,
+              "id": "b0a1f002-14e0-47cc-8328-d16bd26e088f",
+              "number": "3",
+              "title": "Drum and Tympani Solo",
+              "length": 180066,
+              "recording": {
+                "id": "0638554a-082c-4696-9f0a-f94f9305d0f1",
+                "title": "Drum and Tympani Solo",
+                "length": 180066,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 4,
+              "id": "9330a8b7-c28d-445e-bcf0-324abf06f635",
+              "number": "4",
+              "title": "Guitar Solo",
+              "length": 311186,
+              "recording": {
+                "id": "4ebf8f07-5af8-494a-93ea-f3b476acb1e0",
+                "title": "Guitar Solo",
+                "length": 311186,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 5,
+              "id": "1ac7c12a-4520-4436-95ec-ee0b53ffe532",
+              "number": "5",
+              "title": "Flash",
+              "length": 131146,
+              "recording": {
+                "id": "3f7b912c-5b3c-48a9-bc21-2c5bef826277",
+                "title": "Flash",
+                "length": 131146,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 6,
+              "id": "bfd1d8e5-43a9-43eb-b517-ce1fc9d50466",
+              "number": "6",
+              "title": "The Hero",
+              "length": 111440,
+              "recording": {
+                "id": "60a15747-bb42-4ba7-8b31-f435538d610d",
+                "title": "The Hero",
+                "length": 111440,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 7,
+              "id": "0e7e7617-fc91-443a-a819-408b1c0b73e7",
+              "number": "7",
+              "title": "Crazy Little Thing Called Love",
+              "length": 255600,
+              "recording": {
+                "id": "e29172b7-d32d-4b5f-a2c5-903e5ac96459",
+                "title": "Crazy Little Thing Called Love",
+                "length": 255600,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 8,
+              "id": "1f0ea7eb-2ec6-4584-b9d9-8cc7b7f578da",
+              "number": "8",
+              "title": "Jailhouse Rock",
+              "length": 152600,
+              "recording": {
+                "id": "0e229804-4819-4a90-a2f2-4ad9ecd6520e",
+                "title": "Jailhouse Rock",
+                "length": 152600,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 9,
+              "id": "73a58379-a0b6-4e1d-8e15-716dc72a30b5",
+              "number": "9",
+              "title": "Bohemian Rhapsody",
+              "length": 328933,
+              "recording": {
+                "id": "cdb01e2a-8dfe-4f66-91f5-4eb0d1aac885",
+                "title": "Bohemian Rhapsody",
+                "length": 328933,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada",
+                "artist-credit": [
+                  {
+                    "name": "Queen",
+                    "artist": {
+                      "disambiguation": "UK rock group",
+                      "country": "GB",
+                      "type": "Group",
+                      "name": "Queen",
+                      "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                      "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                      "sort-name": "Queen"
+                    },
+                    "joinphrase": ""
+                  }
+                ]
+              }
+            },
+            {
+              "position": 10,
+              "id": "e5f48020-944c-4da1-8742-66794aa989ca",
+              "number": "10",
+              "title": "Tie Your Mother Down",
+              "length": 232933,
+              "recording": {
+                "id": "1af37538-a007-4414-a272-d6b224a644ed",
+                "title": "Tie Your Mother Down",
+                "length": 232933,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 11,
+              "id": "2bd612bd-b2d5-4af4-a0c3-2eed35b33bde",
+              "number": "11",
+              "title": "Another One Bites the Dust",
+              "length": 240600,
+              "recording": {
+                "id": "9ec9bfe8-b30c-4d8b-b525-442b6e499f14",
+                "title": "Another One Bites the Dust",
+                "length": 240600,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 12,
+              "id": "f663dc6c-aeee-48d1-81fa-14a095f8b2f4",
+              "number": "12",
+              "title": "Sheer Heart Attack",
+              "length": 233693,
+              "recording": {
+                "id": "c7b79192-c476-4193-ab4c-2dbaaf40e2be",
+                "title": "Sheer Heart Attack",
+                "length": 233693,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 13,
+              "id": "3c5dac5e-dc93-410c-badb-4f1540dfd7e9",
+              "number": "13",
+              "title": "We Will Rock You",
+              "length": 129333,
+              "recording": {
+                "id": "444b5253-c64a-439d-b9cf-c722cd401f3c",
+                "title": "We Will Rock You",
+                "length": 129333,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 14,
+              "id": "f15c4587-5622-4647-8a62-d7d30c5d7c5c",
+              "number": "14",
+              "title": "We Are the Champions",
+              "length": 207573,
+              "recording": {
+                "id": "3425a009-43dc-48f2-bf79-7825424fbf56",
+                "title": "We Are the Champions",
+                "length": 207573,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            },
+            {
+              "position": 15,
+              "id": "ac6130c6-08ee-47e7-81b8-641b9a752414",
+              "number": "15",
+              "title": "God Save the Queen",
+              "length": 87520,
+              "recording": {
+                "id": "aa1e2464-801e-4827-b973-dd10288227f1",
+                "title": "God Save the Queen",
+                "length": 87506,
+                "video": false,
+                "disambiguation": "live, 1981-11-(24-25): Montreal Forum, Montreal, Canada"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "016801c0-d623-42b1-8280-6f160343e470": {
+      "id": "016801c0-d623-42b1-8280-6f160343e470",
+      "title": "Live at Wembley ’86",
+      "disambiguation": "DADC Austria",
+      "country": "XE",
+      "date": "1992",
+      "status": "Official",
+      "release-group": {
+        "first-release-date": "1992-05-26",
+        "artist-credit": [
+          {
+            "joinphrase": "",
+            "name": "Queen",
+            "artist": {
+              "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+              "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+              "type": "Group",
+              "sort-name": "Queen",
+              "disambiguation": "UK rock group",
+              "country": "GB",
+              "name": "Queen"
+            }
+          }
+        ],
+        "disambiguation": "",
+        "secondary-types": [
+          "Live"
+        ],
+        "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+        "secondary-type-ids": [
+          "6fd474e2-6b58-3102-9d17-d6f7eb7da0a0"
+        ],
+        "id": "372f535d-a06d-35f4-a171-5f63e27c3f8d",
+        "primary-type": "Album",
+        "title": "Live at Wembley ’86"
+      },
+      "media": [
+        {
+          "position": 1,
+          "track-count": 13,
+          "format": "CD",
+          "tracks": [
+            {
+              "position": 1,
+              "id": "95c7a4e4-d412-40a6-97e1-48df01ae70f2",
+              "number": "1",
+              "title": "One Vision",
+              "length": 350666,
+              "recording": {
+                "id": "ddcbe3cb-b2f4-47b8-994d-10261f34064a",
+                "title": "One Vision",
+                "length": 349733,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 2,
+              "id": "33c3c24b-781a-4bcc-a4b7-cea91e405fee",
+              "number": "2",
+              "title": "Tie Your Mother Down",
+              "length": 232400,
+              "recording": {
+                "id": "1b6379bc-ee26-427f-ae50-aa6e80ccc3ac",
+                "title": "Tie Your Mother Down",
+                "length": 232400,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 3,
+              "id": "69b146a3-5cb9-4b51-8c3b-beb753f5c1d5",
+              "number": "3",
+              "title": "In the Lap of the Gods",
+              "length": 163666,
+              "recording": {
+                "id": "d146ae5d-7c18-44b5-aa1b-6ba8da0552a1",
+                "title": "In the Lap of the Gods… Revisited",
+                "length": 163666,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 4,
+              "id": "e0451097-eac3-4f5b-81d6-06f216e5df1e",
+              "number": "4",
+              "title": "Seven Seas of Rhye",
+              "length": 78440,
+              "recording": {
+                "id": "f6188dee-804f-42fb-b43f-8ca685465102",
+                "title": "Seven Seas of Rhye",
+                "length": 78440,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 5,
+              "id": "175a24cb-a9ca-42bf-b482-33c2916a07a8",
+              "number": "5",
+              "title": "Tear It Up",
+              "length": 132133,
+              "recording": {
+                "id": "7eb384ee-7330-4371-8627-d59d4f36b88f",
+                "title": "Tear It Up",
+                "length": 132226,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 6,
+              "id": "12ed4723-3a0e-4879-8953-597861da7fff",
+              "number": "6",
+              "title": "A Kind of Magic",
+              "length": 521559,
+              "recording": {
+                "id": "78a7fa73-68df-4989-b554-040716bb77ad",
+                "title": "A Kind of Magic",
+                "length": 521373,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 7,
+              "id": "d8ffe8ed-bcce-4bf6-b956-05de1b67b67b",
+              "number": "7",
+              "title": "Under Pressure",
+              "length": 221106,
+              "recording": {
+                "id": "2bad727b-b7bc-4bae-a2cf-6ad50a218d88",
+                "title": "Under Pressure",
+                "length": 221000,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK",
+                "artist-credit": [
+                  {
+                    "name": "Queen",
+                    "artist": {
+                      "sort-name": "Queen",
+                      "country": "GB",
+                      "disambiguation": "UK rock group",
+                      "name": "Queen",
+                      "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                      "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                      "type": "Group"
+                    },
+                    "joinphrase": ""
+                  }
+                ]
+              }
+            },
+            {
+              "position": 8,
+              "id": "01ade66c-458c-4a3b-8b03-8e5c1ac44fc6",
+              "number": "8",
+              "title": "Another One Bites the Dust",
+              "length": 293600,
+              "recording": {
+                "id": "2fd00070-c0ce-4828-945d-806444652428",
+                "title": "Another One Bites the Dust",
+                "length": 293600,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 9,
+              "id": "233584df-4220-4f16-bf65-bf32399b269d",
+              "number": "9",
+              "title": "Who Wants to Live Forever",
+              "length": 316160,
+              "recording": {
+                "id": "1222fbf3-bafc-44f4-8965-1d526a354e8f",
+                "title": "Who Wants to Live Forever",
+                "length": 316160,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 10,
+              "id": "ee554cea-2222-4143-97fd-4cf79bd69d84",
+              "number": "10",
+              "title": "I Want to Break Free",
+              "length": 213933,
+              "recording": {
+                "id": "ee861ad8-fab4-4028-b2c2-21069b75cc4a",
+                "title": "I Want to Break Free",
+                "length": 214147,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 11,
+              "id": "93c1199d-a288-4b2c-8e04-9b9d17df3cfe",
+              "number": "11",
+              "title": "Impromptu",
+              "length": 176933,
+              "recording": {
+                "id": "91da5a62-561c-409e-bd57-fc87e311b22e",
+                "title": "Impromptu",
+                "length": 176906,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 12,
+              "id": "a1a093f1-bcc9-4b89-acf5-039ff165e811",
+              "number": "12",
+              "title": "Brighton Rock Solo",
+              "length": 550933,
+              "recording": {
+                "id": "2d31021d-32b1-4914-b17e-5e9ed89d761d",
+                "title": "Brighton Rock Solo",
+                "length": 550826,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 13,
+              "id": "bb2643d8-d6f4-4952-8c93-d2c02b67e3bc",
+              "number": "13",
+              "title": "Now I’m Here",
+              "length": 380040,
+              "recording": {
+                "id": "9dedc87f-59c9-4363-91c5-3139dab9f613",
+                "title": "Now I’m Here",
+                "length": 380173,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            }
+          ]
+        },
+        {
+          "position": 2,
+          "track-count": 15,
+          "format": "CD",
+          "tracks": [
+            {
+              "position": 1,
+              "id": "13ccad7c-58cb-4350-b871-5a932f9ecdd7",
+              "number": "1",
+              "title": "Love of My Life",
+              "length": 288773,
+              "recording": {
+                "id": "43074d46-8cfc-4b55-994a-e13623fa9b35",
+                "title": "Love of My Life",
+                "length": 288800,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 2,
+              "id": "50dcf841-1c90-40e7-bbac-740938c6977e",
+              "number": "2",
+              "title": "Is This the World We Created…?",
+              "length": 178400,
+              "recording": {
+                "id": "84801a00-257a-4ae4-aa02-edccd0871f4d",
+                "title": "Is This the World We Created…?",
+                "length": 178400,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 3,
+              "id": "a67b8c4a-0033-45a6-a90b-808bea351030",
+              "number": "3",
+              "title": "(You’re So Square) Baby I Don’t Care",
+              "length": 96133,
+              "recording": {
+                "id": "8dc85a6f-e986-4bc8-a5ee-e252220bea42",
+                "title": "(You’re So Square) Baby I Don’t Care",
+                "length": 96133,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 4,
+              "id": "5060dfb1-7d60-4828-9159-ffe03d611a6b",
+              "number": "4",
+              "title": "Hello Mary Lou (Goodbye Heart)",
+              "length": 110760,
+              "recording": {
+                "id": "f1032f56-0b68-4ded-a532-5bda562848a3",
+                "title": "Hello Mary Lou (Goodbye Heart)",
+                "length": 110760,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 5,
+              "id": "78e34274-5634-497c-9aa1-2ce4a630a257",
+              "number": "5",
+              "title": "Tutti Frutti",
+              "length": 173640,
+              "recording": {
+                "id": "59814bd5-c670-4bb6-908b-bf4c5fb828b0",
+                "title": "Tutti Frutti",
+                "length": 173626,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 6,
+              "id": "65f4a871-c68a-4ee6-b06a-94c44e65545a",
+              "number": "6",
+              "title": "Gimme Some Lovin’",
+              "length": 55026,
+              "recording": {
+                "id": "531bfb23-5763-42ed-af1b-a87a10c8fdd6",
+                "title": "Gimme Some Lovin’",
+                "length": 55000,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 7,
+              "id": "ea9fce08-1fd9-4f9d-b10d-117902e99e73",
+              "number": "7",
+              "title": "Bohemian Rhapsody",
+              "length": 350533,
+              "recording": {
+                "id": "35a91a43-a1f7-4068-ad03-e0569a0b372f",
+                "title": "Bohemian Rhapsody",
+                "length": 350573,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK",
+                "artist-credit": [
+                  {
+                    "joinphrase": "",
+                    "artist": {
+                      "type": "Group",
+                      "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                      "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                      "sort-name": "Queen",
+                      "name": "Queen",
+                      "disambiguation": "UK rock group",
+                      "country": "GB"
+                    },
+                    "name": "Queen"
+                  }
+                ]
+              }
+            },
+            {
+              "position": 8,
+              "id": "0c8af091-54a8-43bf-a1ea-650f4472ac3c",
+              "number": "8",
+              "title": "Hammer to Fall",
+              "length": 356866,
+              "recording": {
+                "id": "800c66e2-8571-4868-b037-89d55c2bd34c",
+                "title": "Hammer to Fall",
+                "length": 356866,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 9,
+              "id": "dc0f276d-1666-4ff8-a689-c9492d324917",
+              "number": "9",
+              "title": "Crazy Little Thing Called Love",
+              "length": 365866,
+              "recording": {
+                "id": "72e10ef9-57de-4ebd-ac55-422edef74047",
+                "title": "Crazy Little Thing Called Love",
+                "length": 365866,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 10,
+              "id": "7d7701d5-44b9-4c27-a337-5eaaf0951ca3",
+              "number": "10",
+              "title": "Big Spender",
+              "length": 66533,
+              "recording": {
+                "id": "dfb142fc-f3a8-4c04-8509-bd31cb3adae9",
+                "title": "Big Spender",
+                "length": 66400,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 11,
+              "id": "ae885f30-fdb0-4280-a233-a7e798b020c7",
+              "number": "11",
+              "title": "Radio Ga Ga",
+              "length": 357306,
+              "recording": {
+                "id": "4bff091b-b586-4338-98c6-3346e372e670",
+                "title": "Radio Ga Ga",
+                "length": 357400,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 12,
+              "id": "ffde90a7-bc58-4465-abe0-2e33482975a6",
+              "number": "12",
+              "title": "We Will Rock You",
+              "length": 167800,
+              "recording": {
+                "id": "3be1490e-bc35-4422-bd9b-157651f7d401",
+                "title": "We Will Rock You",
+                "length": 167733,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 13,
+              "id": "3d0851b3-7498-4818-8636-a4ff8b3ddd69",
+              "number": "13",
+              "title": "Friends Will Be Friends",
+              "length": 126266,
+              "recording": {
+                "id": "6173c122-1c8b-4be1-9cb9-c78de12db394",
+                "title": "Friends Will Be Friends",
+                "length": 126200,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 14,
+              "id": "6a3381e4-2e2f-4398-81d4-c80d393f81b8",
+              "number": "14",
+              "title": "We Are the Champions",
+              "length": 244960,
+              "recording": {
+                "id": "23290d17-d880-489d-a4a9-cdfa7dbfcf9d",
+                "title": "We Are the Champions",
+                "length": 244933,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 15,
+              "id": "06bbbf34-75d4-49eb-a8b9-ca967a69effd",
+              "number": "15",
+              "title": "God Save the Queen",
+              "length": 87173,
+              "recording": {
+                "id": "002db758-6f6a-48ac-9af0-bd29ac2d3f40",
+                "title": "God Save the Queen",
+                "length": 87960,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "4fdc0364-5c4f-45aa-91ec-b94a5cc9ec7c": {
+      "id": "4fdc0364-5c4f-45aa-91ec-b94a5cc9ec7c",
+      "title": "Live at Wembley ’86",
+      "disambiguation": "664, PM 616",
+      "country": "GB",
+      "date": "1992-05-26",
+      "status": "Official",
+      "media": [
+        {
+          "position": 1,
+          "track-count": 13,
+          "format": "CD",
+          "tracks": [
+            {
+              "position": 1,
+              "id": "64c8d789-e337-384b-ba78-42abe2d2e741",
+              "number": "1",
+              "title": "One Vision",
+              "length": 350666,
+              "recording": {
+                "id": "ddcbe3cb-b2f4-47b8-994d-10261f34064a",
+                "title": "One Vision",
+                "length": 349733,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 2,
+              "id": "e433145c-2daa-3d42-886c-3e65e62a6090",
+              "number": "2",
+              "title": "Tie Your Mother Down",
+              "length": 232400,
+              "recording": {
+                "id": "1b6379bc-ee26-427f-ae50-aa6e80ccc3ac",
+                "title": "Tie Your Mother Down",
+                "length": 232400,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 3,
+              "id": "83b0b64e-a293-322f-8eb5-6942b6a88ffc",
+              "number": "3",
+              "title": "In the Lap of the Gods",
+              "length": 163666,
+              "recording": {
+                "id": "d146ae5d-7c18-44b5-aa1b-6ba8da0552a1",
+                "title": "In the Lap of the Gods… Revisited",
+                "length": 163666,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 4,
+              "id": "e17b9b61-1759-36f5-9399-4c45a41a1750",
+              "number": "4",
+              "title": "Seven Seas of Rhye",
+              "length": 78426,
+              "recording": {
+                "id": "f6188dee-804f-42fb-b43f-8ca685465102",
+                "title": "Seven Seas of Rhye",
+                "length": 78440,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 5,
+              "id": "30f8d0a6-99fa-3583-b49f-e8fda730edff",
+              "number": "5",
+              "title": "Tear It Up",
+              "length": 132133,
+              "recording": {
+                "id": "7eb384ee-7330-4371-8627-d59d4f36b88f",
+                "title": "Tear It Up",
+                "length": 132226,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 6,
+              "id": "fc096ddc-e8a7-3cc1-a5fe-795e0acda5c2",
+              "number": "6",
+              "title": "A Kind of Magic",
+              "length": 521573,
+              "recording": {
+                "id": "78a7fa73-68df-4989-b554-040716bb77ad",
+                "title": "A Kind of Magic",
+                "length": 521373,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 7,
+              "id": "afe7a1f9-4417-3b73-a45d-a34fac9c039f",
+              "number": "7",
+              "title": "Under Pressure",
+              "length": 221093,
+              "recording": {
+                "id": "2bad727b-b7bc-4bae-a2cf-6ad50a218d88",
+                "title": "Under Pressure",
+                "length": 221000,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK",
+                "artist-credit": [
+                  {
+                    "name": "Queen",
+                    "artist": {
+                      "disambiguation": "UK rock group",
+                      "name": "Queen",
+                      "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                      "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                      "sort-name": "Queen",
+                      "type": "Group",
+                      "country": "GB"
+                    },
+                    "joinphrase": ""
+                  }
+                ]
+              }
+            },
+            {
+              "position": 8,
+              "id": "2e04dd82-e803-3909-8980-9c12e02060f6",
+              "number": "8",
+              "title": "Another One Bites the Dust",
+              "length": 293600,
+              "recording": {
+                "id": "2fd00070-c0ce-4828-945d-806444652428",
+                "title": "Another One Bites the Dust",
+                "length": 293600,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 9,
+              "id": "10029e82-a2dc-36a4-bc56-8b4c4bef0d44",
+              "number": "9",
+              "title": "Who Wants to Live Forever",
+              "length": 316173,
+              "recording": {
+                "id": "1222fbf3-bafc-44f4-8965-1d526a354e8f",
+                "title": "Who Wants to Live Forever",
+                "length": 316160,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 10,
+              "id": "3cf82805-266a-3b98-82fd-5290d9eb3f78",
+              "number": "10",
+              "title": "I Want to Break Free",
+              "length": 213933,
+              "recording": {
+                "id": "ee861ad8-fab4-4028-b2c2-21069b75cc4a",
+                "title": "I Want to Break Free",
+                "length": 214147,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 11,
+              "id": "35be4b93-9383-3f28-91d8-98759d0170e0",
+              "number": "11",
+              "title": "Impromptu",
+              "length": 176933,
+              "recording": {
+                "id": "91da5a62-561c-409e-bd57-fc87e311b22e",
+                "title": "Impromptu",
+                "length": 176906,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 12,
+              "id": "0624c905-97cc-3f63-bb30-8cd0ffd33678",
+              "number": "12",
+              "title": "Brighton Rock Solo",
+              "length": 550933,
+              "recording": {
+                "id": "2d31021d-32b1-4914-b17e-5e9ed89d761d",
+                "title": "Brighton Rock Solo",
+                "length": 550826,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 13,
+              "id": "a74d9b87-d301-38fb-a13e-7dd134f64959",
+              "number": "13",
+              "title": "Now I’m Here",
+              "length": 380026,
+              "recording": {
+                "id": "9dedc87f-59c9-4363-91c5-3139dab9f613",
+                "title": "Now I’m Here",
+                "length": 380173,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            }
+          ]
+        },
+        {
+          "position": 2,
+          "track-count": 15,
+          "format": "CD",
+          "tracks": [
+            {
+              "position": 1,
+              "id": "dcabb52f-9363-31b6-be52-d3a0f482e89c",
+              "number": "1",
+              "title": "Love of My Life",
+              "length": 288760,
+              "recording": {
+                "id": "43074d46-8cfc-4b55-994a-e13623fa9b35",
+                "title": "Love of My Life",
+                "length": 288800,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 2,
+              "id": "d2706e3b-74e2-3f31-bbc5-a72d9c8ef603",
+              "number": "2",
+              "title": "Is This the World We Created…?",
+              "length": 178400,
+              "recording": {
+                "id": "84801a00-257a-4ae4-aa02-edccd0871f4d",
+                "title": "Is This the World We Created…?",
+                "length": 178400,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 3,
+              "id": "41066f23-c5ea-3b76-b399-0d2b292ec090",
+              "number": "3",
+              "title": "(You’re So Square) Baby I Don’t Care",
+              "length": 96133,
+              "recording": {
+                "id": "8dc85a6f-e986-4bc8-a5ee-e252220bea42",
+                "title": "(You’re So Square) Baby I Don’t Care",
+                "length": 96133,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 4,
+              "id": "e7978131-92ca-3fe0-a856-9666323cebf7",
+              "number": "4",
+              "title": "Hello Mary Lou (Goodbye Heart)",
+              "length": 110773,
+              "recording": {
+                "id": "f1032f56-0b68-4ded-a532-5bda562848a3",
+                "title": "Hello Mary Lou (Goodbye Heart)",
+                "length": 110760,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 5,
+              "id": "1f8e5aa0-a310-3088-af2f-d455272946a8",
+              "number": "5",
+              "title": "Tutti Frutti",
+              "length": 173626,
+              "recording": {
+                "id": "59814bd5-c670-4bb6-908b-bf4c5fb828b0",
+                "title": "Tutti Frutti",
+                "length": 173626,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 6,
+              "id": "f9967327-c58e-3c49-9b03-5882d7eaf7d6",
+              "number": "6",
+              "title": "Gimme Some Lovin’",
+              "length": 55040,
+              "recording": {
+                "id": "531bfb23-5763-42ed-af1b-a87a10c8fdd6",
+                "title": "Gimme Some Lovin’",
+                "length": 55000,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 7,
+              "id": "4e0d98f1-6da3-31b5-9cde-2dd1165452a5",
+              "number": "7",
+              "title": "Bohemian Rhapsody",
+              "length": 350533,
+              "recording": {
+                "id": "35a91a43-a1f7-4068-ad03-e0569a0b372f",
+                "title": "Bohemian Rhapsody",
+                "length": 350573,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK",
+                "artist-credit": [
+                  {
+                    "joinphrase": "",
+                    "artist": {
+                      "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                      "name": "Queen",
+                      "disambiguation": "UK rock group",
+                      "country": "GB",
+                      "type": "Group",
+                      "sort-name": "Queen",
+                      "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3"
+                    },
+                    "name": "Queen"
+                  }
+                ]
+              }
+            },
+            {
+              "position": 8,
+              "id": "5860bf11-7421-3c14-87cd-c7b54e1314f4",
+              "number": "8",
+              "title": "Hammer to Fall",
+              "length": 356866,
+              "recording": {
+                "id": "800c66e2-8571-4868-b037-89d55c2bd34c",
+                "title": "Hammer to Fall",
+                "length": 356866,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 9,
+              "id": "f991af93-f358-3dbe-a8ca-86104cf7a920",
+              "number": "9",
+              "title": "Crazy Little Thing Called Love",
+              "length": 365866,
+              "recording": {
+                "id": "72e10ef9-57de-4ebd-ac55-422edef74047",
+                "title": "Crazy Little Thing Called Love",
+                "length": 365866,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 10,
+              "id": "f56960f4-f202-34b2-8163-9eacfdd547a6",
+              "number": "10",
+              "title": "Big Spender",
+              "length": 66533,
+              "recording": {
+                "id": "dfb142fc-f3a8-4c04-8509-bd31cb3adae9",
+                "title": "Big Spender",
+                "length": 66400,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 11,
+              "id": "a1664dd9-41a8-36f8-b00d-be8eec65d04d",
+              "number": "11",
+              "title": "Radio Ga Ga",
+              "length": 357293,
+              "recording": {
+                "id": "4bff091b-b586-4338-98c6-3346e372e670",
+                "title": "Radio Ga Ga",
+                "length": 357400,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 12,
+              "id": "741b1b76-4c47-3667-a833-fbdd335330ba",
+              "number": "12",
+              "title": "We Will Rock You",
+              "length": 167800,
+              "recording": {
+                "id": "3be1490e-bc35-4422-bd9b-157651f7d401",
+                "title": "We Will Rock You",
+                "length": 167733,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 13,
+              "id": "cf667fb8-f616-3561-88b0-dde297a01305",
+              "number": "13",
+              "title": "Friends Will Be Friends",
+              "length": 126266,
+              "recording": {
+                "id": "6173c122-1c8b-4be1-9cb9-c78de12db394",
+                "title": "Friends Will Be Friends",
+                "length": 126200,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 14,
+              "id": "35571011-0052-3759-9e9a-60447341069d",
+              "number": "14",
+              "title": "We Are the Champions",
+              "length": 244973,
+              "recording": {
+                "id": "23290d17-d880-489d-a4a9-cdfa7dbfcf9d",
+                "title": "We Are the Champions",
+                "length": 244933,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            },
+            {
+              "position": 15,
+              "id": "bb943123-e0cd-3a4b-b410-f24aaf7aa92c",
+              "number": "15",
+              "title": "God Save the Queen",
+              "length": 87160,
+              "recording": {
+                "id": "002db758-6f6a-48ac-9af0-bd29ac2d3f40",
+                "title": "God Save the Queen",
+                "length": 87960,
+                "video": false,
+                "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

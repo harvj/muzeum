@@ -118,7 +118,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     all(".review-candidate-summary").last.send_keys(:enter)
     expect(page).to have_css(".review-candidate:nth-of-type(2)[open]")
     expect(page).to have_css(".review-candidate[open]", count: 1)
-    expect(page).to have_text("A checked release tracklist is unavailable for this candidate.")
+    expect(page).to have_text("Catalog appearance only. The edition played is unverified.")
     expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
     capture_resolution("ambiguous-mobile")
 

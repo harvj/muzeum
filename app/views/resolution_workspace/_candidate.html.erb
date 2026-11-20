@@ -1,6 +1,7 @@
 <% mbid = candidate.fetch("id") %>
 <% slots = Array(@assessment.evidence["slots"]).select { |slot| slot["recording_mbid"] == mbid } %>
 <% edition = slots.any? ? @assessment.evidence["edition"] : nil %>
+<% appearance = rank.dig("inputs", "catalog_release_appearance", "provenance") %>
 <% countries = edition ? Array(edition["countries"]).presence || Array(edition["country"]) : [] %>
 <% positives = rank.fetch("inputs").values.select { |item| item["state"] == "positive" } %>
 <% conflicts = rank.fetch("inputs").values.select { |item| item["state"] == "contradictory" } %>
@@ -12,7 +13,7 @@
       <strong class="review-candidate-title"><%= candidate["title"] %></strong>
       <span class="review-credit"><%= Array(candidate["artist-credit"]).map { |credit| "#{credit["name"]}#{credit["joinphrase"]}" }.join.presence || "Artist credit unavailable" %>
         <% if candidate["disambiguation"].present? %> · <%= candidate["disambiguation"] %><% end %></span>
-      <span class="review-edition"><%= edition ? edition["title"] : "Supporting release unavailable" %></span>
+      <span class="review-edition"><%= edition&.fetch("title") || appearance&.fetch("title") || "Supporting release unavailable" %></span>
       <% if edition %>
         <span class="compact-meta"><%= edition["date"].presence || "Date unavailable" %>
           · <%= countries.any? ? nil : "Country unavailable" %>
@@ -54,6 +55,13 @@
             </li>
           <% end %>
         </ol>
+      <% elsif appearance %>
+        <p class="compact-meta">
+          <%= link_to [appearance["title"], appearance["disambiguation"].presence].compact.join(" · "),
+            "https://musicbrainz.org/release/#{appearance.fetch("id")}" %>
+          · Disc <%= appearance["medium"] %>, track <%= appearance["position"] %>.
+          Catalog appearance only. The edition played is unverified.
+        </p>
       <% else %>
         <p class="compact-meta">A checked release tracklist is unavailable for this candidate.</p>
       <% end %>

@@ -3,9 +3,10 @@ module RecordingResolution
     LIMIT = 25
 
     def self.call(surface, claims)
-      title = surface.track.to_s.downcase
+      title = DiscoveryTitle.key(surface.track)
+      titles = [ surface.track.to_s.downcase, title, title.tr("'", "’") ].uniq
       id = claims["track_mbid"].to_s.downcase
-      rows = Recording.where("lower(title) = ?", title).or(Recording.where(mbid: id))
+      rows = Recording.where("lower(title) IN (?)", titles).or(Recording.where(mbid: id))
         .order(Arel.sql(Recording.sanitize_sql_array([ "CASE WHEN mbid = ? THEN 0 ELSE 1 END", id ])), :id)
         .limit(LIMIT).includes(:artists).to_a
       verified_id = rows.find { |recording| recording.mbid == id }&.id
@@ -32,11 +33,14 @@ module RecordingResolution
       editions = if claims["album_mbid"].present?
         editions.where(ingested_from_release_mbid: claims["album_mbid"].to_s.downcase)
       else
-        editions.where(title: surface.album, id: CatalogTrackSlot.where(recording_id: recording_ids).select(:release_id))
+        editions.where(title: [ surface.album, DiscoveryTitle.album_base(surface.album) ].uniq,
+          id: CatalogTrackSlot.where(recording_id: recording_ids).select(:release_id))
       end
       editions.order(:id).limit(4).flat_map do |release|
         tracklist = ReleaseTracklist.new(release)
-        matching = tracklist.slots.select { |slot| [ slot.title, slot.recording.title ].include?(surface.track) }
+        matching = tracklist.slots.select do |slot|
+          [ slot.title, slot.recording.title ].any? { |title| DiscoveryTitle.match?(title, surface.track) }
+        end
         matching.map do |slot|
           candidate = ReleaseTracklist.candidate(slot.recording, tracklist.evidence)
           candidate["verified_local_claim"] = slot.recording.mbid.casecmp?(claims["track_mbid"].to_s)

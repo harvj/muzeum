@@ -207,7 +207,7 @@ module CanonicalCatalog
         evidence["verified_recording"] = verified.merge(local.slice("local_release_context"))
       end
       evidence["ranking"] = RecordingResolution::Ranking.call(@surface, evidence)
-      evidence["ranking_version"] = RecordingResolution::Ranking::VERSION
+      evidence["ranking_version"] = evidence["ranking"].first&.fetch("version") || RecordingResolution::Ranking::VERSION
       group = @group || RecordingResolution::Group.create_or_find_by!(surface_id: @surface.id,
         version: RecordingResolution::Ledger::VERSION, claims: @claims)
       digest = Digest::SHA256.hexdigest(evidence.to_json)

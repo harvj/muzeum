@@ -3,22 +3,27 @@ module RecordingResolution
     VERSION = "recording-ranking-v1"
     VERSION_MARKERS = /\b(live|remix|acoustic|demo|alternate|edit|instrumental|remaster)(?:ed)?\b/i
 
-    def self.call(surface, evidence)
+    def self.call(surface, evidence, discovery: true)
       Workspace.candidate_evidence(evidence).filter_map do |candidate|
-        new(surface, evidence, candidate).evaluate
+        new(surface, evidence, candidate, discovery:).evaluate
       end.sort_by { |row| [ -row.fetch("score"), row.fetch("recording_mbid") ] }
     end
 
     def self.recommended?(ranks)
       first, second = ranks
+      if first&.dig("inputs", "recording_identifier", "state") == "positive" &&
+          ranks.drop(1).any? { |rank| rank.dig("inputs", "catalog_release_appearance", "provenance", "relationship") == "matching_catalog_caption" }
+        return false
+      end
       first && (!second || first["score"] > second["score"]) &&
         first.fetch("inputs").values.none? { |item| item["state"] == "contradictory" } &&
         %w[recording_identifier edition_slot].any? { |key| first.dig("inputs", key, "state") == "positive" }
     end
 
-    def initialize(surface, evidence, candidate)
+    def initialize(surface, evidence, candidate, discovery:)
       @surface, @evidence, @candidate = surface, evidence, candidate
       @inputs = {}
+      @discovery = discovery
     end
 
     def evaluate
@@ -64,14 +69,21 @@ module RecordingResolution
           "This stored release contains another recording independently confirmed in your archive", nil)
         @inputs.fetch("local_release_history")["provenance"] = context
       end
+      appearance = @candidate["release_discovery"] unless slot
+      if appearance
+        caption_matches = appearance["relationship"] == "matching_catalog_caption"
+        factor("catalog_release_appearance", true, caption_matches ? 2 : 1, 0,
+          "MusicBrainz lists this recording in the checked catalog tracklist", nil)
+        @inputs.fetch("catalog_release_appearance")["provenance"] = appearance
+      end
 
       # Text narrows discovery. A text-only candidate is still a choice for human review.
-      return unless verified || slot || manual || (@inputs["title"]["state"] == "positive" &&
+      return unless verified || slot || manual || appearance || (@inputs["title"]["state"] == "positive" &&
         %w[artist_name artist_identifier].any? { |key| @inputs[key]["state"] == "positive" })
 
       {
         "recording_mbid" => id, "score" => @inputs.values.sum { |factor| factor.fetch("weight") },
-        "version" => independent_release_support ? "recording-ranking-v1-local-release-v1" : VERSION, "inputs" => @inputs,
+        "version" => version(independent_release_support, appearance), "inputs" => @inputs,
         "provenance" => @candidate.fetch("resolution_candidate_source", "musicbrainz"),
         "source" => { "artist" => @surface.artist, "track" => @surface.track,
           "album" => @surface.album, "claims" => claims },
@@ -80,6 +92,13 @@ module RecordingResolution
     end
 
     private
+
+    def version(independent_release_support, appearance)
+      return "recording-ranking-v1-release-discovery-v1" if appearance || @typographic_match
+      return "recording-ranking-v1-local-release-v1" if independent_release_support
+
+      VERSION
+    end
 
     def factor(key, match, positive, negative, support, conflict)
       @inputs[key] = case match
@@ -92,7 +111,12 @@ module RecordingResolution
     def comparable(first, second)
       return if first.blank? || second.blank?
 
-      first.unicode_normalize.downcase.squish == second.unicode_normalize.downcase.squish
+      previous = first.unicode_normalize.downcase.squish == second.unicode_normalize.downcase.squish
+      return previous unless @discovery
+
+      match = DiscoveryTitle.match?(first, second)
+      @typographic_match ||= match && !previous
+      match
     end
 
     def versions(text)

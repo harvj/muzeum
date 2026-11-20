@@ -108,6 +108,17 @@ module Clients
       end.fetch("data") { raise RecordingResolution::ProviderError, "MusicBrainz search endpoint unavailable" }
     end
 
+    def release_candidates(session, artist:, title:)
+      query = "artist:\"#{escape_phrase(artist)}\" AND release:\"#{escape_phrase(title)}\""
+      response = session.get(:musicbrainz, "/ws/2/release", params: { fmt: "json", limit: 5, query: }) do |data|
+        releases = data["releases"]
+        raise RecordingResolution::ProviderError, "MusicBrainz release search envelope is incomplete" unless releases.is_a?(Array)
+
+        { "releases" => releases.first(5).map { |release| release.slice("id", "title", "disambiguation") } }
+      end
+      Array(response.dig("data", "releases"))
+    end
+
     def verify_recording(session, mbid, catalog: false)
       return { "status" => "invalid" } unless MBID.match?(mbid.to_s)
 
@@ -144,11 +155,11 @@ module Clients
     def project_recording(data)
       data.slice("id", "title", "length", "video", "disambiguation", "first-release-date", "isrcs").merge(
         "artist-credit" => project_credits(data["artist-credit"]),
-        "releases" => Array(data["releases"]).map { |release| release.slice("id", "title", "date", "country") })
+        "releases" => Array(data["releases"]).map { |release| release.slice("id", "title", "date", "country", "disambiguation") })
     end
 
     def project_edition(data)
-      result = data.slice("id", "title", "status", "country", "date")
+      result = data.slice("id", "title", "status", "country", "date", "disambiguation")
       result["release-events"] = Array(data["release-events"]).filter_map do |event|
         codes = Array(event.dig("area", "iso-3166-1-codes"))
         { "country_codes" => codes } if codes.any?

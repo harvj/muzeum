@@ -5,10 +5,11 @@ module RecordingResolution
 
     attr_reader :evidence
 
-    def initialize(session, discogs:, workspace: false)
+    def initialize(session, discogs:, workspace: false, discover: workspace)
       @session = session
       @discogs = DiscogsEvidence.new(discogs, expanded: workspace) if discogs
       @workspace = workspace
+      @discover = discover
       @musicbrainz = Clients::Musicbrainz.new
     end
 
@@ -56,6 +57,13 @@ module RecordingResolution
           "complete_tracklist" => complete_edition?(edition) && Array(edition["media"]).none? { |medium| medium["extra-track-layout"] })
       end
       evidence["slots"] = edition_slots(edition)
+      if @discover
+        related = !verified || DiscoveryTitle.album_base(surface.album) != surface.album || surface.album.to_s.match?(VERSION_MARKER)
+        search = related && (candidates.empty? || candidates.any? { |candidate| Array(candidate["releases"]).any? })
+        discovered = EditionDiscovery.new(@musicbrainz, @session).call(surface, claims, candidates,
+          checked: edition, attempted: edition_id, search:)
+        merge_discovered(discovered)
+      end
       if verified
         slot_check = {
           "requested_edition_mbid" => edition_id, "returned_edition_mbid" => edition&.fetch("id", nil),
@@ -75,6 +83,24 @@ module RecordingResolution
     end
 
     private
+
+    def merge_discovered(discovered)
+      by_id = discovered.group_by { |candidate| candidate["id"] }
+      return if by_id.empty?
+
+      evidence["discovery_appearances"] = by_id.transform_values { |rows| rows.pluck("release_discovery").uniq }
+      additions = by_id.values.map do |rows|
+        rows.find { |row| row.dig("release_discovery", "relationship") == "matching_catalog_caption" } || rows.first
+      end.index_by { |row| row["id"] }
+      evidence["candidates"] = evidence.fetch("candidates").map do |row|
+        discovered = additions.delete(row["id"])
+        discovered ? row.merge("release_discovery" => discovered.fetch("release_discovery")) : row
+      end + additions.values
+      if (verified = evidence["verified_recording"])
+        appearance = evidence["candidates"].find { |row| row["id"] == verified["id"] }&.fetch("release_discovery", nil)
+        verified["release_discovery"] = appearance if appearance
+      end
+    end
 
     def compare_historical_fixture(surface, edition)
       discogs = evidence["discogs"] = {}
