@@ -23,6 +23,10 @@ jobs:
       BROWSER_TESTS: '1'
     steps:
       - uses: actions/checkout@v6
+      - name: Verify Muzeum runtime selection
+        run: |
+          sudo useradd --system --no-create-home --shell /usr/sbin/nologin muzeum
+          sudo env MUZEUM_RUNTIME_TEST_USER=muzeum python3 -B -m unittest discover -s ops/runtime -p 'test_*.py'
       - uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
@@ -35,10 +39,6 @@ jobs:
       - run: bundle exec rspec
       - name: Verify backup helper tests
         run: python3 -m unittest discover -s ops/backups -p 'test_*.py'
-      - name: Verify Muzeum runtime selection
-        run: |
-          sudo useradd --system --no-create-home --shell /usr/sbin/nologin muzeum
-          sudo env MUZEUM_RUNTIME_TEST_USER=muzeum python3 -B -m unittest discover -s ops/runtime -p 'test_*.py'
       - name: Verify catalog readiness diagnostics
         run: python3 -m unittest discover -s ops/catalog -p 'test_*.py'
       - name: Install disposable recovery-test dependency

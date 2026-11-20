@@ -46,7 +46,7 @@ class RuntimeTests(unittest.TestCase):
     @unittest.skipUnless(sys.platform == 'linux' and os.geteuid() == 0, 'requires disposable Linux root fixture')
     def test_installed_layout_is_readable_but_not_writable_after_dropping_privileges(self):
         account = pwd.getpwnam(os.environ.get('MUZEUM_RUNTIME_TEST_USER', 'nobody'))
-        with tempfile.TemporaryDirectory(dir='/opt') as work:
+        with tempfile.TemporaryDirectory(dir='/var/lib') as work:
             parent = Path(work)
             parent.chmod(0o755)
             secure = parent / 'runtime'
@@ -77,9 +77,9 @@ if os.geteuid():
             module.write_bytes(Path(selection.__file__).read_bytes())
             module.chmod(0o644)
             arguments = [sys.executable, '-B', '-c', probe, str(secure), str(manifest)]
-            subprocess.run(arguments, check=True, capture_output=True)
+            subprocess.run(arguments, check=True)
             subprocess.run(arguments, user=account.pw_uid, group=account.pw_gid, extra_groups=[],
-                           check=True, capture_output=True)
+                           check=True)
 
             secure.chmod(0o700)
             with self.assertRaisesRegex(RuntimeError, 'service-traversable'):
