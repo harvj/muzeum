@@ -1,0 +1,3081 @@
+{
+  "nirvana-studio": {
+    "captured_at": "2026-11-20T03:17:31Z",
+    "sources": [
+      {
+        "url": "https://musicbrainz.org/ws/2/release/7fb7f5b1-1b4a-4179-a14a-27af0ad53ca7?inc=recordings+artist-credits&fmt=json",
+        "retrieved_at": "2026-11-20T03:16:38Z",
+        "response_sha256": "b8a88512575689f98f9b701bbbdfdd962e5997a6c894397072bccd4adf9698df"
+      },
+      {
+        "url": "https://musicbrainz.org/ws/2/release/2ff3be28-f74f-40c9-bdde-c19b6e4384ee?inc=recordings+artist-credits&fmt=json",
+        "retrieved_at": "2026-11-20T03:17:31Z",
+        "response_sha256": "80b81a1085ccdcda698ff6a4fe2fcdefcfe6188dcdf4d43bae6378b41424c14f"
+      }
+    ],
+    "evidence": {
+      "candidates": [
+        {
+          "id": "c5ef9bb7-4479-4cf1-8061-9d0c1267e0d6",
+          "title": "Come As You Are",
+          "disambiguation": "",
+          "length": 219000,
+          "video": false,
+          "artist-credit": [
+            {
+              "name": "Nirvana",
+              "joinphrase": "",
+              "artist": {
+                "id": "5b11f4ce-a62d-471e-81fc-a69a8278c7da",
+                "name": "Nirvana"
+              }
+            }
+          ]
+        },
+        {
+          "id": "9738401c-5720-4569-8f56-9780b8b0ab2e",
+          "title": "Come as You Are",
+          "disambiguation": "live, 1993‐11‐18: MTV Unplugged, Sony Studios, New York, NY, USA",
+          "length": 253893,
+          "video": false,
+          "artist-credit": [
+            {
+              "name": "Nirvana",
+              "joinphrase": "",
+              "artist": {
+                "id": "5b11f4ce-a62d-471e-81fc-a69a8278c7da",
+                "name": "Nirvana"
+              }
+            }
+          ]
+        }
+      ],
+      "source_claims": {
+        "track_mbid": "c5ef9bb7-4479-4cf1-8061-9d0c1267e0d6"
+      },
+      "verified_recording": {
+        "id": "c5ef9bb7-4479-4cf1-8061-9d0c1267e0d6",
+        "title": "Come As You Are",
+        "disambiguation": "",
+        "length": 219000,
+        "video": false,
+        "artist-credit": [
+          {
+            "name": "Nirvana",
+            "joinphrase": "",
+            "artist": {
+              "id": "5b11f4ce-a62d-471e-81fc-a69a8278c7da",
+              "name": "Nirvana"
+            }
+          }
+        ]
+      },
+      "edition": {
+        "id": "7fb7f5b1-1b4a-4179-a14a-27af0ad53ca7",
+        "title": "Nevermind"
+      },
+      "slots": [
+        {
+          "medium": 1,
+          "position": 3,
+          "title": "Come As You Are",
+          "track_mbid": "212b2ce4-4ab3-4293-b16e-0c81ec5dc51f",
+          "recording_mbid": "c5ef9bb7-4479-4cf1-8061-9d0c1267e0d6"
+        }
+      ]
+    },
+    "ranking": [
+      {
+        "recording_mbid": "c5ef9bb7-4479-4cf1-8061-9d0c1267e0d6",
+        "score": 16,
+        "version": "recording-ranking-v1",
+        "inputs": {
+          "recording_identifier": {
+            "state": "positive",
+            "weight": 8,
+            "explanation": "Verified source recording identifier"
+          },
+          "different_verified_recording": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "title": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Recording title matches after text normalization"
+          },
+          "artist_name": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Artist name or credited name matches"
+          },
+          "artist_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "edition_slot": {
+            "state": "positive",
+            "weight": 4,
+            "explanation": "A checked MusicBrainz edition contains this track slot"
+          },
+          "version": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "duration": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "manual_lookup": {
+            "state": "unavailable",
+            "weight": 0
+          }
+        },
+        "provenance": "musicbrainz",
+        "source": {
+          "artist": "Nirvana",
+          "track": "Come As You Are",
+          "album": "Nevermind",
+          "claims": {
+            "track_mbid": "c5ef9bb7-4479-4cf1-8061-9d0c1267e0d6"
+          }
+        },
+        "catalog": {
+          "title": "Come As You Are",
+          "artist-credit": [
+            {
+              "name": "Nirvana",
+              "joinphrase": "",
+              "artist": {
+                "id": "5b11f4ce-a62d-471e-81fc-a69a8278c7da",
+                "name": "Nirvana"
+              }
+            }
+          ],
+          "length": 219000,
+          "disambiguation": "",
+          "video": false
+        }
+      },
+      {
+        "recording_mbid": "9738401c-5720-4569-8f56-9780b8b0ab2e",
+        "score": -6,
+        "version": "recording-ranking-v1",
+        "inputs": {
+          "recording_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "different_verified_recording": {
+            "state": "contradictory",
+            "weight": -6,
+            "explanation": "The source recording identifier resolves to a different recording"
+          },
+          "title": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Recording title matches after text normalization"
+          },
+          "artist_name": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Artist name or credited name matches"
+          },
+          "artist_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "edition_slot": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "version": {
+            "state": "contradictory",
+            "weight": -4,
+            "explanation": "Catalog marks a distinct or video version that the source does not confirm"
+          },
+          "duration": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "manual_lookup": {
+            "state": "unavailable",
+            "weight": 0
+          }
+        },
+        "provenance": "musicbrainz",
+        "source": {
+          "artist": "Nirvana",
+          "track": "Come As You Are",
+          "album": "Nevermind",
+          "claims": {
+            "track_mbid": "c5ef9bb7-4479-4cf1-8061-9d0c1267e0d6"
+          }
+        },
+        "catalog": {
+          "title": "Come as You Are",
+          "artist-credit": [
+            {
+              "name": "Nirvana",
+              "joinphrase": "",
+              "artist": {
+                "id": "5b11f4ce-a62d-471e-81fc-a69a8278c7da",
+                "name": "Nirvana"
+              }
+            }
+          ],
+          "length": 253893,
+          "disambiguation": "live, 1993‐11‐18: MTV Unplugged, Sony Studios, New York, NY, USA",
+          "video": false
+        }
+      }
+    ],
+    "recommended_mbid": "c5ef9bb7-4479-4cf1-8061-9d0c1267e0d6"
+  },
+  "nirvana-live-correction": {
+    "captured_at": "2026-11-20T03:17:31Z",
+    "sources": [
+      {
+        "url": "https://musicbrainz.org/ws/2/release/7fb7f5b1-1b4a-4179-a14a-27af0ad53ca7?inc=recordings+artist-credits&fmt=json",
+        "retrieved_at": "2026-11-20T03:16:38Z",
+        "response_sha256": "b8a88512575689f98f9b701bbbdfdd962e5997a6c894397072bccd4adf9698df"
+      },
+      {
+        "url": "https://musicbrainz.org/ws/2/release/2ff3be28-f74f-40c9-bdde-c19b6e4384ee?inc=recordings+artist-credits&fmt=json",
+        "retrieved_at": "2026-11-20T03:17:31Z",
+        "response_sha256": "80b81a1085ccdcda698ff6a4fe2fcdefcfe6188dcdf4d43bae6378b41424c14f"
+      }
+    ],
+    "evidence": {
+      "candidates": [
+        {
+          "id": "c5ef9bb7-4479-4cf1-8061-9d0c1267e0d6",
+          "title": "Come As You Are",
+          "disambiguation": "",
+          "length": 219000,
+          "video": false,
+          "artist-credit": [
+            {
+              "name": "Nirvana",
+              "joinphrase": "",
+              "artist": {
+                "id": "5b11f4ce-a62d-471e-81fc-a69a8278c7da",
+                "name": "Nirvana"
+              }
+            }
+          ]
+        },
+        {
+          "id": "9738401c-5720-4569-8f56-9780b8b0ab2e",
+          "title": "Come as You Are",
+          "disambiguation": "live, 1993‐11‐18: MTV Unplugged, Sony Studios, New York, NY, USA",
+          "length": 253893,
+          "video": false,
+          "artist-credit": [
+            {
+              "name": "Nirvana",
+              "joinphrase": "",
+              "artist": {
+                "id": "5b11f4ce-a62d-471e-81fc-a69a8278c7da",
+                "name": "Nirvana"
+              }
+            }
+          ]
+        }
+      ],
+      "source_claims": {
+        "track_mbid": "c5ef9bb7-4479-4cf1-8061-9d0c1267e0d6"
+      },
+      "verified_recording": {
+        "id": "c5ef9bb7-4479-4cf1-8061-9d0c1267e0d6",
+        "title": "Come As You Are",
+        "disambiguation": "",
+        "length": 219000,
+        "video": false,
+        "artist-credit": [
+          {
+            "name": "Nirvana",
+            "joinphrase": "",
+            "artist": {
+              "id": "5b11f4ce-a62d-471e-81fc-a69a8278c7da",
+              "name": "Nirvana"
+            }
+          }
+        ]
+      },
+      "edition": {
+        "id": "2ff3be28-f74f-40c9-bdde-c19b6e4384ee",
+        "title": "MTV Unplugged in New York"
+      },
+      "slots": [
+        {
+          "medium": 1,
+          "position": 2,
+          "title": "Come as You Are",
+          "track_mbid": "db80d937-93f8-3616-b271-8209cea77519",
+          "recording_mbid": "9738401c-5720-4569-8f56-9780b8b0ab2e"
+        }
+      ]
+    },
+    "ranking": [
+      {
+        "recording_mbid": "c5ef9bb7-4479-4cf1-8061-9d0c1267e0d6",
+        "score": 12,
+        "version": "recording-ranking-v1",
+        "inputs": {
+          "recording_identifier": {
+            "state": "positive",
+            "weight": 8,
+            "explanation": "Verified source recording identifier"
+          },
+          "different_verified_recording": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "title": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Recording title matches after text normalization"
+          },
+          "artist_name": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Artist name or credited name matches"
+          },
+          "artist_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "edition_slot": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "version": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "duration": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "manual_lookup": {
+            "state": "unavailable",
+            "weight": 0
+          }
+        },
+        "provenance": "musicbrainz",
+        "source": {
+          "artist": "Nirvana",
+          "track": "Come as You Are",
+          "album": "MTV Unplugged in New York",
+          "claims": {
+            "track_mbid": "c5ef9bb7-4479-4cf1-8061-9d0c1267e0d6"
+          }
+        },
+        "catalog": {
+          "title": "Come As You Are",
+          "artist-credit": [
+            {
+              "name": "Nirvana",
+              "joinphrase": "",
+              "artist": {
+                "id": "5b11f4ce-a62d-471e-81fc-a69a8278c7da",
+                "name": "Nirvana"
+              }
+            }
+          ],
+          "length": 219000,
+          "disambiguation": "",
+          "video": false
+        }
+      },
+      {
+        "recording_mbid": "9738401c-5720-4569-8f56-9780b8b0ab2e",
+        "score": -2,
+        "version": "recording-ranking-v1",
+        "inputs": {
+          "recording_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "different_verified_recording": {
+            "state": "contradictory",
+            "weight": -6,
+            "explanation": "The source recording identifier resolves to a different recording"
+          },
+          "title": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Recording title matches after text normalization"
+          },
+          "artist_name": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Artist name or credited name matches"
+          },
+          "artist_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "edition_slot": {
+            "state": "positive",
+            "weight": 4,
+            "explanation": "A checked MusicBrainz edition contains this track slot"
+          },
+          "version": {
+            "state": "contradictory",
+            "weight": -4,
+            "explanation": "Catalog marks a distinct or video version that the source does not confirm"
+          },
+          "duration": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "manual_lookup": {
+            "state": "unavailable",
+            "weight": 0
+          }
+        },
+        "provenance": "musicbrainz",
+        "source": {
+          "artist": "Nirvana",
+          "track": "Come as You Are",
+          "album": "MTV Unplugged in New York",
+          "claims": {
+            "track_mbid": "c5ef9bb7-4479-4cf1-8061-9d0c1267e0d6"
+          }
+        },
+        "catalog": {
+          "title": "Come as You Are",
+          "artist-credit": [
+            {
+              "name": "Nirvana",
+              "joinphrase": "",
+              "artist": {
+                "id": "5b11f4ce-a62d-471e-81fc-a69a8278c7da",
+                "name": "Nirvana"
+              }
+            }
+          ],
+          "length": 253893,
+          "disambiguation": "live, 1993‐11‐18: MTV Unplugged, Sony Studios, New York, NY, USA",
+          "video": false
+        }
+      }
+    ],
+    "recommended_mbid": "c5ef9bb7-4479-4cf1-8061-9d0c1267e0d6"
+  },
+  "nirvana-title-only": {
+    "captured_at": "2026-11-20T03:17:31Z",
+    "sources": [
+      {
+        "url": "https://musicbrainz.org/ws/2/release/7fb7f5b1-1b4a-4179-a14a-27af0ad53ca7?inc=recordings+artist-credits&fmt=json",
+        "retrieved_at": "2026-11-20T03:16:38Z",
+        "response_sha256": "b8a88512575689f98f9b701bbbdfdd962e5997a6c894397072bccd4adf9698df"
+      },
+      {
+        "url": "https://musicbrainz.org/ws/2/release/2ff3be28-f74f-40c9-bdde-c19b6e4384ee?inc=recordings+artist-credits&fmt=json",
+        "retrieved_at": "2026-11-20T03:17:31Z",
+        "response_sha256": "80b81a1085ccdcda698ff6a4fe2fcdefcfe6188dcdf4d43bae6378b41424c14f"
+      }
+    ],
+    "evidence": {
+      "candidates": [
+        {
+          "id": "c5ef9bb7-4479-4cf1-8061-9d0c1267e0d6",
+          "title": "Come As You Are",
+          "disambiguation": "",
+          "length": 219000,
+          "video": false,
+          "artist-credit": [
+            {
+              "name": "Nirvana",
+              "joinphrase": "",
+              "artist": {
+                "id": "5b11f4ce-a62d-471e-81fc-a69a8278c7da",
+                "name": "Nirvana"
+              }
+            }
+          ]
+        },
+        {
+          "id": "9738401c-5720-4569-8f56-9780b8b0ab2e",
+          "title": "Come as You Are",
+          "disambiguation": "live, 1993‐11‐18: MTV Unplugged, Sony Studios, New York, NY, USA",
+          "length": 253893,
+          "video": false,
+          "artist-credit": [
+            {
+              "name": "Nirvana",
+              "joinphrase": "",
+              "artist": {
+                "id": "5b11f4ce-a62d-471e-81fc-a69a8278c7da",
+                "name": "Nirvana"
+              }
+            }
+          ]
+        }
+      ],
+      "source_claims": {},
+      "verified_recording": null,
+      "edition": null,
+      "slots": []
+    },
+    "ranking": [
+      {
+        "recording_mbid": "c5ef9bb7-4479-4cf1-8061-9d0c1267e0d6",
+        "score": 4,
+        "version": "recording-ranking-v1",
+        "inputs": {
+          "recording_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "different_verified_recording": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "title": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Recording title matches after text normalization"
+          },
+          "artist_name": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Artist name or credited name matches"
+          },
+          "artist_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "edition_slot": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "version": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "duration": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "manual_lookup": {
+            "state": "unavailable",
+            "weight": 0
+          }
+        },
+        "provenance": "musicbrainz",
+        "source": {
+          "artist": "Nirvana",
+          "track": "Come as You Are",
+          "album": null,
+          "claims": {}
+        },
+        "catalog": {
+          "title": "Come As You Are",
+          "artist-credit": [
+            {
+              "name": "Nirvana",
+              "joinphrase": "",
+              "artist": {
+                "id": "5b11f4ce-a62d-471e-81fc-a69a8278c7da",
+                "name": "Nirvana"
+              }
+            }
+          ],
+          "length": 219000,
+          "disambiguation": "",
+          "video": false
+        }
+      },
+      {
+        "recording_mbid": "9738401c-5720-4569-8f56-9780b8b0ab2e",
+        "score": 0,
+        "version": "recording-ranking-v1",
+        "inputs": {
+          "recording_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "different_verified_recording": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "title": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Recording title matches after text normalization"
+          },
+          "artist_name": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Artist name or credited name matches"
+          },
+          "artist_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "edition_slot": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "version": {
+            "state": "contradictory",
+            "weight": -4,
+            "explanation": "Catalog marks a distinct or video version that the source does not confirm"
+          },
+          "duration": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "manual_lookup": {
+            "state": "unavailable",
+            "weight": 0
+          }
+        },
+        "provenance": "musicbrainz",
+        "source": {
+          "artist": "Nirvana",
+          "track": "Come as You Are",
+          "album": null,
+          "claims": {}
+        },
+        "catalog": {
+          "title": "Come as You Are",
+          "artist-credit": [
+            {
+              "name": "Nirvana",
+              "joinphrase": "",
+              "artist": {
+                "id": "5b11f4ce-a62d-471e-81fc-a69a8278c7da",
+                "name": "Nirvana"
+              }
+            }
+          ],
+          "length": 253893,
+          "disambiguation": "live, 1993‐11‐18: MTV Unplugged, Sony Studios, New York, NY, USA",
+          "video": false
+        }
+      }
+    ],
+    "recommended_mbid": null
+  },
+  "depeche-single": {
+    "captured_at": "2026-11-20T03:17:35Z",
+    "sources": [
+      {
+        "url": "https://musicbrainz.org/ws/2/release/2434701d-50e1-4f47-aa2d-63204e4b6de0?inc=recordings+artist-credits&fmt=json",
+        "retrieved_at": "2026-11-20T03:17:33Z",
+        "response_sha256": "4f5c2be2c942436dbfaa21dde700bd3b571ed8d8b484fb07b7f7a68945003882"
+      },
+      {
+        "url": "https://musicbrainz.org/ws/2/release/efd8b03c-a71f-4ed0-bb32-7c2d1e8789fd?inc=recordings+artist-credits&fmt=json",
+        "retrieved_at": "2026-11-20T03:17:35Z",
+        "response_sha256": "8e5910e03db3aab483e2de72489ed3d305f8718b1d28408b035a5a2a0f07df7f"
+      }
+    ],
+    "evidence": {
+      "candidates": [
+        {
+          "id": "8caee4aa-bc6e-454d-b8ab-16695a398c75",
+          "title": "Enjoy the Silence",
+          "disambiguation": "single version",
+          "length": 255973,
+          "video": false,
+          "artist-credit": [
+            {
+              "name": "Depeche Mode",
+              "joinphrase": "",
+              "artist": {
+                "id": "8538e728-ca0b-4321-b7e5-cff6565dd4c0",
+                "name": "Depeche Mode"
+              }
+            }
+          ]
+        },
+        {
+          "id": "2eca5dbc-d79a-4f61-bc9b-cbae3f5540b9",
+          "title": "Enjoy the Silence ’04 (reinterpreted by Mike Shinoda)",
+          "disambiguation": "",
+          "length": 212413,
+          "video": false,
+          "artist-credit": [
+            {
+              "name": "Depeche Mode",
+              "joinphrase": "",
+              "artist": {
+                "id": "8538e728-ca0b-4321-b7e5-cff6565dd4c0",
+                "name": "Depeche Mode"
+              }
+            }
+          ]
+        }
+      ],
+      "source_claims": {
+        "track_mbid": "8caee4aa-bc6e-454d-b8ab-16695a398c75"
+      },
+      "verified_recording": {
+        "id": "8caee4aa-bc6e-454d-b8ab-16695a398c75",
+        "title": "Enjoy the Silence",
+        "disambiguation": "single version",
+        "length": 255973,
+        "video": false,
+        "artist-credit": [
+          {
+            "name": "Depeche Mode",
+            "joinphrase": "",
+            "artist": {
+              "id": "8538e728-ca0b-4321-b7e5-cff6565dd4c0",
+              "name": "Depeche Mode"
+            }
+          }
+        ]
+      },
+      "edition": {
+        "id": "2434701d-50e1-4f47-aa2d-63204e4b6de0",
+        "title": "Enjoy the Silence"
+      },
+      "slots": [
+        {
+          "medium": 1,
+          "position": 1,
+          "title": "Enjoy the Silence (7” version)",
+          "track_mbid": "4a5676f5-12fd-4d68-b4c2-2e3d59550443",
+          "recording_mbid": "8caee4aa-bc6e-454d-b8ab-16695a398c75"
+        }
+      ]
+    },
+    "ranking": [
+      {
+        "recording_mbid": "8caee4aa-bc6e-454d-b8ab-16695a398c75",
+        "score": 12,
+        "version": "recording-ranking-v1",
+        "inputs": {
+          "recording_identifier": {
+            "state": "positive",
+            "weight": 8,
+            "explanation": "Verified source recording identifier"
+          },
+          "different_verified_recording": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "title": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Recording title matches after text normalization"
+          },
+          "artist_name": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Artist name or credited name matches"
+          },
+          "artist_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "edition_slot": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "version": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "duration": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "manual_lookup": {
+            "state": "unavailable",
+            "weight": 0
+          }
+        },
+        "provenance": "musicbrainz",
+        "source": {
+          "artist": "Depeche Mode",
+          "track": "Enjoy the Silence",
+          "album": "Enjoy the Silence",
+          "claims": {
+            "track_mbid": "8caee4aa-bc6e-454d-b8ab-16695a398c75"
+          }
+        },
+        "catalog": {
+          "title": "Enjoy the Silence",
+          "artist-credit": [
+            {
+              "name": "Depeche Mode",
+              "joinphrase": "",
+              "artist": {
+                "id": "8538e728-ca0b-4321-b7e5-cff6565dd4c0",
+                "name": "Depeche Mode"
+              }
+            }
+          ],
+          "length": 255973,
+          "disambiguation": "single version",
+          "video": false
+        }
+      }
+    ],
+    "recommended_mbid": "8caee4aa-bc6e-454d-b8ab-16695a398c75"
+  },
+  "depeche-remix-correction": {
+    "captured_at": "2026-11-20T03:17:35Z",
+    "sources": [
+      {
+        "url": "https://musicbrainz.org/ws/2/release/2434701d-50e1-4f47-aa2d-63204e4b6de0?inc=recordings+artist-credits&fmt=json",
+        "retrieved_at": "2026-11-20T03:17:33Z",
+        "response_sha256": "4f5c2be2c942436dbfaa21dde700bd3b571ed8d8b484fb07b7f7a68945003882"
+      },
+      {
+        "url": "https://musicbrainz.org/ws/2/release/efd8b03c-a71f-4ed0-bb32-7c2d1e8789fd?inc=recordings+artist-credits&fmt=json",
+        "retrieved_at": "2026-11-20T03:17:35Z",
+        "response_sha256": "8e5910e03db3aab483e2de72489ed3d305f8718b1d28408b035a5a2a0f07df7f"
+      }
+    ],
+    "evidence": {
+      "candidates": [
+        {
+          "id": "8caee4aa-bc6e-454d-b8ab-16695a398c75",
+          "title": "Enjoy the Silence",
+          "disambiguation": "single version",
+          "length": 255973,
+          "video": false,
+          "artist-credit": [
+            {
+              "name": "Depeche Mode",
+              "joinphrase": "",
+              "artist": {
+                "id": "8538e728-ca0b-4321-b7e5-cff6565dd4c0",
+                "name": "Depeche Mode"
+              }
+            }
+          ]
+        },
+        {
+          "id": "2eca5dbc-d79a-4f61-bc9b-cbae3f5540b9",
+          "title": "Enjoy the Silence ’04 (reinterpreted by Mike Shinoda)",
+          "disambiguation": "",
+          "length": 212413,
+          "video": false,
+          "artist-credit": [
+            {
+              "name": "Depeche Mode",
+              "joinphrase": "",
+              "artist": {
+                "id": "8538e728-ca0b-4321-b7e5-cff6565dd4c0",
+                "name": "Depeche Mode"
+              }
+            }
+          ]
+        }
+      ],
+      "source_claims": {
+        "track_mbid": "8caee4aa-bc6e-454d-b8ab-16695a398c75"
+      },
+      "verified_recording": {
+        "id": "8caee4aa-bc6e-454d-b8ab-16695a398c75",
+        "title": "Enjoy the Silence",
+        "disambiguation": "single version",
+        "length": 255973,
+        "video": false,
+        "artist-credit": [
+          {
+            "name": "Depeche Mode",
+            "joinphrase": "",
+            "artist": {
+              "id": "8538e728-ca0b-4321-b7e5-cff6565dd4c0",
+              "name": "Depeche Mode"
+            }
+          }
+        ]
+      },
+      "edition": {
+        "id": "efd8b03c-a71f-4ed0-bb32-7c2d1e8789fd",
+        "title": "Enjoy the Silence 04"
+      },
+      "slots": [
+        {
+          "medium": 1,
+          "position": 1,
+          "title": "Enjoy the Silence (reinterpreted by Mike Shinoda)",
+          "track_mbid": "86829d89-e357-37dc-ba1e-7d70e6986b44",
+          "recording_mbid": "2eca5dbc-d79a-4f61-bc9b-cbae3f5540b9"
+        }
+      ]
+    },
+    "ranking": [
+      {
+        "recording_mbid": "8caee4aa-bc6e-454d-b8ab-16695a398c75",
+        "score": 7,
+        "version": "recording-ranking-v1",
+        "inputs": {
+          "recording_identifier": {
+            "state": "positive",
+            "weight": 8,
+            "explanation": "Verified source recording identifier"
+          },
+          "different_verified_recording": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "title": {
+            "state": "contradictory",
+            "weight": -3,
+            "explanation": "Recording title differs"
+          },
+          "artist_name": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Artist name or credited name matches"
+          },
+          "artist_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "edition_slot": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "version": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "duration": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "manual_lookup": {
+            "state": "unavailable",
+            "weight": 0
+          }
+        },
+        "provenance": "musicbrainz",
+        "source": {
+          "artist": "Depeche Mode",
+          "track": "Enjoy the Silence (reinterpreted by Mike Shinoda)",
+          "album": "Enjoy the Silence 04",
+          "claims": {
+            "track_mbid": "8caee4aa-bc6e-454d-b8ab-16695a398c75"
+          }
+        },
+        "catalog": {
+          "title": "Enjoy the Silence",
+          "artist-credit": [
+            {
+              "name": "Depeche Mode",
+              "joinphrase": "",
+              "artist": {
+                "id": "8538e728-ca0b-4321-b7e5-cff6565dd4c0",
+                "name": "Depeche Mode"
+              }
+            }
+          ],
+          "length": 255973,
+          "disambiguation": "single version",
+          "video": false
+        }
+      },
+      {
+        "recording_mbid": "2eca5dbc-d79a-4f61-bc9b-cbae3f5540b9",
+        "score": -3,
+        "version": "recording-ranking-v1",
+        "inputs": {
+          "recording_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "different_verified_recording": {
+            "state": "contradictory",
+            "weight": -6,
+            "explanation": "The source recording identifier resolves to a different recording"
+          },
+          "title": {
+            "state": "contradictory",
+            "weight": -3,
+            "explanation": "Recording title differs"
+          },
+          "artist_name": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Artist name or credited name matches"
+          },
+          "artist_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "edition_slot": {
+            "state": "positive",
+            "weight": 4,
+            "explanation": "A checked MusicBrainz edition contains this track slot"
+          },
+          "version": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "duration": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "manual_lookup": {
+            "state": "unavailable",
+            "weight": 0
+          }
+        },
+        "provenance": "musicbrainz",
+        "source": {
+          "artist": "Depeche Mode",
+          "track": "Enjoy the Silence (reinterpreted by Mike Shinoda)",
+          "album": "Enjoy the Silence 04",
+          "claims": {
+            "track_mbid": "8caee4aa-bc6e-454d-b8ab-16695a398c75"
+          }
+        },
+        "catalog": {
+          "title": "Enjoy the Silence ’04 (reinterpreted by Mike Shinoda)",
+          "artist-credit": [
+            {
+              "name": "Depeche Mode",
+              "joinphrase": "",
+              "artist": {
+                "id": "8538e728-ca0b-4321-b7e5-cff6565dd4c0",
+                "name": "Depeche Mode"
+              }
+            }
+          ],
+          "length": 212413,
+          "disambiguation": "",
+          "video": false
+        }
+      }
+    ],
+    "recommended_mbid": null
+  },
+  "queen-compilation": {
+    "captured_at": "2026-11-20T03:17:39Z",
+    "sources": [
+      {
+        "url": "https://musicbrainz.org/ws/2/release/5032df80-9baf-44f2-b20f-6058ae79a93d?inc=recordings+artist-credits&fmt=json",
+        "retrieved_at": "2026-11-20T03:17:37Z",
+        "response_sha256": "049f60fdd0c64d95ccb3a0362e5bb49161f20fb493ce3b1230590768a96d2ba8"
+      },
+      {
+        "url": "https://musicbrainz.org/ws/2/release/4fdc0364-5c4f-45aa-91ec-b94a5cc9ec7c?inc=recordings+artist-credits&fmt=json",
+        "retrieved_at": "2026-11-20T03:17:39Z",
+        "response_sha256": "3c77a03e56bcd18fb00c48685950398d430ab8833a68431a1296b45ed6326edd"
+      }
+    ],
+    "evidence": {
+      "candidates": [
+        {
+          "id": "dc6b33ac-c649-414d-bd5d-b6403d23969c",
+          "title": "Bohemian Rhapsody",
+          "disambiguation": "",
+          "length": 332000,
+          "video": false,
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": "",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            }
+          ]
+        },
+        {
+          "id": "35a91a43-a1f7-4068-ad03-e0569a0b372f",
+          "title": "Bohemian Rhapsody",
+          "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK",
+          "length": 350573,
+          "video": false,
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": "",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            }
+          ]
+        }
+      ],
+      "source_claims": {
+        "track_mbid": "dc6b33ac-c649-414d-bd5d-b6403d23969c"
+      },
+      "verified_recording": {
+        "id": "dc6b33ac-c649-414d-bd5d-b6403d23969c",
+        "title": "Bohemian Rhapsody",
+        "disambiguation": "",
+        "length": 332000,
+        "video": false,
+        "artist-credit": [
+          {
+            "name": "Queen",
+            "joinphrase": "",
+            "artist": {
+              "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+              "name": "Queen"
+            }
+          }
+        ]
+      },
+      "edition": {
+        "id": "5032df80-9baf-44f2-b20f-6058ae79a93d",
+        "title": "Greatest Hits"
+      },
+      "slots": [
+        {
+          "medium": 1,
+          "position": 1,
+          "title": "Bohemian Rhapsody",
+          "track_mbid": "1773c1c2-7f12-48d6-abf8-bd8633ceae77",
+          "recording_mbid": "dc6b33ac-c649-414d-bd5d-b6403d23969c"
+        }
+      ]
+    },
+    "ranking": [
+      {
+        "recording_mbid": "dc6b33ac-c649-414d-bd5d-b6403d23969c",
+        "score": 16,
+        "version": "recording-ranking-v1",
+        "inputs": {
+          "recording_identifier": {
+            "state": "positive",
+            "weight": 8,
+            "explanation": "Verified source recording identifier"
+          },
+          "different_verified_recording": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "title": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Recording title matches after text normalization"
+          },
+          "artist_name": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Artist name or credited name matches"
+          },
+          "artist_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "edition_slot": {
+            "state": "positive",
+            "weight": 4,
+            "explanation": "A checked MusicBrainz edition contains this track slot"
+          },
+          "version": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "duration": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "manual_lookup": {
+            "state": "unavailable",
+            "weight": 0
+          }
+        },
+        "provenance": "musicbrainz",
+        "source": {
+          "artist": "Queen",
+          "track": "Bohemian Rhapsody",
+          "album": "Greatest Hits",
+          "claims": {
+            "track_mbid": "dc6b33ac-c649-414d-bd5d-b6403d23969c"
+          }
+        },
+        "catalog": {
+          "title": "Bohemian Rhapsody",
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": "",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            }
+          ],
+          "length": 332000,
+          "disambiguation": "",
+          "video": false
+        }
+      },
+      {
+        "recording_mbid": "35a91a43-a1f7-4068-ad03-e0569a0b372f",
+        "score": -6,
+        "version": "recording-ranking-v1",
+        "inputs": {
+          "recording_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "different_verified_recording": {
+            "state": "contradictory",
+            "weight": -6,
+            "explanation": "The source recording identifier resolves to a different recording"
+          },
+          "title": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Recording title matches after text normalization"
+          },
+          "artist_name": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Artist name or credited name matches"
+          },
+          "artist_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "edition_slot": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "version": {
+            "state": "contradictory",
+            "weight": -4,
+            "explanation": "Catalog marks a distinct or video version that the source does not confirm"
+          },
+          "duration": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "manual_lookup": {
+            "state": "unavailable",
+            "weight": 0
+          }
+        },
+        "provenance": "musicbrainz",
+        "source": {
+          "artist": "Queen",
+          "track": "Bohemian Rhapsody",
+          "album": "Greatest Hits",
+          "claims": {
+            "track_mbid": "dc6b33ac-c649-414d-bd5d-b6403d23969c"
+          }
+        },
+        "catalog": {
+          "title": "Bohemian Rhapsody",
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": "",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            }
+          ],
+          "length": 350573,
+          "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK",
+          "video": false
+        }
+      }
+    ],
+    "recommended_mbid": "dc6b33ac-c649-414d-bd5d-b6403d23969c"
+  },
+  "queen-live-correction": {
+    "captured_at": "2026-11-20T03:17:39Z",
+    "sources": [
+      {
+        "url": "https://musicbrainz.org/ws/2/release/5032df80-9baf-44f2-b20f-6058ae79a93d?inc=recordings+artist-credits&fmt=json",
+        "retrieved_at": "2026-11-20T03:17:37Z",
+        "response_sha256": "049f60fdd0c64d95ccb3a0362e5bb49161f20fb493ce3b1230590768a96d2ba8"
+      },
+      {
+        "url": "https://musicbrainz.org/ws/2/release/4fdc0364-5c4f-45aa-91ec-b94a5cc9ec7c?inc=recordings+artist-credits&fmt=json",
+        "retrieved_at": "2026-11-20T03:17:39Z",
+        "response_sha256": "3c77a03e56bcd18fb00c48685950398d430ab8833a68431a1296b45ed6326edd"
+      }
+    ],
+    "evidence": {
+      "candidates": [
+        {
+          "id": "dc6b33ac-c649-414d-bd5d-b6403d23969c",
+          "title": "Bohemian Rhapsody",
+          "disambiguation": "",
+          "length": 332000,
+          "video": false,
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": "",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            }
+          ]
+        },
+        {
+          "id": "35a91a43-a1f7-4068-ad03-e0569a0b372f",
+          "title": "Bohemian Rhapsody",
+          "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK",
+          "length": 350573,
+          "video": false,
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": "",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            }
+          ]
+        }
+      ],
+      "source_claims": {
+        "track_mbid": "dc6b33ac-c649-414d-bd5d-b6403d23969c"
+      },
+      "verified_recording": {
+        "id": "dc6b33ac-c649-414d-bd5d-b6403d23969c",
+        "title": "Bohemian Rhapsody",
+        "disambiguation": "",
+        "length": 332000,
+        "video": false,
+        "artist-credit": [
+          {
+            "name": "Queen",
+            "joinphrase": "",
+            "artist": {
+              "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+              "name": "Queen"
+            }
+          }
+        ]
+      },
+      "edition": {
+        "id": "4fdc0364-5c4f-45aa-91ec-b94a5cc9ec7c",
+        "title": "Live at Wembley ’86"
+      },
+      "slots": [
+        {
+          "medium": 2,
+          "position": 7,
+          "title": "Bohemian Rhapsody",
+          "track_mbid": "4e0d98f1-6da3-31b5-9cde-2dd1165452a5",
+          "recording_mbid": "35a91a43-a1f7-4068-ad03-e0569a0b372f"
+        }
+      ]
+    },
+    "ranking": [
+      {
+        "recording_mbid": "dc6b33ac-c649-414d-bd5d-b6403d23969c",
+        "score": 12,
+        "version": "recording-ranking-v1",
+        "inputs": {
+          "recording_identifier": {
+            "state": "positive",
+            "weight": 8,
+            "explanation": "Verified source recording identifier"
+          },
+          "different_verified_recording": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "title": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Recording title matches after text normalization"
+          },
+          "artist_name": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Artist name or credited name matches"
+          },
+          "artist_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "edition_slot": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "version": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "duration": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "manual_lookup": {
+            "state": "unavailable",
+            "weight": 0
+          }
+        },
+        "provenance": "musicbrainz",
+        "source": {
+          "artist": "Queen",
+          "track": "Bohemian Rhapsody",
+          "album": "Live at Wembley ’86",
+          "claims": {
+            "track_mbid": "dc6b33ac-c649-414d-bd5d-b6403d23969c"
+          }
+        },
+        "catalog": {
+          "title": "Bohemian Rhapsody",
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": "",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            }
+          ],
+          "length": 332000,
+          "disambiguation": "",
+          "video": false
+        }
+      },
+      {
+        "recording_mbid": "35a91a43-a1f7-4068-ad03-e0569a0b372f",
+        "score": -2,
+        "version": "recording-ranking-v1",
+        "inputs": {
+          "recording_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "different_verified_recording": {
+            "state": "contradictory",
+            "weight": -6,
+            "explanation": "The source recording identifier resolves to a different recording"
+          },
+          "title": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Recording title matches after text normalization"
+          },
+          "artist_name": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Artist name or credited name matches"
+          },
+          "artist_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "edition_slot": {
+            "state": "positive",
+            "weight": 4,
+            "explanation": "A checked MusicBrainz edition contains this track slot"
+          },
+          "version": {
+            "state": "contradictory",
+            "weight": -4,
+            "explanation": "Catalog marks a distinct or video version that the source does not confirm"
+          },
+          "duration": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "manual_lookup": {
+            "state": "unavailable",
+            "weight": 0
+          }
+        },
+        "provenance": "musicbrainz",
+        "source": {
+          "artist": "Queen",
+          "track": "Bohemian Rhapsody",
+          "album": "Live at Wembley ’86",
+          "claims": {
+            "track_mbid": "dc6b33ac-c649-414d-bd5d-b6403d23969c"
+          }
+        },
+        "catalog": {
+          "title": "Bohemian Rhapsody",
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": "",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            }
+          ],
+          "length": 350573,
+          "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK",
+          "video": false
+        }
+      }
+    ],
+    "recommended_mbid": "dc6b33ac-c649-414d-bd5d-b6403d23969c"
+  },
+  "queen-title-only": {
+    "captured_at": "2026-11-20T03:17:39Z",
+    "sources": [
+      {
+        "url": "https://musicbrainz.org/ws/2/release/5032df80-9baf-44f2-b20f-6058ae79a93d?inc=recordings+artist-credits&fmt=json",
+        "retrieved_at": "2026-11-20T03:17:37Z",
+        "response_sha256": "049f60fdd0c64d95ccb3a0362e5bb49161f20fb493ce3b1230590768a96d2ba8"
+      },
+      {
+        "url": "https://musicbrainz.org/ws/2/release/4fdc0364-5c4f-45aa-91ec-b94a5cc9ec7c?inc=recordings+artist-credits&fmt=json",
+        "retrieved_at": "2026-11-20T03:17:39Z",
+        "response_sha256": "3c77a03e56bcd18fb00c48685950398d430ab8833a68431a1296b45ed6326edd"
+      }
+    ],
+    "evidence": {
+      "candidates": [
+        {
+          "id": "dc6b33ac-c649-414d-bd5d-b6403d23969c",
+          "title": "Bohemian Rhapsody",
+          "disambiguation": "",
+          "length": 332000,
+          "video": false,
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": "",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            }
+          ]
+        },
+        {
+          "id": "35a91a43-a1f7-4068-ad03-e0569a0b372f",
+          "title": "Bohemian Rhapsody",
+          "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK",
+          "length": 350573,
+          "video": false,
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": "",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            }
+          ]
+        }
+      ],
+      "source_claims": {},
+      "verified_recording": null,
+      "edition": null,
+      "slots": []
+    },
+    "ranking": [
+      {
+        "recording_mbid": "dc6b33ac-c649-414d-bd5d-b6403d23969c",
+        "score": 4,
+        "version": "recording-ranking-v1",
+        "inputs": {
+          "recording_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "different_verified_recording": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "title": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Recording title matches after text normalization"
+          },
+          "artist_name": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Artist name or credited name matches"
+          },
+          "artist_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "edition_slot": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "version": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "duration": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "manual_lookup": {
+            "state": "unavailable",
+            "weight": 0
+          }
+        },
+        "provenance": "musicbrainz",
+        "source": {
+          "artist": "Queen",
+          "track": "Bohemian Rhapsody",
+          "album": null,
+          "claims": {}
+        },
+        "catalog": {
+          "title": "Bohemian Rhapsody",
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": "",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            }
+          ],
+          "length": 332000,
+          "disambiguation": "",
+          "video": false
+        }
+      },
+      {
+        "recording_mbid": "35a91a43-a1f7-4068-ad03-e0569a0b372f",
+        "score": 0,
+        "version": "recording-ranking-v1",
+        "inputs": {
+          "recording_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "different_verified_recording": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "title": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Recording title matches after text normalization"
+          },
+          "artist_name": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Artist name or credited name matches"
+          },
+          "artist_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "edition_slot": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "version": {
+            "state": "contradictory",
+            "weight": -4,
+            "explanation": "Catalog marks a distinct or video version that the source does not confirm"
+          },
+          "duration": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "manual_lookup": {
+            "state": "unavailable",
+            "weight": 0
+          }
+        },
+        "provenance": "musicbrainz",
+        "source": {
+          "artist": "Queen",
+          "track": "Bohemian Rhapsody",
+          "album": null,
+          "claims": {}
+        },
+        "catalog": {
+          "title": "Bohemian Rhapsody",
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": "",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            }
+          ],
+          "length": 350573,
+          "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK",
+          "video": false
+        }
+      }
+    ],
+    "recommended_mbid": null
+  },
+  "pressure-joint-credit": {
+    "captured_at": "2026-11-20T03:17:43Z",
+    "sources": [
+      {
+        "url": "https://musicbrainz.org/ws/2/release/eac6d0cd-1ed0-4e17-b5b0-d3cfc40547b2?inc=recordings+artist-credits&fmt=json",
+        "retrieved_at": "2026-11-20T03:17:41Z",
+        "response_sha256": "b17cfbe2b3ddb3a77bd8de53f87bf2fb043af27eaa49d228e635db657cb440ea"
+      },
+      {
+        "url": "https://musicbrainz.org/ws/2/release/4fdc0364-5c4f-45aa-91ec-b94a5cc9ec7c?inc=recordings+artist-credits&fmt=json",
+        "retrieved_at": "2026-11-20T03:17:39Z",
+        "response_sha256": "3c77a03e56bcd18fb00c48685950398d430ab8833a68431a1296b45ed6326edd"
+      },
+      {
+        "url": "https://musicbrainz.org/ws/2/release/a1960a72-3686-41f7-b7fb-a210d3d381e8?inc=recordings+artist-credits&fmt=json",
+        "retrieved_at": "2026-11-20T03:17:43Z",
+        "response_sha256": "03faf5c9d02b6f56de9c0e7efc0d5e7e5d8a0ef00b8096b1ad2a43fa8ff34f3a"
+      }
+    ],
+    "evidence": {
+      "candidates": [
+        {
+          "id": "32c7e292-14f1-4080-bddf-ef852e0a4c59",
+          "title": "Under Pressure",
+          "disambiguation": "",
+          "length": 243000,
+          "video": false,
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": " & ",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            },
+            {
+              "name": "David Bowie",
+              "joinphrase": "",
+              "artist": {
+                "id": "5441c29d-3602-4898-b1a1-b77fa23b8e50",
+                "name": "David Bowie"
+              }
+            }
+          ]
+        },
+        {
+          "id": "2bad727b-b7bc-4bae-a2cf-6ad50a218d88",
+          "title": "Under Pressure",
+          "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK",
+          "length": 221000,
+          "video": false,
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": "",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            }
+          ]
+        },
+        {
+          "id": "7ce4d633-0466-4b76-912b-30e83e2c10e3",
+          "title": "Under Pressure",
+          "disambiguation": "live, 1992-04-20: Wembley Stadium, London, UK",
+          "length": 350000,
+          "video": true,
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": " + ",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            },
+            {
+              "name": "David Bowie",
+              "joinphrase": " and ",
+              "artist": {
+                "id": "5441c29d-3602-4898-b1a1-b77fa23b8e50",
+                "name": "David Bowie"
+              }
+            },
+            {
+              "name": "Annie Lennox",
+              "joinphrase": "",
+              "artist": {
+                "id": "3e30aebd-0557-4cfd-8fb9-3945afa5d72b",
+                "name": "Annie Lennox"
+              }
+            }
+          ]
+        }
+      ],
+      "source_claims": {
+        "track_mbid": "32c7e292-14f1-4080-bddf-ef852e0a4c59"
+      },
+      "verified_recording": {
+        "id": "32c7e292-14f1-4080-bddf-ef852e0a4c59",
+        "title": "Under Pressure",
+        "disambiguation": "",
+        "length": 243000,
+        "video": false,
+        "artist-credit": [
+          {
+            "name": "Queen",
+            "joinphrase": " & ",
+            "artist": {
+              "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+              "name": "Queen"
+            }
+          },
+          {
+            "name": "David Bowie",
+            "joinphrase": "",
+            "artist": {
+              "id": "5441c29d-3602-4898-b1a1-b77fa23b8e50",
+              "name": "David Bowie"
+            }
+          }
+        ]
+      },
+      "edition": {
+        "id": "eac6d0cd-1ed0-4e17-b5b0-d3cfc40547b2",
+        "title": "Under Pressure"
+      },
+      "slots": [
+        {
+          "medium": 1,
+          "position": 1,
+          "title": "Under Pressure",
+          "track_mbid": "eb3ec24e-4be1-325b-b4ad-86b8e55c5393",
+          "recording_mbid": "32c7e292-14f1-4080-bddf-ef852e0a4c59"
+        }
+      ]
+    },
+    "ranking": [
+      {
+        "recording_mbid": "32c7e292-14f1-4080-bddf-ef852e0a4c59",
+        "score": 11,
+        "version": "recording-ranking-v1",
+        "inputs": {
+          "recording_identifier": {
+            "state": "positive",
+            "weight": 8,
+            "explanation": "Verified source recording identifier"
+          },
+          "different_verified_recording": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "title": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Recording title matches after text normalization"
+          },
+          "artist_name": {
+            "state": "contradictory",
+            "weight": -3,
+            "explanation": "Artist credit differs"
+          },
+          "artist_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "edition_slot": {
+            "state": "positive",
+            "weight": 4,
+            "explanation": "A checked MusicBrainz edition contains this track slot"
+          },
+          "version": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "duration": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "manual_lookup": {
+            "state": "unavailable",
+            "weight": 0
+          }
+        },
+        "provenance": "musicbrainz",
+        "source": {
+          "artist": "David Bowie & Queen",
+          "track": "Under Pressure",
+          "album": "Under Pressure",
+          "claims": {
+            "track_mbid": "32c7e292-14f1-4080-bddf-ef852e0a4c59"
+          }
+        },
+        "catalog": {
+          "title": "Under Pressure",
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": " & ",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            },
+            {
+              "name": "David Bowie",
+              "joinphrase": "",
+              "artist": {
+                "id": "5441c29d-3602-4898-b1a1-b77fa23b8e50",
+                "name": "David Bowie"
+              }
+            }
+          ],
+          "length": 243000,
+          "disambiguation": "",
+          "video": false
+        }
+      }
+    ],
+    "recommended_mbid": null
+  },
+  "pressure-wembley": {
+    "captured_at": "2026-11-20T03:17:43Z",
+    "sources": [
+      {
+        "url": "https://musicbrainz.org/ws/2/release/eac6d0cd-1ed0-4e17-b5b0-d3cfc40547b2?inc=recordings+artist-credits&fmt=json",
+        "retrieved_at": "2026-11-20T03:17:41Z",
+        "response_sha256": "b17cfbe2b3ddb3a77bd8de53f87bf2fb043af27eaa49d228e635db657cb440ea"
+      },
+      {
+        "url": "https://musicbrainz.org/ws/2/release/4fdc0364-5c4f-45aa-91ec-b94a5cc9ec7c?inc=recordings+artist-credits&fmt=json",
+        "retrieved_at": "2026-11-20T03:17:39Z",
+        "response_sha256": "3c77a03e56bcd18fb00c48685950398d430ab8833a68431a1296b45ed6326edd"
+      },
+      {
+        "url": "https://musicbrainz.org/ws/2/release/a1960a72-3686-41f7-b7fb-a210d3d381e8?inc=recordings+artist-credits&fmt=json",
+        "retrieved_at": "2026-11-20T03:17:43Z",
+        "response_sha256": "03faf5c9d02b6f56de9c0e7efc0d5e7e5d8a0ef00b8096b1ad2a43fa8ff34f3a"
+      }
+    ],
+    "evidence": {
+      "candidates": [
+        {
+          "id": "32c7e292-14f1-4080-bddf-ef852e0a4c59",
+          "title": "Under Pressure",
+          "disambiguation": "",
+          "length": 243000,
+          "video": false,
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": " & ",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            },
+            {
+              "name": "David Bowie",
+              "joinphrase": "",
+              "artist": {
+                "id": "5441c29d-3602-4898-b1a1-b77fa23b8e50",
+                "name": "David Bowie"
+              }
+            }
+          ]
+        },
+        {
+          "id": "2bad727b-b7bc-4bae-a2cf-6ad50a218d88",
+          "title": "Under Pressure",
+          "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK",
+          "length": 221000,
+          "video": false,
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": "",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            }
+          ]
+        },
+        {
+          "id": "7ce4d633-0466-4b76-912b-30e83e2c10e3",
+          "title": "Under Pressure",
+          "disambiguation": "live, 1992-04-20: Wembley Stadium, London, UK",
+          "length": 350000,
+          "video": true,
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": " + ",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            },
+            {
+              "name": "David Bowie",
+              "joinphrase": " and ",
+              "artist": {
+                "id": "5441c29d-3602-4898-b1a1-b77fa23b8e50",
+                "name": "David Bowie"
+              }
+            },
+            {
+              "name": "Annie Lennox",
+              "joinphrase": "",
+              "artist": {
+                "id": "3e30aebd-0557-4cfd-8fb9-3945afa5d72b",
+                "name": "Annie Lennox"
+              }
+            }
+          ]
+        }
+      ],
+      "source_claims": {},
+      "verified_recording": null,
+      "edition": {
+        "id": "4fdc0364-5c4f-45aa-91ec-b94a5cc9ec7c",
+        "title": "Live at Wembley ’86"
+      },
+      "slots": [
+        {
+          "medium": 1,
+          "position": 7,
+          "title": "Under Pressure",
+          "track_mbid": "afe7a1f9-4417-3b73-a45d-a34fac9c039f",
+          "recording_mbid": "2bad727b-b7bc-4bae-a2cf-6ad50a218d88"
+        }
+      ]
+    },
+    "ranking": [
+      {
+        "recording_mbid": "2bad727b-b7bc-4bae-a2cf-6ad50a218d88",
+        "score": 4,
+        "version": "recording-ranking-v1",
+        "inputs": {
+          "recording_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "different_verified_recording": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "title": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Recording title matches after text normalization"
+          },
+          "artist_name": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Artist name or credited name matches"
+          },
+          "artist_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "edition_slot": {
+            "state": "positive",
+            "weight": 4,
+            "explanation": "A checked MusicBrainz edition contains this track slot"
+          },
+          "version": {
+            "state": "contradictory",
+            "weight": -4,
+            "explanation": "Catalog marks a distinct or video version that the source does not confirm"
+          },
+          "duration": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "manual_lookup": {
+            "state": "unavailable",
+            "weight": 0
+          }
+        },
+        "provenance": "musicbrainz",
+        "source": {
+          "artist": "Queen",
+          "track": "Under Pressure",
+          "album": "Live at Wembley ’86",
+          "claims": {}
+        },
+        "catalog": {
+          "title": "Under Pressure",
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": "",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            }
+          ],
+          "length": 221000,
+          "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK",
+          "video": false
+        }
+      },
+      {
+        "recording_mbid": "32c7e292-14f1-4080-bddf-ef852e0a4c59",
+        "score": 4,
+        "version": "recording-ranking-v1",
+        "inputs": {
+          "recording_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "different_verified_recording": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "title": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Recording title matches after text normalization"
+          },
+          "artist_name": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Artist name or credited name matches"
+          },
+          "artist_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "edition_slot": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "version": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "duration": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "manual_lookup": {
+            "state": "unavailable",
+            "weight": 0
+          }
+        },
+        "provenance": "musicbrainz",
+        "source": {
+          "artist": "Queen",
+          "track": "Under Pressure",
+          "album": "Live at Wembley ’86",
+          "claims": {}
+        },
+        "catalog": {
+          "title": "Under Pressure",
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": " & ",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            },
+            {
+              "name": "David Bowie",
+              "joinphrase": "",
+              "artist": {
+                "id": "5441c29d-3602-4898-b1a1-b77fa23b8e50",
+                "name": "David Bowie"
+              }
+            }
+          ],
+          "length": 243000,
+          "disambiguation": "",
+          "video": false
+        }
+      },
+      {
+        "recording_mbid": "7ce4d633-0466-4b76-912b-30e83e2c10e3",
+        "score": 0,
+        "version": "recording-ranking-v1",
+        "inputs": {
+          "recording_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "different_verified_recording": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "title": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Recording title matches after text normalization"
+          },
+          "artist_name": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Artist name or credited name matches"
+          },
+          "artist_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "edition_slot": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "version": {
+            "state": "contradictory",
+            "weight": -4,
+            "explanation": "Catalog marks a distinct or video version that the source does not confirm"
+          },
+          "duration": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "manual_lookup": {
+            "state": "unavailable",
+            "weight": 0
+          }
+        },
+        "provenance": "musicbrainz",
+        "source": {
+          "artist": "Queen",
+          "track": "Under Pressure",
+          "album": "Live at Wembley ’86",
+          "claims": {}
+        },
+        "catalog": {
+          "title": "Under Pressure",
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": " + ",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            },
+            {
+              "name": "David Bowie",
+              "joinphrase": " and ",
+              "artist": {
+                "id": "5441c29d-3602-4898-b1a1-b77fa23b8e50",
+                "name": "David Bowie"
+              }
+            },
+            {
+              "name": "Annie Lennox",
+              "joinphrase": "",
+              "artist": {
+                "id": "3e30aebd-0557-4cfd-8fb9-3945afa5d72b",
+                "name": "Annie Lennox"
+              }
+            }
+          ],
+          "length": 350000,
+          "disambiguation": "live, 1992-04-20: Wembley Stadium, London, UK",
+          "video": true
+        }
+      }
+    ],
+    "recommended_mbid": null
+  },
+  "pressure-title-only": {
+    "captured_at": "2026-11-20T03:17:43Z",
+    "sources": [
+      {
+        "url": "https://musicbrainz.org/ws/2/release/eac6d0cd-1ed0-4e17-b5b0-d3cfc40547b2?inc=recordings+artist-credits&fmt=json",
+        "retrieved_at": "2026-11-20T03:17:41Z",
+        "response_sha256": "b17cfbe2b3ddb3a77bd8de53f87bf2fb043af27eaa49d228e635db657cb440ea"
+      },
+      {
+        "url": "https://musicbrainz.org/ws/2/release/4fdc0364-5c4f-45aa-91ec-b94a5cc9ec7c?inc=recordings+artist-credits&fmt=json",
+        "retrieved_at": "2026-11-20T03:17:39Z",
+        "response_sha256": "3c77a03e56bcd18fb00c48685950398d430ab8833a68431a1296b45ed6326edd"
+      },
+      {
+        "url": "https://musicbrainz.org/ws/2/release/a1960a72-3686-41f7-b7fb-a210d3d381e8?inc=recordings+artist-credits&fmt=json",
+        "retrieved_at": "2026-11-20T03:17:43Z",
+        "response_sha256": "03faf5c9d02b6f56de9c0e7efc0d5e7e5d8a0ef00b8096b1ad2a43fa8ff34f3a"
+      }
+    ],
+    "evidence": {
+      "candidates": [
+        {
+          "id": "32c7e292-14f1-4080-bddf-ef852e0a4c59",
+          "title": "Under Pressure",
+          "disambiguation": "",
+          "length": 243000,
+          "video": false,
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": " & ",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            },
+            {
+              "name": "David Bowie",
+              "joinphrase": "",
+              "artist": {
+                "id": "5441c29d-3602-4898-b1a1-b77fa23b8e50",
+                "name": "David Bowie"
+              }
+            }
+          ]
+        },
+        {
+          "id": "2bad727b-b7bc-4bae-a2cf-6ad50a218d88",
+          "title": "Under Pressure",
+          "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK",
+          "length": 221000,
+          "video": false,
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": "",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            }
+          ]
+        },
+        {
+          "id": "7ce4d633-0466-4b76-912b-30e83e2c10e3",
+          "title": "Under Pressure",
+          "disambiguation": "live, 1992-04-20: Wembley Stadium, London, UK",
+          "length": 350000,
+          "video": true,
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": " + ",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            },
+            {
+              "name": "David Bowie",
+              "joinphrase": " and ",
+              "artist": {
+                "id": "5441c29d-3602-4898-b1a1-b77fa23b8e50",
+                "name": "David Bowie"
+              }
+            },
+            {
+              "name": "Annie Lennox",
+              "joinphrase": "",
+              "artist": {
+                "id": "3e30aebd-0557-4cfd-8fb9-3945afa5d72b",
+                "name": "Annie Lennox"
+              }
+            }
+          ]
+        }
+      ],
+      "source_claims": {},
+      "verified_recording": null,
+      "edition": null,
+      "slots": []
+    },
+    "ranking": [
+      {
+        "recording_mbid": "32c7e292-14f1-4080-bddf-ef852e0a4c59",
+        "score": 4,
+        "version": "recording-ranking-v1",
+        "inputs": {
+          "recording_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "different_verified_recording": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "title": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Recording title matches after text normalization"
+          },
+          "artist_name": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Artist name or credited name matches"
+          },
+          "artist_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "edition_slot": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "version": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "duration": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "manual_lookup": {
+            "state": "unavailable",
+            "weight": 0
+          }
+        },
+        "provenance": "musicbrainz",
+        "source": {
+          "artist": "Queen",
+          "track": "Under Pressure",
+          "album": null,
+          "claims": {}
+        },
+        "catalog": {
+          "title": "Under Pressure",
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": " & ",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            },
+            {
+              "name": "David Bowie",
+              "joinphrase": "",
+              "artist": {
+                "id": "5441c29d-3602-4898-b1a1-b77fa23b8e50",
+                "name": "David Bowie"
+              }
+            }
+          ],
+          "length": 243000,
+          "disambiguation": "",
+          "video": false
+        }
+      },
+      {
+        "recording_mbid": "2bad727b-b7bc-4bae-a2cf-6ad50a218d88",
+        "score": 0,
+        "version": "recording-ranking-v1",
+        "inputs": {
+          "recording_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "different_verified_recording": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "title": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Recording title matches after text normalization"
+          },
+          "artist_name": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Artist name or credited name matches"
+          },
+          "artist_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "edition_slot": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "version": {
+            "state": "contradictory",
+            "weight": -4,
+            "explanation": "Catalog marks a distinct or video version that the source does not confirm"
+          },
+          "duration": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "manual_lookup": {
+            "state": "unavailable",
+            "weight": 0
+          }
+        },
+        "provenance": "musicbrainz",
+        "source": {
+          "artist": "Queen",
+          "track": "Under Pressure",
+          "album": null,
+          "claims": {}
+        },
+        "catalog": {
+          "title": "Under Pressure",
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": "",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            }
+          ],
+          "length": 221000,
+          "disambiguation": "live, 1986-07-12: Wembley Stadium, London, UK",
+          "video": false
+        }
+      },
+      {
+        "recording_mbid": "7ce4d633-0466-4b76-912b-30e83e2c10e3",
+        "score": 0,
+        "version": "recording-ranking-v1",
+        "inputs": {
+          "recording_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "different_verified_recording": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "title": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Recording title matches after text normalization"
+          },
+          "artist_name": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Artist name or credited name matches"
+          },
+          "artist_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "edition_slot": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "version": {
+            "state": "contradictory",
+            "weight": -4,
+            "explanation": "Catalog marks a distinct or video version that the source does not confirm"
+          },
+          "duration": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "manual_lookup": {
+            "state": "unavailable",
+            "weight": 0
+          }
+        },
+        "provenance": "musicbrainz",
+        "source": {
+          "artist": "Queen",
+          "track": "Under Pressure",
+          "album": null,
+          "claims": {}
+        },
+        "catalog": {
+          "title": "Under Pressure",
+          "artist-credit": [
+            {
+              "name": "Queen",
+              "joinphrase": " + ",
+              "artist": {
+                "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                "name": "Queen"
+              }
+            },
+            {
+              "name": "David Bowie",
+              "joinphrase": " and ",
+              "artist": {
+                "id": "5441c29d-3602-4898-b1a1-b77fa23b8e50",
+                "name": "David Bowie"
+              }
+            },
+            {
+              "name": "Annie Lennox",
+              "joinphrase": "",
+              "artist": {
+                "id": "3e30aebd-0557-4cfd-8fb9-3945afa5d72b",
+                "name": "Annie Lennox"
+              }
+            }
+          ],
+          "length": 350000,
+          "disambiguation": "live, 1992-04-20: Wembley Stadium, London, UK",
+          "video": true
+        }
+      }
+    ],
+    "recommended_mbid": null
+  },
+  "bowie-cover-id-conflict": {
+    "captured_at": "2026-11-20T03:17:45Z",
+    "sources": [
+      {
+        "url": "https://musicbrainz.org/ws/2/release/98ca5c4d-8437-477a-978b-e6e082937f12?inc=recordings+artist-credits&fmt=json",
+        "retrieved_at": "2026-11-20T03:17:45Z",
+        "response_sha256": "e1915b670112607a9ff0a97b37a6bcce768291301df5cb55c89a1733c2b06fce"
+      },
+      {
+        "url": "https://musicbrainz.org/ws/2/release/2ff3be28-f74f-40c9-bdde-c19b6e4384ee?inc=recordings+artist-credits&fmt=json",
+        "retrieved_at": "2026-11-20T03:17:31Z",
+        "response_sha256": "80b81a1085ccdcda698ff6a4fe2fcdefcfe6188dcdf4d43bae6378b41424c14f"
+      }
+    ],
+    "evidence": {
+      "candidates": [
+        {
+          "id": "d0c234bd-cfdc-4f73-a19f-67c4be0dc071",
+          "title": "The Man Who Sold the World",
+          "disambiguation": "",
+          "length": 238000,
+          "video": false,
+          "artist-credit": [
+            {
+              "name": "David Bowie",
+              "joinphrase": "",
+              "artist": {
+                "id": "5441c29d-3602-4898-b1a1-b77fa23b8e50",
+                "name": "David Bowie"
+              }
+            }
+          ]
+        },
+        {
+          "id": "0bc124d9-675d-4db3-81bc-dbdbab2c804d",
+          "title": "The Man Who Sold the World",
+          "disambiguation": "live, 1993‐11‐18: MTV Unplugged, Sony Studios, New York, NY, USA",
+          "length": 261093,
+          "video": false,
+          "artist-credit": [
+            {
+              "name": "Nirvana",
+              "joinphrase": "",
+              "artist": {
+                "id": "5b11f4ce-a62d-471e-81fc-a69a8278c7da",
+                "name": "Nirvana"
+              }
+            }
+          ]
+        }
+      ],
+      "source_claims": {
+        "track_mbid": "0bc124d9-675d-4db3-81bc-dbdbab2c804d"
+      },
+      "verified_recording": {
+        "id": "0bc124d9-675d-4db3-81bc-dbdbab2c804d",
+        "title": "The Man Who Sold the World",
+        "disambiguation": "live, 1993‐11‐18: MTV Unplugged, Sony Studios, New York, NY, USA",
+        "length": 261093,
+        "video": false,
+        "artist-credit": [
+          {
+            "name": "Nirvana",
+            "joinphrase": "",
+            "artist": {
+              "id": "5b11f4ce-a62d-471e-81fc-a69a8278c7da",
+              "name": "Nirvana"
+            }
+          }
+        ]
+      },
+      "edition": {
+        "id": "98ca5c4d-8437-477a-978b-e6e082937f12",
+        "title": "The Man Who Sold the World"
+      },
+      "slots": [
+        {
+          "medium": 1,
+          "position": 8,
+          "title": "The Man Who Sold the World",
+          "track_mbid": "28e2ca2a-d488-34f6-a654-9ce9243f33a1",
+          "recording_mbid": "d0c234bd-cfdc-4f73-a19f-67c4be0dc071"
+        }
+      ]
+    },
+    "ranking": [
+      {
+        "recording_mbid": "0bc124d9-675d-4db3-81bc-dbdbab2c804d",
+        "score": 3,
+        "version": "recording-ranking-v1",
+        "inputs": {
+          "recording_identifier": {
+            "state": "positive",
+            "weight": 8,
+            "explanation": "Verified source recording identifier"
+          },
+          "different_verified_recording": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "title": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Recording title matches after text normalization"
+          },
+          "artist_name": {
+            "state": "contradictory",
+            "weight": -3,
+            "explanation": "Artist credit differs"
+          },
+          "artist_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "edition_slot": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "version": {
+            "state": "contradictory",
+            "weight": -4,
+            "explanation": "Catalog marks a distinct or video version that the source does not confirm"
+          },
+          "duration": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "manual_lookup": {
+            "state": "unavailable",
+            "weight": 0
+          }
+        },
+        "provenance": "musicbrainz",
+        "source": {
+          "artist": "David Bowie",
+          "track": "The Man Who Sold the World",
+          "album": "The Man Who Sold the World",
+          "claims": {
+            "track_mbid": "0bc124d9-675d-4db3-81bc-dbdbab2c804d"
+          }
+        },
+        "catalog": {
+          "title": "The Man Who Sold the World",
+          "artist-credit": [
+            {
+              "name": "Nirvana",
+              "joinphrase": "",
+              "artist": {
+                "id": "5b11f4ce-a62d-471e-81fc-a69a8278c7da",
+                "name": "Nirvana"
+              }
+            }
+          ],
+          "length": 261093,
+          "disambiguation": "live, 1993‐11‐18: MTV Unplugged, Sony Studios, New York, NY, USA",
+          "video": false
+        }
+      },
+      {
+        "recording_mbid": "d0c234bd-cfdc-4f73-a19f-67c4be0dc071",
+        "score": 2,
+        "version": "recording-ranking-v1",
+        "inputs": {
+          "recording_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "different_verified_recording": {
+            "state": "contradictory",
+            "weight": -6,
+            "explanation": "The source recording identifier resolves to a different recording"
+          },
+          "title": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Recording title matches after text normalization"
+          },
+          "artist_name": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Artist name or credited name matches"
+          },
+          "artist_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "edition_slot": {
+            "state": "positive",
+            "weight": 4,
+            "explanation": "A checked MusicBrainz edition contains this track slot"
+          },
+          "version": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "duration": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "manual_lookup": {
+            "state": "unavailable",
+            "weight": 0
+          }
+        },
+        "provenance": "musicbrainz",
+        "source": {
+          "artist": "David Bowie",
+          "track": "The Man Who Sold the World",
+          "album": "The Man Who Sold the World",
+          "claims": {
+            "track_mbid": "0bc124d9-675d-4db3-81bc-dbdbab2c804d"
+          }
+        },
+        "catalog": {
+          "title": "The Man Who Sold the World",
+          "artist-credit": [
+            {
+              "name": "David Bowie",
+              "joinphrase": "",
+              "artist": {
+                "id": "5441c29d-3602-4898-b1a1-b77fa23b8e50",
+                "name": "David Bowie"
+              }
+            }
+          ],
+          "length": 238000,
+          "disambiguation": "",
+          "video": false
+        }
+      }
+    ],
+    "recommended_mbid": null
+  },
+  "nirvana-cover-live": {
+    "captured_at": "2026-11-20T03:17:45Z",
+    "sources": [
+      {
+        "url": "https://musicbrainz.org/ws/2/release/98ca5c4d-8437-477a-978b-e6e082937f12?inc=recordings+artist-credits&fmt=json",
+        "retrieved_at": "2026-11-20T03:17:45Z",
+        "response_sha256": "e1915b670112607a9ff0a97b37a6bcce768291301df5cb55c89a1733c2b06fce"
+      },
+      {
+        "url": "https://musicbrainz.org/ws/2/release/2ff3be28-f74f-40c9-bdde-c19b6e4384ee?inc=recordings+artist-credits&fmt=json",
+        "retrieved_at": "2026-11-20T03:17:31Z",
+        "response_sha256": "80b81a1085ccdcda698ff6a4fe2fcdefcfe6188dcdf4d43bae6378b41424c14f"
+      }
+    ],
+    "evidence": {
+      "candidates": [
+        {
+          "id": "d0c234bd-cfdc-4f73-a19f-67c4be0dc071",
+          "title": "The Man Who Sold the World",
+          "disambiguation": "",
+          "length": 238000,
+          "video": false,
+          "artist-credit": [
+            {
+              "name": "David Bowie",
+              "joinphrase": "",
+              "artist": {
+                "id": "5441c29d-3602-4898-b1a1-b77fa23b8e50",
+                "name": "David Bowie"
+              }
+            }
+          ]
+        },
+        {
+          "id": "0bc124d9-675d-4db3-81bc-dbdbab2c804d",
+          "title": "The Man Who Sold the World",
+          "disambiguation": "live, 1993‐11‐18: MTV Unplugged, Sony Studios, New York, NY, USA",
+          "length": 261093,
+          "video": false,
+          "artist-credit": [
+            {
+              "name": "Nirvana",
+              "joinphrase": "",
+              "artist": {
+                "id": "5b11f4ce-a62d-471e-81fc-a69a8278c7da",
+                "name": "Nirvana"
+              }
+            }
+          ]
+        }
+      ],
+      "source_claims": {
+        "track_mbid": "0bc124d9-675d-4db3-81bc-dbdbab2c804d"
+      },
+      "verified_recording": {
+        "id": "0bc124d9-675d-4db3-81bc-dbdbab2c804d",
+        "title": "The Man Who Sold the World",
+        "disambiguation": "live, 1993‐11‐18: MTV Unplugged, Sony Studios, New York, NY, USA",
+        "length": 261093,
+        "video": false,
+        "artist-credit": [
+          {
+            "name": "Nirvana",
+            "joinphrase": "",
+            "artist": {
+              "id": "5b11f4ce-a62d-471e-81fc-a69a8278c7da",
+              "name": "Nirvana"
+            }
+          }
+        ]
+      },
+      "edition": {
+        "id": "2ff3be28-f74f-40c9-bdde-c19b6e4384ee",
+        "title": "MTV Unplugged in New York"
+      },
+      "slots": [
+        {
+          "medium": 1,
+          "position": 4,
+          "title": "The Man Who Sold the World",
+          "track_mbid": "1fb67441-8287-3ad2-ad23-08603e830fcc",
+          "recording_mbid": "0bc124d9-675d-4db3-81bc-dbdbab2c804d"
+        }
+      ]
+    },
+    "ranking": [
+      {
+        "recording_mbid": "0bc124d9-675d-4db3-81bc-dbdbab2c804d",
+        "score": 12,
+        "version": "recording-ranking-v1",
+        "inputs": {
+          "recording_identifier": {
+            "state": "positive",
+            "weight": 8,
+            "explanation": "Verified source recording identifier"
+          },
+          "different_verified_recording": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "title": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Recording title matches after text normalization"
+          },
+          "artist_name": {
+            "state": "positive",
+            "weight": 2,
+            "explanation": "Artist name or credited name matches"
+          },
+          "artist_identifier": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "edition_slot": {
+            "state": "positive",
+            "weight": 4,
+            "explanation": "A checked MusicBrainz edition contains this track slot"
+          },
+          "version": {
+            "state": "contradictory",
+            "weight": -4,
+            "explanation": "Catalog marks a distinct or video version that the source does not confirm"
+          },
+          "duration": {
+            "state": "unavailable",
+            "weight": 0
+          },
+          "manual_lookup": {
+            "state": "unavailable",
+            "weight": 0
+          }
+        },
+        "provenance": "musicbrainz",
+        "source": {
+          "artist": "Nirvana",
+          "track": "The Man Who Sold the World",
+          "album": "MTV Unplugged in New York",
+          "claims": {
+            "track_mbid": "0bc124d9-675d-4db3-81bc-dbdbab2c804d"
+          }
+        },
+        "catalog": {
+          "title": "The Man Who Sold the World",
+          "artist-credit": [
+            {
+              "name": "Nirvana",
+              "joinphrase": "",
+              "artist": {
+                "id": "5b11f4ce-a62d-471e-81fc-a69a8278c7da",
+                "name": "Nirvana"
+              }
+            }
+          ],
+          "length": 261093,
+          "disambiguation": "live, 1993‐11‐18: MTV Unplugged, Sony Studios, New York, NY, USA",
+          "video": false
+        }
+      }
+    ],
+    "recommended_mbid": null
+  },
+  "cover-missing-edition": {
+    "captured_at": "2026-11-20T03:17:45Z",
+    "sources": [
+      {
+        "url": "https://musicbrainz.org/ws/2/release/98ca5c4d-8437-477a-978b-e6e082937f12?inc=recordings+artist-credits&fmt=json",
+        "retrieved_at": "2026-11-20T03:17:45Z",
+        "response_sha256": "e1915b670112607a9ff0a97b37a6bcce768291301df5cb55c89a1733c2b06fce"
+      },
+      {
+        "url": "https://musicbrainz.org/ws/2/release/2ff3be28-f74f-40c9-bdde-c19b6e4384ee?inc=recordings+artist-credits&fmt=json",
+        "retrieved_at": "2026-11-20T03:17:31Z",
+        "response_sha256": "80b81a1085ccdcda698ff6a4fe2fcdefcfe6188dcdf4d43bae6378b41424c14f"
+      }
+    ],
+    "evidence": {
+      "candidates": [
+        {
+          "id": "d0c234bd-cfdc-4f73-a19f-67c4be0dc071",
+          "title": "The Man Who Sold the World",
+          "disambiguation": "",
+          "length": 238000,
+          "video": false,
+          "artist-credit": [
+            {
+              "name": "David Bowie",
+              "joinphrase": "",
+              "artist": {
+                "id": "5441c29d-3602-4898-b1a1-b77fa23b8e50",
+                "name": "David Bowie"
+              }
+            }
+          ]
+        },
+        {
+          "id": "0bc124d9-675d-4db3-81bc-dbdbab2c804d",
+          "title": "The Man Who Sold the World",
+          "disambiguation": "live, 1993‐11‐18: MTV Unplugged, Sony Studios, New York, NY, USA",
+          "length": 261093,
+          "video": false,
+          "artist-credit": [
+            {
+              "name": "Nirvana",
+              "joinphrase": "",
+              "artist": {
+                "id": "5b11f4ce-a62d-471e-81fc-a69a8278c7da",
+                "name": "Nirvana"
+              }
+            }
+          ]
+        }
+      ],
+      "source_claims": {},
+      "verified_recording": null,
+      "edition": null,
+      "slots": []
+    },
+    "ranking": [],
+    "recommended_mbid": null
+  }
+}

@@ -22,6 +22,16 @@ module RecordingResolution
       new(rows, split_at).evaluate
     end
 
+    def self.features(rank)
+      rank.fetch("inputs").filter_map do |name, input|
+        "#{rank.fetch('version')}:#{name}=#{input.fetch('state')}" unless input["state"] == "unavailable"
+      end.to_set
+    end
+
+    def self.adjusted_score(rank, weights)
+      rank.fetch("score") + features(rank).sum { |feature| weights.fetch(feature, 0) }
+    end
+
     def initialize(rows, split_at)
       @rows = rows.sort_by { |row| [ Time.iso8601(row.fetch("at")), row.fetch("id") ] }
       @split = Time.iso8601(split_at)
@@ -82,20 +92,14 @@ module RecordingResolution
       recommended == snapshot["candidate_mbid"] ? "followed" : "overridden"
     end
 
-    def features(rank)
-      rank.fetch("inputs").filter_map do |name, input|
-        "#{rank.fetch('version')}:#{name}=#{input.fetch('state')}" unless input["state"] == "unavailable"
-      end.to_set
-    end
-
     def votes(rows)
       counts = Hash.new(0)
       rows.each do |row|
         snapshot = row.fetch("snapshot")
         selected, alternatives = snapshot.fetch("ranking").partition { |rank| rank["recording_mbid"] == snapshot["candidate_mbid"] }
-        chosen = features(selected.first)
+        chosen = self.class.features(selected.first)
         alternatives.each do |alternative|
-          other = features(alternative)
+          other = self.class.features(alternative)
           (chosen - other).each { |feature| counts[feature] += 1 }
           (other - chosen).each { |feature| counts[feature] -= 1 }
         end
@@ -108,7 +112,7 @@ module RecordingResolution
         snapshot = row.fetch("snapshot")
         ranks = snapshot.fetch("ranking")
         scores = ranks.to_h do |rank|
-          [ rank.fetch("recording_mbid"), rank.fetch("score") + features(rank).sum { |feature| weights.fetch(feature, 0) } ]
+          [ rank.fetch("recording_mbid"), self.class.adjusted_score(rank, weights) ]
         end
         best = scores.values.max
         scores.values.count(best) == 1 && scores[snapshot.fetch("candidate_mbid")] == best

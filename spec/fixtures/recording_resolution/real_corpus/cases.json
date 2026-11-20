@@ -1,0 +1,321 @@
+[
+  {
+    "id": "nirvana-studio",
+    "partition": "train",
+    "observation_group": "come-as-you-are",
+    "tags": [
+      "studio",
+      "live"
+    ],
+    "candidate_refs": [
+      "nirvana_studio",
+      "nirvana_live"
+    ],
+    "surface": {
+      "artist": "Nirvana",
+      "track": "Come As You Are",
+      "album": "Nevermind"
+    },
+    "checked_slot_ref": "nirvana_studio",
+    "verified_identifier_ref": "nirvana_studio",
+    "reviewed_ref": "nirvana_studio",
+    "initial_choice_ref": null
+  },
+  {
+    "id": "nirvana-live-correction",
+    "partition": "train",
+    "observation_group": "come-as-you-are",
+    "tags": [
+      "live",
+      "misleading-id",
+      "correction"
+    ],
+    "candidate_refs": [
+      "nirvana_studio",
+      "nirvana_live"
+    ],
+    "surface": {
+      "artist": "Nirvana",
+      "track": "Come as You Are",
+      "album": "MTV Unplugged in New York"
+    },
+    "checked_slot_ref": "nirvana_live",
+    "verified_identifier_ref": "nirvana_studio",
+    "reviewed_ref": "nirvana_live",
+    "initial_choice_ref": "nirvana_studio"
+  },
+  {
+    "id": "nirvana-title-only",
+    "partition": "train",
+    "observation_group": "come-as-you-are",
+    "tags": [
+      "ambiguous",
+      "studio",
+      "live"
+    ],
+    "candidate_refs": [
+      "nirvana_studio",
+      "nirvana_live"
+    ],
+    "surface": {
+      "artist": "Nirvana",
+      "track": "Come as You Are",
+      "album": null
+    },
+    "checked_slot_ref": null,
+    "verified_identifier_ref": null,
+    "reviewed_ref": null,
+    "initial_choice_ref": null
+  },
+  {
+    "id": "depeche-single",
+    "partition": "train",
+    "observation_group": "enjoy-the-silence",
+    "tags": [
+      "studio",
+      "remix"
+    ],
+    "candidate_refs": [
+      "dm_single",
+      "dm_remix"
+    ],
+    "surface": {
+      "artist": "Depeche Mode",
+      "track": "Enjoy the Silence",
+      "album": "Enjoy the Silence"
+    },
+    "checked_slot_ref": "dm_single",
+    "verified_identifier_ref": "dm_single",
+    "reviewed_ref": "dm_single",
+    "initial_choice_ref": null
+  },
+  {
+    "id": "depeche-remix-correction",
+    "partition": "train",
+    "observation_group": "enjoy-the-silence",
+    "tags": [
+      "remix",
+      "misleading-id",
+      "correction"
+    ],
+    "candidate_refs": [
+      "dm_single",
+      "dm_remix"
+    ],
+    "surface": {
+      "artist": "Depeche Mode",
+      "track": "Enjoy the Silence (reinterpreted by Mike Shinoda)",
+      "album": "Enjoy the Silence 04"
+    },
+    "checked_slot_ref": "dm_remix",
+    "verified_identifier_ref": "dm_single",
+    "reviewed_ref": "dm_remix",
+    "initial_choice_ref": "dm_single"
+  },
+  {
+    "id": "queen-compilation",
+    "partition": "held_out",
+    "observation_group": "bohemian-rhapsody",
+    "tags": [
+      "compilation",
+      "studio",
+      "live"
+    ],
+    "candidate_refs": [
+      "queen_studio",
+      "queen_live"
+    ],
+    "surface": {
+      "artist": "Queen",
+      "track": "Bohemian Rhapsody",
+      "album": "Greatest Hits"
+    },
+    "checked_slot_ref": "queen_studio",
+    "verified_identifier_ref": "queen_studio",
+    "reviewed_ref": "queen_studio",
+    "initial_choice_ref": null
+  },
+  {
+    "id": "queen-live-correction",
+    "partition": "held_out",
+    "observation_group": "bohemian-rhapsody",
+    "tags": [
+      "live",
+      "misleading-id",
+      "correction"
+    ],
+    "candidate_refs": [
+      "queen_studio",
+      "queen_live"
+    ],
+    "surface": {
+      "artist": "Queen",
+      "track": "Bohemian Rhapsody",
+      "album": "Live at Wembley ’86"
+    },
+    "checked_slot_ref": "queen_live",
+    "verified_identifier_ref": "queen_studio",
+    "reviewed_ref": "queen_live",
+    "initial_choice_ref": "queen_studio"
+  },
+  {
+    "id": "queen-title-only",
+    "partition": "held_out",
+    "observation_group": "bohemian-rhapsody",
+    "tags": [
+      "ambiguous",
+      "studio",
+      "live"
+    ],
+    "candidate_refs": [
+      "queen_studio",
+      "queen_live"
+    ],
+    "surface": {
+      "artist": "Queen",
+      "track": "Bohemian Rhapsody",
+      "album": null
+    },
+    "checked_slot_ref": null,
+    "verified_identifier_ref": null,
+    "reviewed_ref": null,
+    "initial_choice_ref": null
+  },
+  {
+    "id": "pressure-joint-credit",
+    "partition": "held_out",
+    "observation_group": "under-pressure",
+    "tags": [
+      "alternate-credit",
+      "studio"
+    ],
+    "candidate_refs": [
+      "pressure_studio",
+      "pressure_live",
+      "pressure_tribute"
+    ],
+    "surface": {
+      "artist": "David Bowie & Queen",
+      "track": "Under Pressure",
+      "album": "Under Pressure"
+    },
+    "checked_slot_ref": "pressure_studio",
+    "verified_identifier_ref": "pressure_studio",
+    "reviewed_ref": "pressure_studio",
+    "initial_choice_ref": null
+  },
+  {
+    "id": "pressure-wembley",
+    "partition": "held_out",
+    "observation_group": "under-pressure",
+    "tags": [
+      "live",
+      "alternate-credit"
+    ],
+    "candidate_refs": [
+      "pressure_studio",
+      "pressure_live",
+      "pressure_tribute"
+    ],
+    "surface": {
+      "artist": "Queen",
+      "track": "Under Pressure",
+      "album": "Live at Wembley ’86"
+    },
+    "checked_slot_ref": "pressure_live",
+    "verified_identifier_ref": null,
+    "reviewed_ref": "pressure_live",
+    "initial_choice_ref": null
+  },
+  {
+    "id": "pressure-title-only",
+    "partition": "held_out",
+    "observation_group": "under-pressure",
+    "tags": [
+      "ambiguous",
+      "live",
+      "alternate-credit"
+    ],
+    "candidate_refs": [
+      "pressure_studio",
+      "pressure_live",
+      "pressure_tribute"
+    ],
+    "surface": {
+      "artist": "Queen",
+      "track": "Under Pressure",
+      "album": null
+    },
+    "checked_slot_ref": null,
+    "verified_identifier_ref": null,
+    "reviewed_ref": null,
+    "initial_choice_ref": null
+  },
+  {
+    "id": "bowie-cover-id-conflict",
+    "partition": "held_out",
+    "observation_group": "man-who-sold-the-world",
+    "tags": [
+      "misleading-id",
+      "cover",
+      "alternate-credit"
+    ],
+    "candidate_refs": [
+      "bowie_studio",
+      "nirvana_cover"
+    ],
+    "surface": {
+      "artist": "David Bowie",
+      "track": "The Man Who Sold the World",
+      "album": "The Man Who Sold the World"
+    },
+    "checked_slot_ref": "bowie_studio",
+    "verified_identifier_ref": "nirvana_cover",
+    "reviewed_ref": "bowie_studio",
+    "initial_choice_ref": null
+  },
+  {
+    "id": "nirvana-cover-live",
+    "partition": "held_out",
+    "observation_group": "man-who-sold-the-world",
+    "tags": [
+      "live",
+      "cover"
+    ],
+    "candidate_refs": [
+      "bowie_studio",
+      "nirvana_cover"
+    ],
+    "surface": {
+      "artist": "Nirvana",
+      "track": "The Man Who Sold the World",
+      "album": "MTV Unplugged in New York"
+    },
+    "checked_slot_ref": "nirvana_cover",
+    "verified_identifier_ref": "nirvana_cover",
+    "reviewed_ref": "nirvana_cover",
+    "initial_choice_ref": null
+  },
+  {
+    "id": "cover-missing-edition",
+    "partition": "held_out",
+    "observation_group": "man-who-sold-the-world",
+    "tags": [
+      "ambiguous",
+      "cover"
+    ],
+    "candidate_refs": [
+      "bowie_studio",
+      "nirvana_cover"
+    ],
+    "surface": {
+      "artist": "David Bowie / Nirvana",
+      "track": "The Man Who Sold the World",
+      "album": null
+    },
+    "checked_slot_ref": null,
+    "verified_identifier_ref": null,
+    "reviewed_ref": null,
+    "initial_choice_ref": null
+  }
+]
