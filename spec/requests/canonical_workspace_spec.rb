@@ -65,12 +65,12 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
   it "protects the library, workspace and import actions" do
     [ artists_path, releases_path, recordings_path, resolution_surfaces_path ].each do |path|
       get path
-      expect(response).to redirect_to(new_session_path)
+      expect(response).to redirect_to(root_path)
     end
     get artists_path(profile: "qalephd", action_name: "index")
-    expect(response).to redirect_to(new_session_path)
+    expect(response).to redirect_to(root_path)
     post import_artist_path(1)
-    expect(response).to redirect_to(new_session_path)
+    expect(response).to redirect_to(root_path)
   end
 
   it "reviews an exact surface, records explicit choices, rejects stale writes, and respects archive revocation" do

@@ -9,8 +9,7 @@ Rails.application.configure do
     policy.script_src :self
     policy.style_src :self
     policy.connect_src :self
-    # Chromium carries the initiating sign-in form policy through the OIDC redirect.
-    policy.form_action :self, "https://auth.harvj.com"
+    policy.form_action :self
   end
   config.content_security_policy_nonce_generator = ->(_request) { SecureRandom.base64(16) }
   config.content_security_policy_nonce_directives = %w[script-src]

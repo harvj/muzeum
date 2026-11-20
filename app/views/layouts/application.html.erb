@@ -39,7 +39,7 @@
           <div class="account-nav" aria-label="Profile"><%= render "shared/session_dropdown" %></div>
         <% else %>
           <div class="account-nav">
-            <%= link_to "Log In", "https://auth.harvj.com/", class: "entity-link" %>
+            <%= link_to "Log In", login_path, class: "entity-link", data: { turbo: false, turbo_prefetch: false } %>
             <%= render "shared/appearance" %>
           </div>
         <% end %>

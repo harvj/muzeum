@@ -18,7 +18,7 @@ RSpec.describe "Site Art appearance", type: :system do
       { name: "prefers-color-scheme", value: "light" },
       { name: "prefers-reduced-motion", value: "reduce" }
     ])
-    visit new_session_path
+    visit root_path
     expect(page).to have_css("img.site-art-background[src='#{light}']", visible: :all)
     expect(page).to have_css("link[rel=icon][href='/icon.svg']", visible: :all)
 
@@ -235,10 +235,10 @@ RSpec.describe "Site Art appearance", type: :system do
   end
 
   it "keeps the local theme and branded icon when remote candidates cannot decode" do
-    allow(SiteArt).to receive(:snapshot).and_return(light: { url: "/session/new", presentation: { foreground: "#123456" } }, favicon: "/session/new")
-    visit new_session_path
+    allow(SiteArt).to receive(:snapshot).and_return(light: { url: "/", presentation: { foreground: "#123456" } }, favicon: "/")
+    visit root_path
     select "Light", from: "Appearance"
-    expect(page).to have_button("Continue with harvj Auth")
+    expect(page).to have_link("Log In", href: login_path)
     expect(page).to have_css("link[rel=icon][href*='muzeum-favicon']", count: 1, visible: :all)
     expect(page).to have_no_css("img.site-art-background", visible: :all)
     expect(page).to have_no_css("[data-art-treatment]")

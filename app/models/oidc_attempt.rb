@@ -1,11 +1,11 @@
 class OidcAttempt < ApplicationRecord
-  def self.consume!(state, browser)
+  def self.consume!(state, browser_digest)
     transaction do
-      attempt = lock.find_by!(state: state)
+      attempt = lock.find_by(state:)
+      next unless attempt && ActiveSupport::SecurityUtils.secure_compare(attempt.browser_digest, browser_digest)
+
       attempt.destroy!
-      return nil if attempt.expires_at <= Time.current
-      return nil unless ActiveSupport::SecurityUtils.secure_compare(attempt.browser_digest, Digest::SHA256.hexdigest(browser.to_s))
-      attempt
+      attempt if attempt.expires_at > Time.current
     end
   end
 end

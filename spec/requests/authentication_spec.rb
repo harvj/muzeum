@@ -8,11 +8,11 @@ RSpec.describe "OIDC authentication", type: :request do
 
   it "protects routes and Turbo frames while leaving liveness public" do
     get archive_path, headers: { "Turbo-Frame" => "private" }
-    expect(response).to redirect_to(new_session_path)
+    expect(response).to redirect_to(root_path)
     patch lastfm_account_path, params: { lastfm_username: "someone" }
-    expect(response).to redirect_to(new_session_path)
+    expect(response).to redirect_to(root_path)
     post imports_path
-    expect(response).to redirect_to(new_session_path)
+    expect(response).to redirect_to(root_path)
     get "/up"
     expect(response).to have_http_status(:ok)
   end
@@ -30,39 +30,39 @@ RSpec.describe "OIDC authentication", type: :request do
     expect(response).to have_http_status(:ok)
     expect(response.headers["Cache-Control"]).to include("no-store")
     get "/oidc/callback", params: { state: state, code: "one-use-code" }
-    expect(response).to redirect_to(new_session_path)
+    expect(response).to redirect_to(root_path)
     delete session_path
     expect(user.sessions.count).to eq(0)
     get archive_path
-    expect(response).to redirect_to(new_session_path)
+    expect(response).to redirect_to(root_path)
   end
 
   [ { iss: "https://evil.test" }, { aud: "other-client" }, { nonce: "wrong" }, { exp: 1 }, { iat: 1.day.from_now.to_i }, { azp: "other" } ].each do |claims|
     it "rejects invalid token claims #{claims.keys.join(',')}" do
       finish_oidc(claims: claims)
-      expect(response).to redirect_to(new_session_path)
+      expect(response).to redirect_to(root_path)
       expect(Session.count).to eq(0)
     end
   end
 
-  it "consumes expired and browser-mismatched attempts without creating a session" do
-    post session_path
+  it "consumes expired attempts and leaves a foreign binding untouched" do
+    get login_path
     attempt = OidcAttempt.last
     attempt.update!(expires_at: 1.second.ago)
     get "/oidc/callback", params: { state: attempt.state, code: "x" }
     expect(OidcAttempt.exists?(attempt.id)).to be(false)
     expect(Session.count).to eq(0)
-    post session_path
+    get login_path
     attempt = OidcAttempt.last
     attempt.update!(browser_digest: Digest::SHA256.hexdigest("another browser"))
     get "/oidc/callback", params: { state: attempt.state, code: "x" }
     expect(Session.count).to eq(0)
-    expect(OidcAttempt.exists?(attempt.id)).to be(false)
+    expect(OidcAttempt.exists?(attempt.id)).to be(true)
   end
 
   it "rejects token signature manipulation" do
     finish_oidc(key: OpenSSL::PKey::RSA.generate(2048))
-    expect(response).to redirect_to(new_session_path)
+    expect(response).to redirect_to(root_path)
     expect(Session.count).to eq(0)
   end
 
@@ -78,11 +78,11 @@ RSpec.describe "OIDC authentication", type: :request do
     finish_oidc
     Session.update_all(last_seen_at: 13.hours.ago)
     get archive_path
-    expect(response).to redirect_to(new_session_path)
+    expect(response).to redirect_to(root_path)
     finish_oidc
     User.find_by!(oidc_subject: @subject).update!(disabled_at: Time.current)
     get archive_path
-    expect(response).to redirect_to(new_session_path)
+    expect(response).to redirect_to(root_path)
   end
 
   it "checks native grant revocation after 60 seconds and fails closed on outages" do
@@ -90,7 +90,7 @@ RSpec.describe "OIDC authentication", type: :request do
     Session.update_all(verified_at: 61.seconds.ago)
     stub_request(:post, "https://auth.harvj.com/introspect").to_return(status: 503)
     get archive_path
-    expect(response).to redirect_to(new_session_path)
+    expect(response).to redirect_to(root_path)
     expect(Session.count).to eq(1)
     stub_request(:post, "https://auth.harvj.com/introspect").to_return(body: { active: false }.to_json)
     get archive_path
@@ -118,28 +118,40 @@ RSpec.describe "OIDC authentication", type: :request do
     expect(Session.count).to eq(0)
   end
 
-  it "accepts the rendered CSRF token and same-origin sign-in without weakening origin checks" do
+  it "enforces logout CSRF while retaining a valid same-origin logout form" do
+    finish_oidc
     old = ActionController::Base.allow_forgery_protection
     ActionController::Base.allow_forgery_protection = true
-    get new_session_path
-    expect(response.headers["Referrer-Policy"]).to eq("strict-origin-when-cross-origin")
-    token = Nokogiri::HTML(response.body).at_css('input[name="authenticity_token"]')["value"]
-    post session_path, params: { authenticity_token: token }, headers: { "Origin" => "http://www.example.com" }
-    expect(response.location).to start_with("https://auth.harvj.com/authorize")
-    expect(OidcAttempt.count).to eq(1)
+    get archive_path
+    token = Nokogiri::HTML(response.body).at_css('form[action="/session"] input[name="authenticity_token"]')["value"]
+
+    delete session_path
+    expect(response).to have_http_status(:unprocessable_content)
+    expect(Session.count).to eq(1)
+    delete session_path, params: { authenticity_token: token }, headers: { "Origin" => "http://www.example.com" }
+    expect(response).to redirect_to(root_path)
+    expect(Session.count).to eq(0)
   ensure
     ActionController::Base.allow_forgery_protection = old
   end
 
-  it "rejects forged cookies and enforces CSRF" do
+  it "rejects forged cookies without starting login on protected background requests" do
     cookies[:session_id] = "1"
     get archive_path
-    expect(response).to redirect_to(new_session_path)
-    old = ActionController::Base.allow_forgery_protection
-    ActionController::Base.allow_forgery_protection = true
-    post session_path
-    expect(response).to have_http_status(:unprocessable_content)
-  ensure
-    ActionController::Base.allow_forgery_protection = old
+    expect(response).to redirect_to(root_path)
+    expect(OidcAttempt.count).to eq(0)
+  end
+
+  it "enforces the approved MFA assurance when configured" do
+    ENV["OIDC_REQUIRED_ACR"] = "urn:harvj:assurance:mfa"
+    finish_oidc
+    expect(response).to redirect_to(root_path)
+    expect(Session.count).to eq(0)
+    finish_oidc(claims: { acr: "urn:harvj:assurance:password" })
+    expect(response).to redirect_to(root_path)
+    expect(Session.count).to eq(0)
+    finish_oidc(claims: { acr: "urn:harvj:assurance:mfa" })
+    expect(response).to redirect_to(archive_path)
+    expect(Session.count).to eq(1)
   end
 end

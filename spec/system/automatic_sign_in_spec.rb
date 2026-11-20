@@ -14,8 +14,8 @@ RSpec.describe "Shared Auth browser navigation", type: :system do
     prepare_oidc
     @old_forgery_protection = ActionController::Base.allow_forgery_protection
     ActionController::Base.allow_forgery_protection = true
-    visit new_session_path
-    @application_url = page.current_url.delete_suffix(new_session_path)
+    visit root_path
+    @application_url = page.current_url.delete_suffix("/")
     ENV["OIDC_REDIRECT_URI"] = "#{@application_url}/oidc/callback"
     @authorizations = 0
     application_url = @application_url
@@ -25,14 +25,17 @@ RSpec.describe "Shared Auth browser navigation", type: :system do
       request = Rack::Request.new(env)
       headers = { "content-type" => "text/html" }
       if request.path == "/auth-account"
-        [ 200, headers, [ "<a href='#{application_url}/'>Muzeum</a>" ] ]
+        [ 200, headers, [ "<a href='#{application_url}/login'>Muzeum</a>" ] ]
       elsif request.path == "/ce"
         [ 200, headers, [ "<a href='#{application_url}/archive'>Muzeum</a>" ] ]
       elsif request.path == "/authorize"
-        @authorizations += 1 unless request.params["signed_in"]
+        @authorizations += 1 unless request.params["signed_in"] || request.params["mfa_complete"]
         callback = "#{request.params.fetch('redirect_uri')}?#{URI.encode_www_form(state: request.params.fetch('state'), code: 'browser-code')}"
         if @provider_mode == :denied
           [ 403, headers, [ "Application access denied. <a href='#{application_url}/archive'>Return to Muzeum</a>" ] ]
+        elsif @provider_mode == :mfa && !request.params["mfa_complete"]
+          continuation = "#{request.path}?#{URI.encode_www_form(request.params.merge('mfa_complete' => 'yes'))}"
+          [ 200, headers, [ "<h1>Test Auth MFA</h1><a href='#{ERB::Util.html_escape(continuation)}'>Complete test MFA</a>" ] ]
         elsif @provider_mode == :fresh && !request.params["signed_in"]
           continuation = "#{request.path}?#{URI.encode_www_form(request.params.merge('signed_in' => 'yes'))}"
           [ 200, headers, [ "<h1>Test Auth login</h1><a href='#{ERB::Util.html_escape(continuation)}'>Sign in to test Auth</a>" ] ]
@@ -47,7 +50,8 @@ RSpec.describe "Shared Auth browser navigation", type: :system do
     allow_any_instance_of(OidcClient).to receive(:authorization_uri).and_wrap_original do |method, attempt|
       uri = URI(method.call(attempt))
       token = JSON::JWT.new(iss: OidcClient::ISSUER, sub: @subject, aud: "muzeum-test", iat: Time.current.to_i,
-        exp: 5.minutes.from_now.to_i, nonce: @provider_mode == :failed ? "incorrect-nonce" : attempt.nonce)
+        exp: 5.minutes.from_now.to_i, nonce: @provider_mode == :failed ? "incorrect-nonce" : attempt.nonce,
+        acr: ("urn:harvj:assurance:mfa" if @provider_mode == :mfa))
       token.kid = "test"
       signed = token.sign(@signing_key, :RS256).to_s
       stub_request(:post, "https://auth.harvj.com/token").with { |request|
@@ -92,10 +96,10 @@ RSpec.describe "Shared Auth browser navigation", type: :system do
     @provider_mode = :sso
     visit "http://127.0.0.1:#{@provider.port}/auth-account"
     click_link "Muzeum"
-    expect(page).to have_current_path(root_path)
-    expect(page).to have_link("Log In", href: "https://auth.harvj.com/")
-    expect(@authorizations).to eq(0)
-    click_link "Open your archive"
+    expect(page).to have_current_path(archive_path)
+    expect(@authorizations).to eq(1)
+    visit "http://127.0.0.1:#{@provider.port}/auth-account"
+    click_link "Muzeum"
     expect(page).to have_current_path(archive_path)
     expect(@authorizations).to eq(1)
 
@@ -126,11 +130,24 @@ RSpec.describe "Shared Auth browser navigation", type: :system do
     expect(@authorizations).to eq(1)
   end
 
+  it "lets Auth own MFA and completes the same Muzeum attempt with the approved assurance" do
+    @provider_mode = :mfa
+    ENV["OIDC_REQUIRED_ACR"] = "urn:harvj:assurance:mfa"
+    visit root_path
+    click_link "Log In"
+    expect(page).to have_text("Test Auth MFA")
+    expect(Session.count).to eq(0)
+    click_link "Complete test MFA"
+    expect(page).to have_current_path(archive_path)
+    expect(Session.count).to eq(1)
+    expect(@authorizations).to eq(1)
+  end
+
   it "does not loop after provider-owned access denial" do
     navigate_from_ce(:denied)
     expect(page).to have_content("Application access denied")
     click_link "Return to Muzeum"
-    expect(page).to have_button("Continue with harvj Auth")
+    expect(page).to have_link("Log In", href: login_path)
     expect(@authorizations).to eq(1)
     expect(Session.count).to eq(0)
   end
@@ -139,7 +156,7 @@ RSpec.describe "Shared Auth browser navigation", type: :system do
     navigate_from_ce(:failed)
     expect(page).to have_content("Sign-in could not be verified")
     visit "#{@application_url}/archive"
-    expect(page).to have_button("Continue with harvj Auth")
+    expect(page).to have_link("Log In", href: login_path)
     expect(@authorizations).to eq(1)
     expect(Session.count).to eq(0)
   end
@@ -149,9 +166,9 @@ RSpec.describe "Shared Auth browser navigation", type: :system do
     expect(page).to have_link("Archive summary")
     find("summary[aria-label='Session menu']").click
     click_button "Log out"
-    expect(page).to have_button("Continue with harvj Auth")
+    expect(page).to have_link("Log In", href: login_path)
     visit "#{@application_url}/archive"
-    expect(page).to have_button("Continue with harvj Auth")
+    expect(page).to have_link("Log In", href: login_path)
     expect(@authorizations).to eq(1)
     expect(Session.count).to eq(0)
   end

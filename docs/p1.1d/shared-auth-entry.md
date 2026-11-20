@@ -1,5 +1,7 @@
 # Shared Auth application entry
 
+This records the original rollout. See [the canonical login entry](../p1.5.3c/canonical-login.md) for the current candidate.
+
 A top-level browser navigation to the protected dashboard automatically enters the existing confidential OIDC code flow. The redirect through `/session/new` consumes a server-set, one-use initiation marker without rendering the manual page. Automatic and manual initiation share the same rate-limited implementation, browser-bound state, nonce, S256 verifier, callback validation and session creation. Private redirects are also non-cacheable.
 
 Automatic initiation is limited to dashboard GET/HTML document navigations with browser Fetch Metadata. Missing metadata, Turbo frames, fetches, prefetch/prerender requests, HEAD/JSON, mutations, health and assets do not initiate authentication. Direct `/session/new` remains a deliberate manual entry point. The dashboard path/query is retained in the signed application session; callback destinations are restricted to the local dashboard. Request parameters cannot select an external return location.

@@ -44,6 +44,7 @@ The authoritative, living domain rules are [principles](domain/principles.md), [
    - **P1.5.2b — Discovery coverage and edition semantics.** Discover candidates through verified local and bounded MusicBrainz tracklists, keep recording identity separate from edition attribution, and replay real discovery misses before further ranking work. [Evidence and replay](p1.5.2/discovery-coverage.md).
    - **P1.5.3a — Resolution Review evidence and usability.** Retain checked candidate tracklists and make catalog appearances, source claims, relative scores and assignment scope explicit. Align the wordmark, footer credit and anonymous Auth navigation with the shared site conventions. [Evidence and verification](p1.5.3a/resolution-review.md).
    - **P1.5.3b — Wikidata artist enrichment.** Use reciprocal artist identifiers and retained administrative hierarchies for origin. Display verified Commons flags alongside their specific places. [Provenance and release scope](p1.5.3b/artist-geography.md).
+   - **P1.5.3c — Canonical Auth login.** Use a session-aware Muzeum `/login` for navigation and the Auth application dropdown. Preserve protected destinations and keep rollout independent of Auth. [Contract and release handoff](p1.5.3c/canonical-login.md).
 
 9. **P1.6 — Profile onboarding (tentative).**
    - **P1.6a — Last.fm authentication and verified username.** Use Last.fm web authorization and bind only the returned username.

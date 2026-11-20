@@ -31,6 +31,6 @@ RSpec.describe "Authenticated dashboard synchronization", type: :request do
     expect(response.body).not_to include('source-name">authorized')
     delete session_path
     get dashboard_updates_path
-    expect(response).to redirect_to(new_session_path)
+    expect(response).to redirect_to(root_path)
   end
 end

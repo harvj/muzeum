@@ -7,6 +7,6 @@ Rails.application.config.filter_parameters += [
   :passw, :email, :secret, :token, :_key, :crypt, :salt, :certificate, :otp, :ssn, :cvv, :cvc
 ]
 
-Rails.application.config.filter_parameters += %i[code state id_token access_token refresh_token client_secret grant_token verifier nonce]
+Rails.application.config.filter_parameters += %i[code state resume id_token access_token refresh_token client_secret grant_token verifier nonce]
 # Redirect instrumentation must not retain authorization state/nonce in URLs.
 Rails.application.config.filter_redirect << "auth.harvj.com"

@@ -15,7 +15,7 @@ RSpec.describe "Dashboard appearance", type: :system do
     user.import_runs.create!(source_username: user.lastfm_username, status: :completed, scrobbles_processed: 3,
       next_page: 2, total_pages: 1, last_success_at: Time.current)
     session = user.sessions.create!(expires_at: 7.days.from_now, last_seen_at: Time.current, verified_at: Time.current, grant_token: "test-only-grant")
-    visit new_session_path
+    visit root_path
     jar = ActionDispatch::TestRequest.create.cookie_jar
     jar.signed[:session_id] = session.id
     page.driver.browser.manage.add_cookie(name: "session_id", value: jar[:session_id], path: "/", http_only: true)
@@ -73,8 +73,8 @@ RSpec.describe "Dashboard appearance", type: :system do
     page.driver.browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "prefers-reduced-motion", value: "reduce" } ])
     expect(page.evaluate_script("getComputedStyle(document.querySelector('.stone-environment'), '::after').animationName")).to eq("none")
     click_button "Log out"
-    expect(page).to have_content("Sign in to Muzeum")
+    expect(page).to have_link("Log In", href: login_path)
     visit archive_path
-    expect(page).to have_current_path(new_session_path)
+    expect(page).to have_current_path(root_path)
   end
 end

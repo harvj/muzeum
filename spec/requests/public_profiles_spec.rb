@@ -127,7 +127,7 @@ RSpec.describe "Public listening profiles", type: :request do
     play = fixture.fetch(:resolved)
     authorize_fixture_publication(fixture)
     expect { post decide_resolution_surface_path(play) }.not_to change(RecordingResolution::Decision, :count)
-    expect(response).to redirect_to(new_session_path)
+    expect(response).to redirect_to(root_path)
     expect { post "#{public_profile_recording_path(profile, fixture.fetch(:recording))}/import" }
       .not_to change(CatalogImport, :count)
     expect(response).to have_http_status(:not_found)
@@ -146,6 +146,7 @@ RSpec.describe "Public listening profiles", type: :request do
     expect { post import_recording_path(fixture.fetch(:recording)) }.not_to change(CatalogImport, :count)
     expect(response).to have_http_status(:forbidden)
 
+    delete session_path
     @subject = fixture.fetch(:owner).oidc_subject
     finish_oidc
     get archive_path

@@ -16,7 +16,7 @@ RSpec.describe "Verified artist geography", type: :system do
     user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "geography-browser")
     session = user.sessions.create!(expires_at: 7.days.from_now, last_seen_at: Time.current, verified_at: Time.current,
       grant_token: "browser-test-fixture")
-    visit new_session_path
+    visit root_path
     jar = ActionDispatch::TestRequest.create.cookie_jar
     jar.signed[:session_id] = session.id
     page.driver.browser.manage.add_cookie(name: "session_id", value: jar[:session_id], path: "/", http_only: true)

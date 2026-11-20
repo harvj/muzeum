@@ -1,7 +1,8 @@
 Rails.application.routes.draw do
   get "site-art", to: "site_art#show"
   get "up" => "rails/health#show", as: :rails_health_check
-  resource :session, only: %i[new create destroy]
+  get "login", to: "sessions#login"
+  resource :session, only: :destroy
   get "oidc/callback", to: "sessions#callback"
   resource :lastfm_account, only: :update
   resources :imports, only: :create

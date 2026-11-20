@@ -10,6 +10,8 @@ The single-open candidate accordion remains. Score details use a native disclosu
 
 ## Navigation and release scope
 
+The login description below records P1.5.3a. [P1.5.3c](../p1.5.3c/canonical-login.md) supersedes its anonymous login destination.
+
 The global wordmark links to the canonical Muzeum root and the footer credit links to harvj.com. The year and SHA-bound version remain in the footer. Anonymous headers link **Log In** to the Auth root. Signed-in headers retain Profile, including when the user is browsing a published archive. Those reads still use the published profile's scope.
 
 The live Auth root was checked as an anonymous visitor. It serves the account login form, and the Auth route returns to its account homepage. It does not create Muzeum's OIDC state, nonce or PKCE verifier. Users can return to the public Muzeum homepage and select **Open your archive**, which uses the existing OIDC entry and callback. Browser tests replay that Auth account return and real client verification against a disposable provider fixture. For a direct handoff from the Auth application menu, separately review configuring its membership-scoped Muzeum entry to the exact registered origin's `/archive`. An immediate app login from an anonymous header would use a Muzeum-owned entry before reaching Auth and requires a separate decision about the requested header destination. [Auth integration contract](https://github.com/harvj/auth/blob/main/docs/integrations/application-login.md).

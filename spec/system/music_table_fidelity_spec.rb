@@ -104,8 +104,8 @@ RSpec.describe "Music table fidelity", type: :system do
     [ [ "desktop", 1440, 960 ], [ "mobile", 390, 844 ] ].each do |screen, width, height|
       viewport(width, height)
       browser.manage.delete_all_cookies
-      visit new_session_path
-      expect(page).to have_css(".login")
+      visit root_path
+      expect(page).to have_link("Log In", href: login_path)
       verify_footer("short", screen, width, height)
 
       authenticate_fixture(user)
@@ -215,7 +215,7 @@ RSpec.describe "Music table fidelity", type: :system do
   def authenticate_fixture(user)
     session = user.sessions.create!(expires_at: 1.day.from_now, last_seen_at: Time.current, verified_at: Time.current,
       grant_token: "fixture")
-    visit new_session_path
+    visit root_path
     jar = ActionDispatch::TestRequest.create.cookie_jar
     jar.signed[:session_id] = session.id
     page.driver.browser.manage.add_cookie(name: "session_id", value: jar[:session_id], path: "/", http_only: true)

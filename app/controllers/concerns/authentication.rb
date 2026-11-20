@@ -38,19 +38,18 @@ module Authentication
   def require_authentication
     return if Current.session
 
-    if interactive_application_entry? && !session[:oidc_auto_blocked]
-      session[:oidc_return_to] = request.fullpath
-      session[:oidc_auto_blocked] = true
-      session[:oidc_auto_start] = true
+    destination = LoginDestination.validate(request.fullpath)
+    if destination && interactive_login_request? && request.headers["Sec-Fetch-Mode"] == "navigate" &&
+        request.headers["Sec-Fetch-Dest"] == "document" && !session[:oidc_auto_blocked]
+      return redirect_to login_path(resume: LoginDestination.handoff(destination))
     end
-    redirect_to new_session_path
+
+    redirect_to root_path
   end
 
-  def interactive_application_entry?
-    controller_path == "home" && action_name == "show" && request.get? && request.format.html? &&
-      request.headers["Sec-Fetch-Mode"] == "navigate" && request.headers["Sec-Fetch-Dest"] == "document" &&
-      request.headers["Turbo-Frame"].blank? &&
-      ![ request.headers["Purpose"], request.headers["Sec-Purpose"] ].compact.any? { |value| value.include?("prefetch") }
+  def interactive_login_request?
+    request.get? && request.format.html? && !request.xhr? && request.headers["Turbo-Frame"].blank? &&
+      [ request.headers["Purpose"], request.headers["Sec-Purpose"] ].compact.none? { |value| value.match?(/prefetch|prerender/i) }
   end
 
   def prevent_private_caching

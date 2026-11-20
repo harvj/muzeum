@@ -14,14 +14,14 @@ RSpec.describe "Auth sign-in page", type: :system do
   it "protects the archive and offers only the established Auth login" do
     old = ActionController::Base.allow_forgery_protection
     ActionController::Base.allow_forgery_protection = true
-    visit new_session_path
-    expect(page).to have_content("Sign in to Muzeum")
-    expect(page).to have_button("Continue with harvj Auth")
+    allow(OidcClient).to receive(:new).and_raise(OidcClient::Failure)
+    visit root_path
+    expect(page).to have_link("Log In", href: login_path)
     expect(page).not_to have_field("Password")
     expect(page).not_to have_content("Observed artists")
-    click_button "Continue with harvj Auth"
+    click_link "Log In"
     expect(page).to have_content("Sign-in is temporarily unavailable")
-    expect(OidcAttempt.count).to eq(1)
+    expect(OidcAttempt.count).to eq(0)
     if ENV["BROWSER_TESTS"] == "1"
       select "Dark", from: "Appearance"
       expect(page.evaluate_script("document.documentElement.dataset.appearance")).to eq("dark")

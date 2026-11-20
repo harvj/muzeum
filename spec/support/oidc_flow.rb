@@ -1,9 +1,10 @@
 module OidcFlow
   def prepare_oidc
-    @old_env = ENV.to_h.slice("OIDC_CLIENT_ID", "OIDC_CLIENT_SECRET", "OIDC_REDIRECT_URI")
+    @old_env = ENV.to_h.slice("OIDC_CLIENT_ID", "OIDC_CLIENT_SECRET", "OIDC_REDIRECT_URI", "OIDC_REQUIRED_ACR")
     ENV["OIDC_CLIENT_ID"] = "muzeum-test"
     ENV["OIDC_CLIENT_SECRET"] = "test-only-secret"
     ENV["OIDC_REDIRECT_URI"] = "http://www.example.com/oidc/callback"
+    ENV.delete("OIDC_REQUIRED_ACR")
     @signing_key = OpenSSL::PKey::RSA.generate(2048)
     @subject = "existing-auth-uuid"
     metadata = { issuer: OidcClient::ISSUER, authorization_endpoint: "https://auth.harvj.com/authorize",
@@ -15,7 +16,7 @@ module OidcFlow
   end
 
   def finish_oidc(claims: {}, key: @signing_key, initiate: true)
-    post session_path if initiate
+    get login_path if initiate
     expect(response).to have_http_status(:redirect)
     query = Rack::Utils.parse_query(URI(response.location).query)
     expect(query["code_challenge_method"]).to eq("S256")
@@ -36,6 +37,6 @@ module OidcFlow
   end
 
   def restore_oidc
-    %w[OIDC_CLIENT_ID OIDC_CLIENT_SECRET OIDC_REDIRECT_URI].each { |k| @old_env.key?(k) ? ENV[k] = @old_env[k] : ENV.delete(k) }
+    %w[OIDC_CLIENT_ID OIDC_CLIENT_SECRET OIDC_REDIRECT_URI OIDC_REQUIRED_ACR].each { |k| @old_env.key?(k) ? ENV[k] = @old_env[k] : ENV.delete(k) }
   end
 end
