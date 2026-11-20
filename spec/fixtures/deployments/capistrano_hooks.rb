@@ -46,7 +46,7 @@ def self.capture(*args)
     $events << [ "remote revision", args.last ]
     "a" * 40
   elsif args.last == "version"
-    Digest::SHA256.hexdigest(File.binread("ops/deploy/muzeum_deploy.py") + File.binread("ops/deploy/inspect.rb"))
+    Digest::SHA256.hexdigest(File.binread("ops/deploy/muzeum_deploy.py") + File.binread("ops/deploy/inspect.rb") + File.binread("ops/runtime/muzeum_runtime.py"))
   else
     JSON.generate({ sha: fetch(:approved_revision), token: fetch(:deployment_token), phase: $phase, health: "passed" })
   end
