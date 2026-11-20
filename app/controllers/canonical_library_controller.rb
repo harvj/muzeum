@@ -14,6 +14,10 @@ class CanonicalLibraryController < ApplicationController
     records = records.where("#{field} ILIKE ?", "%#{@model.sanitize_sql_like(@query)}%") if @query.present?
     @entries = with_artist_credits(records).limit(PAGE + 1).to_a
     @next_page = @entries.pop && @entries.last.id if @entries.size > PAGE
+    if @model == Artist
+      @geographies = CatalogRevision.where(entity_type: CanonicalCatalog::ArtistGeography::ENTITY_TYPE, entity_id: @entries.map(&:id))
+        .select("DISTINCT ON (entity_id) entity_id, evidence").order(:entity_id, id: :desc).index_by(&:entity_id)
+    end
   end
 
   def show
@@ -27,6 +31,8 @@ class CanonicalLibraryController < ApplicationController
 
     case @entry
     when Artist
+      @geography = CatalogRevision.where(entity_type: CanonicalCatalog::ArtistGeography::ENTITY_TYPE, entity_id: @entry.id)
+        .order(id: :desc).first
       @recordings = @entry.recordings.order(:title, :id).includes(recording_artists: :artist)
       @recordings = @recordings.merge(@profile_catalog.recordings) if @public_profile
       performed_on = CatalogTrackSlot.where(recording_id: @entry.recording_artists.select(:recording_id)).select(:release_id)

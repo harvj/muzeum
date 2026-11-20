@@ -3,10 +3,16 @@ import { Controller } from "@hotwired/stimulus"
 const regions = { XW: "Worldwide", XE: "Europe", ZZ: "Country unavailable" }
 
 export default class extends Controller {
-  static values = { code: String }
+  static values = { country: String }
+
+  hideFlag(event) {
+    event.target.closest(".geographic-flag").hidden = true
+  }
 
   connect() {
-    const code = this.codeValue.toUpperCase()
+    if (!this.hasCountryValue) return
+
+    const code = this.countryValue.toUpperCase()
     if (regions[code]) {
       this.element.textContent = regions[code]
       return

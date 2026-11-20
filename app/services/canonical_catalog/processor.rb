@@ -19,6 +19,7 @@ module CanonicalCatalog
       when "recording" then import_recording
       when "release" then import_release
       when "artist" then import_artist
+      when "artist_geography" then import_artist_geography
       when "assessment", "recording_investigation" then assess
       end
     rescue RecordingResolution::ProviderError => error
@@ -61,7 +62,7 @@ module CanonicalCatalog
     def retry_or_fail(error)
       locked do
         attempts = @request.attempts + (error.deferred ? 0 : 1)
-        stopped = error.terminal || attempts >= MAX_ATTEMPTS || (@request.kind == "recording_investigation" && @request.created_at <= 1.day.ago)
+        stopped = error.terminal || attempts >= MAX_ATTEMPTS || (%w[recording_investigation artist_geography].include?(@request.kind) && @request.created_at <= 1.day.ago)
         persist_assessment_failure(error, stopped) if @surface && !error.deferred
         @request.update!(state: stopped ? "failed" : "pending", attempts:, failure: error.deferred ? nil : error.message,
           due_at: retry_due_at(error, attempts), lease_token: nil, lease_until: nil)
@@ -79,7 +80,33 @@ module CanonicalCatalog
       data = @musicbrainz.catalog_artist(@session, artist.mbid)
       raise Store::Unverified, "Artist identity could not be verified" unless data && data["id"] == artist.mbid
 
-      complete { @store.artist(data) }
+      geography = nil
+      complete do
+        @store.artist(data)
+        ids = Array(data["wikidata_ids"])
+        if ids.any?
+          geography = CatalogImport.request!("artist_geography", artist.id,
+            data.slice("id", "country", "area", "begin-area", "wikidata_ids"))
+        end
+      end
+      geography&.dispatch
+    end
+
+    def import_artist_geography
+      artist = Artist.find(@request.entity_id)
+      source = @request.context
+      ids = Array(source["wikidata_ids"])
+      raise Store::Unverified, "MusicBrainz artist identity changed" unless artist.mbid == source["id"]
+
+      evidence = if ids.one?
+        ArtistGeography.new(Clients::Wikimedia.new(@session)).call(mbid: artist.mbid, entity_id: ids.first, musicbrainz: source)
+      else
+        { "provider" => "wikidata", "status" => "conflicting_identifiers", "musicbrainz" => source }
+      end
+      complete do
+        CatalogRevision.create!(entity_type: ArtistGeography::ENTITY_TYPE, entity_id: artist.id,
+          catalog_import: @request, evidence: evidence.merge("requests" => @session.provenance))
+      end
     end
 
     def import_release

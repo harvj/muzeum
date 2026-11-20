@@ -1,0 +1,21 @@
+<% place = local_assigns[:place] %>
+<% country = local_assigns[:country] %>
+<% if place %>
+  <% flag = place["flag"] %>
+  <span class="geographic-place" data-controller="geographic-place">
+    <% if flag %>
+      <%= link_to flag.fetch("source"), class: "geographic-flag", aria: { label: "Flag of #{place.fetch("label")} · #{flag.fetch("license")}#{flag["author"].present? ? " · #{flag["author"]}" : ""}" } do %>
+        <%= image_tag flag.fetch("url"), alt: "Flag of #{place.fetch("label")}", width: 24, height: 16,
+          loading: "lazy", referrerpolicy: "no-referrer", data: { action: "error->geographic-place#hideFlag" } %>
+      <% end %>
+    <% end %>
+    <%= link_to place.fetch("label"), "https://www.wikidata.org/wiki/#{place.fetch("id")}" %>
+    <% if flag&.fetch("license_url", nil) %>
+      <small>Flag by <%= flag.fetch("author") %> · <%= link_to flag.fetch("license"), flag.fetch("license_url") %></small>
+    <% end %>
+  </span>
+<% elsif country.present? %>
+  <span class="geographic-place" data-controller="geographic-place" data-geographic-place-country-value="<%= country %>">Country unavailable</span>
+<% else %>
+  <span>Country unavailable</span>
+<% end %>

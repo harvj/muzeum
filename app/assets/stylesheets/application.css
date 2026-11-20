@@ -333,3 +333,7 @@ main .review-candidate.recommended { border-color: #378c48; }
 .review-candidate[open] > summary::after { content: "⌃"; }
 
 .review-recording-id { overflow-wrap: anywhere; }
+
+.geographic-place { display: inline-flex; align-items: center; flex-wrap: wrap; gap: .28em; }
+.geographic-flag { line-height: 0; }
+.geographic-flag img { display: block; width: 1.5rem; height: 1rem; object-fit: contain; border: 1px solid var(--line); }

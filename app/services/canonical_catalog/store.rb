@@ -41,7 +41,8 @@ module CanonicalCatalog
       mbid = self.class.mbid!(data["id"])
       name = self.class.name!(data["name"])
       artist = Artist.create_or_find_by!(mbid:) { |row| row.name = name }
-      refresh(artist, "name" => name, "country" => data["country"].presence)
+      refresh(artist, { "name" => name, "country" => data["country"].presence },
+        data.slice("wikidata_ids", "area", "begin-area"))
       artist
     end
 

@@ -33,7 +33,7 @@
       <% if reference %>
         <p class="compact-meta"><%= release_date || "Release date unavailable" %> ·
           <% if countries.empty? %>Country unavailable<% end %>
-          <% countries.each_with_index do |country, index| %><%= ", " if index.positive? %><span data-controller="release-country" data-release-country-code-value="<%= country %>"><%= country %></span><% end %>
+          <% countries.each_with_index do |country, index| %><%= ", " if index.positive? %><%= render "shared/geographic_place", country: %><% end %>
         </p>
       <% end %>
       <%= render "review_tracklist", release:, release_id:, mbid: %>

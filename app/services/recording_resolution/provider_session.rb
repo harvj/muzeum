@@ -6,9 +6,12 @@ module RecordingResolution
     USER_AGENT = "Muzeum/1.3 (https://muzeum.fm)"
     LEASE = 2.minutes
     MAX_CACHE_ROWS = 1_000
+    MAX_WIKIMEDIA_CACHE_ROWS = 200
     LIMITS = { musicbrainz: 300, discogs: 150 }.freeze
-    SPACING = { musicbrainz: 1.second, discogs: 3.seconds }.freeze
-    ORIGINS = { musicbrainz: "https://musicbrainz.org", discogs: "https://api.discogs.com" }.freeze
+    WIKIMEDIA = %i[wikidata commons].freeze
+    SPACING = { musicbrainz: 1.second, discogs: 3.seconds, wikidata: 1.second, commons: 1.second }.freeze
+    ORIGINS = { musicbrainz: "https://musicbrainz.org", discogs: "https://api.discogs.com",
+      wikidata: "https://www.wikidata.org", commons: "https://commons.wikimedia.org" }.freeze
 
     attr_reader :provenance, :current_request
 
@@ -20,13 +23,15 @@ module RecordingResolution
       @http = HTTP.timeout(connect: 5, read: 10, write: 5)
     end
 
-    def get(provider, path, params: {}, headers: {}, &project)
+    def get(provider, path, params: {}, headers: {}, projection: nil, &project)
       if provider == :discogs && live?
         raise ProviderError.new("Discogs API has been retired", terminal: true)
       end
       @current_request = { "provider" => provider.to_s, "endpoint" => path, "parameters" => params.stringify_keys }
       # The public search projection is context-free. Edition and verification requests remain request-scoped.
-      scope = if @catalog && provider == :musicbrainz && path == "/ws/2/recording"
+      scope = if @catalog && WIKIMEDIA.include?(provider)
+        [ "catalog-wikimedia-v1", projection ]
+      elsif @catalog && provider == :musicbrainz && path == "/ws/2/recording"
         "catalog-recording-search-v1"
       else
         @catalog ? [ "catalog-v1", @work.id ] : [ "v1", @pilot.id ]
@@ -39,12 +44,19 @@ module RecordingResolution
       status, response_headers, body = fetch(provider, path, params, headers)
       document = interpret(provider, status, response_headers, body, project)
       document["retrieved_at"] = Time.current.iso8601(6)
-      retain = provider == :discogs ? 30.minutes : 1.day
+      document["cache_family"] = "wikimedia" if WIKIMEDIA.include?(provider)
+      retain = WIKIMEDIA.include?(provider) ? 7.days : (provider == :discogs ? 30.minutes : 1.day)
       @work.with_lock do
         self.class.assert_lease!(@work, @token, state: @catalog ? "refreshing" : "leased")
         RequestCache.where(expires_at: ...Time.current).delete_all
         RequestCache.upsert({ request_key: key, expires_at: retain.from_now, document: }, unique_by: :request_key)
-        RequestCache.where(request_key: RequestCache.order(expires_at: :desc, request_key: :desc).offset(MAX_CACHE_ROWS).select(:request_key)).delete_all
+        family = if WIKIMEDIA.include?(provider)
+          RequestCache.where("document->>'cache_family' = 'wikimedia'")
+        else
+          RequestCache.where("document->>'cache_family' IS NULL")
+        end
+        capacity = WIKIMEDIA.include?(provider) ? MAX_WIKIMEDIA_CACHE_ROWS : MAX_CACHE_ROWS
+        RequestCache.where(request_key: family.order(expires_at: :desc, request_key: :desc).offset(capacity).select(:request_key)).delete_all
       end
       remember(provider, path, params, document)
     rescue HTTP::Error, JSON::ParserError, URI::InvalidURIError
@@ -64,8 +76,8 @@ module RecordingResolution
     def remember(provider, path, params, document)
       @provenance << { "provider" => provider, "endpoint" => path, "parameters" => params,
         "retrieved_at" => document["retrieved_at"],
-        "projection_digest" => Digest::SHA256.hexdigest(document.except("retrieved_at").to_json) }
-      document.except("retrieved_at")
+        "projection_digest" => Digest::SHA256.hexdigest(document.except("retrieved_at", "cache_family").to_json) }
+      document.except("retrieved_at", "cache_family")
     end
 
     def reserve!(provider)
@@ -115,12 +127,25 @@ module RecordingResolution
         url = "#{ORIGINS.fetch(provider)}#{path}"
         response = @http.headers({ "User-Agent" => USER_AGENT, "Accept" => "application/json" }.merge(headers))
           .get(url, params:)
-        [ response.code, response.headers, response.to_s ]
+        [ response.code, response.headers, WIKIMEDIA.include?(provider) ? bounded_wikimedia_body(response) : response.to_s ]
       else
         raise ProviderError.new("Fixture transport unavailable", terminal: true) unless @fixture
 
         @fixture.call(provider, path, params)
       end
+    end
+
+    def bounded_wikimedia_body(response)
+      body = +""
+      response.body.each do |chunk|
+        if body.bytesize + chunk.bytesize > 4.megabytes
+          response.body.connection.close
+          raise ProviderError.new("Wikimedia response exceeds the enrichment limit", terminal: true)
+        end
+
+        body << chunk
+      end
+      body
     end
 
     def interpret(provider, status, headers, body, project)
@@ -156,6 +181,15 @@ module RecordingResolution
 
       data = JSON.parse(body)
       raise TypeError unless data.is_a?(Hash)
+
+      if WIKIMEDIA.include?(provider) && data["error"]
+        if data.dig("error", "code") == "maxlag"
+          due = retry_time(headers["Retry-After"]) || 1.minute.from_now
+          impose_cooldown(provider, due)
+          raise ProviderError.new("#{provider} reports replication lag", retry_at: due)
+        end
+        raise ProviderError.new("#{provider} API rejected the request", terminal: true)
+      end
 
       { "data" => project ? project.call(data) : data }
     end

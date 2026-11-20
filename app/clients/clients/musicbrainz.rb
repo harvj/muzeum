@@ -143,8 +143,11 @@ module Clients
     def catalog_artist(session, mbid)
       return unless MBID.match?(mbid.to_s)
 
-      session.get(:musicbrainz, "/ws/2/artist/#{mbid}", params: { fmt: "json" }) do |data|
-        data.slice("id", "name", "country")
+      session.get(:musicbrainz, "/ws/2/artist/#{mbid}", params: { fmt: "json", inc: "url-rels" }) do |data|
+        urls = Array(data["relations"]).select { |relation| relation["type"] == "wikidata" }.filter_map do |relation|
+          relation.dig("url", "resource").to_s[%r{\Ahttps://www\.wikidata\.org/wiki/(Q[1-9][0-9]{0,11})\z}, 1]
+        end.uniq
+        data.slice("id", "name", "country", "area", "begin-area").merge("wikidata_ids" => urls.first(12))
       end["data"]
     end
 

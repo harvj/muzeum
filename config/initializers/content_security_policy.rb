@@ -5,7 +5,7 @@ Rails.application.configure do
     policy.object_src :none
     policy.frame_ancestors :none
     policy.font_src :self
-    policy.img_src :self, :data, "https://art.harvj.com"
+    policy.img_src :self, :data, "https://art.harvj.com", "https://upload.wikimedia.org"
     policy.script_src :self
     policy.style_src :self
     policy.connect_src :self

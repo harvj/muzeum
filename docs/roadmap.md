@@ -43,6 +43,7 @@ The authoritative, living domain rules are [principles](domain/principles.md), [
    - **P1.5.2a — Human validation and release-assisted review.** Expand the offline holdout to include discovery misses, prepare a blinded order study, and test scoped tracklist proposals with explicit confirmation and preserved evidence. Next, validate human feedback and batch-specific snapshots offline. [Batch design](p1.5.2/release-tracklist-review.md).
    - **P1.5.2b — Discovery coverage and edition semantics.** Discover candidates through verified local and bounded MusicBrainz tracklists, keep recording identity separate from edition attribution, and replay real discovery misses before further ranking work. [Evidence and replay](p1.5.2/discovery-coverage.md).
    - **P1.5.3a — Resolution Review evidence and usability.** Retain checked candidate tracklists and make catalog appearances, source claims, relative scores and assignment scope explicit. Align the wordmark, footer credit and anonymous Auth navigation with the shared site conventions. [Evidence and verification](p1.5.3a/resolution-review.md).
+   - **P1.5.3b — Wikidata artist enrichment.** Use reciprocal artist identifiers and retained administrative hierarchies for origin. Display verified Commons flags alongside their specific places. [Provenance and release scope](p1.5.3b/artist-geography.md).
 
 9. **P1.6 — Profile onboarding (tentative).**
    - **P1.6a — Last.fm authentication and verified username.** Use Last.fm web authorization and bind only the returned username.

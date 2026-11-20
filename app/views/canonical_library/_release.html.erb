@@ -3,7 +3,7 @@
   <div class="plays-tooltip" popover="manual" aria-hidden="true" data-play-titles-target="tooltip"></div>
   <h2>Track listing</h2>
   <p><%= [@entry.release_year, @entry.release_month&.to_s&.rjust(2, "0"), @entry.release_day&.to_s&.rjust(2, "0")].compact.join("-").presence || "Date unknown" %>
-    · <%= @entry.catalog_country.presence || "Country unknown" %></p>
+    · <%= render "shared/geographic_place", country: @entry.catalog_country %></p>
   <% if @slots.any? %>
     <%= dense_table("Track listing", classes: "release-tracks") do %>
       <thead><tr><th scope="col" class="track-number" aria-label="Track number">#</th><th scope="col">Recording</th><th scope="col" class="table-number">Length</th><th scope="col" class="table-number">Resolved plays</th></tr></thead>
