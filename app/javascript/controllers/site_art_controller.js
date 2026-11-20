@@ -1,5 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
-import { artworkTreatment } from "site_art_presentation"
+import { artworkTreatment, readingSurface } from "site_art_presentation"
 
 const refreshInterval = 60000
 const imageTimeout = 5000
@@ -88,6 +88,8 @@ export default class extends Controller {
         if (values[name]) element.style.setProperty(property, values[name])
         else element.style.removeProperty(property)
       }
+      if (values.foreground) element.style.setProperty("--reading-surface", readingSurface(values.foreground))
+      else element.style.removeProperty("--reading-surface")
       element.toggleAttribute("data-art-treatment", Object.values(values).some(Boolean))
     }
   }

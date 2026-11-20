@@ -80,9 +80,13 @@ RSpec.describe "Site Art appearance", type: :system do
     expect(overlay_property("textShadow")).to eq("rgba(255, 248, 233, 0.95) 0px 2px 3px")
     expect(overlay_property("backgroundImage")).to eq("none")
     expect(overlay_property("boxShadow")).to eq("none")
+    expect(overlay_property("backgroundColor", "header")).to eq("rgba(255, 255, 255, 0.54)")
+    expect(overlay_property("backgroundColor", "footer")).to eq("rgba(0, 0, 0, 0.57)")
     find(".harvj-wordmark").hover
     expect(overlay_property("color")).to eq("rgb(255, 255, 255)")
     expect(overlay_property("backgroundColor")).to eq("rgb(41, 45, 44)")
+    expect(overlay_property("textDecorationLine")).to eq("none")
+    expect(overlay_property("textShadow")).to eq("none")
     find("main h1").hover
     browser.action.send_keys(:tab).perform
     expect(page).to have_css(".harvj-wordmark:focus-visible")
@@ -131,6 +135,13 @@ RSpec.describe "Site Art appearance", type: :system do
     expect(page).to have_css("header[style*='#F5EFE3']")
     expect(overlay_property("color")).to eq("rgb(245, 239, 227)")
     expect(overlay_property("color", "footer span")).to eq("rgb(245, 239, 227)")
+    sign_in = "header .entity-link"
+    expect(overlay_property("color", sign_in)).to eq("rgb(245, 239, 227)")
+    find(sign_in).hover
+    expect(overlay_property("color", sign_in)).to eq("rgb(35, 38, 37)")
+    expect(overlay_property("backgroundColor", sign_in)).to eq("rgb(241, 242, 237)")
+    expect(overlay_property("textDecorationLine", sign_in)).to eq("none")
+    find("main h1").hover
     browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "forced-colors", value: "active" } ])
     expect(overlay_property("backgroundImage")).to eq("none")
     expect(overlay_property("color")).not_to eq("rgb(245, 239, 227)")

@@ -82,7 +82,8 @@ body:has(.library-nav) main { margin-top: 14px; }
 .entity-link:hover, .entity-link:focus-visible, main a:hover, main a:focus-visible {
   color: var(--card);
   background-color: var(--ink);
-  text-decoration-color: transparent;
+  text-decoration: none;
+  text-shadow: none;
 }
 .entity-link:focus-visible, main a:focus-visible { outline-offset: 1px; }
 .harvj-session > summary { width: auto; padding: 0 9px; }
@@ -210,7 +211,7 @@ body:has(.library-nav) main { margin-top: 14px; }
 
 .profile-import label { flex-basis: 100%; }
 .profile-import input { flex: 1; width: auto; }
-.profile-import :disabled { cursor: not-allowed; opacity: .66; }
+.profile-import :disabled { cursor: not-allowed; color: var(--muted); opacity: 1; }
 
 
 /* Keep remote image sizing in the fingerprinted application stylesheet. */
@@ -232,18 +233,28 @@ body > :is(header, main, footer) {
   --art-foreground: initial;
   --art-text-shadow: initial;
   --art-backing: initial;
+  --reading-surface: initial;
 }
 
+a:hover { text-decoration: none; }
+
 @media (forced-colors: none) {
+  body > :is(header, footer)[data-art-treatment],
+  main[data-art-treatment] > .intro,
+  main[data-art-treatment] .archive-heading {
+    background-color: var(--reading-surface, var(--card));
+  }
+
   header[data-art-treatment] :where(.harvj-wordmark, .entity-link, .account-nav > .controls > label),
   main[data-art-treatment] > .intro > :is(h1, p),
+  main[data-art-treatment] .archive-heading,
   footer[data-art-treatment] > :is(span, a) {
     text-shadow: var(--art-text-shadow, none);
   }
 
-  header[data-art-treatment] .harvj-wordmark { color: var(--art-foreground, var(--harvj-wordmark-color)); }
-  header[data-art-treatment] :is(.entity-link, .account-nav > .controls > label),
-  main[data-art-treatment] > .intro > h1 { color: var(--art-foreground, var(--ink)); }
+  header[data-art-treatment] :is(.harvj-wordmark, .entity-link):not(:hover, :focus-visible, :active),
+  header[data-art-treatment] .account-nav > .controls > label,
+  main[data-art-treatment] :is(.intro > h1, .archive-heading) { color: var(--art-foreground, var(--ink)); }
   main[data-art-treatment] > .intro > p,
   footer[data-art-treatment] > :is(span, a) { color: var(--art-foreground, var(--muted)); }
   main[data-art-treatment] > .intro a:not(:hover, :focus-visible, :active) { color: var(--art-foreground, var(--ink)); }
@@ -251,7 +262,7 @@ body > :is(header, main, footer) {
     color: var(--card);
     background: var(--ink);
     text-shadow: none;
-    text-decoration: underline;
+    text-decoration: none;
   }
   body > header :is(.harvj-wordmark, .entity-link):focus-visible {
     outline: 2px solid var(--ink);
@@ -267,5 +278,6 @@ body > :is(header, main, footer) {
     --art-foreground: initial !important;
     --art-text-shadow: initial !important;
     --art-backing: initial !important;
+    --reading-surface: initial !important;
   }
 }
