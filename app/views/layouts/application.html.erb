@@ -17,7 +17,7 @@
     <%= tag.div class: "stone-environment", aria: { hidden: true },
                 data: { controller: "site-art", site_art_urls_value: SiteArt.snapshot } %>
     <header>
-      <a class="harvj-wordmark" href="/">muzeum</a>
+      <a class="harvj-wordmark" href="https://muzeum.fm/">muzeum</a>
       <div class="header-navigation">
         <% if @public_profile %>
           <nav class="library-nav" aria-label="Public profile">
@@ -26,7 +26,6 @@
               <%= link_to section.capitalize, catalog_index_path(section), class: "entity-link" %>
             <% end %>
           </nav>
-          <div class="account-nav"><%= render "shared/appearance" %></div>
         <% elsif current_user %>
           <nav class="library-nav" aria-label="Music library">
             <% { "Recordings" => recordings_path, "Releases" => releases_path, "Artists" => artists_path,
@@ -35,10 +34,12 @@
               <%= link_to label, path, class: "entity-link", aria: { current: active ? "page" : nil } %>
             <% end %>
           </nav>
+        <% end %>
+        <% if current_user %>
           <div class="account-nav" aria-label="Profile"><%= render "shared/session_dropdown" %></div>
         <% else %>
           <div class="account-nav">
-            <%= link_to "Sign in", archive_path, class: "entity-link" unless controller_name == "sessions" %>
+            <%= link_to "Log In", "https://auth.harvj.com/", class: "entity-link" %>
             <%= render "shared/appearance" %>
           </div>
         <% end %>
@@ -49,7 +50,7 @@
       <%= yield %>
     </main>
     <footer class="site-footer">
-      <span>© 2026 Jim Harvey<% if (tag = published_release_tag) %> · Muzeum <%= tag %><% end %></span>
+      <span>© 2026 <%= link_to "Jim Harvey", "https://harvj.com/" %><% if (tag = published_release_tag) %> · Muzeum <%= tag %><% end %></span>
     </footer>
   </body>
 </html>

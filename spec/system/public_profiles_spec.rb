@@ -19,7 +19,7 @@ RSpec.describe "Public profile browsing", type: :system do
     allow(SiteArt).to receive(:snapshot).and_return(
       light: { url: "/environments/stone/limestone.jpg" }, dark: { url: "/environments/stone/onyx.jpg" })
 
-    [ [ 1440, 960, "light" ], [ 390, 844, "dark" ] ].each do |width, height, theme|
+    [ [ 1440, 960 ], [ 390, 844 ] ].product(%w[light dark]).each do |(width, height), theme|
       browser.execute_cdp("Emulation.setDeviceMetricsOverride", width:, height:, deviceScaleFactor: 1, mobile: width < 700)
       browser.execute_cdp("Emulation.setEmulatedMedia", features: [
         { name: "prefers-color-scheme", value: theme }, { name: "prefers-reduced-motion", value: "reduce" }
@@ -27,13 +27,15 @@ RSpec.describe "Public profile browsing", type: :system do
       visit root_path
       expect(page).to have_field("Last.fm username", disabled: true)
       expect(page).to have_button("Get Started", disabled: true)
-      expect(page).to have_link("Sign in", href: archive_path)
+      expect(page).to have_link("Open your archive", href: archive_path)
+      verify_navigation
       verify_viewport(width, theme)
       capture("landing-#{theme}")
 
       click_link "qalephd"
       expect(page).to have_content("Unresolved")
       expect(page).to have_no_link("Resolution")
+      verify_navigation
       verify_viewport(width, theme)
       capture("archive-#{theme}")
 
@@ -42,11 +44,19 @@ RSpec.describe "Public profile browsing", type: :system do
       click_link "Harbor Sessions"
       expect(page).to have_content("The Empty Pier")
       expect(page).to have_no_button("Import")
+      verify_navigation
       verify_viewport(width, theme)
     end
   ensure
     browser&.execute_cdp("Emulation.clearDeviceMetricsOverride")
     browser&.execute_cdp("Emulation.setEmulatedMedia", features: [])
+  end
+
+  def verify_navigation
+    expect(page).to have_css('header .harvj-wordmark[href="https://muzeum.fm/"]')
+    expect(page).to have_link("Jim Harvey", href: "https://harvj.com/")
+    expect(page).to have_link("Log In", href: "https://auth.harvj.com/")
+    expect(page).to have_no_css("header summary[aria-label='Session menu']")
   end
 
   def verify_viewport(width, theme)

@@ -1,11 +1,19 @@
 <% mbid = candidate.fetch("id") %>
-<% slots = Array(@assessment.evidence["slots"]).select { |slot| slot["recording_mbid"] == mbid } %>
-<% edition = slots.any? ? @assessment.evidence["edition"] : nil %>
 <% appearance = rank.dig("inputs", "catalog_release_appearance", "provenance") %>
-<% countries = edition ? Array(edition["countries"]).presence || Array(edition["country"]) : [] %>
-<% positives = rank.fetch("inputs").values.select { |item| item["state"] == "positive" } %>
-<% conflicts = rank.fetch("inputs").values.select { |item| item["state"] == "contradictory" } %>
-<% tooltip_id = "score-evidence-#{mbid}" %>
+<% edition = @assessment.evidence["edition"] if Array(@assessment.evidence["slots"]).any? { |slot| slot["recording_mbid"] == mbid } %>
+<% local_id = candidate.dig("local_release_context", "edition_mbid") %>
+<% references = Array(candidate["releases"]) %>
+<% references = [ { "id" => local_id }, *references ] if local_id %>
+<% shared_isrc = @candidates.any? { |other| other["id"] != mbid && (Array(other["isrcs"]) & Array(candidate["isrcs"])).any? } %>
+<% reference = appearance || edition || references.find { |item| @review_releases[item["id"]]&.fetch("state", nil) == "complete" } || references.first %>
+<% release_id = reference&.fetch("id", nil) %>
+<% release = @review_releases[release_id] %>
+<% metadata = (reference || {}).merge(release || {}) %>
+<% release_date = metadata["date"].presence %>
+<% countries = Array(metadata["countries"]).presence || Array(metadata["country"]) %>
+<% factors = rank.fetch("inputs").select { |_, item| %w[positive contradictory].include?(item["state"]) } %>
+<% positives, conflicts = factors.partition { |_, item| item["state"] == "positive" } %>
+<% target = @selected_scrobble || @observation %>
 <details class="candidate review-candidate<%= " recommended" if recommended %>" name="resolution-candidate" <%= "open" if expanded %>>
   <summary class="review-candidate-summary">
     <span>
@@ -13,68 +21,41 @@
       <strong class="review-candidate-title"><%= candidate["title"] %></strong>
       <span class="review-credit"><%= Array(candidate["artist-credit"]).map { |credit| "#{credit["name"]}#{credit["joinphrase"]}" }.join.presence || "Artist credit unavailable" %>
         <% if candidate["disambiguation"].present? %> · <%= candidate["disambiguation"] %><% end %></span>
-      <span class="review-edition"><%= edition&.fetch("title") || appearance&.fetch("title") || "Supporting release unavailable" %></span>
-      <% if edition %>
-        <span class="compact-meta"><%= edition["date"].presence || "Date unavailable" %>
-          · <%= countries.any? ? nil : "Country unavailable" %>
-          <% countries.each_with_index do |country, index| %><%= ", " if index.positive? %><span data-controller="release-country" data-release-country-code-value="<%= country %>"><%= country %></span><% end %>
-          · <%= Array(edition["formats"]).join(" / ").presence || "Format unavailable" %>
-          <% if edition.dig("release-group", "primary-type").present? %> · <%= edition.dig("release-group", "primary-type") %><% end %></span>
-      <% end %>
+      <span class="review-edition"><%= metadata["title"].presence || "MusicBrainz supplied no release title" %><% if metadata["disambiguation"].present? %> · <%= metadata["disambiguation"] %><% end %> · <%= release_date&.first(4) || "Release year unavailable" %></span>
+      <span class="compact-meta"><%= recording_duration(candidate["length"]) if candidate["length"] %><%= " · " if candidate["length"] %>MusicBrainz ID <%= mbid.first(8) %></span>
     </span>
-    <span class="review-score">
-      Score <strong><%= rank["score"] %></strong>
-      <span class="review-score-help" tabindex="0" aria-label="Explain score <%= rank["score"] %>" aria-describedby="<%= tooltip_id %>">ⓘ
-        <span id="<%= tooltip_id %>" class="review-tooltip" role="tooltip">
-          <strong>Why <%= rank["score"] %>?</strong>
-          <% (positives + conflicts).each do |item| %><span><%= "%+d" % item["weight"] %> · <%= item["explanation"] %></span><% end %>
-          <span>Relative evidence score</span>
-        </span>
-      </span>
-      <meter min="<%= [0, @ranking.last["score"]].min %>" max="<%= [1, @ranking.first["score"]].max %>"
-        value="<%= rank["score"] %>" aria-label="Score relative to this shortlist"></meter>
-    </span>
+    <span class="review-score">Score <strong><%= rank["score"] %></strong></span>
   </summary>
   <div class="review-candidate-detail">
     <div>
       <p class="compact-meta review-recording-id"><%= rank["provenance"] == "local_catalog" ? "Local catalog" : "MusicBrainz" %> ·
         <%= link_to "Recording #{mbid}", "https://musicbrainz.org/recording/#{mbid}", title: mbid %></p>
-      <% if edition %>
-        <h3>Tracklist · <%= edition["title"] %></h3>
-        <p class="compact-meta">Supporting evidence for recording identity. Release assignment is separate.
-          <% if Clients::Musicbrainz::MBID.match?(edition["id"].to_s) %>
-            <%= link_to "MusicBrainz release", "https://musicbrainz.org/release/#{edition.fetch("id")}" %>
-          <% end %></p>
-        <% unless edition["complete_tracklist"] %><p class="compact-meta">Showing retained track slots. Full tracklist availability is unverified.</p><% end %>
-        <ol class="review-tracks">
-          <% Array(@assessment.evidence["slots"]).each do |slot| %>
-            <li class="<%= "review-track-match" if slot["recording_mbid"] == mbid %>">
-              <span><%= [slot["medium"], slot["number"].presence || slot["position"]].compact.join(".") %></span>
-              <span><%= slot["title"] %><% if slot["recording_mbid"] == mbid %><span class="visually-hidden"> (candidate recording)</span><% end %></span>
-              <span><%= recording_duration(slot["length"]) if slot["length"] %></span>
-            </li>
-          <% end %>
-        </ol>
-      <% elsif appearance %>
-        <p class="compact-meta">
-          <%= link_to [appearance["title"], appearance["disambiguation"].presence].compact.join(" · "),
-            "https://musicbrainz.org/release/#{appearance.fetch("id")}" %>
-          · Disc <%= appearance["medium"] %>, track <%= appearance["position"] %>.
-          Catalog appearance only. The edition played is unverified.
+      <% if reference %>
+        <p class="compact-meta"><%= release_date || "Release date unavailable" %> ·
+          <% if countries.empty? %>Country unavailable<% end %>
+          <% countries.each_with_index do |country, index| %><%= ", " if index.positive? %><span data-controller="release-country" data-release-country-code-value="<%= country %>"><%= country %></span><% end %>
         </p>
-      <% else %>
-        <p class="compact-meta">A checked release tracklist is unavailable for this candidate.</p>
       <% end %>
+      <%= render "review_tracklist", release:, release_id:, mbid: %>
     </div>
     <div class="review-factors">
       <h3>For</h3>
-      <ul><% positives.each do |item| %><li><%= item["explanation"] %></li><% end %></ul>
+      <ul><% positives.each do |key, item| %><li><%= review_factor_label(key, item) %></li><% end %></ul>
       <h3>Against</h3>
       <% if conflicts.any? %>
-        <ul><% conflicts.each do |item| %><li><%= item["explanation"] %></li><% end %></ul>
+        <ul><% conflicts.each do |key, item| %><li><%= review_factor_label(key, item) %></li><% end %></ul>
       <% else %><p>No conflict in the available evidence.</p><% end %>
       <h3>Uncertainty</h3>
-      <p><%= positives.all? { |item| item["weight"] <= 2 } ? "The available evidence does not independently link this play to the recording." : "The source observation provides no measured duration for comparison." %></p>
+      <p>The source observation provides no measured duration for comparison.</p>
+      <% if @candidates.many? %>
+        <% if shared_isrc %><p>MusicBrainz lists a shared ISRC for at least one alternative.</p><% end %>
+        <p>Whether these catalog recording IDs represent the same audio is unknown.</p>
+      <% end %>
+      <details class="review-score-explanation">
+        <summary>Explain score <%= rank["score"] %></summary>
+        <ul><% factors.each do |key, item| %><li><%= "%+d" % item["weight"] %> · <%= review_factor_label(key, item) %></li><% end %></ul>
+        <p>Scores express relative evidence strength. They are not probabilities or calibrated confidence.</p>
+      </details>
     </div>
   </div>
   <% if @may_manage_observation && @assessment_matches_claims %>
@@ -89,9 +70,13 @@
       <%= form.label :comment, "Comment (optional)", for: "comment-#{mbid}" %>
       <%= form.text_field :comment, id: "comment-#{mbid}", maxlength: 500 %>
     </details>
-    <% unless @selected_scrobble %><p class="muted"><%= pluralize(@affected_count, "current observation") %> affected, plus future exact matches. Individual overrides retain precedence.</p><% end %>
+    <p class="muted"><% if @selected_scrobble %>Affects 1 observation, ID <%= target.id %>.
+      <%= link_to "Review matching-group scope", resolution_surface_path(@observation, assessment: @assessment.id) %>
+      <% else %>Affects <%= pluralize(@affected_count, "current matching observation") %> and future exact matches. Individual overrides take precedence.
+      <%= link_to "Review only observation #{target.id}", resolution_surface_path(@observation, assessment: @assessment.id, play: target.id) %>
+      <% end %></p>
     <div class="catalog-actions">
-      <%= form.button(@selected_scrobble ? "Only this time" : "Apply to all", name: "mode", value: "resolved") %>
+      <%= form.button(@selected_scrobble ? "Assign only observation #{target.id}" : "Assign #{pluralize(@affected_count, "matching observation")}", name: "mode", value: "resolved") %>
       <%= form.button "Defer", name: "feedback", value: "deferred", formaction: defer_resolution_surface_path(@observation) %>
       <%= form.button "Reject candidate", name: "feedback", value: "rejected", formaction: defer_resolution_surface_path(@observation) %>
     </div>

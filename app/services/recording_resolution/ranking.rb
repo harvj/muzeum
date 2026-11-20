@@ -3,9 +3,9 @@ module RecordingResolution
     VERSION = "recording-ranking-v1"
     VERSION_MARKERS = /\b(live|remix|acoustic|demo|alternate|edit|instrumental|remaster)(?:ed)?\b/i
 
-    def self.call(surface, evidence, discovery: true)
+    def self.call(surface, evidence, discovery: true, caption_bonus: false)
       Workspace.candidate_evidence(evidence).filter_map do |candidate|
-        new(surface, evidence, candidate, discovery:).evaluate
+        new(surface, evidence, candidate, discovery:, caption_bonus:).evaluate
       end.sort_by { |row| [ -row.fetch("score"), row.fetch("recording_mbid") ] }
     end
 
@@ -20,10 +20,11 @@ module RecordingResolution
         %w[recording_identifier edition_slot].any? { |key| first.dig("inputs", key, "state") == "positive" }
     end
 
-    def initialize(surface, evidence, candidate, discovery:)
+    def initialize(surface, evidence, candidate, discovery:, caption_bonus:)
       @surface, @evidence, @candidate = surface, evidence, candidate
       @inputs = {}
       @discovery = discovery
+      @caption_bonus = caption_bonus
     end
 
     def evaluate
@@ -71,8 +72,8 @@ module RecordingResolution
       end
       appearance = @candidate["release_discovery"] unless slot
       if appearance
-        caption_matches = appearance["relationship"] == "matching_catalog_caption"
-        factor("catalog_release_appearance", true, caption_matches ? 2 : 1, 0,
+        weight = @caption_bonus && appearance["relationship"] == "matching_catalog_caption" ? 2 : 1
+        factor("catalog_release_appearance", true, weight, 0,
           "MusicBrainz lists this recording in the checked catalog tracklist", nil)
         @inputs.fetch("catalog_release_appearance")["provenance"] = appearance
       end
@@ -94,6 +95,7 @@ module RecordingResolution
     private
 
     def version(independent_release_support, appearance)
+      return "recording-ranking-v1-release-discovery-v2" if appearance && !@caption_bonus
       return "recording-ranking-v1-release-discovery-v1" if appearance || @typographic_match
       return "recording-ranking-v1-local-release-v1" if independent_release_support
 

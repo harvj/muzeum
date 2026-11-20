@@ -1,5 +1,5 @@
 class PublicProfilesController < ApplicationController
-  skip_before_action :resume_session, :require_authentication
+  skip_before_action :require_authentication
   include PublishedProfile
 
   def show

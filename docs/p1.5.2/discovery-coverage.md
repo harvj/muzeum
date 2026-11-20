@@ -14,6 +14,8 @@ The existing provider ledger and job budgets still apply. Discovery itself consi
 
 ## Replay results
 
+This replay preserves the v0.3.3 caption scoring. See [P1.5.3a](../p1.5.3a/resolution-review.md) for the subsequent rule change.
+
 Run `RAILS_ENV=test bin/rails runner script/resolution_discovery_replay.rb` against the archived MusicBrainz projections in the discovery fixture. It includes the production candidate set and source claims for Regent's Court, three previous held-out discovery misses, and three edition controls. The controls cover original material, a newly introduced bonus track, and previously released EP material on the deluxe program. Artist and label tracklists corroborate their release context. The Queen cases replay the same missing candidates and misleading identifier used in prior evaluation. They are constructed source claims with independently corroborated recording context. [Original EP](https://thegetupkids.bandcamp.com/album/simple-science), [Queen Montreal release](https://musicbrainz.org/release/1586ee16-f598-4bf4-90d6-133128c2df94), [Queen Wembley release](https://musicbrainz.org/release/4fdc2eac-8574-4114-b36f-c7fcfe619178).
 
 | Measure | P1.5.1 replay | Discovery replay |

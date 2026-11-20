@@ -23,7 +23,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     click_link "Signals"
     expect(page).to have_text("A checked MusicBrainz edition contains this track slot")
     within(".candidate", text: "Signals") do
-      find_button("Apply to all").send_keys(:enter)
+      find_button("Assign 1 matching observation").send_keys(:enter)
     end
     expect(page).to have_text("Recording decision saved.")
     expect(page).to have_text("Confirmed candidate")
@@ -61,7 +61,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     expect(page).to have_link("Night Drive")
 
     visit resolution_surface_path(observation, play: observation.id)
-    expect(page).to have_button("Only this time")
+    expect(page).to have_button("Assign only observation #{observation.id}")
     expect(page).to have_text("Inherited from your exact-surface assignment")
     verify_appearances("resolution")
   end
@@ -84,19 +84,16 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     CanonicalCatalog::Processor.new(request, session_factory: ->(*) { CatalogFixtures::Session.new }).call
     click_link "Refresh results"
     expect(page).to have_css(".review-candidate.recommended")
-    expect(page).to have_text("2 current observations")
+    expect(page).to have_text("2 current matching observations")
     expect(page).to have_css(".review-candidate[open] .review-tracks li", count: 3)
     expect(page).to have_css(".review-candidate[open] .review-track-match", count: 2)
-    expect(page).to have_text("🇺🇸 United States, 🇨🇦 Canada · CD · Album")
+    expect(page).to have_text("🇺🇸 United States, 🇨🇦 Canada")
     expect(page).to have_text("3:10")
     expect(page).to have_link("MusicBrainz release", href: "https://musicbrainz.org/release/#{CatalogFixtures::IDS[:edition]}")
     expect(page).to have_no_css(".resolution-review img")
-    find(".review-score-help").hover
-    expect(page).to have_css("[role=tooltip]", text: "Verified source recording identifier")
-    browser.execute_script("document.querySelector('.review-score-help').focus()")
-    find(".review-credit").hover
-    expect(page).to have_css("[role=tooltip]", text: "Relative evidence score")
-    browser.execute_script("document.activeElement.blur()")
+    find(".review-score-explanation summary").send_keys(:enter)
+    expect(page).to have_css(".review-score-explanation[open]", text: "Verified source recording identifier")
+    expect(page).to have_text("Scores express relative evidence strength.")
     capture_resolution("ranked-desktop")
 
     assessment = RecordingResolution::Ledger.assessments(user).sole
@@ -124,7 +121,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
 
     visit resolution_surface_path(observation, assessment: assessment.id)
     within(".candidate", text: "Signals") do
-      find_button("Apply to all").send_keys(:enter)
+      find_button("Assign 2 matching observations").send_keys(:enter)
     end
     expect(page).to have_text("Inherited from your exact-surface assignment")
     expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)

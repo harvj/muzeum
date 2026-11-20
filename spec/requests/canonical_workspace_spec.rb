@@ -1,6 +1,7 @@
 require "rails_helper"
 require_relative "../support/oidc_flow"
 require_relative "../support/catalog_fixtures"
+require_relative "../support/discovery_replay"
 
 RSpec.describe "Canonical library and resolution workspace", type: :request do
   include OidcFlow
@@ -17,6 +18,48 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     assessment = RecordingResolution::Assessment.new(evidence: {})
     expect(RecordingResolution::Workspace.editions(candidate, assessment)).to eq(
       [ [ "ESTRUS · 2026 · US", CatalogFixtures::IDS[:track] ] ])
+  end
+
+  it "renders the Regent's Court source, three checked tracklists and explicit decision scopes" do
+    finish_oidc
+    user = User.find_by!(oidc_subject: @subject)
+    LastfmAccount.associate!(user, "regents-court-review")
+    fixture_dir = Rails.root.join("spec/fixtures/recording_resolution/discovery")
+    fixture = JSON.parse(fixture_dir.join("corpus.json").read)
+    daytrotter = JSON.parse(fixture_dir.join("daytrotter.json").read)
+    fixture.fetch("releases")[daytrotter.fetch("id")] = daytrotter
+    example = fixture.fetch("cases").find { |row| row["id"] == "regents-court-292999" }
+    source = example.fetch("surface")
+    claims = example.fetch("claims")
+    payload = claims.merge("artist_name" => source.fetch("artist"), "album_name" => source.fetch("album"), "track_name" => source.fetch("track"))
+    plays = 5.times.map do |offset|
+      Scrobble.create!(user:, lastfm_account: user.source_account, played_at: offset.days.ago,
+        source_fingerprint: SecureRandom.hex(32), payload:)
+    end
+    observation = plays.first
+    surface = RecordingResolution::Ledger.attach!(observation)
+    group = RecordingResolution::Group.create!(surface_id: surface.id, version: RecordingResolution::Ledger::VERSION, claims:)
+    session = DiscoveryReplay::Session.new(fixture, example)
+    evidence = RecordingResolution::Evaluator.new(session, discogs: nil, workspace: true, review_alternative: true).call(surface, claims)
+    # Reproduce the historical scoring that production stored before the caption rule changed.
+    evidence["ranking"] = RecordingResolution::Ranking.call(surface, evidence, caption_bonus: true)
+    assessment = RecordingResolution::Assessment.create!(group_id: group.id, version: "fixture", actor: "fixture",
+      digest: SecureRandom.hex(32), evidence:)
+
+    get resolution_surface_path(observation, play: observation.id, assessment: assessment.id)
+    expect(response).to have_http_status(:ok)
+    doc = Nokogiri::HTML(response.body)
+    expect(doc.css(".review-source-claims dt").map(&:text)).to eq(%w[Track Artist Album])
+    expect(doc.css(".review-source-claims dd").map(&:text)).to eq(source.values_at("track", "artist", "album"))
+    expect(doc.css(".review-edition").map(&:text).join(" ")).to include("deluxe edition", "2011", "Daytrotter Session")
+    expect(doc.css(".review-candidate").map { |card| card.css(".review-tracks li").size }).to eq([ 18, 14, 4 ])
+    expect(doc.css(".review-track-match").size).to eq(3)
+    expect(doc.css(".review-score strong").map(&:text)).to eq(%w[9 8 7])
+    expect(doc.text).to include("historical scoring", "3 plausible recordings found", "Assign only observation #{observation.id}", "2:03")
+
+    get resolution_surface_path(observation, assessment: assessment.id)
+    expect(response.body).to include("Assign 5 matching observations", "future exact matches")
+    expect(RecordingResolution::Decision.count).to eq(0)
   end
 
   it "protects the library, workspace and import actions" do
@@ -43,10 +86,10 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     get resolution_surfaces_path(filter: "suggested")
     expect(response.body).to include("Signals", "Night Lines", "Night Drive")
     get resolution_surface_path(example)
-    expect(response.body).to include("Apply to all", "A checked MusicBrainz edition contains this track slot")
+    expect(response.body).to include("Assign 2 matching observations", "A checked MusicBrainz edition contains this track slot")
     expect(response.body).not_to include("Release edition to verify")
     get resolution_surface_path(example, before: second.id)
-    expect(response.body).to include("2 observations with these exact Last.fm strings")
+    expect(response.body).to include("2 matching observations")
     expect { post decide_resolution_surface_path(example), params: choice }.to change(RecordingResolution::Decision, :count).by(1)
     expect(response).to redirect_to(resolution_surface_path(example))
     get resolution_surfaces_path(filter: "resolved")
@@ -76,7 +119,7 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     expect(response.body).to include("Signals")
     expect(RecordingResolution::Ledger.effective(user).find(second.id).effective_recording_id).to be_nil
     get resolution_surface_path(example, play: second.id)
-    expect(response.body).to include("Only this time", "Return to inheritance")
+    expect(response.body).to include("Assign only observation", "Return to inheritance")
     post decide_resolution_surface_path(example), params: { scope: "scrobble", play_id: second.id, mode: "inherit", head: head.id }
     expect(RecordingResolution::Decision.last.evidence.fetch("reason_code")).to eq("restore_inheritance")
     later = catalog_observation(user, time: 1.day.from_now)
@@ -111,7 +154,7 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     CanonicalCatalog::Processor.new(request, session_factory: ->(*) { CatalogFixtures::Session.new }).call
     expect(request.reload.state).to eq("imported")
     get resolution_surface_path(second)
-    expect(response.body).to include("Muzeum’s recommendation", "Verified source recording identifier", "2 current observations")
+    expect(response.body).to include("Muzeum’s recommendation", "Verified source recording identifier", "2 current matching observations")
 
     assessment = RecordingResolution::Ledger.assessments(user).sole
     post decide_resolution_surface_path(second), params: { mode: "resolved", scope: "surface",

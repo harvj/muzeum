@@ -51,7 +51,26 @@ module CanonicalLibraryHelper
     return "Unknown" unless milliseconds
 
     minutes, seconds = (milliseconds / 1000).divmod(60)
+    return format("%d:%02d:%02d", minutes / 60, minutes % 60, seconds) if minutes >= 60
+
     format("%d:%02d", minutes, seconds)
+  end
+
+  def review_factor_label(key, factor)
+    return factor["explanation"] unless key == "catalog_release_appearance"
+
+    case factor.dig("provenance", "relationship")
+    when "matching_catalog_caption"
+      if factor["weight"] == 2
+        "Checked tracklist and matching Last.fm album caption (historical scoring)"
+      else
+        "Checked catalog tracklist contains this recording"
+      end
+    when "related_catalog_title"
+      "Checked catalog tracklist contains this recording"
+    else
+      factor["explanation"]
+    end
   end
 
   def observed_text(value, label)

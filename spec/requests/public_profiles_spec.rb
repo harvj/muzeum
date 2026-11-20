@@ -42,14 +42,14 @@ RSpec.describe "Public listening profiles", type: :request do
     html = Nokogiri::HTML(response.body)
     expect(html.at_css('nav[aria-label="Music library"]')).to be_present
     expect(html.at_css('summary[aria-label="Session menu"]')).to be_present
-    expect(html.css("header a").map(&:text)).not_to include("Sign in")
+    expect(html.css("header a").map(&:text)).not_to include("Log In")
 
     user.sessions.sole.update!(last_seen_at: 13.hours.ago)
     expect { get root_path }.not_to change(OidcAttempt, :count)
     expect(response).to have_http_status(:ok)
     html = Nokogiri::HTML(response.body)
     expect(html.at_css('summary[aria-label="Session menu"]')).to be_nil
-    expect(html.css("header a").map(&:text)).to include("Sign in")
+    expect(html.css("header a").map(&:text)).to include("Log In")
   end
 
   it "shows only the published archive and its canonical context to anonymous visitors" do

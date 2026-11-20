@@ -10,9 +10,10 @@ homepage and the first read-only profile path before [resolution issue #28](http
 - `/archive` is the private dashboard. Eligible top-level navigation to it
   uses the existing guarded OIDC entry. Auth continues to own login and
   assurance. The Auth application link to `/` lands on the new public
-  homepage, from which **Sign in** enters the private dashboard.
-- `/profiles/:profile` and its catalog routes are read-only and do not
-  resume an Auth session. The archive pages by observation time and ID
+  homepage, from which **Open your archive** enters the private dashboard.
+- `/profiles/:profile` and its catalog routes are read-only. They can resume an
+  existing Muzeum session to display Profile while keeping all catalog queries
+  scoped to the published profile. The archive pages by observation time and ID
   and displays only timestamps and catalog or reported display fields.
   Unresolved titles carry an explicit label. Private settings, import
   status, decision history, raw fetches and payload provenance stay private.

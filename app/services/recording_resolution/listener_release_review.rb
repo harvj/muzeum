@@ -35,7 +35,11 @@ module RecordingResolution
         context ? candidate.merge("local_release_context" => context) : candidate
       end
       verified = decorated.find { |candidate| candidate["id"] == evidence.dig("verified_recording", "id") }
-      Ranking.call(surface, evidence.merge("verified_recording" => verified, "candidates" => decorated))
+      historical_caption_bonus = Array(evidence["ranking"]).any? do |rank|
+        rank.dig("inputs", "catalog_release_appearance", "weight") == 2
+      end
+      Ranking.call(surface, evidence.merge("verified_recording" => verified, "candidates" => decorated),
+        caption_bonus: historical_caption_bonus)
     end
 
     def token(ranking)

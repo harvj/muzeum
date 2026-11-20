@@ -1,0 +1,27 @@
+<h3>Release tracklist</h3>
+<% if release_id && Clients::Musicbrainz::MBID.match?(release_id) %>
+  <p class="compact-meta"><%= link_to "MusicBrainz release", "https://musicbrainz.org/release/#{release_id}" %>
+    · Catalog appearance only. The edition played is unverified.</p>
+<% end %>
+<% case release&.fetch("state", nil) %>
+<% when "complete" %><p class="compact-meta">Complete tracklist.</p>
+<% when "incomplete" %><p class="compact-meta">Muzeum retrieved this release, but the retained tracklist is incomplete.</p>
+<% when "missing" %><p class="compact-meta">MusicBrainz did not supply a tracklist.</p>
+<% when "unavailable" %><p class="compact-meta">MusicBrainz could not complete the tracklist request.</p>
+<% else %>
+  <p class="compact-meta"><%= release_id ? "Muzeum has not retrieved this release’s tracklist." : "MusicBrainz did not provide a supporting release." %></p>
+<% end %>
+<% Array(release&.fetch("media", nil)).each do |medium| %>
+  <% next if medium["tracks"].blank? %>
+  <h4>Disc <%= medium["position"] || "unknown" %> · <%= medium["format"].presence || "Format unavailable" %></h4>
+  <ol class="review-tracks">
+    <% medium["tracks"].each do |track| %>
+      <% match = track["recording_mbid"] == mbid %>
+      <li class="<%= "review-track-match" if match %>">
+        <span><%= track["number"].presence || track["position"] || "—" %></span>
+        <span><%= track["title"].presence || "Track title unavailable" %><% if match %><span class="visually-hidden"> (candidate recording)</span><% end %></span>
+        <span><%= track["length"] ? recording_duration(track["length"]) : "—" %></span>
+      </li>
+    <% end %>
+  </ol>
+<% end %>

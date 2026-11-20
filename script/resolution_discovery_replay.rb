@@ -6,7 +6,7 @@ fixture = JSON.parse(Rails.root.join("spec/fixtures/recording_resolution/discove
 report = fixture.fetch("cases").to_h do |example|
   [ example.fetch("id"), {
     "baseline" => DiscoveryReplay.run(fixture, example, discover: false),
-    "discovery" => DiscoveryReplay.run(fixture, example, discover: true)
+    "discovery" => DiscoveryReplay.run(fixture, example, discover: true, caption_bonus: true)
   } ]
 end
 puts JSON.pretty_generate("version" => fixture.fetch("version"), "cases" => report)

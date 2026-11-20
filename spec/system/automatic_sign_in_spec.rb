@@ -1,8 +1,10 @@
 require "rails_helper"
 require_relative "../support/oidc_flow"
+require_relative "../support/public_profile_fixture"
 
 RSpec.describe "Shared Auth browser navigation", type: :system do
   include OidcFlow
+  include PublicProfileFixture
 
   before do
     skip "Run with BROWSER_TESTS=1 for OIDC browser verification" unless ENV["BROWSER_TESTS"] == "1"
@@ -22,7 +24,9 @@ RSpec.describe "Shared Auth browser navigation", type: :system do
     provider = lambda do |env|
       request = Rack::Request.new(env)
       headers = { "content-type" => "text/html" }
-      if request.path == "/ce"
+      if request.path == "/auth-account"
+        [ 200, headers, [ "<a href='#{application_url}/'>Muzeum</a>" ] ]
+      elsif request.path == "/ce"
         [ 200, headers, [ "<a href='#{application_url}/archive'>Muzeum</a>" ] ]
       elsif request.path == "/authorize"
         @authorizations += 1 unless request.params["signed_in"]
@@ -80,6 +84,38 @@ RSpec.describe "Shared Auth browser navigation", type: :system do
     page.refresh
     expect(page).to have_link("Archive summary")
     expect(@authorizations).to eq(1)
+  end
+
+  it "returns from the Auth account through Muzeum and preserves signed-in navigation across viewports and appearances" do
+    fixture = listening_profile_fixture
+    authorize_fixture_publication(fixture)
+    @provider_mode = :sso
+    visit "http://127.0.0.1:#{@provider.port}/auth-account"
+    click_link "Muzeum"
+    expect(page).to have_current_path(root_path)
+    expect(page).to have_link("Log In", href: "https://auth.harvj.com/")
+    expect(@authorizations).to eq(0)
+    click_link "Open your archive"
+    expect(page).to have_current_path(archive_path)
+    expect(@authorizations).to eq(1)
+
+    browser = page.driver.browser
+    [ [ 1440, 960 ], [ 390, 844 ] ].product(%w[light dark]).each do |(width, height), theme|
+      browser.execute_cdp("Emulation.setDeviceMetricsOverride", width:, height:, deviceScaleFactor: 1, mobile: width < 700)
+      browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "prefers-color-scheme", value: theme } ])
+      [ root_path, archive_path, public_profile_path(fixture.fetch(:profile)) ].each do |path|
+        visit path
+        expect(page).to have_css('header .harvj-wordmark[href="https://muzeum.fm/"]')
+        expect(page).to have_link("Jim Harvey", href: "https://harvj.com/")
+        expect(page).to have_css("header summary[aria-label='Session menu']", text: "Profile")
+        expect(page).to have_no_link("Log In")
+        expect(page.evaluate_script("innerWidth")).to eq(width)
+      end
+    end
+    expect(@authorizations).to eq(1)
+  ensure
+    browser&.execute_cdp("Emulation.clearDeviceMetricsOverride")
+    browser&.execute_cdp("Emulation.setEmulatedMedia", features: [])
   end
 
   it "allows provider-owned fresh login before returning to the dashboard" do

@@ -5,11 +5,12 @@ module RecordingResolution
 
     attr_reader :evidence
 
-    def initialize(session, discogs:, workspace: false, discover: workspace)
+    def initialize(session, discogs:, workspace: false, discover: workspace, review_alternative: false)
       @session = session
       @discogs = DiscogsEvidence.new(discogs, expanded: workspace) if discogs
       @workspace = workspace
       @discover = discover
+      @review_alternative = review_alternative
       @musicbrainz = Clients::Musicbrainz.new
     end
 
@@ -60,9 +61,9 @@ module RecordingResolution
       if @discover
         related = !verified || DiscoveryTitle.album_base(surface.album) != surface.album || surface.album.to_s.match?(VERSION_MARKER)
         search = related && (candidates.empty? || candidates.any? { |candidate| Array(candidate["releases"]).any? })
-        discovered = EditionDiscovery.new(@musicbrainz, @session).call(surface, claims, candidates,
-          checked: edition, attempted: edition_id, search:)
-        merge_discovered(discovered)
+        discovery = EditionDiscovery.new(@musicbrainz, @session)
+        merge_discovered(discovery.call(surface, claims, candidates, checked: edition, attempted: edition_id, search:, review_alternative: @review_alternative))
+        evidence["review_tracklists"] = discovery.tracklists if discovery.tracklists.any?
       end
       if verified
         slot_check = {
@@ -181,7 +182,7 @@ module RecordingResolution
 
     def recording_evidence(recording)
       recording.slice("id", "title", "length", "disambiguation", "video", "isrcs", "artist-credit", "first-release-date").merge(
-        "releases" => Array(recording["releases"]).map { |release| release.slice("id", "title", "country", "date", "release-group") }
+        "releases" => Array(recording["releases"]).map { |release| release.slice("id", "title", "country", "date", "release-group", "disambiguation") }
       )
     end
   end

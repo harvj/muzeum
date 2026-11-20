@@ -1,0 +1,60 @@
+{
+  "id": "637cc60e-9181-4552-943d-202bd9746a06",
+  "title": "Daytrotter Session",
+  "date": "2011-04-25",
+  "country": "XW",
+  "disambiguation": "",
+  "media": [
+    {
+      "position": 1,
+      "format": "Digital Media",
+      "track-count": 4,
+      "tracks": [
+        {
+          "id": "0caebbf8-7382-37f5-be8f-a575d1b63ca1",
+          "position": 1,
+          "number": "1",
+          "title": "Welcome to Daytrotter",
+          "length": 8000,
+          "recording": {
+            "id": "f9947e8a-b1a0-4028-893c-330779236a00",
+            "length": 8000
+          }
+        },
+        {
+          "id": "de6f8ff1-cd7d-3d61-ade8-f713e0ded08f",
+          "position": 2,
+          "number": "2",
+          "title": "Regent’s Court",
+          "length": 123000,
+          "recording": {
+            "id": "914eb7fc-0faf-4067-87b1-9f74db1d4f99",
+            "length": 123000
+          }
+        },
+        {
+          "id": "fd2e035e-0567-3c2d-ab8c-70ad5fd98ef4",
+          "position": 3,
+          "number": "3",
+          "title": "Keith Case",
+          "length": 243000,
+          "recording": {
+            "id": "635cc1a4-96dd-4e40-a7cd-61fe3afd101d",
+            "length": 243000
+          }
+        },
+        {
+          "id": "eebee902-5132-3b0a-9ef1-1771d8126fd2",
+          "position": 4,
+          "number": "4",
+          "title": "Rememorable",
+          "length": 182000,
+          "recording": {
+            "id": "a44b4fd4-b6e8-4e65-b728-f362af2477b0",
+            "length": 182000
+          }
+        }
+      ]
+    }
+  ]
+}

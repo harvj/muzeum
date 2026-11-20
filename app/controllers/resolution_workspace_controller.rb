@@ -49,6 +49,7 @@ class ResolutionWorkspaceController < ApplicationController
     else
       []
     end
+    @review_releases = RecordingResolution::ReviewRelease.for_assessment(@assessment)
     @assessment_matches_claims = params[:assessment].blank? || assessment_matches_claims?(@assessment, target)
     if @may_manage_observation && @assessment && @assessment_matches_claims
       review = RecordingResolution::ListenerReleaseReview.new(current_user, target, @assessment)

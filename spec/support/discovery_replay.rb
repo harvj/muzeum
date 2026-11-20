@@ -27,12 +27,12 @@ module DiscoveryReplay
     end
   end
 
-  def self.run(fixture, example, discover:)
+  def self.run(fixture, example, discover:, review_alternative: false, caption_bonus: false)
     session = Session.new(fixture, example)
     surface = RecordingResolution::RealCorpusEvaluation::Observation.new(**example.fetch("surface").symbolize_keys)
     started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-    evidence = RecordingResolution::Evaluator.new(session, discogs: nil, workspace: true, discover:).call(surface, example.fetch("claims", {}))
-    ranks = RecordingResolution::Ranking.call(surface, evidence, discovery: discover)
+    evidence = RecordingResolution::Evaluator.new(session, discogs: nil, workspace: true, discover:, review_alternative:).call(surface, example.fetch("claims", {}))
+    ranks = RecordingResolution::Ranking.call(surface, evidence, discovery: discover, caption_bonus:)
     elapsed = (Process.clock_gettime(Process::CLOCK_MONOTONIC) - started) * 1_000
     ids = ranks.pluck("recording_mbid")
     target = example.fetch("reviewed_mbid")
@@ -40,6 +40,6 @@ module DiscoveryReplay
     { "surfaced" => ids.include?(target), "included_non_reference" => ids.count { |id| id != target },
       "correct_top" => ids.first == target && (ranks.one? || ranks.first.fetch("score") > ranks[1].fetch("score")),
       "recommendation" => recommendation ? (recommendation == target ? "correct" : "false_positive") : "withheld",
-      "calls" => session.paths.size, "elapsed_ms" => elapsed.round(2), "paths" => session.paths, "ranking" => ranks }
+      "calls" => session.paths.size, "elapsed_ms" => elapsed.round(2), "paths" => session.paths, "ranking" => ranks, "tracklists" => evidence.fetch("review_tracklists", {}) }
   end
 end

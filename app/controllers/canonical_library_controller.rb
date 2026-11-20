@@ -2,7 +2,7 @@ class CanonicalLibraryController < ApplicationController
   MODELS = { "artists" => Artist, "releases" => Release, "recordings" => Recording }.freeze
   PAGE = 30
   include PublishedProfile
-  skip_before_action :resume_session, :require_authentication,
+  skip_before_action :require_authentication,
     if: -> { public_profile_request? && %w[index show].include?(action_name) }
   before_action :section
 

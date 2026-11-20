@@ -7,9 +7,14 @@
     end %>
   <strong class="review-state"><%= review_state %></strong>
   <p><%= link_to "Recording resolution", resolution_surfaces_path %></p>
-  <h1><%= observed_text(@observation.payload["artist_name"], "Artist") %> — <%= observed_text(@observation.payload["track_name"], "Track") %></h1>
-  <p><%= observed_text(@observation.payload["artist_name"], "Artist") %> · <%= observed_text(@observation.payload["album_name"], "Album") %></p>
-  <p><%= pluralize(@observations_count, "observation") %> with these exact Last.fm strings · Observation <%= (@selected_scrobble || @observation).id %>.</p>
+  <% source = @selected_scrobble || @observation %>
+  <h1>Last.fm source claims</h1>
+  <dl class="review-source-claims">
+    <% %w[Track Artist Album].each do |label| %>
+      <div><dt><%= label %></dt><dd><%= observed_text(source.payload["#{label.downcase}_name"], label) %></dd></div>
+    <% end %>
+  </dl>
+  <p><%= pluralize(@observations_count, "matching observation") %> · Observation <%= source.id %></p>
 </section>
 <nav class="review-sections" aria-label="Review sections">
   <a href="#review-candidates">Candidates</a>
@@ -31,6 +36,12 @@
   <% else %>
     <p><strong><%= @candidates.many? ? "Ambiguous" : "Unresolved" %></strong>
       <% if @current_decision&.mode == "unresolved" %> · Explicitly left unresolved<% end %></p>
+    <% if @candidates.many? %>
+      <p><%= pluralize(@candidates.size, "plausible recording") %> found. The available source evidence does not establish which recording was played.</p>
+    <% end %>
+    <% if @assessment&.evidence&.fetch("reasons", [])&.include?("unverified_recording") && @assessment.evidence.dig("source_claims", "track_mbid").present? %>
+      <p>The Last.fm recording identifier could not be verified.</p>
+    <% end %>
   <% end %>
   <% if @batch_releases.present? %>
     <h3>Review other tracks</h3>
@@ -41,10 +52,10 @@
   <h3>Decision scope</h3>
   <% if @selected_scrobble %>
     <p>Reviewing the observation at <%= browser_time(@selected_scrobble.played_at) %>.
-      <%= link_to "Review the exact surface", resolution_surface_path(@observation) %></p>
+      <%= link_to "Review #{@affected_count} matching observations", resolution_surface_path(@observation, assessment: params[:assessment]) %></p>
   <% else %>
     <p>Exact matching group · <%= pluralize(@affected_count, "affected observation") %>.</p>
-    <p><%= link_to "Review only this observation", resolution_surface_path(@observation, play: @observation.id) %></p>
+    <p><%= link_to "Review only observation #{@observation.id}", resolution_surface_path(@observation, play: @observation.id, assessment: params[:assessment]) %></p>
   <% end %>
 </section>
   <section class="review-sidebar-card">
@@ -74,7 +85,7 @@
   <% end %>
   <% if @assessment && !@assessment_matches_claims %><p>This historical assessment used different source ID claims.</p><% end %>
   <% if @candidates.any? %>
-    <p>Scores rank evidence for review. The scrobble supplies no measured duration for comparison.</p>
+    <p>Scores rank relative evidence strength for this shortlist.</p>
     <% @candidates.first(3).each_with_index do |candidate, index| %>
       <%= render "candidate", candidate:, rank: @ranking[index], expanded: index.zero?, recommended: index.zero? && RecordingResolution::Ranking.recommended?(@ranking) %>
     <% end %>

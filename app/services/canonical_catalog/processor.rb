@@ -165,7 +165,8 @@ module CanonicalCatalog
           RecordingResolution::Ranking.recommended?(local_ranking)
         return complete { write_assessment(local_evidence) }
       end
-      @evaluator = RecordingResolution::Evaluator.new(@session, discogs: nil, workspace: true)
+      @evaluator = RecordingResolution::Evaluator.new(@session, discogs: nil, workspace: true,
+        review_alternative: @request.context["refresh"] == true)
       evidence = @evaluator.call(surface, @claims)
       if (manual = @request.context["manual_mbid"]).present?
         result = @musicbrainz.verify_recording(@session, manual, catalog: true)

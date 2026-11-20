@@ -18,7 +18,7 @@ RSpec.describe RecordingResolution::EditionDiscovery do
     end
   end
 
-  it "ranks the checked Regent's Court deluxe appearance first while preserving distinct alternatives" do
+  it "gives checked Regent's Court appearances equal weight while preserving distinct alternatives" do
     result = DiscoveryReplay.run(fixture, examples.fetch("regents-court-292999"), discover: true)
 
     expect(result.fetch("ranking").pluck("recording_mbid")).to eq(%w[
@@ -26,7 +26,33 @@ RSpec.describe RecordingResolution::EditionDiscovery do
       1a5b8b34-3f99-454d-96d2-82f200cfffe2
       914eb7fc-0faf-4067-87b1-9f74db1d4f99
     ])
+    expect(result.fetch("ranking").pluck("score")).to eq([ 8, 8, 7 ])
     expect(result.fetch("recommendation")).to eq("withheld")
+  end
+
+  it "retains the three real Regent's Court tracklists during explicit review with one additional lookup" do
+    daytrotter = JSON.parse(Rails.root.join("spec/fixtures/recording_resolution/discovery/daytrotter.json").read)
+    fixture.fetch("releases")[daytrotter.fetch("id")] = daytrotter
+
+    result = DiscoveryReplay.run(fixture, examples.fetch("regents-court-292999"), discover: true, review_alternative: true)
+    lists = result.fetch("tracklists")
+    expect(result.fetch("calls")).to eq(6)
+    expect(lists.values.pluck("state")).to all(eq("complete"))
+    expect(lists.values.map { |list| list.fetch("media").first.fetch("tracks").size }).to eq([ 18, 14, 4 ])
+    expect(lists.fetch(daytrotter.fetch("id")).fetch("media").first.fetch("tracks").second)
+      .to include("number" => "2", "length" => 123000, "recording_mbid" => "914eb7fc-0faf-4067-87b1-9f74db1d4f99")
+    expect(result.fetch("ranking").pluck("score")).to eq([ 8, 8, 7 ])
+  end
+
+  it "distinguishes missing provider track data from a retained incomplete medium" do
+    edition = fixture.fetch("releases").fetch("96fdedfd-ba26-4ff4-a7bc-faf54879f158")
+    missing = RecordingResolution::ReviewRelease.project(edition.except("media"))
+    expect(missing).to include("state" => "missing", "media" => [])
+
+    edition.fetch("media").first.fetch("tracks").pop
+    partial = RecordingResolution::ReviewRelease.project(edition)
+    expect(partial.fetch("state")).to eq("incomplete")
+    expect(partial.fetch("media").first.fetch("tracks").size).to eq(17)
   end
 
   it "withholds a badge when a verified studio identifier conflicts with a checked live appearance" do
