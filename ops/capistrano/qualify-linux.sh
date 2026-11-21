@@ -24,7 +24,10 @@ sudo install -d -o "$deploy" -m 0755 "$bundle_path"
 cp -a . "$work/controls"
 sudo chown -R "$deploy:$deploy" "$work"
 chmod 0755 "$work" || sudo chmod 0755 "$work"
-sudo -u "$deploy" git clone --bare --no-local "$work/controls" "$app/repo"
+sudo -u "$deploy" git clone --mirror --no-local "$work/controls" "$app/repo"
+for revision in "$base" "$candidate"; do
+  sudo -u "$deploy" git --git-dir="$app/repo" cat-file -e "$revision^{commit}"
+done
 cat <<'RUBY' | sudo -u "$deploy" tee "$work/controls/ops/capistrano/config/deploy/qualification.rb" >/dev/null
 SSHKit.config.backend = SSHKit::Backend::Local
 server "localhost", roles: %w[app web]
