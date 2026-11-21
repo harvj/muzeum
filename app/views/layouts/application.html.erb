@@ -2,10 +2,10 @@
 <html lang="en">
   <head>
     <title>Muzeum — listening archive</title>
-    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
-    <% if @public_profile || controller_name == "landing" %><meta name="turbo-cache-control" content="no-cache"><% end %>
+    <% if current_user || @public_profile || controller_name == "landing" %><meta name="turbo-cache-control" content="no-cache"><% end %>
     <%= tag.link rel: "icon", href: asset_path("muzeum-favicon.svg"), type: "image/svg+xml", sizes: "any" %>
     <link rel="stylesheet" href="/identity/v1/identity.css">
     <link rel="stylesheet" href="/identity/v1/session.css">
@@ -16,6 +16,7 @@
   <body>
     <%= tag.div class: "stone-environment", aria: { hidden: true },
                 data: { controller: "site-art", site_art_urls_value: SiteArt.snapshot } %>
+    <a class="shell-skip" href="#main-content">Skip to main content</a>
     <header>
       <a class="harvj-wordmark" href="https://muzeum.fm/">muzeum</a>
       <div class="header-navigation">
@@ -40,17 +41,18 @@
         <% else %>
           <div class="account-nav">
             <%= link_to "Log In", login_path, class: "entity-link", data: { turbo: false, turbo_prefetch: false } %>
-            <%= render "shared/appearance" %>
           </div>
         <% end %>
       </div>
+      <% unless current_user %><div class="shell-public-appearance"><%= render "shared/appearance" %></div><% end %>
     </header>
-    <main>
+    <main id="main-content" tabindex="-1">
       <% flash.each do |_, message| %><p class="card flash" role="status"><%= message %></p><% end %>
       <%= yield %>
     </main>
     <footer class="site-footer">
-      <span>© 2026 <%= link_to "Jim Harvey", "https://harvj.com/" %><% if (tag = published_release_tag) %> · Muzeum <%= tag %><% end %></span>
+      <span>© <%= Time.current.year %> <%= link_to "Jim Harvey", "https://harvj.com" %></span>
+      <% if (tag = published_release_tag) %><span>Muzeum <%= tag %></span><% end %>
     </footer>
   </body>
 </html>

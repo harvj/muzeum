@@ -57,6 +57,21 @@ class OidcClient
     raise Failure
   end
 
+  def shell_evidence(grant, subject:)
+    endpoint = discovery.raw[:introspection_endpoint]
+    uri = URI(endpoint.to_s)
+    return unless uri.is_a?(URI::HTTPS) && uri.origin == ISSUER &&
+      uri.userinfo.nil? && uri.query.nil? && uri.fragment.nil?
+
+    response = http.post(uri.to_s, form: { token: grant, token_type_hint: "refresh_token", application_shell_version: "1" })
+    return unless response.status.success?
+
+    ApplicationShellEvidence.validate(JSON.parse(response.to_s, allow_duplicate_key: false),
+      subject:, grant:, client_id: ENV.fetch("OIDC_CLIENT_ID"))
+  rescue Failure, OpenIDConnect::Exception, HTTP::Error, URI::Error, JSON::ParserError, Faraday::Error
+    nil
+  end
+
   def revoke(grant)
     http.post("#{ISSUER}/revoke", form: { token: grant, token_type_hint: "refresh_token" })
   rescue HTTP::Error

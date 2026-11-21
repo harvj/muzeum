@@ -159,3 +159,26 @@ bundle exec cap production -T
 ```
 
 Fixtures create only `muzeum_deploy_test_*` databases, synthetic observations/raw pages/OIDC principals/interpretation decisions, and production-named restricted roles in the **dedicated disposable cluster**. The inspector fixture refuses a cluster already containing those roles. Real PostgreSQL, Rails migrations, Restic encryption/read-data checks, four-database isolated restores and full application schema inspection run locally and in CI. Service restart, publication faults and Caddy boundaries use a disposable filesystem/service adapter, not production systemd/Caddy. These tests do not replace the required separate installation review or claim a second live production deployment. Never use a production port/URL. Retained verification results: [verification](verification.md).
+
+### Application Shell CI and deployment preflight
+
+Ordinary CI checks out a reviewed Infrastructure revision with the
+read-only deploy key in `INFRASTRUCTURE_STANDARDS_SSH_KEY`. Checkout
+uses strict host checking and clears its credential before app checks
+run. The production coordinator never receives the key.
+
+The adapter in `.github/application-shell-checks.json` runs the Muzeum
+conformance checks against the signed current standard. Missing tooling
+or incomplete or failed evidence fails CI. A passing run publishes a
+Shell review and receipt bound to the tested Git SHA. Verify the exact
+candidate in its branch-push CI run. A PR run evaluates the GitHub merge
+candidate and its artifacts cover that SHA.
+
+For a separately approved deployment SHA, verify the repository, run, SHA,
+standard version and review digest in the artifact with Infrastructure's
+`application-shell-ci --verify-artifact`. Set `APPLICATION_SHELL_REVIEW`
+to the verified `application-shell-review.json` before using the
+existing Capistrano workflow. Preflight independently verifies the
+current published standard before server preparation. Compatible
+registry-only patches can reuse matching behavior evidence. The
+existing release selection, rollback and emergency procedures apply.

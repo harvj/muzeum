@@ -58,6 +58,38 @@ jobs:
           SECRET_KEY_BASE_DUMMY: '1'
       - name: Validate Capistrano configuration without contacting the server
         run: bundle exec cap production -T
+      - name: Require read-only Application Shell tooling access
+        env:
+          STANDARDS_KEY: ${{ secrets.INFRASTRUCTURE_STANDARDS_SSH_KEY }}
+        run: |
+          if [[ -z "$STANDARDS_KEY" ]]; then
+            echo '::error::Configure the approved read-only Infrastructure credential before running Shell CI.'
+            exit 1
+          fi
+      - name: Check out reviewed Infrastructure standards
+        uses: actions/checkout@v6
+        with:
+          repository: harvj/infrastructure
+          ref: 0588826061ff0f7f16916beab763b484af06e514
+          path: .standards/infrastructure
+          ssh-key: ${{ secrets.INFRASTRUCTURE_STANDARDS_SSH_KEY }}
+          ssh-strict: true
+          sparse-checkout: |
+            .github/actions/application-shell-ci
+            bin
+            deploy/keys
+            lib
+            docs/specifications
+            fixtures/application-shell
+            tests
+          persist-credentials: false
+      - name: Verify the current Application Shell in ordinary CI
+        uses: ./.standards/infrastructure/.github/actions/application-shell-ci
+        with:
+          application: muzeum
+          revision: ${{ github.sha }}
+          adapter: .github/application-shell-checks.json
+          mode: required
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

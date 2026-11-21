@@ -171,15 +171,17 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     [ [ "desktop", 1440, 960 ], [ "mobile", 390, 844 ] ].each do |size, width, height|
       page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width:, height:, deviceScaleFactor: 1, mobile: size == "mobile")
       %w[light dark].each do |mode|
-        find("summary[aria-label='Session menu']").send_keys(:enter)
-        find(".appearance-submenu summary").send_keys(:enter) unless has_css?(".appearance-submenu[open]", wait: 0)
+        find(".harvj-session > summary").send_keys(:enter)
         select mode.capitalize, from: "Appearance"
-        find("summary[aria-label='Session menu']").send_keys(:enter)
+        find(".harvj-session > summary").send_keys(:enter)
         expect(page.evaluate_script("document.documentElement.dataset.appearance")).to eq(mode)
         expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
         expect(page.evaluate_script(<<~JS)).to be(true)
-          document.querySelector(".library-nav").getBoundingClientRect().right <=
-            document.querySelector(".account-nav").getBoundingClientRect().left
+          (() => {
+            const nav = document.querySelector(".library-nav").getBoundingClientRect();
+            const controls = document.querySelector(".account-nav").getBoundingClientRect();
+            return innerWidth <= 700 ? nav.top >= controls.bottom : nav.right <= controls.left;
+          })()
         JS
         expect(page.evaluate_script(<<~'JS')).to be >= 4.5
           (() => {
