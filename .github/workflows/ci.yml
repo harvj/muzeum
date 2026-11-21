@@ -77,7 +77,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           repository: harvj/infrastructure
-          ref: 8310490b9cb148b129a5efd9288ffb958940fc36
+          ref: f61cf730e920aac1b133f15ce7a82b82b2b470b9
           path: .standards/infrastructure
           token: ${{ secrets.INFRASTRUCTURE_STANDARDS_READ_TOKEN }}
           persist-credentials: false
