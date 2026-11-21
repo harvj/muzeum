@@ -68,6 +68,22 @@ RSpec.describe "Capistrano deployment/reporting integration" do
     expect(result["states"]).to eq(%w[in_progress failure])
   end
 
+  it "probes the explicit Ruby and frozen Bundler in the release directory" do
+    result = rehearse("runtime_probe")
+    runtime = "/opt/muzeum/ruby-3.4.13/bin"
+    bundle = "#{runtime}/ruby #{runtime}/bundle"
+    expect(result["events"]).to match([
+      [ "directory", "/disposable/release" ],
+      [ "environment", { "BUNDLE_IGNORE_CONFIG" => "1", "BUNDLE_FROZEN" => "true", "BUNDLE_WITHOUT" => "development:test" } ],
+      [ "command", "#{runtime}/ruby", "-e", include("RUBY_VERSION") ],
+      [ "command", bundle, "--version" ],
+      [ "command", bundle, "check" ]
+    ])
+    expect(result["rake"]).to start_with("#{bundle} exec ")
+    expect(result["default_env"]).to include("PATH" => "#{runtime}:/usr/bin:/bin",
+      "BUNDLE_PATH" => "/var/www/muzeum/shared/bundle/ruby-3.4.13")
+  end
+
   it "stamps the reviewed version only after the packaged revision matches" do
     expected_sha = "1633c96d63c1a44e678e95292466ab49c0442103"
     expect(rehearse("stamp")["events"]).to eq([

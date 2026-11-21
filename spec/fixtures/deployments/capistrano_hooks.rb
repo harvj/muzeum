@@ -2,6 +2,8 @@
 require "capistrano/all"
 require "capistrano/setup"
 require "capistrano/deploy"
+require "capistrano/bundler"
+Rake.application.load_imports
 require "tmpdir"
 require_relative "../../support/deployment_api_fixture"
 load "./config/deploy.rb"
@@ -84,6 +86,38 @@ end
 
 def self.upload!(contents, destination)
   $events << [ "stamp", contents.read, destination.to_s ]
+end
+
+if $scenario == "runtime_probe"
+  set :bundle_bins, %w[rake rails]
+  set :bundle_without, "development:test"
+  set :approved_revision, MuzeumDeploymentRevision::V034_SHA
+  set :release_path, Pathname("/disposable/release")
+  SSHKit.config.command_map.prefix[:rake] << "bundle exec"
+  def self.capture(*)
+    fetch(:approved_revision)
+  end
+
+  def self.within(directory)
+    $events << [ "directory", directory.to_s ]
+    yield
+  end
+
+  def self.with(environment)
+    $events << [ "environment", environment ]
+    yield
+  end
+
+  def self.execute(command, *args)
+    $events << [ "command", SSHKit.config.command_map[command], *args ]
+  end
+
+  muzeum_configure_release_runtime
+  Rake::Task["muzeum:probe_release_runtime"].invoke
+  puts "HOOK_FIXTURE:" + JSON.generate({ events: $events, rake: SSHKit.config.command_map[:rake],
+    default_env: SSHKit.config.default_env })
+  FileUtils.remove_entry($local)
+  exit 0
 end
 
 if %w[stamp stamp_mismatch].include?($scenario)

@@ -30,6 +30,38 @@ def muzeum_reporting
   MuzeumDeploymentReporting::Outbox.new(File.join(git_directory, "muzeum-deployments"))
 end
 
+def muzeum_configure_release_runtime
+  runtime = "/opt/muzeum/ruby-3.4.13/bin"
+  bundle = "#{runtime}/ruby #{runtime}/bundle"
+  SSHKit.config.command_map[:ruby] = "#{runtime}/ruby"
+  SSHKit.config.command_map[:bundle] = bundle
+  fetch(:bundle_bins).each do |command|
+    SSHKit.config.command_map.prefix[command.to_sym].map! { |prefix| prefix == "bundle exec" ? "#{bundle} exec" : prefix }
+  end
+  set :bundle_path, "/var/www/muzeum/shared/bundle/ruby-3.4.13"
+  bundle_environment = { "BUNDLE_IGNORE_CONFIG" => "1", "BUNDLE_FROZEN" => "true",
+                         "BUNDLE_WITHOUT" => fetch(:bundle_without) }
+  environment = fetch(:default_env).merge(bundle_environment).merge("PATH" => "#{runtime}:/usr/bin:/bin",
+    "BUNDLE_PATH" => fetch(:bundle_path), "RBENV_VERSION" => "3.4.13")
+  set :default_env, environment
+  SSHKit.config.default_env = environment
+  set :bundle_env_variables, bundle_environment
+end
+
+def muzeum_probe_release_runtime(directory, revision)
+  on primary(:app) do
+    within directory do
+      raise "Runtime probe checkout revision mismatch" unless capture(:cat, "REVISION") == revision
+
+      with fetch(:bundle_env_variables) do
+        execute :ruby, "-e", %q('abort "Expected Ruby 3.4.13" unless RUBY_VERSION == "3.4.13"; puts RUBY_DESCRIPTION')
+        execute :bundle, "--version"
+        execute :bundle, "check"
+      end
+    end
+  end
+end
+
 def muzeum_verify_helper
   on primary(:app) do
     installed = capture(:sudo, "-n", "/usr/local/sbin/muzeum-deploy", "version").strip
@@ -62,10 +94,17 @@ namespace :muzeum do
   end
 
   desc "Verify the reviewed release checkout and live production baseline without deploying"
-  task :release_preflight, [ :version, :checkout ] do |_, args|
+  task :release_preflight, [ :version, :checkout, :runtime_probe ] do |_, args|
     approval = MuzeumDeploymentRevision.resolve_release!(args[:version], args[:checkout])
     puts "Preflight #{approval.fetch(:branch)} at #{approval.fetch(:sha)}; CI #{approval.fetch(:ci)}"
     muzeum_verify_helper
+    if approval.fetch(:sha) == MuzeumDeploymentRevision::V034_SHA
+      directory = args[:runtime_probe].to_s
+      raise "Provide the unpublished release checkout for the runtime probe" unless %r{\A/var/www/muzeum/releases/[0-9]{14}\z}.match?(directory)
+
+      muzeum_configure_release_runtime
+      muzeum_probe_release_runtime(directory, approval.fetch(:sha))
+    end
     on primary(:app) do
       execute :sudo, "-n", "/usr/local/sbin/muzeum-deploy", "release-preflight", approval.fetch(:baseline), approval.fetch(:sha)
     end
@@ -101,11 +140,8 @@ namespace :muzeum do
     selection = fetch(:muzeum_release_selection, nil)
     approval = selection ? MuzeumDeploymentRevision.resolve_release!(*selection) : MuzeumDeploymentRevision.resolve!
     if approval.fetch(:sha) == MuzeumDeploymentRevision::V034_SHA
-      runtime = "/opt/muzeum/ruby-3.4.13/bin"
-      SSHKit.config.command_map[:bundle] = "#{runtime}/bundle"
+      muzeum_configure_release_runtime
       set :reviewed_release_version, approval.fetch(:version)
-      set :default_env, fetch(:default_env).merge("PATH" => "#{runtime}:/usr/bin:/bin",
-        "BUNDLE_PATH" => "/var/www/muzeum/shared/bundle/ruby-3.4.13", "RBENV_VERSION" => "3.4.13")
     end
     set :approved_revision, approval.fetch(:sha)
     set :branch, approval.fetch(:sha)
@@ -144,6 +180,11 @@ namespace :muzeum do
       raise "GitHub initiation failed; production deployment was not started; inspect local reporting outbox"
     end
     outbox.attempted(fetch(:deployment_token))
+  end
+
+  task :probe_release_runtime do
+    revision = fetch(:approved_revision)
+    muzeum_probe_release_runtime(release_path, revision) if revision == MuzeumDeploymentRevision::V034_SHA
   end
 
   task :prepare do
@@ -195,6 +236,7 @@ namespace :muzeum do
 end
 before "deploy:starting", "muzeum:authorize"
 before "deploy:reverting", "muzeum:refuse_rollback"
+before "bundler:config", "muzeum:probe_release_runtime"
 after "deploy:updated", "muzeum:prepare"
 after "deploy:published", "muzeum:finish"
 after "deploy:finished", "muzeum:complete"
