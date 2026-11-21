@@ -78,7 +78,7 @@ class FixtureHost:
     def check_withdrawal(self, sha):
         self.event('check_withdrawal')
 
-    def migrate(self, release, sha):
+    def migrate(self, release, sha, token):
         self.event('migration')
         self.pending = []
 
@@ -163,7 +163,7 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(flow.release_preflight(OLD)['health'], 'passed')
         self.assertFalse((flow.root / 'active.json').exists())
         with self.assertRaisesRegex(RuntimeError, 'Invalid release approval'):
-            flow.run('begin', NEW, self.token, release_review={**review, 'branch': 'main'})
+            flow.run('begin', NEW, self.token, release_review={**review, 'branch': 'release/v0.0.0'})
         host.sha = 'c' * 40
         with self.assertRaisesRegex(RuntimeError, 'Live production baseline differs'):
             flow.run('begin', NEW, self.token, release_review=review)
@@ -321,8 +321,8 @@ class WorkflowTests(unittest.TestCase):
             with self.subTest(altered=altered), tempfile.TemporaryDirectory() as root:
                 host = FixtureHost(root, True)
                 original = host.migrate
-                def changed(release, sha):
-                    original(release, sha)
+                def changed(release, sha, token):
+                    original(release, sha, token)
                     if altered == 'evidence':
                         host.fingerprint = lambda specification=None: {'source': 'corrupted'}
                     else:
@@ -348,8 +348,8 @@ class DatabaseRehearsalTests(WorkflowTests):
         host, flow = self.workflow(True)
         flow.run('begin', NEW, self.token)
         original = host.migrate
-        def committed_then_failed(release, sha):
-            original(release, sha)
+        def committed_then_failed(release, sha, token):
+            original(release, sha, token)
             raise RuntimeError('Simulated failure after committed migration')
         host.migrate = committed_then_failed
         with self.assertRaises(RuntimeError):
@@ -389,6 +389,9 @@ class DatabaseRehearsalTests(WorkflowTests):
 
 
 class DatabaseHost(FixtureHost):
+    fingerprint_tables = [('scrobbles', 'id,payload,played_at'), ('import_pages', 'id,raw_body'),
+                          ('users', 'id,oidc_issuer,oidc_subject'), ('decisions', 'id,actor,evidence')]
+
     def __init__(self, root, migration=False, fail=None):
         super().__init__(root, migration, fail)
         self.pg = Path(os.environ.get('MUZEUM_DEPLOY_TEST_PGBIN', '/usr/bin'))
@@ -426,7 +429,7 @@ CREATE TRIGGER immutable_source BEFORE UPDATE OR DELETE ON scrobbles FOR EACH RO
     def fingerprint(self, specification=None):
         self.event('fingerprint')
         return {database: {table: self.query(database, 'SELECT md5(string_agg(row_to_json(t)::text,\'\' ORDER BY id)) FROM (SELECT ' + columns + ' FROM ' + table + ') t')
-                           for table, columns in [('scrobbles', 'id,payload,played_at'), ('import_pages', 'id,raw_body'), ('users', 'id,oidc_issuer,oidc_subject'), ('decisions', 'id,actor,evidence')]}
+                           for table, columns in self.fingerprint_tables}
                 for database in self.databases}
 
     def backup_restore(self, sha):
@@ -448,7 +451,7 @@ CREATE TRIGGER immutable_source BEFORE UPDATE OR DELETE ON scrobbles FOR EACH RO
             self.invoke([str(self.pg / 'createdb'), target])
             try:
                 self.invoke([str(self.pg / 'pg_restore'), '--no-owner', '--no-acl', '--exit-on-error', '-d', target, str(restored / str(capture).lstrip('/') / (database + '.dump'))])
-                for table, columns in [('scrobbles', 'id,payload,played_at'), ('import_pages', 'id,raw_body'), ('users', 'id,oidc_issuer,oidc_subject'), ('decisions', 'id,actor,evidence')]:
+                for table, columns in self.fingerprint_tables:
                     actual = self.query(target, 'SELECT md5(string_agg(row_to_json(t)::text,\'\' ORDER BY id)) FROM (SELECT ' + columns + ' FROM ' + table + ') t')
                     if actual != fingerprints[database][table]:
                         raise RuntimeError('Disposable restored fingerprint mismatch')
@@ -456,7 +459,7 @@ CREATE TRIGGER immutable_source BEFORE UPDATE OR DELETE ON scrobbles FOR EACH RO
                 self.invoke([str(self.pg / 'dropdb'), target])
         return {'snapshot_id': snapshot, 'release_sha': sha, 'databases_verified': 4}
 
-    def migrate(self, release, sha):
+    def migrate(self, release, sha, token):
         self.event('migration')
         env = dict(self.env, DATABASE_URL='postgresql://127.0.0.1:' + self.env['PGPORT'] + '/' + self.databases[0], FIXTURE_MIGRATIONS=str(release / 'db/migrate'))
         script = "require 'active_record'; ActiveRecord::Base.establish_connection(ENV.fetch('DATABASE_URL')); ActiveRecord::MigrationContext.new(ENV.fetch('FIXTURE_MIGRATIONS')).migrate"

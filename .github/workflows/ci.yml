@@ -2,7 +2,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main, release/v0.3.2, controls/v0.3.4, controls/v0.3.4-shell, controls/v0.3.5, controls/v0.3.6, controls/v0.4.0]
+    branches: [main, 'release/v*', 'controls/v*']
 permissions:
   contents: read
 jobs:
@@ -43,6 +43,8 @@ jobs:
         run: python3 -m unittest discover -s ops/catalog -p 'test_*.py'
       - name: Install disposable recovery-test dependency
         run: sudo apt-get update && sudo apt-get install -y restic postgresql-client-16
+      - name: Fetch immutable release fixtures for the deployment rehearsal
+        run: git fetch --no-tags --depth=1 origin c37a00dcf058e87fdc59644e9e444c001e29622f 96597aa6f94e64b6bb9cfdb7399de1ed98124a11
       - name: Rehearse Muzeum deploy success and failure paths in disposable databases
         run: python3 -m unittest discover -s ops/deploy -p 'test_*.py' -v
         env:

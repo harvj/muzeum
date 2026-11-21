@@ -65,7 +65,8 @@ end
 def muzeum_verify_helper
   on primary(:app) do
     installed = capture(:sudo, "-n", "/usr/local/sbin/muzeum-deploy", "version").strip
-    expected = Digest::SHA256.hexdigest(File.binread(File.expand_path("../ops/deploy/muzeum_deploy.py", __dir__)) + File.binread(File.expand_path("../ops/deploy/inspect.rb", __dir__)) + File.binread(File.expand_path("../ops/runtime/muzeum_runtime.py", __dir__)))
+    paths = %w[deploy/muzeum_deploy.py deploy/inspect.rb runtime/muzeum_runtime.py deploy/release_authorization.py provision/muzeum-migrate]
+    expected = Digest::SHA256.hexdigest(paths.map { |path| File.binread(File.expand_path("../ops/#{path}", __dir__)) }.join)
     raise "Reviewed deployment helper version mismatch" unless installed == expected
   end
 end
@@ -76,6 +77,9 @@ def muzeum_publish_result(token, sha)
     receipt = JSON.parse(capture(:sudo, "-n", "/usr/local/sbin/muzeum-deploy", "receipt", sha, token))
   end
   result = muzeum_reporting.reconcile(token, receipt)
+  puts "Muzeum #{receipt.dig('release_review', 'version') || sha}: #{result.fetch(:state)}; health #{receipt.dig('rollback', 'health') || receipt['health'] || 'unverified'}"
+  puts "Authorization #{receipt['authorization_sha256'] || 'unavailable'}; rollback #{receipt.dig('rollback', 'revision') || 'none recorded'}; receipt #{token}.json"
+  puts receipt["safe_state"] if receipt["safe_state"]
   puts "GitHub deployment #{result.fetch(:id)}: #{result.fetch(:state)}; receipt #{token}.json"
   warn "Deployment remains incomplete; inspect server receipt #{token}.json" unless result.fetch(:terminal)
 rescue StandardError
@@ -95,7 +99,8 @@ namespace :muzeum do
 
   desc "Verify the reviewed release checkout and live production baseline without deploying"
   task :release_preflight, [ :version, :checkout, :runtime_probe ] do |_, args|
-    approval = MuzeumDeploymentRevision.resolve_release!(args[:version], args[:checkout])
+    approval = MuzeumDeploymentRevision.authorization!(args[:checkout])
+    raise "Requested version differs from authorization" unless approval.fetch(:version) == args[:version]
     puts "Preflight #{approval.fetch(:branch)} at #{approval.fetch(:sha)}; CI #{approval.fetch(:ci)}"
     muzeum_verify_helper
     if MuzeumDeploymentRevision.patched_runtime?(approval.fetch(:sha))
@@ -138,7 +143,8 @@ namespace :muzeum do
 
   task :authorize do
     selection = fetch(:muzeum_release_selection, nil)
-    approval = selection ? MuzeumDeploymentRevision.resolve_release!(*selection) : MuzeumDeploymentRevision.resolve!
+    approval = MuzeumDeploymentRevision.authorization!(selection ? selection.last : Dir.pwd)
+    raise "Requested version differs from authorization" if selection && selection.first != approval.fetch(:version)
     if MuzeumDeploymentRevision.patched_runtime?(approval.fetch(:sha))
       muzeum_configure_release_runtime
       set :reviewed_release_version, approval.fetch(:version)
@@ -158,12 +164,7 @@ namespace :muzeum do
     outbox.check_clear!
     muzeum_verify_helper
     on primary(:app) do
-      if selection
-        execute :sudo, "-n", "/usr/local/sbin/muzeum-deploy", "begin-release", fetch(:approved_revision),
-          fetch(:deployment_token), *approval.values_at(:branch, :version, :baseline, :scope, :ci)
-      else
-        execute :sudo, "-n", "/usr/local/sbin/muzeum-deploy", "begin", fetch(:approved_revision), fetch(:deployment_token)
-      end
+      execute :sudo, "-n", "/usr/local/sbin/muzeum-deploy", "begin-authorized", fetch(:deployment_token), approval.fetch(:envelope)
       set :deployment_lock_acquired, true
     end
     begin
@@ -191,13 +192,7 @@ namespace :muzeum do
     on primary(:app) do
       if (version = fetch(:reviewed_release_version, nil))
         revision = fetch(:approved_revision)
-        expected = {
-          "v0.3.4" => MuzeumDeploymentRevision::V034_SHA,
-          "v0.3.5" => MuzeumDeploymentRevision::V035_SHA,
-          "v0.3.6" => MuzeumDeploymentRevision::V036_SHA,
-          "v0.4.0" => MuzeumDeploymentRevision::V040_SHA
-        }.fetch(version)
-        raise "Unexpected reviewed release metadata" unless revision == expected && capture(:cat, release_path.join("REVISION")) == revision
+        raise "Unexpected reviewed release metadata" unless capture(:cat, release_path.join("REVISION")) == revision
 
         upload! StringIO.new("#{revision} #{version}\n"), release_path.join("REVIEWED_RELEASE")
       end
@@ -239,6 +234,8 @@ namespace :muzeum do
     abort "Automatic rollback is unavailable: review a schema-compatible forward deployment; never reverse migrations or restore live data automatically"
   end
 end
+# The installed coordinator publishes under the same verified approval as migration.
+Rake::Task["deploy:symlink:release"].clear_actions if Rake::Task.task_defined?("deploy:symlink:release")
 before "deploy:starting", "muzeum:authorize"
 before "deploy:reverting", "muzeum:refuse_rollback"
 before "bundler:config", "muzeum:probe_release_runtime"

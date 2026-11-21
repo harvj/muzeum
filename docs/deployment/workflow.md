@@ -1,5 +1,7 @@
 # Muzeum single-command deployments
 
+For the proposed signed deployment workflow, see [Release authorization v1](release-authorization.md). The description below records the installed historical workflow pending privileged review.
+
 Standing operator convention: **`cap production deploy`** (equivalently `bundle exec cap production deploy` when Bundler is needed). Invoking it authorizes deployment of the reviewed, synchronized local `main` and execution of its reviewed additive migrations. No environment flags or interactive secret prompts are required. Agents still need explicit authorization to invoke a production deployment; implementing code does not imply that authorization.
 
 **Shared Caddy isolation is active.** P1.3b was published at `364996ed0528a9e94a4287255dc7680c3fe39354` through the installed scoped route interface from [harvj/infrastructure](https://github.com/harvj/infrastructure). The operator installs and verifies reviewed privileged helpers before a non-deploying preflight. CI never deploys.

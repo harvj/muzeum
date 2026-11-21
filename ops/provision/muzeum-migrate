@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3 -I
 """Migrate only an exact Muzeum candidate as the isolated migration OS identity."""
 import fcntl,json,os,re,signal,subprocess,sys
 from pathlib import Path
@@ -17,50 +17,67 @@ def run_bounded(argv, *, cwd, env, timeout):
     return subprocess.CompletedProcess(argv, process.returncode, stdout, stderr)
 
 
+def authorized_migrations(release, sha, token, receipt_path):
+    # The coordinator owns this record and holds its phase lock for the entire call.
+    info = receipt_path.lstat()
+    if info.st_uid != os.geteuid() or info.st_mode & 0o077 or receipt_path.is_symlink():
+        raise RuntimeError('Untrusted active deployment record')
+    record = json.loads(receipt_path.read_text())
+    if (record.get('sha'), record.get('token'), record.get('release'), record.get('migrating')) != (
+            sha, token, str(release), True) or not re.fullmatch('[a-f0-9]{64}', record.get('authorization_sha256', '')):
+        raise RuntimeError('Active authorized migration required')
+    from release_authorization import verify_migrations
+    approval = record['release_review']
+    if approval['policy'] != 'additive-verified' or approval['sha'] != sha or not record['migrations']:
+        raise RuntimeError('Active deployment does not authorize additive migration')
+    verify_migrations(release, record['migrations'], approval)
+    return record['migrations']
+
+
 def main():
-    if os.geteuid()!=0 or len(sys.argv)!=3:raise RuntimeError()
-    release=Path(sys.argv[1]).resolve(strict=True);sha=sys.argv[2]
-    if release.parent!=Path('/var/www/muzeum/releases') or not re.fullmatch('[a-f0-9]{40}',sha) or (release/'REVISION').read_text().strip()!=sha:raise RuntimeError()
+    if os.geteuid() != 0 or len(sys.argv) != 4:
+        raise RuntimeError('Expected installed Muzeum migrator')
+    release = Path(sys.argv[1]).resolve(strict=True)
+    sha, token = sys.argv[2:]
+    if (release.parent != Path('/var/www/muzeum/releases') or not re.fullmatch('[0-9]{14}', release.name)
+            or not re.fullmatch('[a-f0-9]{40}', sha) or not re.fullmatch('[a-f0-9]{32}', token)
+            or (release / 'REVISION').read_text().strip() != sha):
+        raise RuntimeError('Invalid staged release identity')
     os.umask(0o077)
-    with open('/etc/muzeum/migration.lock','a') as lock:
-        fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
-        env={'LANG':'C.UTF-8','HOME':'/home/muzeum-migrate','BUNDLE_WITHOUT':'development:test','BUNDLE_IGNORE_CONFIG':'1','BUNDLE_DEPLOYMENT':'true','BUNDLE_FROZEN':'true','BOOTSNAP_READONLY':'1','PGOPTIONS':'-c lock_timeout=5000 -c statement_timeout=120000'}
-        for line in Path('/etc/muzeum/migrate.env').read_text().splitlines():
-            name,value=line.split('=',1);env[name]=value
-        env.update(BOOTSNAP_READONLY='1', PGOPTIONS='-c lock_timeout=5000 -c statement_timeout=120000')
-        sys.path.insert(0, '/usr/local/lib/muzeum-runtime')
-        from muzeum_runtime import BASELINE, FORWARD, release_runtime, runtime_environment
-        if sha != BASELINE:
-            receipt = json.loads(Path('/var/lib/muzeum-deploy/active.json').read_text())
-            if sha != FORWARD or receipt.get('sha') != sha or receipt.get('release') != str(release) or not receipt.get('migrating'):
-                raise RuntimeError('Active guarded migration required')
+    sys.path[:0] = ['/usr/local/lib/muzeum-runtime', '/usr/local/lib/muzeum-deploy']
+    with open('/etc/muzeum/migration.lock', 'a') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        migrations = authorized_migrations(release, sha, token, Path('/var/lib/muzeum-deploy/active.json'))
+        from muzeum_runtime import release_runtime, runtime_environment
         directory, bundle_path = release_runtime(release, sha)
-        env = runtime_environment(env, directory, bundle_path)
-        env.update(BUNDLE_IGNORE_CONFIG='1', BUNDLE_DEPLOYMENT='true', BUNDLE_FROZEN='true', BUNDLE_WITHOUT='development:test')
-        env['BUNDLE_GEMFILE']=str(release/'Gemfile')
-        # Only empty auxiliary databases may receive an explicit first bootstrap.
-        ruby="""require 'bundler/setup';require './config/environment';
-%w[cache queue cable].each do |name|
- config=ActiveRecord::Base.configurations.configs_for(env_name:'production',name:name)
- ActiveRecord::Base.establish_connection(config)
- if ActiveRecord::Base.connection.tables.empty?
-  load Rails.root.join('db',name+'_schema.rb')
- end
-end
-"""
-        result=run_bounded(['/usr/sbin/runuser','-u','muzeum-migrate','--',str(directory / 'ruby'),'-e',ruby],cwd=release,env=env,timeout=120)
+        env = dict(line.split('=', 1) for line in Path('/etc/muzeum/migrate.env').read_text().splitlines())
+        env = migration_environment(env, directory, bundle_path, release, runtime_environment)
+        execute_migrations(migrations, directory, release, env)
+    print('Approved Muzeum migration scope completed with isolated migrator credentials.')
+
+
+def migration_environment(values, directory, bundle_path, release, runtime_environment):
+    env = runtime_environment(values, directory, bundle_path)
+    env.update(LANG='C.UTF-8', HOME='/home/muzeum-migrate', RAILS_ENV='production',
+               BUNDLE_IGNORE_CONFIG='1', BUNDLE_DEPLOYMENT='true', BUNDLE_FROZEN='true',
+               BUNDLE_WITHOUT='development:test', BUNDLE_GEMFILE=str(release / 'Gemfile'),
+               BOOTSNAP_READONLY='1', PGOPTIONS='-c lock_timeout=5000 -c statement_timeout=120000')
+    return env
+
+
+def execute_migrations(migrations, directory, release, env,
+                       prefix=('/usr/sbin/runuser', '-u', 'muzeum-migrate', '--'),
+                       diagnostic=Path('/etc/muzeum/migration-last-error')):
+    for migration in sorted(migrations, key=lambda item: (int(item['version']), item['database'])):
+        result = run_bounded([*prefix, str(directory / 'ruby'), str(directory / 'bundle'),
+                              'exec', 'rails', 'db:migrate:up:' + migration['database']],
+                             cwd=release, env=dict(env, VERSION=migration['version']), timeout=180)
         if result.returncode:
-            diagnostic=Path('/etc/muzeum/migration-last-error')
-            fd=os.open(diagnostic,os.O_WRONLY|os.O_CREAT|os.O_TRUNC|os.O_NOFOLLOW,0o600)
-            with os.fdopen(fd,'wb') as out:out.write(result.stderr)
-            raise RuntimeError()
-        result=run_bounded(['/usr/sbin/runuser','-u','muzeum-migrate','--',str(directory / 'bundle'),'exec','rails','db:migrate'],cwd=release,env=env,timeout=180)
-        if result.returncode:
-            diagnostic=Path('/etc/muzeum/migration-last-error')
-            fd=os.open(diagnostic,os.O_WRONLY|os.O_CREAT|os.O_TRUNC|os.O_NOFOLLOW,0o600)
-            with os.fdopen(fd,'wb') as out:out.write(result.stderr)
-            raise RuntimeError()
-    print('Exact Muzeum candidate migration completed with isolated migrator credentials.')
+            fd = os.open(diagnostic, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o600)
+            with os.fdopen(fd, 'wb') as output:
+                output.write(result.stderr)
+            raise RuntimeError('Approved migration failed; confirm schema before retry')
+
 
 if __name__ == '__main__':
     try:
