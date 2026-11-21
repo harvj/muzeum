@@ -58,22 +58,15 @@ jobs:
           SECRET_KEY_BASE_DUMMY: '1'
       - name: Validate Capistrano configuration without contacting the server
         run: bundle exec cap production -T
-      - name: Check Application Shell tooling access
-        if: ${{ !cancelled() }}
-        id: shell-tooling
+      - name: Require read-only Application Shell tooling access
         env:
           STANDARDS_KEY: ${{ secrets.INFRASTRUCTURE_STANDARDS_SSH_KEY }}
         run: |
-          if [[ -n "$STANDARDS_KEY" ]]; then
-            echo 'available=true' >> "$GITHUB_OUTPUT"
-          else
-            echo '### Application Shell audit unavailable' >> "$GITHUB_STEP_SUMMARY"
-            echo 'Configure an approved read-only Infrastructure credential to run the pilot.' >> "$GITHUB_STEP_SUMMARY"
+          if [[ -z "$STANDARDS_KEY" ]]; then
+            echo '::error::Configure the approved read-only Infrastructure credential before running Shell CI.'
+            exit 1
           fi
       - name: Check out reviewed Infrastructure standards
-        if: ${{ !cancelled() && steps.shell-tooling.outputs.available == 'true' }}
-        id: shell-checkout
-        continue-on-error: true
         uses: actions/checkout@v6
         with:
           repository: harvj/infrastructure
@@ -90,17 +83,13 @@ jobs:
             fixtures/application-shell
             tests
           persist-credentials: false
-      - name: Report unavailable Application Shell contract
-        if: ${{ !cancelled() && steps.shell-checkout.outcome == 'failure' }}
-        run: echo 'Application Shell audit could not retrieve the pinned Infrastructure revision.' >> "$GITHUB_STEP_SUMMARY"
-      - name: Audit the current Application Shell in ordinary CI
-        if: ${{ !cancelled() && steps.shell-checkout.outcome == 'success' }}
+      - name: Verify the current Application Shell in ordinary CI
         uses: ./.standards/infrastructure/.github/actions/application-shell-ci
         with:
           application: muzeum
           revision: ${{ github.sha }}
           adapter: .github/application-shell-checks.json
-          mode: audit
+          mode: required
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
