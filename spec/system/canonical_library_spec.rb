@@ -7,6 +7,8 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
   before do
     skip "Run with BROWSER_TESTS=1 for canonical workspace browser verification" unless ENV["BROWSER_TESTS"] == "1"
 
+    stub_request(:get, "#{OidcClient::ISSUER}/.well-known/oauth-authorization-server").to_return(status: 503)
+
     driven_by :selenium, using: :headless_chrome do |options|
       options.binary = ENV["CHROME_BINARY"] if ENV["CHROME_BINARY"]
     end
@@ -23,7 +25,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     click_link "Signals"
     expect(page).to have_text("A checked MusicBrainz edition contains this track slot")
     within(".candidate", text: "Signals") do
-      find_button("Assign 1 matching observation").send_keys(:enter)
+      find_button("Resolve 1 observation").send_keys(:enter)
     end
     expect(page).to have_text("Recording decision saved.")
     expect(page).to have_text("Confirmed candidate")
@@ -61,7 +63,8 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     expect(page).to have_link("Night Drive")
 
     visit resolution_surface_path(observation, play: observation.id)
-    expect(page).to have_button("Assign only observation #{observation.id}")
+    expect(page).to have_button("Resolve 1 observation")
+    expect(page).to have_text("Resolve only this observation")
     expect(page).to have_text("Inherited from your exact-surface assignment")
     verify_appearances("resolution")
   end
@@ -84,7 +87,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     CanonicalCatalog::Processor.new(request, session_factory: ->(*) { CatalogFixtures::Session.new }).call
     click_link "Refresh status"
     expect(page).to have_css(".review-candidate.recommended")
-    expect(page).to have_text("2 current matching observations")
+    expect(page).to have_text("2 matching observations")
     expect(page).to have_css(".review-candidate[open] .review-tracks li", count: 3)
     expect(page).to have_css(".review-candidate[open] .review-track-match", count: 2)
     expect(page).to have_text("🇺🇸 United States", normalize_ws: true)
@@ -122,7 +125,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
 
     visit resolution_surface_path(observation, assessment: assessment.id)
     within(".candidate", text: "Signals") do
-      find_button("Assign 2 matching observations").send_keys(:enter)
+      find_button("Resolve 2 observations").send_keys(:enter)
     end
     expect(page).to have_text("Inherited from your exact-surface assignment")
     expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
@@ -166,6 +169,57 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
       JS
       capture_resolution("outage-#{size}")
     end
+  ensure
+    browser&.execute_cdp("Emulation.clearDeviceMetricsOverride")
+  end
+
+  it "opens LIGHT BEAMS from any play and resolves the group while preserving an exception" do
+    user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "light-beams-review", lastfm_username: "light-beams-review")
+    release = JSON.parse(file_fixture("resolution/blue-lips.json").read)
+    recording = release.fetch("media").first.fetch("tracks").first.fetch("recording")
+    claims = { "artist_name" => "Tove Lo", "album_name" => release.fetch("title"), "track_name" => "LIGHT BEAMS" }
+    make_play = ->(time) { Scrobble.create!(user:, played_at: time, payload: claims) }
+    plays = [ 3.hours.ago, 2.hours.ago, 1.hour.ago ].map(&make_play)
+    surface = RecordingResolution::Ledger.attach!(plays.first)
+    group = RecordingResolution::Group.create!(surface_id: surface.id, version: RecordingResolution::Ledger::VERSION, claims: {})
+    evidence = { "candidates" => [ recording.merge("releases" => [ release.slice("id", "title", "date", "country") ]) ],
+      "review_tracklists" => { release.fetch("id") => RecordingResolution::ReviewRelease.project(release) } }
+    evidence["ranking"] = RecordingResolution::Ranking.call(surface, evidence)
+    RecordingResolution::Assessment.create!(group_id: group.id, version: "fixture", actor: "fixture",
+      digest: SecureRandom.hex(32), evidence:)
+
+    browser = page.driver.browser
+    sign_in(user)
+    plays.each do |play|
+      visit resolution_surface_path(play)
+      expect(page).to have_button("Resolve 3 observations")
+      expect(page).to have_text("Future exact matches inherit this decision")
+      expect(page).to have_css(".review-tracks li", count: 14)
+    end
+    browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 1440, height: 960, deviceScaleFactor: 1, mobile: false)
+    capture_resolution("light-beams-desktop")
+    browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 390, height: 844, deviceScaleFactor: 1, mobile: true)
+    expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
+    capture_resolution("light-beams-mobile")
+
+    alternate = Recording.create!(title: "Existing exception", mbid: SecureRandom.uuid)
+    RecordingResolution::Ledger.record!(listener: user, scrobble: plays.second, scope: :scrobble, mode: "resolved",
+      reason: "Existing exception", recording: alternate)
+    visit resolution_surface_path(plays.second)
+    expect(page).to have_css(".review-sidebar-card", text: /Individual overrides\s+1/)
+    expect(page).to have_button("Resolve 2 observations")
+    click_button "Resolve 2 observations"
+    expect(page).to have_text("Recording decision saved.")
+    expect(page).to have_css(".review-state", exact_text: "Resolved")
+    expect(page).to have_css(".review-sidebar-card", text: /Inheriting group resolution\s+2/)
+    expect(page).to have_css(".review-sidebar-card", text: /Still unresolved\s+0/)
+
+    future = make_play.call(Time.current)
+    expect(RecordingResolution::Ledger.effective(user).find(future.id).effective_recording_id).to eq(Recording.find_by!(mbid: recording.fetch("id")).id)
+    expect(RecordingResolution::Ledger.effective(user).find(plays.second.id).effective_recording_id).to eq(alternate.id)
+    visit archive_path
+    expect(page).to have_link("LIGHT BEAMS", count: 3)
+    expect(page).to have_link("Existing exception")
   ensure
     browser&.execute_cdp("Emulation.clearDeviceMetricsOverride")
   end

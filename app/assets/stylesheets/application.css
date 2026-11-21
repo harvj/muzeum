@@ -341,7 +341,7 @@ a:hover { text-decoration: none; }
   }
 }
 
-.play-identity-status { flex: none; color: var(--muted); }
+.play-identity-status { flex: none; color: var(--muted); font-size: .7em; font-style: normal; }
 .source-claim :is(.play-artist, .play-recording, .play-recording a:not(:hover, :focus-visible)) {
   color: var(--muted);
   font-style: italic;

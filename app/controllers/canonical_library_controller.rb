@@ -39,17 +39,37 @@ class CanonicalLibraryController < ApplicationController
       @releases = Release.where(id: @entry.release_artists.select(:release_id)).or(Release.where(id: performed_on)).order(:title, :id).includes(release_artists: :artist)
       @releases = @releases.merge(@profile_catalog.releases) if @public_profile
     when Release
-      @slots = @entry.catalog_track_slots.order(:medium, :position).includes(:recording)
-      @legacy_slots = @entry.release_recordings.order(:position).includes(:recording) if @slots.empty? && !@public_profile
+      slots = @entry.catalog_track_slots.order(:medium, :position)
+      cursor = slots.find_by(id: params[:after_track]) if params[:after_track].present?
+      if cursor
+        @track_offset = slots.where("(medium, position) <= (?, ?)", cursor.medium, cursor.position).count
+        slots = slots.where("(medium, position) > (?, ?)", cursor.medium, cursor.position)
+      end
+      @slots = slots.includes(:recording).limit(101).to_a
+      @next_track = @slots.pop && @slots.last.id if @slots.size > 100
+      if @slots.empty? && !@public_profile && !cursor
+        legacy_slots = @entry.release_recordings.order(:position, :id)
+        legacy_cursor = legacy_slots.find_by(id: params[:after_legacy_track]) if params[:after_legacy_track].present?
+        if legacy_cursor
+          legacy_slots = legacy_slots.where("(position, id) > (?, ?)", legacy_cursor.position, legacy_cursor.id)
+        end
+        @legacy_slots = legacy_slots.includes(recording: { recording_artists: :artist }).limit(101).to_a
+        @next_legacy_track = @legacy_slots.pop && @legacy_slots.last.id if @legacy_slots.size > 100
+      end
       recording_ids = @slots.map(&:recording_id)
-      @track_counts = effective.where("effective_resolution.recording_id IN (?)", recording_ids.presence || [ nil ])
+      @track_counts = recording_plays(recording_ids)
         .group("effective_resolution.recording_id").count(:id)
     when Recording
       @releases = @entry.admitted_releases.order(:title, :id).includes(release_artists: :artist)
       @releases = @releases.merge(@profile_catalog.releases) if @public_profile
-      plays = effective.where("effective_resolution.recording_id = ?", @entry.id)
+      cursor = @releases.find_by(id: params[:after_appearance]) if params[:after_appearance].present?
+      if cursor
+        @releases = @releases.where("(releases.title, releases.id) > (?, ?)", cursor.title, cursor.id)
+      end
+      @releases = @releases.limit(PAGE + 1).to_a
+      @next_appearance = @releases.pop && @releases.last.id if @releases.size > PAGE
+      plays = recording_plays([ @entry.id ])
       @observation_count = plays.count(:id)
-      @unresolved_available = !@public_profile && @archive_available && effective.where("effective_resolution.recording_id IS NULL").exists?
       if @public_profile
         plays = ListeningPage.chronological(plays, before: params[:before])
       else
@@ -96,7 +116,11 @@ class CanonicalLibraryController < ApplicationController
     end
   end
 
-  def effective
-    @profile_catalog ? @profile_catalog.catalog_plays : RecordingResolution::Ledger.effective(current_user)
+  def recording_plays(ids)
+    if @profile_catalog
+      @profile_catalog.catalog_plays.where("effective_resolution.recording_id IN (?)", ids.presence || [ nil ])
+    else
+      RecordingResolution::Ledger.for_recordings(current_user, ids)
+    end
   end
 end

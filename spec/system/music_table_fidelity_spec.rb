@@ -79,9 +79,14 @@ RSpec.describe "Music table fidelity", type: :system do
   it "uses the full recording cell for original titles and previews only genuine overflow" do
     user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "archive-width", lastfm_username: "archive-width")
     titles = [ "Vi", "des fleurs x stromae", LONG_TITLE + ("X" * 100) ]
-    titles.each_with_index do |title, index|
+    plays = titles.each_with_index.map do |title, index|
       user.scrobbles.create!(played_at: Time.current - index.minutes,
         payload: { artist_name: "Tove Lo", track_name: title, album_name: "ESTRUS" })
+    end
+    partial = Recording.create!(title: "Unverified alternate spelling", mbid: "legacy-recording")
+    verified = Recording.create!(title: titles.last, mbid: SecureRandom.uuid)
+    [ [ plays[1], partial ], [ plays[2], verified ] ].each do |play, recording|
+      RecordingResolution::Ledger.record!(listener: user, scrobble: play, scope: :scrobble, mode: "resolved", reason: "Browser fixture", recording:)
     end
     authenticate_fixture(user)
     [ [ 1440, 960 ], [ 390, 844 ] ].each do |width, height|
@@ -92,15 +97,23 @@ RSpec.describe "Music table fidelity", type: :system do
         [...document.querySelectorAll(".play-recording a")].map(link => {
           const name = link.closest(".play-name")
           const layout = link.closest(".play-recording-layout")
-          const unused = layout.getBoundingClientRect().right - name.getBoundingClientRect().right
+          const badge = layout.querySelector(".play-identity-status")
+          const right = badge ? badge.getBoundingClientRect().left - parseFloat(getComputedStyle(layout).columnGap) : layout.getBoundingClientRect().right
+          const unused = right - name.getBoundingClientRect().right
           return [link.scrollWidth > link.clientWidth, unused < 1, getComputedStyle(link).textOverflow]
         })
+      JS
+      expect(page).to have_css(".play-row.source-claim .play-recording a[aria-label='Vi, Unresolved']")
+      expect(page).to have_css(".play-row.partially-resolved .play-recording", text: "Partial")
+      expect(page).to have_css(".play-row:not(.source-claim) .play-recording", text: titles.last)
+      expect(page.evaluate_script(<<~JS)).to eq(%w[italic italic normal])
+        [...document.querySelectorAll(".play-recording")].map(cell => getComputedStyle(cell).fontStyle)
       JS
       expect(measurement).to eq([ [ false, true, "ellipsis" ], [ false, true, "ellipsis" ], [ true, true, "ellipsis" ] ])
       expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
       if width > 700
         find_link(titles[1]).hover
-        expect(page).to have_no_css(".plays-tooltip:popover-open")
+        expect(page).to have_css(".plays-tooltip:popover-open", exact_text: "Partially resolved")
         find_link(titles.last).hover
         expect(page).to have_css(".plays-tooltip:popover-open", text: titles.last)
       end

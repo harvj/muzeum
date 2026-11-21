@@ -49,6 +49,7 @@ The authoritative, living domain rules are [principles](domain/principles.md), [
    - **v0.3.4 release gate — Resolution Evidence and Artist Enrichment.** Verify the combined P1.5.3 candidate on the patched Ruby and current Brakeman, then review the Muzeum-only production runtime handoff. [Readiness](deployment/v0.3.4-runtime-readiness.md) · [Draft release notes](releases/v0.3.4.md).
    - **v0.3.5 hotfix — Resolution Review.** Put original Last.fm claims above investigation details. Distinguish queued work, provider retries, terminal provider failures, and completed searches without a verified match. Keep investigation and assignment policies in place.
    - **v0.3.6 maintenance — Homepage and Archive.** Remove the redundant homepage introduction, collapse signed-out appearance controls into a disclosure, and use the full Archive cell width for recording titles.
+   - **P1.5.4 · v0.4.0 — Unified Recording Resolution.** Default to the exact matching group, keep individual exceptions in the same review, and show the group’s effective state and counts. Clarify Archive source status and optimize source statistics and catalog listening queries.
 
 9. **P1.6 — Profile onboarding (tentative).**
    - **P1.6a — Last.fm authentication and verified username.** Use Last.fm web authorization and bind only the returned username.

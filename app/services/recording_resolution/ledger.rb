@@ -59,6 +59,32 @@ module RecordingResolution
     end
     private_class_method :visible_surfaces
 
+    # Start from recordings mentioned by a decision. The usual projection still chooses
+    # the effective head, including later changes and individual exceptions.
+    def self.for_recordings(listener, recording_ids)
+      ids = Array(recording_ids).compact.uniq
+      return effective(listener).none if ids.empty?
+
+      matching = Scrobble.sanitize_sql_array([ <<~SQL, { listener: listener.id, recordings: ids } ])
+        WITH relevant_decisions AS MATERIALIZED (
+          SELECT DISTINCT surface_id, scrobble_id FROM resolution_decisions
+          WHERE recording_id IN (:recordings)
+            AND (user_id = :listener OR (user_id IS NULL AND scrobble_id IS NULL))
+        )
+        SELECT scrobble_id FROM relevant_decisions WHERE scrobble_id IS NOT NULL
+        UNION
+        SELECT scrobbles.id FROM relevant_decisions
+        JOIN resolution_surfaces surface ON surface.id = relevant_decisions.surface_id
+        JOIN scrobbles ON scrobbles.lastfm_account_id = surface.lastfm_account_id
+          AND #{EXACT_KEY_SQL} = surface.exact_key
+          AND (surface.artist, surface.album, surface.track) IS NOT DISTINCT FROM
+            (scrobbles.payload->>'artist_name', scrobbles.payload->>'album_name', scrobbles.payload->>'track_name')
+        WHERE relevant_decisions.scrobble_id IS NULL
+      SQL
+      effective(listener).joins("JOIN (#{matching}) relevant_plays ON relevant_plays.scrobble_id = scrobbles.id")
+        .where("effective_resolution.recording_id IN (?)", ids)
+    end
+
     # Keep archive authorization in the query so a previously constructed relation observes revocation.
     def self.effective(listener)
       return Scrobble.none unless listener.id

@@ -36,6 +36,12 @@
       "risk": "additive",
       "quiesce": true,
       "review": "Adds an empty append-only publication audit table, foreign key, and an owning-grant revocation trigger. No backfill, profile activation, or source data changes. DDL briefly locks the profile and grant tables. Require Muzeum-only quiescence, a fresh encrypted backup and isolated four-database recovery. Retain the migration and audit records during forward repair."
+    },
+    "db/migrate/20261121160000_index_resolution_decisions_by_recording.rb": {
+      "sha256": "ccf5ac6f930dde4487cc537cb6a77112fc7bb2e5df63abb9d02107a47d2288e8",
+      "risk": "additive",
+      "quiesce": true,
+      "review": "Adds one concurrent partial index for catalog listening lookups. No decision or source observation rewrite. Require existing guarded migration and recovery checks."
     }
   }
 }

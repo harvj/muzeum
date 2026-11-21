@@ -56,11 +56,38 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     expect(doc.css(".review-candidate").map { |card| card.css(".review-tracks li").size }).to eq([ 18, 14, 4 ])
     expect(doc.css(".review-track-match").size).to eq(3)
     expect(doc.css(".review-score strong").map(&:text)).to eq(%w[9 8 7])
-    expect(doc.text).to include("historical scoring", "3 plausible recordings found", "Assign only observation #{observation.id}", "2:03")
+    expect(doc.text).to include("historical scoring", "3 plausible recordings found", "Resolve observation #{observation.id} only", "2:03")
 
     get resolution_surface_path(observation, assessment: assessment.id)
-    expect(response.body).to include("Assign 5 matching observations", "future exact matches")
+    expect(response.body).to include("Resolve 5 observations", "Future exact matches")
     expect(RecordingResolution::Decision.count).to eq(0)
+  end
+
+  it "paginates ordered track slots and release appearances without dropping catalog entries" do
+    finish_oidc
+    recording = Recording.create!(title: "Common recording", mbid: SecureRandom.uuid)
+    release = Release.create!(title: "Long release")
+    101.times do |i|
+      release.catalog_track_slots.create!(recording:, medium: 1, position: i + 1, title: "Slot #{i + 1}", track_mbid: SecureRandom.uuid)
+    end
+    31.times do |i|
+      Release.create!(title: "Appearance %02d" % i).catalog_track_slots.create!(recording:, medium: 1,
+        position: 1, title: recording.title, track_mbid: SecureRandom.uuid)
+    end
+
+    get release_path(release)
+    doc = Nokogiri::HTML(response.body)
+    expect(doc.css(".release-tracks tbody tr").size).to eq(100)
+    get doc.at_xpath("//a[text()='More tracks']")["href"]
+    doc = Nokogiri::HTML(response.body)
+    expect(doc.css(".release-tracks tbody tr").map(&:text).join).to include("101", "Slot 101")
+
+    get recording_path(recording)
+    doc = Nokogiri::HTML(response.body)
+    expect(doc.text).to include("Appearance 29")
+    expect(doc.text).not_to include("Appearance 30")
+    get doc.at_xpath("//a[text()='More release appearances']")["href"]
+    expect(response.body).to include("Appearance 30", "Long release")
   end
 
   it "protects the library, workspace and import actions" do
@@ -87,7 +114,7 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     get resolution_surfaces_path(filter: "suggested")
     expect(response.body).to include("Signals", "Night Lines", "Night Drive")
     get resolution_surface_path(example)
-    expect(response.body).to include("Assign 2 matching observations", "A checked MusicBrainz edition contains this track slot")
+    expect(response.body).to include("Resolve 2 observations", "A checked MusicBrainz edition contains this track slot")
     expect(response.body).not_to include("Release edition to verify")
     get resolution_surface_path(example, before: second.id)
     expect(response.body).to include("2 matching observations")
@@ -120,7 +147,7 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     expect(response.body).to include("Signals")
     expect(RecordingResolution::Ledger.effective(user).find(second.id).effective_recording_id).to be_nil
     get resolution_surface_path(example, play: second.id)
-    expect(response.body).to include("Assign only observation", "Return to inheritance")
+    expect(response.body).to include("Resolve only this observation", "Return this observation to inheritance")
     post decide_resolution_surface_path(example), params: { scope: "scrobble", play_id: second.id, mode: "inherit", head: head.id }
     expect(RecordingResolution::Decision.last.evidence.fetch("reason_code")).to eq("restore_inheritance")
     later = catalog_observation(user, time: 1.day.from_now)
@@ -155,7 +182,7 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     CanonicalCatalog::Processor.new(request, session_factory: ->(*) { CatalogFixtures::Session.new }).call
     expect(request.reload.state).to eq("imported")
     get resolution_surface_path(second)
-    expect(response.body).to include("Muzeum’s recommendation", "Verified source recording identifier", "2 current matching observations")
+    expect(response.body).to include("Muzeum’s recommendation", "Verified source recording identifier", "2 matching observations")
 
     assessment = RecordingResolution::Ledger.assessments(user).sole
     post decide_resolution_surface_path(second), params: { mode: "resolved", scope: "surface",

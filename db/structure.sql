@@ -2469,6 +2469,13 @@ CREATE INDEX index_releases_on_release_group_mbid ON public.releases USING btree
 
 
 --
+-- Name: index_resolution_decisions_on_recording_and_listener; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_resolution_decisions_on_recording_and_listener ON public.resolution_decisions USING btree (recording_id, user_id) WHERE (recording_id IS NOT NULL);
+
+
+--
 -- Name: index_scrobbles_archive_keyset; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -3397,6 +3404,7 @@ ALTER TABLE ONLY public.resolution_work
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261121160000'),
 ('20261119150200'),
 ('20261119150100'),
 ('20261119150000'),

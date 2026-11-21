@@ -8,7 +8,7 @@
     <%= dense_table("Track listing", classes: "release-tracks") do %>
       <thead><tr><th scope="col" class="track-number" aria-label="Track number">#</th><th scope="col">Recording</th><th scope="col" class="table-number">Length</th><th scope="col" class="table-number">Resolved plays</th></tr></thead>
       <tbody>
-        <% @slots.each.with_index(1) do |slot, number| %>
+        <% @slots.each.with_index(@track_offset.to_i + 1) do |slot, number| %>
           <tr><td class="track-number"><%= number %></td>
             <th scope="row"><span class="play-name" data-overflow-name><%= entity_link slot.title, catalog_entry_path(slot.recording) %></span></th>
             <td class="table-number"><%= recording_duration(slot.recording.duration_ms) if slot.recording.duration_ms %></td>
@@ -23,11 +23,13 @@
         <% end %>
       </tbody>
     <% end %>
+    <% if @next_track %><p><%= link_to "More tracks", catalog_entry_path(@entry, after_track: @next_track) %></p><% end %>
   <% elsif @legacy_slots.present? %>
     <p>Earlier catalog listing. Verify the full edition with Import.</p>
     <ol class="catalog-list">
       <% @legacy_slots.each do |slot| %><li><%= catalog_link(slot.recording) %></li><% end %>
     </ol>
+    <% if @next_legacy_track %><p><%= link_to "More earlier tracks", catalog_entry_path(@entry, after_legacy_track: @next_legacy_track) %></p><% end %>
   <% else %>
     <p>No verified track listing is available.</p>
   <% end %>

@@ -1,5 +1,9 @@
+<% unless Clients::Musicbrainz::MBID.match?(@entry.mbid.to_s) %>
+  <p class="muted">Partially resolved · The provider identity is unverified.</p>
+<% end %>
 <% if @releases.any? %>
   <%= render "related", title: "Release appearances", items: @releases %>
+  <% if @next_appearance %><p><%= link_to "More release appearances", catalog_entry_path(@entry, after_appearance: @next_appearance, before: params[:before]) %></p><% end %>
 <% else %>
   <section class="card library-card">
     <h2>Release appearances</h2>
@@ -11,7 +15,7 @@
   <p>Recording duration <%= recording_duration(@entry.duration_ms) %></p>
   <% if @archive_available %>
     <p><%= pluralize(@observation_count, "resolved listening observation") %>.</p>
-    <% if @unresolved_available %><p class="muted">Your archive contains unresolved observations that are outside this count.</p><% end %>
+    <% unless @public_profile %><p class="muted">Unresolved observations are outside this count.</p><% end %>
     <% if @plays.any? %>
       <%= dense_table("Listening activity") do %>
         <thead><tr><th scope="col">Played at</th></tr></thead>
@@ -20,7 +24,7 @@
             <tr><th scope="row"><% if @public_profile %>
               <%= browser_time(play.played_at) %>
             <% else %>
-              <%= entity_link browser_time(play.played_at), resolution_surface_path(play, play: play.id) %>
+              <%= entity_link browser_time(play.played_at), resolution_surface_path(play) %>
             <% end %></th></tr>
           <% end %>
         </tbody>

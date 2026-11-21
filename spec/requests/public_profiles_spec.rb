@@ -157,6 +157,6 @@ RSpec.describe "Public listening profiles", type: :request do
     expect { post decide_resolution_surface_path(play), params: { mode: "unresolved", scope: "scrobble", play_id: play.id,
       head: head.id, reason: "Owner review" } }
       .to change(RecordingResolution::Decision, :count).by(1)
-    expect(response).to redirect_to(resolution_surface_path(play, play: play.id))
+    expect(response).to redirect_to(resolution_surface_path(play))
   end
 end

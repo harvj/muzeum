@@ -17,23 +17,27 @@
         <% @recent.each do |play| %>
           <% recording = @recent_recordings[play.id] %>
           <% release = @recent_releases[play.id] %>
-          <% observation = resolution_surface_path(play, play: play.id) unless @public_profile %>
+          <% observation = resolution_surface_path(play) unless @public_profile %>
           <% status = if recording.nil?
             "Unresolved"
           elsif !Clients::Musicbrainz::MBID.match?(recording.mbid.to_s)
             "Partially resolved"
           end %>
-          <tr class="play-row<%= " source-claim" if status %>" role="row">
+          <tr class="play-row<%= " source-claim" if status %><%= " partially-resolved" if recording && status %>" role="row">
             <td role="cell" class="table-time"><%= observation ? entity_link(browser_time(play.played_at, clock: true), observation) : browser_time(play.played_at, clock: true) %></td>
-            <td role="cell" class="play-artist"><span class="play-name" data-overflow-name><%= (catalog_artists(recording).presence if recording) || observed_text(play.payload["artist_name"], "Artist") %></span></td>
+            <td role="cell" class="play-artist"><span class="play-name" data-overflow-name><%= (catalog_artists(recording).presence if recording && !status) || observed_text(play.payload["artist_name"], "Artist") %></span></td>
             <td role="cell" class="play-length table-number"><%= recording_duration(recording.duration_ms) if recording&.duration_ms %></td>
-            <th scope="row" role="rowheader" class="play-recording"><span class="play-recording-layout"><% if status %><span class="play-identity-status" title="<%= status %>"><span class="visually-hidden"><%= status %>: </span><span aria-hidden="true">◇</span></span><% end %><span class="play-name" data-overflow-name><% if recording %>
+            <th scope="row" role="rowheader" class="play-recording"><span class="play-recording-layout"><span class="play-name" data-overflow-name<% if status %> data-resolution-status="<%= status %>"<% end %>><% if recording && !status %>
               <%= catalog_link(recording) %>
+            <% elsif recording && !@public_profile %>
+              <%= link_to observed_text(play.payload["track_name"], "Track"), recording_path(recording), class: "entity-link",
+                aria: { label: "#{observed_text(play.payload["track_name"], "Track")}, #{status}" } %>
             <% elsif observation %>
-              <%= entity_link observed_text(play.payload["track_name"], "Track"), observation %>
+              <%= link_to observed_text(play.payload["track_name"], "Track"), observation, class: "entity-link",
+                aria: { label: "#{observed_text(play.payload["track_name"], "Track")}, #{status}" } %>
             <% else %>
-              <%= observed_text(play.payload["track_name"], "Track") %> <small class="muted">Unresolved</small>
-            <% end %></span></span></th>
+              <%= observed_text(play.payload["track_name"], "Track") %><span class="visually-hidden">, <%= status %></span>
+            <% end %></span><% if recording && status %><small class="play-identity-status" aria-hidden="true">Partial</small><% end %></span></th>
             <td role="cell" class="play-release"<% unless release %> title="Reported by Last.fm"<% end %>><span class="play-name" data-overflow-name><%= release ? catalog_link(release) : observed_text(play.payload["album_name"], "Album") %></span></td>
             <td role="cell" class="play-year table-number"><%= release&.release_year %></td>
           </tr>

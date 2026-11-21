@@ -1,0 +1,317 @@
+{
+  "id": "1f2f9922-162d-42d0-a94d-b965bb59dcff",
+  "title": "BLUE LIPS (lady wood phase II)",
+  "date": "2017-11-17",
+  "country": "NZ",
+  "media": [
+    {
+      "position": 1,
+      "format": "Digital Media",
+      "track-count": 14,
+      "tracks": [
+        {
+          "number": "1",
+          "position": 1,
+          "title": "LIGHT BEAMS",
+          "length": 67000,
+          "recording": {
+            "id": "564c83ca-0025-49c9-ac5e-96c3cd54ab7f",
+            "title": "LIGHT BEAMS",
+            "length": 67000,
+            "artist-credit": [
+              {
+                "name": "Tove Lo",
+                "joinphrase": "",
+                "artist": {
+                  "id": "56756959-1e78-429c-b897-e1d056cb0225",
+                  "name": "Tove Lo"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "number": "2",
+          "position": 2,
+          "title": "disco tits",
+          "length": 224000,
+          "recording": {
+            "id": "12f1e7bd-b3e2-4daa-9e3e-35f7dbfd5b27",
+            "title": "disco tits",
+            "length": 223000,
+            "artist-credit": [
+              {
+                "name": "Tove Lo",
+                "joinphrase": "",
+                "artist": {
+                  "id": "56756959-1e78-429c-b897-e1d056cb0225",
+                  "name": "Tove Lo"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "number": "3",
+          "position": 3,
+          "title": "shedontknowbutsheknows",
+          "length": 197000,
+          "recording": {
+            "id": "ae1b9625-c825-4e96-abaa-cc6319bbfc25",
+            "title": "shedontknowbutsheknows",
+            "length": 197000,
+            "artist-credit": [
+              {
+                "name": "Tove Lo",
+                "joinphrase": "",
+                "artist": {
+                  "id": "56756959-1e78-429c-b897-e1d056cb0225",
+                  "name": "Tove Lo"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "number": "4",
+          "position": 4,
+          "title": "shivering gold",
+          "length": 216000,
+          "recording": {
+            "id": "85cc34e6-c144-45d9-b742-af995edb26f6",
+            "title": "shivering gold",
+            "length": 216000,
+            "artist-credit": [
+              {
+                "name": "Tove Lo",
+                "joinphrase": "",
+                "artist": {
+                  "id": "56756959-1e78-429c-b897-e1d056cb0225",
+                  "name": "Tove Lo"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "number": "5",
+          "position": 5,
+          "title": "dont ask dont tell",
+          "length": 226000,
+          "recording": {
+            "id": "a342e86f-9757-4248-a915-f4657e597417",
+            "title": "dont ask dont tell",
+            "length": 226000,
+            "artist-credit": [
+              {
+                "name": "Tove Lo",
+                "joinphrase": "",
+                "artist": {
+                  "id": "56756959-1e78-429c-b897-e1d056cb0225",
+                  "name": "Tove Lo"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "number": "6",
+          "position": 6,
+          "title": "stranger",
+          "length": 235000,
+          "recording": {
+            "id": "e9e146f1-c336-4198-a9f5-66391882e48b",
+            "title": "stranger",
+            "length": 235000,
+            "artist-credit": [
+              {
+                "name": "Tove Lo",
+                "joinphrase": "",
+                "artist": {
+                  "id": "56756959-1e78-429c-b897-e1d056cb0225",
+                  "name": "Tove Lo"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "number": "7",
+          "position": 7,
+          "title": "bitches",
+          "length": 137000,
+          "recording": {
+            "id": "def1e58f-52f4-4dbd-aa9a-c74d1fa633c4",
+            "title": "bitches",
+            "length": 137000,
+            "artist-credit": [
+              {
+                "name": "Tove Lo",
+                "joinphrase": "",
+                "artist": {
+                  "id": "56756959-1e78-429c-b897-e1d056cb0225",
+                  "name": "Tove Lo"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "number": "8",
+          "position": 8,
+          "title": "PITCH BLACK",
+          "length": 54000,
+          "recording": {
+            "id": "413df0f0-0b6d-4297-9989-d8c3c77495c3",
+            "title": "PITCH BLACK",
+            "length": 54000,
+            "artist-credit": [
+              {
+                "name": "Tove Lo",
+                "joinphrase": "",
+                "artist": {
+                  "id": "56756959-1e78-429c-b897-e1d056cb0225",
+                  "name": "Tove Lo"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "number": "9",
+          "position": 9,
+          "title": "romantics",
+          "length": 212000,
+          "recording": {
+            "id": "ecd26d16-11e6-4d56-836d-6869df9b8b26",
+            "title": "romantics",
+            "length": 212000,
+            "artist-credit": [
+              {
+                "name": "Tove Lo",
+                "joinphrase": " feat. ",
+                "artist": {
+                  "id": "56756959-1e78-429c-b897-e1d056cb0225",
+                  "name": "Tove Lo"
+                }
+              },
+              {
+                "name": "Daye Jack",
+                "joinphrase": "",
+                "artist": {
+                  "id": "65f24f36-0c82-4f78-9dbf-343b36843129",
+                  "name": "Daye Jack"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "number": "10",
+          "position": 10,
+          "title": "cycles",
+          "length": 208000,
+          "recording": {
+            "id": "53a84a58-40e1-43c2-a454-971db6d6db00",
+            "title": "cycles",
+            "length": 208000,
+            "artist-credit": [
+              {
+                "name": "Tove Lo",
+                "joinphrase": "",
+                "artist": {
+                  "id": "56756959-1e78-429c-b897-e1d056cb0225",
+                  "name": "Tove Lo"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "number": "11",
+          "position": 11,
+          "title": "struggle",
+          "length": 226000,
+          "recording": {
+            "id": "d2d6118b-ef74-4f3d-8e52-06114260aa78",
+            "title": "struggle",
+            "length": 226000,
+            "artist-credit": [
+              {
+                "name": "Tove Lo",
+                "joinphrase": "",
+                "artist": {
+                  "id": "56756959-1e78-429c-b897-e1d056cb0225",
+                  "name": "Tove Lo"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "number": "12",
+          "position": 12,
+          "title": "9th of october",
+          "length": 205000,
+          "recording": {
+            "id": "be8409c4-d76d-48e9-bd4d-db7b0253eb7c",
+            "title": "9th of october",
+            "length": 205000,
+            "artist-credit": [
+              {
+                "name": "Tove Lo",
+                "joinphrase": "",
+                "artist": {
+                  "id": "56756959-1e78-429c-b897-e1d056cb0225",
+                  "name": "Tove Lo"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "number": "13",
+          "position": 13,
+          "title": "bad days",
+          "length": 206000,
+          "recording": {
+            "id": "b60ed146-f217-4eb6-b45c-fa8ff5553303",
+            "title": "bad days",
+            "length": 206000,
+            "artist-credit": [
+              {
+                "name": "Tove Lo",
+                "joinphrase": "",
+                "artist": {
+                  "id": "56756959-1e78-429c-b897-e1d056cb0225",
+                  "name": "Tove Lo"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "number": "14",
+          "position": 14,
+          "title": "hey you got drugs?",
+          "length": 258000,
+          "recording": {
+            "id": "fdf6197f-85cf-41ff-a1ac-6fee307338e6",
+            "title": "hey you got drugs?",
+            "length": 258000,
+            "artist-credit": [
+              {
+                "name": "Tove Lo",
+                "joinphrase": "",
+                "artist": {
+                  "id": "56756959-1e78-429c-b897-e1d056cb0225",
+                  "name": "Tove Lo"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

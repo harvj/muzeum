@@ -14,6 +14,7 @@ class ResolutionWorkspaceController < ApplicationController
   end
 
   def show
+    @observation = @workspace.matching(@observation).find(params[:play]) if params[:play].present?
     @may_manage_observation = current_user.managed_archive_grants.exists?(lastfm_account_id: @observation.lastfm_account_id)
     @surface = @workspace.surface(@observation)
     ids, @observations_count = @workspace.matching_page(@observation, before_id: params[:before].to_i)
@@ -24,7 +25,7 @@ class ResolutionWorkspaceController < ApplicationController
     @inherited_head = @surface_head unless @surface_head&.mode == "inherit"
     @inherited_head ||= @history.find_by(user_id: nil, scrobble_id: nil)
     @exception_heads = @history.where(user_id: current_user.id, scrobble_id: @scrobbles.map(&:id)).group_by(&:scrobble_id).transform_values(&:first)
-    @selected_scrobble = @workspace.matching(@observation).find(params[:play]) if params[:play].present?
+    @selected_scrobble = @observation
     @assessments = @workspace.assessments(@surface)
     @assessment = if params[:assessment].present?
       @assessments.find(params[:assessment])
@@ -61,8 +62,8 @@ class ResolutionWorkspaceController < ApplicationController
     legacy_candidates = RecordingResolution::Workspace.candidates(@assessment).index_by { |candidate| candidate["id"] }
     @candidates = @ranking.filter_map { |rank| legacy_candidates[rank["recording_mbid"]] }
     current = @scrobbles.find { |play| play.id == target.id } || RecordingResolution::Ledger.effective(current_user).find(target.id)
-    @current_decision = @history.find_by(id: current.effective_recording_decision_id) if current.effective_recording_decision_id
-    if (@assessment.nil? || @assessment.evidence["partial"]) && @assessment_request.nil? && current.effective_recording_id.nil? && @may_manage_observation &&
+    @current_decision = @inherited_head
+    if (@assessment.nil? || @assessment.evidence["partial"]) && @assessment_request.nil? && @inherited_head&.recording_id.nil? && @may_manage_observation &&
         params[:assessment].blank? && params[:before].blank? && params[:history_before].blank?
       @assessment_request = investigation.request
     end
@@ -70,14 +71,18 @@ class ResolutionWorkspaceController < ApplicationController
     if @selected_scrobble
       @selected_head = @history.find_by(user_id: current_user.id, scrobble_id: @selected_scrobble.id)
     end
-    @current_recording_id = current.effective_recording_id
-    @surface_recording_id = @inherited_head&.recording_id
-    @affected_count = @observations_count - @history.where(user_id: current_user.id).where.not(scrobble_id: nil)
-      .where.not(mode: "inherit").where("NOT EXISTS (SELECT 1 FROM resolution_decisions successor WHERE successor.predecessor_id = resolution_decisions.id)").count
+    @current_recording_id = @inherited_head&.recording_id
+    overrides = protected_plays(@surface).where(scrobble_id: @workspace.matching(target).select(:id)).reorder(nil).group(:mode).count
+    @override_count = overrides.values.sum
+    @affected_count = @observations_count - @override_count
+    @inheriting_count = @current_recording_id ? @affected_count : 0
+    @unresolved_count = @affected_count - @inheriting_count + overrides.fetch("unresolved", 0)
     @current_recording = Recording.find_by(id: @current_recording_id) if @current_recording_id
-    if @may_manage_observation && @current_recording && @current_decision&.user_id == current_user.id &&
-        !@current_decision.evidence.key?("release_batch")
-      @batch_releases = @current_recording.admitted_releases.where.not(catalog_verified_at: nil).order(:id).limit(5)
+    effective_decision = @history.find_by(id: current.effective_recording_decision_id) if current.effective_recording_decision_id
+    if @may_manage_observation && current.effective_recording_id && effective_decision&.user_id == current_user.id &&
+        !effective_decision.evidence.key?("release_batch")
+      @batch_releases = Release.joins(:catalog_track_slots).where(catalog_track_slots: { recording_id: current.effective_recording_id })
+        .where.not(catalog_verified_at: nil).distinct.order(:id).limit(5)
     end
     @history = @history.where("id < ?", params[:history_before].to_i) if params[:history_before].to_i.positive?
     @history = @history.limit(21).to_a
@@ -137,8 +142,7 @@ class ResolutionWorkspaceController < ApplicationController
     end
     request&.dispatch
     notice = "Recording decision saved."
-    redirect_to resolution_surface_path(@observation, play: scope == :scrobble ? target.id : nil),
-      notice:, status: :see_other
+    redirect_to resolution_surface_path(target), notice:, status: :see_other
   rescue ActiveRecord::StaleObjectError
     redirect_to resolution_surface_path(@observation), alert: "This assignment changed. Review the current decision and submit again.", status: :see_other
   rescue ArgumentError, CanonicalCatalog::Store::Unverified
@@ -268,10 +272,13 @@ class ResolutionWorkspaceController < ApplicationController
   def affected_count(target, surface, scope)
     return 1 if scope == :scrobble
 
-    protected_plays = @workspace.history(surface).where(user_id: current_user.id).where.not(scrobble_id: nil)
+    @workspace.matching(target).where.not(id: protected_plays(surface).select(:scrobble_id)).count
+  end
+
+  def protected_plays(surface)
+    @workspace.history(surface).where(user_id: current_user.id).where.not(scrobble_id: nil)
       .where.not(mode: "inherit").where("NOT EXISTS (SELECT 1 FROM resolution_decisions successor WHERE successor.predecessor_id = resolution_decisions.id)")
-      .reorder(nil).select(:scrobble_id)
-    @workspace.matching(target).where.not(id: protected_plays).count
+      .reorder(nil)
   end
 
   def assessment_matches_claims?(assessment, target)

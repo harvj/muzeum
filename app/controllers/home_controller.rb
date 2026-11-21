@@ -12,16 +12,35 @@ class HomeController < ApplicationController
 
   def summary
     @account = current_user.source_account
-    observations = archive_observations
-    @count = observations.count
-    @earliest = observations.minimum(:played_at)
-    @latest = observations.maximum(:played_at)
-    @artists = observations.distinct.count(Arel.sql("NULLIF(payload->>'artist_name', '')"))
-    @albums = observations.where("NULLIF(payload->>'album_name', '') IS NOT NULL").distinct.count(Arel.sql("jsonb_build_array(payload->>'artist_name', payload->>'album_name')"))
-    @tracks = observations.where("NULLIF(payload->>'track_name', '') IS NOT NULL").distinct.count(Arel.sql("jsonb_build_array(payload->>'artist_name', payload->>'track_name')"))
+    @count, @earliest, @latest, @artists, @albums, @tracks = archive_statistics
   end
 
   private
+
+  def archive_statistics
+    observations = archive_observations
+    latest_id = observations.order(id: :desc).pick(:id)
+    return [ 0, nil, nil, 0, 0, 0 ] unless latest_id
+
+    # Source rows are immutable and PageWriter appends under the archive account lock.
+    # A new observation advances the key; a resolution decision cannot affect these counts.
+    Rails.cache.fetch([ "archive-source-summary-v1", @account.id, latest_id ], expires_in: 1.day) do
+      source = Scrobble.where(lastfm_account_id: @account.id, id: ..latest_id)
+      groups = source.select(<<~SQL).group(Arel.sql("GROUPING SETS ((), (artist), (artist, album), (artist, track))"))
+        payload->>'artist_name' AS artist, payload->>'album_name' AS album, payload->>'track_name' AS track,
+        GROUPING(payload->>'artist_name', payload->>'album_name', payload->>'track_name') AS level,
+        COUNT(*) AS plays, MIN(played_at) AS earliest, MAX(played_at) AS latest
+      SQL
+      Scrobble.from(groups, :source_groups).pick(
+        Arel.sql("MAX(plays) FILTER (WHERE level = 7)"),
+        Arel.sql("MAX(earliest) FILTER (WHERE level = 7)"),
+        Arel.sql("MAX(latest) FILTER (WHERE level = 7)"),
+        Arel.sql("COUNT(*) FILTER (WHERE level = 3 AND NULLIF(artist, '') IS NOT NULL)"),
+        Arel.sql("COUNT(*) FILTER (WHERE level = 1 AND NULLIF(album, '') IS NOT NULL)"),
+        Arel.sql("COUNT(*) FILTER (WHERE level = 2 AND NULLIF(track, '') IS NOT NULL)")
+      )
+    end
+  end
 
   def archive_observations
     return Scrobble.none unless @account
