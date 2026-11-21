@@ -82,6 +82,8 @@ class CutoverHost(DatabaseHost):
     def __init__(self, root, audit):
         super().__init__(root)
         self.audit = audit
+        self.bundle_path = self.invoke(['bundle', 'exec', 'ruby', '-e',
+                                        'path = Bundler.settings[:path]; print File.expand_path(path) if path'])
         self.releases = self.root / 'releases'
         self.releases.mkdir()
         self.paths = {sha: self.releases / timestamp for sha, timestamp in (
@@ -91,6 +93,8 @@ class CutoverHost(DatabaseHost):
             archive = subprocess.check_output(['git', 'archive', sha])
             subprocess.run(['tar', '-xf', '-', '-C', path], input=archive, check=True)
             (path / 'REVISION').write_text(sha + '\n')
+            if (path / 'Gemfile.lock').read_bytes() != Path('Gemfile.lock').read_bytes():
+                raise RuntimeError('Install archived fixture dependencies before running the cutover rehearsal')
         self.candidate = self.paths[CANDIDATE]
         self.sha = BASELINE
         (self.root / 'current').symlink_to(self.paths[BASELINE])
@@ -132,7 +136,9 @@ end""")
     def migration_env(self):
         from urllib.parse import quote
         env = dict(self.env, RAILS_ENV='production', SECRET_KEY_BASE_DUMMY='1', BOOTSNAP_READONLY='1',
-                   SCHEMA=str(self.root / 'test-structure.sql'))
+                   SCHEMA=str(self.root / 'test-structure.sql'), BUNDLE_FROZEN='true')
+        if self.bundle_path:
+            env['BUNDLE_PATH'] = self.bundle_path
         user = quote(self.env.get('PGUSER', os.environ.get('USER', 'postgres')))
         for name, database in self.connections():
             env[name] = f'postgresql://{user}@127.0.0.1:{self.env["PGPORT"]}/{database}'
