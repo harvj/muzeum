@@ -56,6 +56,7 @@ RSpec.describe "Application Shell evidence", type: :request do
   it "does not authorize a page bound to the session replaced by a new login" do
     finish_oidc
     original = ApplicationShellEvidence.session_binding(Session.last)
+    delete session_path
     finish_oidc
     expect(ApplicationShellEvidence.session_binding(Session.last)).not_to eq(original)
     get application_shell_path, headers: { "X-Muzeum-Shell-Session" => original }

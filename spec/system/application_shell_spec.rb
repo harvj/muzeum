@@ -24,10 +24,22 @@ RSpec.describe "Application Shell navigation", type: :system do
     evidence = { username: "alex", ids: %w[continuum-engine remote-gaming muzeum], expires_at: 50.seconds.from_now.to_i }
     allow(provider).to receive(:shell_evidence).and_return(evidence)
 
-    [ [ 1440, 960 ], [ 390, 844 ] ].each do |width, height|
-      page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width:, height:, deviceScaleFactor: 1, mobile: width < 700)
+    [ [ 1440, 960 ], [ 701, 750 ], [ 700, 750 ], [ 390, 844 ], [ 320, 540 ] ].each do |width, height|
+      page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width:, height:, deviceScaleFactor: 1, mobile: width <= 700)
       visit archive_path
       expect(page).to have_css(".harvj-session summary", text: "alex")
+      geometry = page.evaluate_script(<<~JS)
+        (() => {
+          const wordmark = document.querySelector(".harvj-wordmark").getBoundingClientRect()
+          const trigger = document.querySelector(".harvj-session summary").getBoundingClientRect()
+          return [wordmark.left, wordmark.top, innerWidth - trigger.right, trigger.height]
+        })()
+      JS
+      inset = width <= 700 ? 28 : width * 0.065
+      expect(geometry[0]).to be_within(1).of(inset)
+      expect(geometry[1]).to be_within(1).of(width <= 700 ? 27 : 35)
+      expect(geometry[2]).to be_within(1).of(inset)
+      expect(geometry[3]).to be >= 44
       find(".harvj-session summary").send_keys(:enter)
       within(".harvj-session-panel") do
         expect(page).to have_link("Remote-Gaming", href: "https://gaming.harvj.com/")

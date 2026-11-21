@@ -39,7 +39,7 @@
         <% if current_user %>
           <div class="account-nav" aria-label="Profile"><%= render "shared/session_dropdown" %></div>
         <% else %>
-          <div class="account-nav">
+          <div class="account-nav anonymous-account-nav">
             <%= link_to "Log In", login_path, class: "entity-link", data: { turbo: false, turbo_prefetch: false } %>
             <%= render "shared/appearance" %>
           </div>

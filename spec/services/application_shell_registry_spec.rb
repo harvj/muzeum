@@ -41,6 +41,24 @@ RSpec.describe ApplicationShellRegistry do
       replay.each { |path, value| stub_request(:get, described_class::ORIGIN + path).to_return(body: value) }
       expect { registry.refresh }.to raise_error(described_class::Invalid)
       expect(state.read).to eq(saved)
+      registry_path = "versions/1.1.0/application-shell-registry.json"
+      manifest_path = "versions/1.1.0/manifest.json"
+      replacement = JSON.parse(original.fetch(registry_path))
+      replacement.fetch("applications").find { |item| item.fetch("id") == "remote-gaming" }["availability"] = "withdrawn"
+      replacement["specification_version"] = "1.1.1"
+      replacement = JSON.generate(replacement)
+      manifest = JSON.parse(original.fetch(manifest_path))
+      manifest["version"] = "1.1.1"
+      manifest.fetch("files")["application-shell-registry.json"] = Digest::SHA256.hexdigest(replacement)
+      manifest = JSON.generate(manifest)
+      next_bundle = original.merge(registry_path => replacement, manifest_path => manifest)
+        .transform_keys { |path| path.sub("versions/1.1.0/", "versions/1.1.1/") }.merge(
+        encode_pointer.call(pointer.merge("sequence" => 12, "issued_at" => now - 1, "expires_at" => now + 60,
+          "version" => "1.1.1", "manifest_sha256" => Digest::SHA256.hexdigest(manifest)))
+      )
+      next_bundle.each { |path, value| stub_request(:get, described_class::ORIGIN + path).to_return(body: value) }
+      registry.refresh
+      expect(registry.entries.find { |item| item.fetch("id") == "remote-gaming" }.fetch("availability")).to eq("withdrawn")
       state.write("{}")
       expect(registry.entries).to be_empty
     end

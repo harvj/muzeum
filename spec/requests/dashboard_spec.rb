@@ -50,6 +50,21 @@ RSpec.describe "Listening archive", type: :request do
     end
   end
 
+  it "uses the packaged version only for the running revision before publication" do
+    Dir.mktmpdir do |directory|
+      reviewed = Pathname(directory).join("REVIEWED_RELEASE")
+      sha = "a" * 40
+      allow(Rails.configuration.x).to receive(:reviewed_release_path).and_return(reviewed)
+      allow(Rails.configuration.x).to receive(:running_revision).and_return(sha)
+      reviewed.write("#{sha} v0.3.4\n")
+      get archive_path
+      expect(response.body).to include("Muzeum v0.3.4")
+      allow(Rails.configuration.x).to receive(:running_revision).and_return("b" * 40)
+      get archive_path
+      expect(response.body).not_to include("Muzeum v0.3.4")
+    end
+  end
+
   it "computes statistics from only the user's persisted observations" do
     user = User.find_by!(oidc_subject: @subject)
     LastfmAccount.associate!(user, "stats-fixture")

@@ -57,7 +57,9 @@ class ApplicationShellRegistry
       previous = local_bundle
       previous_sequence, = verified(previous, fresh: false)
       return if sequence == previous_sequence && bundle == previous
-      raise Invalid unless sequence > previous_sequence
+      old_pointer = parse(previous.fetch("current.json"))
+      same_version_changed = old_pointer["version"] == pointer["version"] && old_pointer["manifest_sha256"] != pointer["manifest_sha256"]
+      raise Invalid if sequence <= previous_sequence || same_version_changed
 
       Tempfile.create(".shell-registry", @state.dirname) do |file|
         file.write(JSON.generate(bundle.transform_values { |data| Base64.strict_encode64(data) }))
