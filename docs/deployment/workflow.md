@@ -159,3 +159,27 @@ bundle exec cap production -T
 ```
 
 Fixtures create only `muzeum_deploy_test_*` databases, synthetic observations/raw pages/OIDC principals/interpretation decisions, and production-named restricted roles in the **dedicated disposable cluster**. The inspector fixture refuses a cluster already containing those roles. Real PostgreSQL, Rails migrations, Restic encryption/read-data checks, four-database isolated restores and full application schema inspection run locally and in CI. Service restart, publication faults and Caddy boundaries use a disposable filesystem/service adapter, not production systemd/Caddy. These tests do not replace the required separate installation review or claim a second live production deployment. Never use a production port/URL. Retained verification results: [verification](verification.md).
+
+### Application Shell CI pilot
+
+The controls-branch CI for `4e861c9` verified the release candidate without
+a Shell result. The new audit step runs in ordinary CI using a reviewed
+Infrastructure checkout and the existing deployment-hook fixture. Set up
+`INFRASTRUCTURE_STANDARDS_READ_TOKEN` with approved read-only access to the
+private Infrastructure repository. This is a test-job credential. The
+production coordinator never receives it.
+
+The pilot covers the local activation-side portion of SH-10 and reports
+remaining cases through the audit findings. Keep the existing Muzeum Shell
+implementation and full test cases with their current owners. The PR adds
+CI coordination only. It leaves the held v0.3.4 release SHA and existing
+production requirements in place.
+
+When the app adapter covers the current contract, get a passing result from
+the ordinary branch-push CI for the separately approved deployment SHA.
+Verify the repository, CI run, exact SHA, standard version and review digest
+in the artifact. Set `APPLICATION_SHELL_REVIEW` to its
+`application-shell-review.json` before using the existing Capistrano flow.
+Do not use an audit-only, partial, missing or merge-SHA artifact to approve
+a release. Required CI mode needs explicit adoption approval and the
+owner's coordinated version and candidate decision.

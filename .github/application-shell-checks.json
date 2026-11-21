@@ -1,0 +1,10 @@
+{
+  "format_version": 1,
+  "checks": [
+    {
+      "cases": ["SH-10"],
+      "argv": ["bundle", "exec", "rspec", "spec/operations/deployment_hooks_spec.rb"],
+      "evidence": "Existing disposable Capistrano hook test verifies production preparation stops on a failed shared Shell preflight"
+    }
+  ]
+}
