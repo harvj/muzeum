@@ -120,7 +120,7 @@ RSpec.describe "Music table fidelity", type: :system do
   end
 
   def verify_footer(length, screen, width, height)
-    expect(page).to have_css("body > .site-footer", text: "© 2026 Jim Harvey · Muzeum v0.2.1", count: 1, visible: :all)
+    expect(page).to have_css("body > .site-footer", text: "© #{Time.current.year} Jim Harvey Muzeum v0.2.1", count: 1, visible: :all)
     %w[light dark].each do |appearance|
       page.execute_script(<<~JS, appearance)
         const control = document.querySelector(".controls select");

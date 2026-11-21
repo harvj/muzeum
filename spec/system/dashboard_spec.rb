@@ -23,7 +23,7 @@ RSpec.describe "Dashboard appearance", type: :system do
     expect(page).to have_content("fixture-listener")
     expect(page).to have_link("Archive summary")
     expect(page).to have_css(".listening-day", count: 3)
-    expect(page).to have_content("© 2026 Jim Harvey")
+    expect(page).to have_content("© #{Time.current.year} Jim Harvey")
     observation = user.scrobbles.order(:played_at).last
     expect(page).to have_link("Fixture track 2", href: resolution_surface_path(observation, play: observation.id))
     output = Pathname(ENV.fetch("P14_PREVIEW_DIR", Rails.root.join("docs/p1.1d/previews")))
@@ -31,20 +31,9 @@ RSpec.describe "Dashboard appearance", type: :system do
     [ [ "desktop", 1440, 960 ], [ "mobile", 390, 844 ] ].each do |size, width, height|
       page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: width, height: height, deviceScaleFactor: 1, mobile: size == "mobile")
       %w[light dark].each do |mode|
-        find("summary[aria-label='Session menu']").send_keys(:enter)
-        if size == "desktop"
-          find(".appearance-submenu summary").hover
-          expect(page).to have_css(".appearance-submenu[open]")
-          expect(page.evaluate_script(<<~JS)).to be(true)
-            document.querySelector(".appearance-submenu .controls").getBoundingClientRect().right <=
-              document.querySelector(".appearance-submenu summary").getBoundingClientRect().left
-          JS
-          page.save_screenshot(output.join("desktop-appearance-menu.png")) if ENV["CAPTURE_PREVIEWS"] == "1"
-        else
-          find(".appearance-submenu summary").send_keys(:enter) unless has_css?(".appearance-submenu[open]", wait: 0)
-        end
+        find(".harvj-session > summary").send_keys(:enter)
         select mode.capitalize, from: "Appearance"
-        find("summary[aria-label='Session menu']").send_keys(:enter)
+        find(".harvj-session > summary").send_keys(:enter)
         expect(page.evaluate_script("document.documentElement.dataset.appearance")).to eq(mode)
         page.execute_script("document.documentElement.dataset.still = 'true'")
         page.execute_script("return document.fonts.ready")
@@ -64,15 +53,15 @@ RSpec.describe "Dashboard appearance", type: :system do
     within(".stat", text: "Imported scrobbles") { expect(page).to have_content("4") }
     expect(page).to have_content("Observed artists")
     click_link "Back to Archive"
-    find("summary[aria-label='Session menu']").click
-    expect(page).to have_link("Continuum Engine", href: "https://funding.harvj.com/")
-    expect(page).to have_link("Auth", href: "https://auth.harvj.com/")
-    expect(page).not_to have_link("Muzeum", href: "https://muzeum.fm/")
+    find(".harvj-session > summary").click unless has_css?(".harvj-session[open]", wait: 0)
+    expect(page).to have_no_link("Continuum Engine")
+    expect(page).to have_no_link("Auth")
+    expect(page).to have_no_link("Muzeum", href: "https://muzeum.fm/")
     expect(page).not_to have_link("User management")
     page.save_screenshot(output.join("mobile-session-menu.png")) if ENV["CAPTURE_PREVIEWS"] == "1"
     page.driver.browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "prefers-reduced-motion", value: "reduce" } ])
     expect(page.evaluate_script("getComputedStyle(document.querySelector('.stone-environment'), '::after').animationName")).to eq("none")
-    click_button "Log out"
+    click_button "Log Out"
     expect(page).to have_link("Log In", href: login_path)
     visit archive_path
     expect(page).to have_current_path(root_path)

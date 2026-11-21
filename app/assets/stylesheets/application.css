@@ -248,7 +248,7 @@ a:hover { text-decoration: none; }
     background-color: var(--reading-surface, var(--card));
   }
 
-  header[data-art-treatment] :where(.harvj-wordmark, .entity-link, .account-nav > .controls > label),
+  header[data-art-treatment] :where(.harvj-wordmark, .entity-link, .shell-public-appearance > .controls > label),
   main[data-art-treatment] > .intro > :is(h1, p),
   main[data-art-treatment] .archive-heading,
   footer[data-art-treatment] > :is(span, a) {
@@ -256,7 +256,7 @@ a:hover { text-decoration: none; }
   }
 
   header[data-art-treatment] :is(.harvj-wordmark, .entity-link):not(:hover, :focus-visible, :active),
-  header[data-art-treatment] .account-nav > .controls > label,
+  header[data-art-treatment] .shell-public-appearance > .controls > label,
   main[data-art-treatment] :is(.intro > h1, .archive-heading) { color: var(--art-foreground, var(--ink)); }
   main[data-art-treatment] > .intro > p,
   footer[data-art-treatment] > :is(span, a) { color: var(--art-foreground, var(--muted)); }
@@ -337,3 +337,79 @@ main .review-candidate.recommended { border-color: #378c48; }
 .geographic-place { display: inline-flex; align-items: center; flex-wrap: wrap; gap: .28em; }
 .geographic-flag { line-height: 0; }
 .geographic-flag img { display: block; width: 1.5rem; height: 1rem; object-fit: contain; border: 1px solid var(--line); }
+
+
+/* Application Shell v1.1.0 layout and application-owned controls. */
+body > header {
+  --shell-inset: 6.5vw;
+  --shell-top: 27.4px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 20px;
+  row-gap: 8px;
+  min-height: 0;
+  padding: calc(var(--shell-top) + env(safe-area-inset-top)) max(var(--shell-inset), env(safe-area-inset-right)) 8px
+    max(var(--shell-inset), env(safe-area-inset-left));
+}
+.header-navigation { display: contents; }
+body > header .harvj-wordmark { grid-area: 1 / 1; align-self: start; margin-block-start: 7.6px; }
+body > header .account-nav { grid-area: 1 / 3; min-width: 0; place-self: start end; }
+body > header .library-nav { grid-area: 1 / 2; justify-content: end; gap: 4px 20px; }
+body > header .shell-public-appearance { grid-area: 2 / 2 / auto / span 2; justify-self: end; }
+body > header :is(.library-nav a, .account-nav > a, .harvj-session > summary) {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+body > header .library-nav a[aria-current] { font-weight: 600; text-decoration: underline; }
+.harvj-session > summary .session-username { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.harvj-session > summary { max-width: min(32ch, calc(100vw - 176px)); }
+.session-dot { flex: 0 0 8px; height: 8px; border-radius: 50%; background: #388b57; }
+.harvj-session > .harvj-session-panel {
+  width: min(300px, calc(100vw - max(var(--shell-inset), env(safe-area-inset-left)) - max(var(--shell-inset), env(safe-area-inset-right))));
+  max-height: calc(100dvh - 100px);
+  overflow: auto;
+}
+.harvj-session-panel .controls { padding: 0 10px; flex-wrap: wrap; }
+.harvj-session-panel .controls :is(select, button) { min-height: 44px; }
+body > .site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 8px;
+  padding: 16px max(6.5vw, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(6.5vw, env(safe-area-inset-left));
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+.site-footer span { min-width: 0; overflow-wrap: anywhere; }
+.shell-skip {
+  position: absolute;
+  z-index: 30;
+  inset: 4px auto auto 4px;
+  padding: 8px;
+  background: var(--card);
+  color: var(--ink);
+}
+.shell-skip:not(:focus) { clip-path: inset(50%); }
+@media (max-width: 700px) {
+  body > header { --shell-inset: 28px; --shell-top: 18.8px; grid-template-columns: auto minmax(0, 1fr); }
+  body > header .harvj-wordmark { margin-block-start: 8.2px; }
+  body > header .account-nav { grid-area: 1 / 2; }
+  body > header .library-nav { grid-area: 2 / 1 / auto / span 2; gap: 4px 12px; }
+  body > header .shell-public-appearance { grid-area: auto / 1 / auto / span 2; }
+  body > .site-footer {
+    padding-inline: max(28px, env(safe-area-inset-left)) max(28px, env(safe-area-inset-right));
+  }
+}
+@media (max-height: 320px) {
+  body > header:has(.harvj-session[open]) { display: flex; flex-wrap: wrap; }
+  .harvj-session > .harvj-session-panel { position: static; max-height: none; margin-top: 8px; }
+}
+@media (forced-colors: active) {
+  .session-dot { background: ButtonText; forced-color-adjust: none; }
+}

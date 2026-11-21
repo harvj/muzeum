@@ -2,8 +2,90 @@
   "format_version": 1,
   "checks": [
     {
-      "cases": ["SH-10"],
-      "argv": ["bundle", "exec", "rspec", "spec/operations/deployment_hooks_spec.rb"],
+      "cases": [
+        "SH-02"
+      ],
+      "argv": [
+        "env",
+        "BROWSER_TESTS=1",
+        "bundle",
+        "exec",
+        "rspec",
+        "spec/system/sign_in_spec.rb",
+        "spec/system/automatic_sign_in_spec.rb",
+        "spec/system/public_profiles_spec.rb"
+      ],
+      "evidence": "Anonymous home, deliberate same-origin login, verified Auth callback and public profile Shell exception exercised in Chromium"
+    },
+    {
+      "cases": [
+        "SH-04"
+      ],
+      "argv": [
+        "env",
+        "BROWSER_TESTS=1",
+        "bundle",
+        "exec",
+        "rspec",
+        "spec/services/application_shell_spec.rb",
+        "spec/requests/application_shell_spec.rb",
+        "spec/system/application_shell_spec.rb"
+      ],
+      "evidence": "Real OIDC-bound grant validation, ordered verified cache intersection, disclosure revocation and canonical destination URLs"
+    },
+    {
+      "cases": [
+        "SH-06"
+      ],
+      "argv": [
+        "env",
+        "BROWSER_TESTS=1",
+        "bundle",
+        "exec",
+        "rspec",
+        "spec/system/site_art_spec.rb",
+        "spec/system/dashboard_spec.rb"
+      ],
+      "evidence": "Chromium evidence for Shell artwork and decode fallback, appearance and motion controls, contrast and keyboard focus"
+    },
+    {
+      "cases": [
+        "SH-07"
+      ],
+      "argv": [
+        "env",
+        "BROWSER_TESTS=1",
+        "bundle",
+        "exec",
+        "rspec",
+        "spec/system/music_table_fidelity_spec.rb",
+        "spec/requests/application_shell_spec.rb",
+        "spec/operations/published_release_spec.rb"
+      ],
+      "evidence": "Short/long responsive footer and credit/year rollover, verified running release metadata and pointer switch"
+    },
+    {
+      "cases": [
+        "SH-09"
+      ],
+      "argv": [
+        "python3",
+        "-B",
+        "script/test_application_shell_registry.py",
+        ".standards/infrastructure"
+      ],
+      "evidence": "Two Infrastructure-signed disposable publications with live Ruby refresh, expiry, tamper, replay, outage and restart with independent eligibility"
+    },
+    {
+      "cases": [
+        "SH-10"
+      ],
+      "argv": [
+        "bundle",
+        "exec",
+        "rspec",
+        "spec/operations/deployment_hooks_spec.rb"
+      ],
       "evidence": "Existing disposable Capistrano hook test verifies production preparation stops on a failed shared Shell preflight"
     }
   ]

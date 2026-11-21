@@ -1,5 +1,7 @@
 Rails.application.routes.draw do
   get "site-art", to: "site_art#show"
+  get "application-shell", to: "application_shell#show", as: :application_shell
+
   get "up" => "rails/health#show", as: :rails_health_check
   get "login", to: "sessions#login"
   resource :session, only: :destroy

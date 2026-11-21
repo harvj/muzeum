@@ -8,7 +8,7 @@ module OidcFlow
     @signing_key = OpenSSL::PKey::RSA.generate(2048)
     @subject = "existing-auth-uuid"
     metadata = { issuer: OidcClient::ISSUER, authorization_endpoint: "https://auth.harvj.com/authorize",
-      token_endpoint: "https://auth.harvj.com/token", jwks_uri: "https://auth.harvj.com/jwks",
+      introspection_endpoint: "https://auth.harvj.com/introspect", token_endpoint: "https://auth.harvj.com/token", jwks_uri: "https://auth.harvj.com/jwks",
       response_types_supported: [ "code" ], subject_types_supported: [ "public" ], id_token_signing_alg_values_supported: [ "RS256" ] }
     stub_request(:get, "https://auth.harvj.com/.well-known/openid-configuration").to_return(headers: { "Content-Type" => "application/json" }, body: metadata.to_json)
     stub_request(:get, "https://auth.harvj.com/jwks").to_return(headers: { "Content-Type" => "application/json" }, body: { keys: [ JSON::JWK.new(@signing_key.public_key, kid: "test") ] }.to_json)

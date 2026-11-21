@@ -54,9 +54,9 @@ RSpec.describe "Public profile browsing", type: :system do
 
   def verify_navigation
     expect(page).to have_css('header .harvj-wordmark[href="https://muzeum.fm/"]')
-    expect(page).to have_link("Jim Harvey", href: "https://harvj.com/")
+    expect(page).to have_link("Jim Harvey", href: "https://harvj.com")
     expect(page).to have_link("Log In", href: login_path)
-    expect(page).to have_no_css("header summary[aria-label='Session menu']")
+    expect(page).to have_no_css("header .harvj-session > summary")
   end
 
   def verify_viewport(width, theme)

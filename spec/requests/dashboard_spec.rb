@@ -60,7 +60,7 @@ RSpec.describe "Listening archive", type: :request do
     get archive_summary_path
     expect(response.body).to include("01 Jan 2020", "01 Jan 2021", "Observed artists", "Observed albums", "Observed tracks")
     expect(response.body).not_to include("1999", "Private Artist", "User management")
-    expect(response.body).to include("https://funding.harvj.com/", "harvj-session")
+    expect(response.body).to include("harvj-session")
     expect(controller.instance_variable_get(:@artists)).to eq(1)
     expect(controller.instance_variable_get(:@albums)).to eq(1)
     expect(controller.instance_variable_get(:@tracks)).to eq(2)

@@ -1,19 +1,23 @@
-<details class="harvj-session">
-  <summary aria-label="Session menu"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="9" r="3"/><path d="M5 19c1-6 13-6 14 0"/></svg><span>Profile</span><span aria-hidden="true">⌄</span></summary>
+<details class="harvj-session" data-controller="application-shell"
+         data-application-shell-url-value="<%= application_shell_path %>"
+         data-action="toggle->application-shell#toggle keydown.esc->application-shell#escape pointerdown@document->application-shell#dismiss pageshow@window->application-shell#restore pagehide@window->application-shell#clear">
+  <summary data-application-shell-target="trigger" aria-label="Signed in">
+    <span class="session-dot" aria-hidden="true"></span>
+    <span class="session-username" data-application-shell-target="username">Signed in</span>
+    <span aria-hidden="true">⌄</span>
+  </summary>
   <div class="harvj-session-panel">
-    <p class="profile-label">Applications</p>
-    <%= link_to "Auth", "https://auth.harvj.com/" %>
-    <%= link_to "Continuum Engine", "https://funding.harvj.com/" %>
-    <% if auth_administration_available? %>
-      <%= link_to "User management", "https://auth.harvj.com/admin" %>
+    <section aria-labelledby="application-shell-applications" data-application-shell-target="applications" hidden>
+      <h2 class="profile-label" id="application-shell-applications">Applications</h2>
+      <div data-application-shell-target="destinations"></div>
+    </section>
+    <section class="profile-settings" aria-labelledby="application-shell-settings">
+      <h2 class="profile-label" id="application-shell-settings">Muzeum settings</h2>
+      <%= render "shared/appearance" %>
+    </section>
+    <% if (client_id = ENV["OIDC_CLIENT_ID"].presence) %>
+      <%= link_to "Account Settings", "#{OidcClient::ISSUER}/account?#{URI.encode_www_form(client_id: client_id)}" %>
     <% end %>
-    <div class="profile-settings">
-      <p class="profile-label">Muzeum settings</p>
-      <details class="appearance-submenu" data-controller="hover-disclosure" data-action="pointerenter->hover-disclosure#enter pointerleave->hover-disclosure#leave">
-        <summary data-action="click->hover-disclosure#pin">Appearance <span aria-hidden="true">‹</span></summary>
-        <%= render "shared/appearance" %>
-      </details>
-    </div>
-    <%= button_to "Log out", session_path, method: :delete %>
+    <%= button_to "Log Out", session_path, method: :delete %>
   </div>
 </details>
