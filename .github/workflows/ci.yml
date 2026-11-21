@@ -86,6 +86,9 @@ jobs:
             bin
             deploy/keys
             lib
+            docs/specifications
+            fixtures/application-shell
+            tests
           persist-credentials: false
       - name: Report unavailable Application Shell contract
         if: ${{ !cancelled() && steps.shell-checkout.outcome == 'failure' }}
