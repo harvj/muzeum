@@ -320,6 +320,9 @@ main .candidate h3 { margin: 0; font-size: 1.05rem; }
 .resolution-review :is(h2, h3, .review-candidate-title) { font-family: Georgia, serif; font-weight: 700; }
 .review-sections { display: flex; gap: .6rem 1.4rem; flex-wrap: wrap; padding-block: .8rem; border-block-end: 1px solid var(--line); }
 .review-grid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(14rem, 1fr); gap: 1rem; margin-block: .9rem; }
+.review-grid:not(:has(.review-candidate)) { grid-template-columns: minmax(0, 1fr); }
+.review-grid:not(:has(.review-candidate)) .review-sidebar { grid-area: 2 / 1; display: flex; flex-wrap: wrap; gap: .7rem; }
+.review-grid:not(:has(.review-candidate)) .review-sidebar-card { flex: 1 1 15rem; margin-block-end: 0; }
 .review-sidebar { grid-column: 2; grid-row: 1; }
 .review-candidates { grid-column: 1; grid-row: 1; min-width: 0; }
 .review-sidebar-card, main .review-candidate, .review-secondary {
