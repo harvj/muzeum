@@ -95,182 +95,27 @@ RSpec.describe MuzeumDeploymentRevision do
     expect { described_class.resolve! }.to raise_error(/exact SHA must pass/)
   end
 
-  context "with a separate release checkout" do
-    let(:version) { "v0.3.2" }
-    let(:branch) { "release/#{version}" }
-    let(:scope) { "https://github.com/harvj/muzeum/issues/32#issuecomment-123" }
-    let(:release_checkout) { File.expand_path("../release") }
-    let(:manifest) { File.expand_path("../releases.json") }
+  it "uses a single signed envelope for arbitrary clean branch candidates and exact push CI" do
+    version = "v0.9.9"
+    branch = "release/#{version}"
+    baseline = @sha
+    git("switch", "-c", branch)
+    File.write("fixture", "next candidate")
+    git("commit", "-am", "Next release")
+    git("push", "-u", "origin", branch)
+    candidate = git("rev-parse", "HEAD")
+    approval = { application: "muzeum", sha: candidate, baseline:, version:, branch:, ci: @ci["url"] }
+    allow(described_class).to receive(:ci!).with(candidate, branch:, required_jobs: true).and_return(@ci["url"])
+    path = File.expand_path("../approval.json")
+    envelope = JSON.generate(payload: Base64.strict_encode64(JSON.generate(approval)), signature: "verified by installed helper")
+    File.write(path, envelope)
+    previous = ENV["MUZEUM_RELEASE_AUTHORIZATION"]
+    ENV["MUZEUM_RELEASE_AUTHORIZATION"] = path
 
-    before do
-      git("worktree", "add", "-b", branch, release_checkout, @sha)
-      Dir.chdir(release_checkout) do
-        File.write("fixture", "release candidate\n")
-        git("commit", "-am", "Release candidate")
-        git("push", "-u", "origin", branch)
-        @candidate = git("rev-parse", "HEAD")
-      end
-      @ci.merge!("headSha" => @candidate, "headBranch" => branch, "event" => "push")
-      stub_const("MuzeumDeploymentRevision::RELEASES", manifest)
-      write_review
-    end
-
-    def write_review(override = {})
-      File.write(manifest, JSON.generate(version => { sha: @candidate, baseline: @sha, scope: }.merge(override)))
-    end
-
-    it "requires an explicit reviewed release and pins its separate CI and baseline" do
-      expect(described_class.resolve_release!(version, release_checkout)).to eq(
-        sha: @candidate, baseline: @sha, branch:, version:, scope:, ci: @ci["url"]
-      )
-      Dir.chdir(release_checkout) do
-        expect { described_class.resolve! }.to raise_error(/requires local main/)
-      end
-    end
-
-    it "rejects arbitrary branches and unapproved versions" do
-      expect { described_class.resolve_release!("main", release_checkout) }.to raise_error(/stable vX.Y.Z/)
-      expect { described_class.resolve_release!("v0.3.3", release_checkout) }.to raise_error(/not reviewed/)
-      expect { described_class.resolve_release!(version, Dir.pwd) }.to raise_error(/requires local release/)
-    end
-
-    it "rejects a dirty release checkout and a reviewed SHA mismatch" do
-      dirty = File.join(release_checkout, "untracked")
-      File.write(dirty, "unreviewed")
-      expect { described_class.resolve_release!(version, release_checkout) }.to raise_error(/clean checkout/)
-      File.delete(dirty)
-      write_review(sha: "0" * 40)
-      expect { described_class.resolve_release!(version, release_checkout) }.to raise_error(/reviewed SHA/)
-    end
-
-    it "rejects a missing baseline and absent or cross-branch CI" do
-      write_review(baseline: "0" * 40)
-      expect { described_class.resolve_release!(version, release_checkout) }.to raise_error(/preflight command failed/)
-      write_review
-      @ci["headBranch"] = "main"
-      expect { described_class.resolve_release!(version, release_checkout) }.to raise_error(/selected branch push/)
-      @ci = {}
-      expect { described_class.resolve_release!(version, release_checkout) }.to raise_error(/exact SHA must pass/)
-    end
-  end
-  context "with the pinned v0.3.4 exception" do
-    let(:version) { "v0.3.4" }
-    let(:controls) { "controls/v0.3.4-shell" }
-    let(:candidate_branch) { "candidate/v0.3.4-shell-revocation" }
-    let(:release) { "release/v0.3.4" }
-    let(:release_checkout) { File.expand_path("../release") }
-    let(:manifest) { File.expand_path("../releases.json") }
-
-    before do
-      git("worktree", "add", "-b", release, release_checkout, @sha)
-      Dir.chdir(release_checkout) do
-        File.write("fixture", "forward\n")
-        git("commit", "-am", "Pinned forward candidate")
-        git("push", "-u", "origin", release)
-        @candidate = git("rev-parse", "HEAD")
-      end
-      git("switch", "-c", controls)
-      File.write("fixture", "controls\n")
-      git("commit", "-am", "Reviewed controls")
-      git("push", "-u", "origin", controls)
-      @control_sha = git("rev-parse", "HEAD")
-      stub_const("MuzeumDeploymentRevision::V034_SHA", @candidate)
-      stub_const("MuzeumDeploymentRevision::RELEASES", manifest)
-      File.write(manifest, JSON.generate(version => { sha: @candidate, baseline: @sha,
-        scope: "https://github.com/harvj/muzeum/issues/28#issuecomment-123" }))
-      @job_rows = described_class::REQUIRED_JOBS.map { |name| { name:, status: "completed", conclusion: "success" } }
-      @forward_run = { databaseId: 2, headSha: @candidate, headBranch: candidate_branch, event: "push",
-        status: "completed", conclusion: "success", url: "https://example.test/forward-ci" }
-      @control_run = @forward_run.merge(databaseId: 1, headSha: @control_sha, headBranch: controls)
-      allow(described_class).to receive(:command).and_wrap_original do |original, *arguments|
-        case arguments
-        when %w[git remote get-url origin]
-          "git@github.com:harvj/muzeum.git"
-        when ->(args) { args.take(3) == %w[gh run list] }
-          run = arguments.include?(controls) ? @control_run : @forward_run
-          expect(arguments).to include("--commit", "--branch", run.equal?(@control_run) ? controls : candidate_branch, "--event", "push")
-          JSON.generate([ run ])
-        when ->(args) { args.take(3) == %w[gh run view] }
-          run = arguments.fetch(3) == "1" ? @control_run : @forward_run
-          JSON.generate(run.merge(jobs: @job_rows))
-        else
-          original.call(*arguments)
-        end
-      end
-    end
-
-    it "keeps the approved release checkout while verifying candidate push CI and control push CI" do
-      result = described_class.resolve_release!(version, release_checkout)
-      expect(result).to include(sha: @candidate, branch: release, ci: @forward_run[:url])
-    end
-
-    it "rejects missing and failed required jobs even when the run reports success" do
-      missing = @job_rows.pop
-      expect { described_class.resolve_release!(version, release_checkout) }.to raise_error(/Required CI jobs/)
-      @job_rows << missing.merge(conclusion: "failure")
-      expect { described_class.resolve_release!(version, release_checkout) }.to raise_error(/Required CI jobs/)
-    end
-
-    it "rejects a modified v0.3.4 review SHA" do
-      review = JSON.parse(File.read(manifest))
-      review.fetch(version)["sha"] = @control_sha
-      File.write(manifest, JSON.generate(review))
-      expect { described_class.resolve_release!(version, release_checkout) }.to raise_error(/pinned forward SHA/)
-    end
-
-    it "rejects an unrelated forward CI branch and an unauthorized control branch" do
-      @forward_run[:headBranch] = release
-      expect { described_class.resolve_release!(version, release_checkout) }.to raise_error(/selected branch push/)
-      git("switch", "main")
-      expect { described_class.resolve_release!(version, release_checkout) }.to raise_error(/requires local controls/)
-    end
-  end
-
-  it "pins the hotfix and verifies CI for both hotfix branches" do
-    hotfix = described_class::V035_SHA
-    baseline = described_class::V034_SHA
-    controls = "b" * 40
-    release_branch = "release/v0.3.5"
-    control_branch = "controls/v0.3.5"
-    allow(described_class).to receive(:checkout!).with(control_branch).and_return(controls)
-    allow(described_class).to receive(:checkout!).with(release_branch).and_return(hotfix)
-    expect(described_class).to receive(:ci!).with(controls, branch: control_branch, required_jobs: true).ordered
-    expect(described_class).to receive(:command).with("git", "merge-base", "--is-ancestor", baseline, hotfix).and_return("")
-    expect(described_class).to receive(:ci!).with(hotfix, branch: release_branch, required_jobs: true).ordered.and_return("https://example.test/ci")
-
-    expect(described_class.resolve_release!("v0.3.5", Dir.pwd)).to include(sha: hotfix, baseline:, branch: release_branch)
-    expect(described_class.patched_runtime?(baseline)).to be(true)
-  end
-
-  it "pins the maintenance release and verifies CI for both branches" do
-    hotfix = described_class::V036_SHA
-    baseline = described_class::V035_SHA
-    controls = "b" * 40
-    release_branch = "release/v0.3.6"
-    control_branch = "controls/v0.3.6"
-    allow(described_class).to receive(:checkout!).with(control_branch).and_return(controls)
-    allow(described_class).to receive(:checkout!).with(release_branch).and_return(hotfix)
-    expect(described_class).to receive(:ci!).with(controls, branch: control_branch, required_jobs: true).ordered
-    expect(described_class).to receive(:command).with("git", "merge-base", "--is-ancestor", baseline, hotfix).and_return("")
-    expect(described_class).to receive(:ci!).with(hotfix, branch: release_branch, required_jobs: true).ordered.and_return("https://example.test/ci")
-
-    expect(described_class.resolve_release!("v0.3.6", Dir.pwd)).to include(sha: hotfix, baseline:, branch: release_branch)
-    expect(described_class.patched_runtime?(baseline)).to be(true)
-  end
-
-  it "pins the unified resolution release and verifies CI for both branches" do
-    hotfix = described_class::V040_SHA
-    baseline = described_class::V036_SHA
-    controls = "b" * 40
-    release_branch = "release/v0.4.0"
-    control_branch = "controls/v0.4.0"
-    allow(described_class).to receive(:checkout!).with(control_branch).and_return(controls)
-    allow(described_class).to receive(:checkout!).with(release_branch).and_return(hotfix)
-    expect(described_class).to receive(:ci!).with(controls, branch: control_branch, required_jobs: true).ordered
-    expect(described_class).to receive(:command).with("git", "merge-base", "--is-ancestor", baseline, hotfix).and_return("")
-    expect(described_class).to receive(:ci!).with(hotfix, branch: release_branch, required_jobs: true).ordered.and_return("https://example.test/ci")
-
-    expect(described_class.resolve_release!("v0.4.0", Dir.pwd)).to include(sha: hotfix, baseline:, branch: release_branch)
-    expect(described_class.patched_runtime?(baseline)).to be(true)
+    expect(described_class.authorization!).to include(sha: candidate, baseline:, version:, branch:, envelope: Base64.strict_encode64(envelope))
+    File.write(path, JSON.generate(payload: Base64.strict_encode64(JSON.generate(approval.merge(sha: "f" * 40))), signature: "fixture"))
+    expect { described_class.authorization! }.to raise_error(/does not match approved SHA/)
+  ensure
+    ENV["MUZEUM_RELEASE_AUTHORIZATION"] = previous
   end
 end

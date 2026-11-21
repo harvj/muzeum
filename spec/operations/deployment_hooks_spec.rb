@@ -9,6 +9,19 @@ RSpec.describe "Capistrano deployment/reporting integration" do
     JSON.parse(output.lines.find { |line| line.start_with?("HOOK_FIXTURE:") }.delete_prefix("HOOK_FIXTURE:")).merge("stderr" => errors)
   end
 
+  it "delegates production pointer changes to the installed coordinator" do
+    script = <<~RUBY
+      require "capistrano/all"
+      Rake.application = Capistrano::Application.new
+      Rake.application.init("cap")
+      Rake.application.load_rakefile
+      Rake::Task["production"].invoke
+      abort "unguarded promotion" unless Rake::Task["deploy:symlink:release"].actions.empty?
+    RUBY
+    _output, errors, status = Open3.capture3("bundle", "exec", "ruby", "-e", script)
+    expect(status).to be_success, errors
+  end
+
   it "runs the real preflight task without logging shims, deployment phases or GitHub records" do
     result = rehearse("preflight")
     expect(result["events"]).to eq([ [ "server", "preflight" ] ])
@@ -85,7 +98,7 @@ RSpec.describe "Capistrano deployment/reporting integration" do
   end
 
   it "stamps the reviewed version only after the packaged revision matches" do
-    expected_sha = "1633c96d63c1a44e678e95292466ab49c0442103"
+    expected_sha = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
     expect(rehearse("stamp")["events"]).to eq([
       [ "remote revision", "/disposable/release/REVISION" ],
       [ "stamp", "#{expected_sha} v0.3.4\n", "/disposable/release/REVIEWED_RELEASE" ],

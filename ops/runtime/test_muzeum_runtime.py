@@ -13,11 +13,11 @@ import muzeum_runtime as selection
 
 
 class RuntimeTests(unittest.TestCase):
-    def test_baseline_keeps_legacy_path_and_unreviewed_sha_fails(self):
+    def test_baseline_keeps_legacy_path_and_malformed_sha_fails(self):
         directory, _ = selection.runtime(selection.BASELINE)
         self.assertEqual(directory, Path('/opt/auth/ruby-3.4.12/bin'))
-        with self.assertRaisesRegex(RuntimeError, 'reviewed release SHA'):
-            selection.runtime('0' * 40)
+        with self.assertRaisesRegex(RuntimeError, 'immutable release identity'):
+            selection.runtime('invalid')
 
     def test_both_patched_releases_require_matching_binary_digests(self):
         with tempfile.TemporaryDirectory() as work:
@@ -30,11 +30,11 @@ class RuntimeTests(unittest.TestCase):
             manifest = directory / 'runtime-sha256.json'
             manifest.write_text(json.dumps(checksums))
             with patch.object(selection, 'PATCHED', directory), patch.object(selection, 'MANIFEST', manifest), patch.object(selection, 'protected'):
-                for sha in (selection.FORWARD, selection.HOTFIX, selection.MAINTENANCE, selection.UNIFIED_RESOLUTION, selection.ROLLBACK):
+                for sha in ('a' * 40, 'b' * 40):
                     self.assertEqual(selection.runtime(sha)[0], directory)
                 (directory / 'bundle').write_bytes(b'changed')
                 with self.assertRaisesRegex(RuntimeError, 'checksum mismatch'):
-                    selection.runtime(selection.FORWARD)
+                    selection.runtime('c' * 40)
 
     def test_link_is_rejected_even_if_executable_bytes_match(self):
         with tempfile.TemporaryDirectory() as work:

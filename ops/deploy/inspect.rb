@@ -2,6 +2,7 @@
 require "json"
 require "digest"
 result = { databases: {}, pending: [] }
+verified_forward = JSON.parse(ENV.fetch("MUZEUM_VERIFIED_FORWARD_SCHEMA", "{}"))
 ActiveRecord::Base.configurations.configs_for(env_name: "production").each do |config|
   ActiveRecord::Base.establish_connection(config)
   connection = ActiveRecord::Base.connection
@@ -42,7 +43,10 @@ ActiveRecord::Base.configurations.configs_for(env_name: "production").each do |c
       schema = File.read(Rails.root.join("db", "#{config.name}_schema.rb"))
       [ schema.match(/define\(version: ([0-9_]+)\)/).captures.first.delete("_") ]
     end
-    raise "Database has unknown migrations" unless (versions - files.map(&:first) - baseline).empty?
+    compatible = verified_forward.fetch(config.name, [])
+    raise "Invalid forward schema evidence" unless compatible.is_a?(Array) &&
+      compatible.all? { |version| /\A[0-9]+\z/.match?(version) }
+    raise "Database has unknown migrations" unless (versions - files.map(&:first) - baseline - compatible).empty?
     files.reject { |version, _| versions.include?(version) }.each do |version, path|
       result[:pending] << { database: config.name, version: version, path: path, sha256: Digest::SHA256.file(Rails.root.join(path)).hexdigest }
     end

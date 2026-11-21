@@ -20,7 +20,7 @@ preflight = File.join($local, "application-shell-preflight")
 File.write(preflight, <<~SH)
   #!/bin/sh
   test "$#" -eq 6 &&
-    test "$1 $2 $3 $4 $5 $6" = "--app muzeum --revision #{"a" * 40} --review $APPLICATION_SHELL_REVIEW" ||
+    test "$1 $2 $3 $4 $5 $6" = "--app muzeum --revision #{MuzeumDeploymentRevision::LEGACY_RUNTIME} --review $APPLICATION_SHELL_REVIEW" ||
     exit 2
   exit #{$scenario == "shell_blocked" ? 1 : 0}
 SH
@@ -37,6 +37,10 @@ module MuzeumDeploymentRevision
     when "api"
       $scenario == "sync_mismatch" ? "b" * 40 : "a" * 40
     end
+  end
+
+  def self.authorization!(_checkout)
+    { sha: LEGACY_RUNTIME, ci: "https://example.test/ci", version: "v0.9.0", envelope: "fixture-envelope" }
   end
 
   def self.resolve!
@@ -59,9 +63,10 @@ end
 def self.capture(*args)
   if args.first == :cat
     $events << [ "remote revision", args.last ]
-    $scenario == "stamp" ? MuzeumDeploymentRevision::V034_SHA : "a" * 40
+    $scenario == "stamp" ? "b" * 40 : "a" * 40
   elsif args.last == "version"
-    Digest::SHA256.hexdigest(File.binread("ops/deploy/muzeum_deploy.py") + File.binread("ops/deploy/inspect.rb") + File.binread("ops/runtime/muzeum_runtime.py"))
+    paths = %w[deploy/muzeum_deploy.py deploy/inspect.rb runtime/muzeum_runtime.py deploy/release_authorization.py provision/muzeum-migrate]
+    Digest::SHA256.hexdigest(paths.map { |path| File.binread("ops/#{path}") }.join)
   else
     JSON.generate({ sha: fetch(:approved_revision), token: fetch(:deployment_token), phase: $phase, health: "passed" })
   end
@@ -74,6 +79,11 @@ def self.execute(*args)
   end
 
   phase = args.fetch(3)
+  if phase == "begin-authorized"
+    raise "Missing signed envelope" unless args.last == "fixture-envelope"
+
+    phase = "begin"
+  end
   $events << [ "server", phase ]
   $phase = { "begin" => "prepared_checkout", "prepare" => "ready_to_publish", "finish" => "verified", "complete" => "complete", "fail" => "failed", "cancel" => "cancelled", "preflight" => "unchanged" }.fetch(phase)
   $api.fail_next = :before if phase == "begin" && $scenario == "before_api"
@@ -91,7 +101,7 @@ end
 if $scenario == "runtime_probe"
   set :bundle_bins, %w[rake rails]
   set :bundle_without, "development:test"
-  set :approved_revision, MuzeumDeploymentRevision::V034_SHA
+  set :approved_revision, "b" * 40
   set :release_path, Pathname("/disposable/release")
   SSHKit.config.command_map.prefix[:rake] << "bundle exec"
   def self.capture(*)
@@ -121,7 +131,7 @@ if $scenario == "runtime_probe"
 end
 
 if %w[stamp stamp_mismatch].include?($scenario)
-  set :approved_revision, MuzeumDeploymentRevision::V034_SHA
+  set :approved_revision, "b" * 40
   set :reviewed_release_version, "v0.3.4"
   set :deployment_token, "a" * 32
   set :release_path, Pathname("/disposable/release")

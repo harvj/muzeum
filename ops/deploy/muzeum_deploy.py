@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3 -I
 """Muzeum-only guarded Capistrano phases. Install only after separate safety review."""
 import contextlib
 import datetime as dt
@@ -16,6 +16,9 @@ import sys
 import tempfile
 import time
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from release_authorization import KEY as AUTHORIZATION_KEY, load_signed, verify_migrations
+
 APP = Path('/var/www/muzeum')
 STATE = Path('/var/lib/muzeum-deploy')
 BACKUPS = Path('/var/lib/harvj-backups/muzeum')
@@ -26,7 +29,8 @@ RELEASE_VERSION = re.compile(r'v(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9]
 RELEASE_SCOPE = re.compile(r'https://github\.com/harvj/muzeum/issues/[0-9]+#issuecomment-[0-9]+')
 RELEASE_CI = re.compile(r'https://github\.com/harvj/muzeum/actions/runs/[0-9]+')
 RUNTIME_LIBRARY = Path('/usr/local/lib/muzeum-runtime/muzeum_runtime.py')
-MIGRATOR_SHA256 = 'f1583c1ad732724270ab654dae796bac9930c76d4584785cc1081b8593856834'
+MIGRATOR = Path('/usr/local/sbin/muzeum-migrate')
+AUTHORIZATION_LIBRARY = Path(__file__).resolve().with_name('release_authorization.py')
 ROUTE_HELPER = Path('/usr/local/sbin/harvj-muzeum-route')
 
 
@@ -79,7 +83,7 @@ class Host:
         return (APP / 'current').resolve(strict=True) == self.release(release, sha) and self.revision() == sha
 
     def preflight(self):
-        for helper in (Path(__file__).resolve(), Path(__file__).resolve().with_name('inspect.rb'), Path('/usr/local/sbin/muzeum-migrate'), RUNTIME_LIBRARY, ROUTE_HELPER):
+        for helper in (Path(__file__).resolve(), Path(__file__).resolve().with_name('inspect.rb'), MIGRATOR, AUTHORIZATION_LIBRARY, AUTHORIZATION_KEY, RUNTIME_LIBRARY, ROUTE_HELPER):
             info = helper.stat()
             if info.st_uid != 0 or info.st_mode & 0o022:
                 raise RuntimeError('Deployment/migration helpers must be root-owned and immutable to runtime')
@@ -129,7 +133,19 @@ class Host:
         if inspection['pending']:
             raise RuntimeError('Published application has pending migrations')
 
+    def record_compatible_schema(self, baseline, migrations):
+        compatibility = STATE / ('compatible-schema-' + baseline + '.json')
+        prior = json.loads(compatibility.read_text()) if compatibility.exists() else {}
+        for migration in migrations:
+            versions = set(prior.get(migration['database'], []))
+            prior[migration['database']] = sorted(versions | {migration['version']})
+        write_json(compatibility, prior)
+
     def inspect(self, release, health=False):
+        revision = (release / 'REVISION').read_text().strip()
+        if not SHA.fullmatch(revision):
+            raise RuntimeError('Invalid inspection revision')
+        compatibility = STATE / ('compatible-schema-' + revision + '.json')
         values = {}
         for line in (APP / 'shared/.env').read_text().splitlines():
             if line.strip():
@@ -145,7 +161,8 @@ class Host:
                    BUNDLE_GEMFILE=str(release / 'Gemfile'), BUNDLE_IGNORE_CONFIG='1', BUNDLE_DEPLOYMENT='true',
                    BUNDLE_FROZEN='true', BUNDLE_WITHOUT='development:test', BOOTSNAP_READONLY='1',
                    PGOPTIONS='-c default_transaction_read_only=on -c statement_timeout=120000',
-                   MUZEUM_DEPLOY_CHECK_HEALTH='1' if health else '0')
+                   MUZEUM_DEPLOY_CHECK_HEALTH='1' if health else '0',
+                   MUZEUM_VERIFIED_FORWARD_SCHEMA=compatibility.read_text() if compatibility.exists() else '{}')
         sys.path.insert(0, str(RUNTIME_LIBRARY.parent))
         from muzeum_runtime import release_runtime, runtime_environment
         directory, bundle_path = release_runtime(release)
@@ -237,11 +254,24 @@ class Host:
     def withdraw(self, sha):
         self.route('withdraw', sha)
 
-    def migrate(self, release, sha):
-        expected = MIGRATOR_SHA256
-        if hashlib.sha256(Path('/usr/local/sbin/muzeum-migrate').read_bytes()).hexdigest() != expected:
-            raise RuntimeError('Reviewed migration helper must be installed first')
-        self.command(['/usr/local/sbin/muzeum-migrate', str(release), sha])
+    def migrate(self, release, sha, token):
+        self.command([str(MIGRATOR), str(release), sha, token])
+
+    def replace_current(self, release):
+        with tempfile.TemporaryDirectory(dir=APP, prefix='.muzeum-pointer-') as directory:
+            temporary = Path(directory) / 'current'
+            temporary.symlink_to(release)
+            temporary.replace(APP / 'current')
+
+    def promote(self, release, sha, prior):
+        if self.revision() != prior:
+            raise RuntimeError('Live baseline changed before guarded promotion')
+        self.replace_current(self.release(release, sha))
+
+    def restore_pointer(self, prior, expected, sha):
+        if not self.published(expected, sha):
+            raise RuntimeError('Current release changed before rollback')
+        self.replace_current(prior)
 
     def start(self):
         self.command(['systemctl', 'restart', *UNITS])
@@ -301,13 +331,51 @@ class Deployment:
                     raise RuntimeError('Live production baseline differs from release review')
                 return evidence
 
-    def run(self, phase, sha, token, path=None, release_review=None):
+    def recover_verified_baseline(self, record):
+        approval = record.get('release_review', {})
+        if (not record.get('authorization_sha256') or not record.get('baseline')
+                or record.get('route_transition') == 'withdrawing'
+                or (record['migrating'] and (not record.get('schema_verified_at')
+                    or approval.get('rollback') != 'verified-forward-compatible'))):
+            return False
+        before = record['baseline']['revision']
+        with self.host.backup_lock():
+            current = self.host.revision()
+            if current not in (before, record['sha']):
+                return False
+            if current == before and not record['withdrawn'] and not record['migrating']:
+                self.host.health()
+            else:
+                if not record['withdrawn']:
+                    self.host.withdraw(current)
+                    record['withdrawn'] = True
+                    self.save(record)
+                self.host.stop()
+                previous = self.host.release(record['rollback_release'], before)
+                if record['migrating']:
+                    self.host.record_compatible_schema(before, record['migrations'])
+                if current != before:
+                    self.host.restore_pointer(previous, record['release'], record['sha'])
+                self.host.start()
+                self.host.health()
+                self.host.activate(before)
+                record['withdrawn'] = False
+        record['rollback'] = {'revision': before, 'health': 'passed',
+                              'schema': 'retained' if record['migrating'] else 'unchanged'}
+        record['safe_state'] = 'Prior release healthy; no database restore performed'
+        return True
+
+    def begin_authorized(self, token, encoded, key=AUTHORIZATION_KEY):
+        review, digest = load_signed(encoded, key)
+        return self.run('begin', review['sha'], token, release_review=review, authorization_digest=digest)
+
+    def run(self, phase, sha, token, path=None, release_review=None, authorization_digest=None, require_authorized=False):
         if not SHA.fullmatch(sha) or not TOKEN.fullmatch(token):
             raise RuntimeError('Immutable SHA and deployment token required')
         if release_review:
             version = release_review['version']
             if (phase != 'begin' or not RELEASE_VERSION.fullmatch(version) or
-                    release_review['branch'] != 'release/' + version or
+                    release_review['branch'] not in ('main', 'release/' + version) or
                     not SHA.fullmatch(release_review['baseline']) or release_review['baseline'] == sha or
                     not RELEASE_SCOPE.fullmatch(release_review['scope']) or not RELEASE_CI.fullmatch(release_review['ci'])):
                 raise RuntimeError('Invalid release approval metadata')
@@ -325,9 +393,21 @@ class Deployment:
                     record['runtime'] = self.prove_runtime(sha)
                 if release_review:
                     record['release_review'] = release_review
+                if authorization_digest:
+                    record['authorization_sha256'] = authorization_digest
+                    previous = (APP / 'current').resolve(strict=True)
+                    record['rollback_release'] = str(self.host.release(previous, release_review['baseline']))
                 self.save(record)
             else:
+                if phase == 'fail' and not active.exists():
+                    previous = self.root / (token + '.json')
+                    if previous.exists():
+                        record = json.loads(previous.read_text())
+                        if (record.get('sha'), record.get('token'), record.get('phase')) == (sha, token, 'failed'):
+                            return record
                 record = json.loads(active.read_text())
+                if require_authorized and not record.get('authorization_sha256'):
+                    raise RuntimeError('Active deployment has no verified release authorization')
                 if record['sha'] != sha or record['token'] != token:
                     raise RuntimeError('Deployment lock identity mismatch')
                 if self.prove_runtime and phase not in ('fail', 'cancel') and record.get('runtime') != self.prove_runtime(sha):
@@ -347,10 +427,14 @@ class Deployment:
                     elif phase == 'prepare':
                         if record['phase'] != 'prepared_checkout':
                             raise RuntimeError('Unexpected prepare transition')
+                        if record.get('authorization_sha256') and self.host.revision() != record['baseline']['revision']:
+                            raise RuntimeError('Live baseline changed before staging')
                         release = self.host.release(path, sha)
                         record['release'] = str(release)
                         before = self.host.inspect(release)
                         reviewed_migrations(release, before['pending'])
+                        if record.get('authorization_sha256'):
+                            verify_migrations(release, before['pending'], record['release_review'])
                         record['migrations'] = before['pending']
                         if before['pending']:
                             self.host.check_withdrawal(record['baseline']['revision'])
@@ -370,7 +454,7 @@ class Deployment:
                             # Persist intent immediately before issuing any migration.
                             record['migrating'] = True
                             self.save(record)
-                            self.host.migrate(release, sha)
+                            self.host.migrate(release, sha, token)
                             after = self.host.inspect(release)
                             if after['pending'] or self.host.fingerprint(record['evidence']) != record['evidence']:
                                 raise RuntimeError('Migration changed existing evidence or left pending migrations')
@@ -382,7 +466,13 @@ class Deployment:
                             record['schema_versions'] = {name: value['versions'] for name, value in after['databases'].items() if 'versions' in value}
                         record['phase'] = 'ready_to_publish'
                     elif phase == 'finish':
-                        if record['phase'] != 'ready_to_publish' or not self.host.published(record['release'], sha):
+                        if record['phase'] != 'ready_to_publish':
+                            raise RuntimeError('Unexpected publication transition')
+                        if record.get('authorization_sha256'):
+                            record['promotion_started_at'] = now()
+                            self.save(record)
+                            self.host.promote(record['release'], sha, record['baseline']['revision'])
+                        if not self.host.published(record['release'], sha):
                             raise RuntimeError('Publication did not select the exact candidate')
                         self.host.release(record['release'], sha)
                         self.host.start()
@@ -415,14 +505,23 @@ class Deployment:
                 if record['phase'] in ('complete', 'cancelled'):
                     active.unlink()
                 return record
-            except Exception as error:
-                # Never roll back code/schema or restore data. Preserve a root-only audit and lock.
+            except (Exception, KeyboardInterrupt) as error:
+                # Restore only verified compatible code. Never reverse schema or restore live data.
                 record['failed_phase'] = phase
                 record['phase'] = 'failed'
                 record['failure_at'] = now()
                 record['diagnostic'] = str(error) if isinstance(error, RuntimeError) else type(error).__name__
                 self.save(record)
-                # Once migration may have run, old code must never resume. After publication,
+                try:
+                    recovered = self.recover_verified_baseline(record)
+                except Exception:
+                    recovered = False
+                if recovered:
+                    self.save(record)
+                    active.unlink()
+                    raise RuntimeError('Deployment failed; ' + record['safe_state'] +
+                                       '; receipt ' + token + '.json') from None
+                # If schema compatibility is uncertain, old code must never resume. After publication,
                 # withdraw the exact current candidate if its restart/health checks failed.
                 if record['migrating'] or record['withdrawn'] or (record.get('baseline') and self.host.revision() != record['baseline']['revision']):
                     route_ok = record['withdrawn']
@@ -450,7 +549,9 @@ def main():
     if os.geteuid() != 0:
         raise RuntimeError('Root-owned installed helper required')
     if sys.argv[1:] == ['version']:
-        print(hashlib.sha256(Path(__file__).resolve().read_bytes() + Path(__file__).resolve().with_name('inspect.rb').read_bytes() + RUNTIME_LIBRARY.read_bytes()).hexdigest())
+        components = (Path(__file__).resolve(), Path(__file__).resolve().with_name('inspect.rb'),
+                      RUNTIME_LIBRARY, AUTHORIZATION_LIBRARY, MIGRATOR)
+        print(hashlib.sha256(b''.join(path.read_bytes() for path in components)).hexdigest())
         return
     if sys.argv[1:] == ['preflight']:
         host = Host()
@@ -469,18 +570,20 @@ def main():
         record = json.loads((STATE / (token + '.json')).read_text())
         if record['sha'] != sha or record['token'] != token:
             raise RuntimeError('Receipt identity mismatch')
-        print(json.dumps({key: record[key] for key in ('sha', 'token', 'phase', 'health', 'release_review', 'runtime') if key in record}))
+        print(json.dumps({key: record[key] for key in ('sha', 'token', 'phase', 'health', 'release_review', 'runtime', 'authorization_sha256', 'rollback', 'safe_state') if key in record}))
         return
-    if len(sys.argv) == 9 and sys.argv[1] == 'begin-release':
-        sha, token, branch, version, baseline, scope, ci = sys.argv[2:]
-        review = {'branch': branch, 'version': version, 'baseline': baseline, 'scope': scope, 'ci': ci}
-        record = Deployment(Host(), prove_runtime=runtime_proof).run('begin', sha, token, release_review=review)
+    if len(sys.argv) == 4 and sys.argv[1] == 'begin-authorized':
+        sys.path.insert(0, str(RUNTIME_LIBRARY.parent))
+        import muzeum_runtime
+        muzeum_runtime.protected(AUTHORIZATION_KEY)
+        token, encoded = sys.argv[2:]
+        record = Deployment(Host(), prove_runtime=runtime_proof).begin_authorized(token, encoded)
     else:
-        if len(sys.argv) not in (4, 5):
-            raise RuntimeError('Expected phase SHA token [release]')
-        record = Deployment(Host(), prove_runtime=runtime_proof).run(*sys.argv[1:])
+        if len(sys.argv) not in (4, 5) or sys.argv[1] not in ('prepare', 'finish', 'complete', 'fail', 'cancel'):
+            raise RuntimeError('Expected a signed begin or guarded deployment phase')
+        record = Deployment(Host(), prove_runtime=runtime_proof).run(*sys.argv[1:], require_authorized=True)
     # No subprocess output, environments or opaque grants are published.
-    print(json.dumps({key: record[key] for key in ('sha', 'token', 'phase', 'baseline', 'release_review', 'migrations', 'pre_backup', 'post_backup', 'health', 'safe_state', 'runtime') if key in record}))
+    print(json.dumps({key: record[key] for key in ('sha', 'token', 'phase', 'baseline', 'release_review', 'migrations', 'pre_backup', 'post_backup', 'health', 'safe_state', 'runtime', 'authorization_sha256', 'rollback') if key in record}))
 
 
 if __name__ == '__main__':

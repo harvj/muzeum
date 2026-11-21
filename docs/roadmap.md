@@ -56,3 +56,12 @@ The authoritative, living domain rules are [principles](domain/principles.md), [
 10. **P2.0 — Temporal musical knowledge and shelf queries (future, exploratory).** Represent recording contributors, instruments, roles, time-bounded musical events and coordinated/overlapping passages with provenance and annotation coverage. Enable queries such as "my favorite songs with dual guitar solos" and "how many scrobbles of recordings with two guitar solos?" without claiming complete playback or treating missing annotations as negative evidence. Design and sequence only after the near-term canonical library is useful; no implementation authorization implied.
 
 The primary security boundary is the local issuer/subject profile and its authenticated session. Last.fm association grants access to a public archive and does not prove source-account ownership. Identical same-second deliveries lack upstream durable event IDs; report this limitation rather than inventing certainty. Unresolved observed names are never canonical MusicBrainz artist/album/track entities.
+
+## P0 deployment reliability
+
+1. Review the [single release authorization](deployment/release-authorization.md)
+   and disposable v0.3.6 to v0.4.0 rehearsal. Keep v0.3.6 live.
+2. Qualify the installed helper boundary in disposable Linux, including safe
+   refusal, compatible rollback, receipt reporting and a subsequent release.
+3. Request initial privileged installation approval independently of the
+   next reviewed release. Retain the normal single Capistrano operation.
