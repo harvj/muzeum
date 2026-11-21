@@ -69,7 +69,7 @@ RSpec.describe "Capistrano deployment/reporting integration" do
   end
 
   it "stamps the reviewed version only after the packaged revision matches" do
-    expected_sha = "76d739af5001f9f4e5a0993be38bb0d4d2d44c3d"
+    expected_sha = "f75c34f107543432c75e6b115576224d03eeb3d7"
     expect(rehearse("stamp")["events"]).to eq([
       [ "remote revision", "/disposable/release/REVISION" ],
       [ "stamp", "#{expected_sha} v0.3.4\n", "/disposable/release/REVIEWED_RELEASE" ],

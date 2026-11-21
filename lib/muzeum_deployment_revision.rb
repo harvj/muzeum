@@ -6,7 +6,7 @@ module MuzeumDeploymentRevision
   SHA = /\A[0-9a-f]{40}\z/
   RELEASES = File.expand_path("../config/deploy/releases.json", __dir__)
 
-  V034_SHA = "76d739af5001f9f4e5a0993be38bb0d4d2d44c3d"
+  V034_SHA = "f75c34f107543432c75e6b115576224d03eeb3d7"
   V034_CONTROLS = "controls/v0.3.4-shell"
   V034_CI_BRANCH = "candidate/v0.3.4-shell"
   REQUIRED_JOBS = [
