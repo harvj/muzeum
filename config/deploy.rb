@@ -98,7 +98,7 @@ namespace :muzeum do
     approval = MuzeumDeploymentRevision.resolve_release!(args[:version], args[:checkout])
     puts "Preflight #{approval.fetch(:branch)} at #{approval.fetch(:sha)}; CI #{approval.fetch(:ci)}"
     muzeum_verify_helper
-    if approval.fetch(:sha) == MuzeumDeploymentRevision::V034_SHA
+    if MuzeumDeploymentRevision.patched_runtime?(approval.fetch(:sha))
       directory = args[:runtime_probe].to_s
       raise "Provide the unpublished release checkout for the runtime probe" unless %r{\A/var/www/muzeum/releases/[0-9]{14}\z}.match?(directory)
 
@@ -123,7 +123,7 @@ namespace :muzeum do
     on primary(:app) do
       revision = capture(:cat, File.join(current, "REVISION"))
       MuzeumPublishedRelease.verify!(revision, tag:, command: MuzeumDeploymentRevision.method(:command))
-      ruby = revision == MuzeumDeploymentRevision::V034_SHA ? "/opt/muzeum/ruby-3.4.13/bin/ruby" : "/home/muzeum/.rbenv/shims/ruby"
+      ruby = MuzeumDeploymentRevision.patched_runtime?(revision) ? "/opt/muzeum/ruby-3.4.13/bin/ruby" : "/home/muzeum/.rbenv/shims/ruby"
       execute ruby, File.join(current, "lib/muzeum_published_release.rb"), revision, tag
       puts "Synchronized Muzeum #{tag} for live revision #{revision}"
     end
@@ -139,7 +139,7 @@ namespace :muzeum do
   task :authorize do
     selection = fetch(:muzeum_release_selection, nil)
     approval = selection ? MuzeumDeploymentRevision.resolve_release!(*selection) : MuzeumDeploymentRevision.resolve!
-    if approval.fetch(:sha) == MuzeumDeploymentRevision::V034_SHA
+    if MuzeumDeploymentRevision.patched_runtime?(approval.fetch(:sha))
       muzeum_configure_release_runtime
       set :reviewed_release_version, approval.fetch(:version)
     end
@@ -184,15 +184,15 @@ namespace :muzeum do
 
   task :probe_release_runtime do
     revision = fetch(:approved_revision)
-    muzeum_probe_release_runtime(release_path, revision) if revision == MuzeumDeploymentRevision::V034_SHA
+    muzeum_probe_release_runtime(release_path, revision) if MuzeumDeploymentRevision.patched_runtime?(revision)
   end
 
   task :prepare do
     on primary(:app) do
       if (version = fetch(:reviewed_release_version, nil))
         revision = fetch(:approved_revision)
-        raise "Unexpected reviewed release metadata" unless version == "v0.3.4" &&
-          revision == MuzeumDeploymentRevision::V034_SHA && capture(:cat, release_path.join("REVISION")) == revision
+        expected = { "v0.3.4" => MuzeumDeploymentRevision::V034_SHA, "v0.3.5" => MuzeumDeploymentRevision::V035_SHA }.fetch(version)
+        raise "Unexpected reviewed release metadata" unless revision == expected && capture(:cat, release_path.join("REVISION")) == revision
 
         upload! StringIO.new("#{revision} #{version}\n"), release_path.join("REVIEWED_RELEASE")
       end

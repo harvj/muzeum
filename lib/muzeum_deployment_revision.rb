@@ -9,6 +9,8 @@ module MuzeumDeploymentRevision
   V034_SHA = "1633c96d63c1a44e678e95292466ab49c0442103"
   V034_CONTROLS = "controls/v0.3.4-shell"
   V034_CI_BRANCH = "candidate/v0.3.4-shell-revocation"
+  V035_SHA = "4da6c96424b6bf644cf5c6e7bc0398de61e5c08b"
+  V035_CONTROLS = "controls/v0.3.5"
   REQUIRED_JOBS = [
     "tests", "quality (bin/rubocop)", "quality (bin/brakeman --no-pager --exit-on-warn --exit-on-error)",
     "quality (bin/bundler-audit check --update)"
@@ -61,6 +63,10 @@ module MuzeumDeploymentRevision
     { sha: sha, ci: ci!(sha) }
   end
 
+  def self.patched_runtime?(sha)
+    [ V034_SHA, V035_SHA ].include?(sha)
+  end
+
   def self.resolve_release!(version, checkout)
     raise "Expected a stable vX.Y.Z release version" unless VERSION.match?(version.to_s)
     raise "Release checkout path is required" if checkout.to_s.empty?
@@ -72,16 +78,19 @@ module MuzeumDeploymentRevision
       raise "Release requires a pinned SHA, production baseline and reviewed scope record"
     end
 
-    shell_release = version == "v0.3.4"
-    raise "v0.3.4 review must retain the pinned forward SHA" if shell_release && sha != V034_SHA
-    control_sha = checkout!(shell_release ? V034_CONTROLS : "main")
-    ci!(control_sha, branch: V034_CONTROLS, required_jobs: true) if shell_release
+    controls, pinned = case version
+    when "v0.3.4" then [ V034_CONTROLS, V034_SHA ]
+    when "v0.3.5" then [ V035_CONTROLS, V035_SHA ]
+    end
+    raise "#{version} review must retain the pinned forward SHA" if pinned && sha != pinned
+    control_sha = checkout!(controls || "main")
+    ci!(control_sha, branch: controls, required_jobs: true) if controls
     branch = "release/#{version}"
     # The release worktree must retain the same approved repository and track its own upstream.
     Dir.chdir(File.realpath(checkout)) do
       raise "Release checkout does not match reviewed SHA" unless checkout!(branch) == sha
       command("git", "merge-base", "--is-ancestor", baseline, sha)
     end
-    { sha:, ci: ci!(sha, branch: shell_release ? V034_CI_BRANCH : branch, required_jobs: shell_release), branch:, version:, baseline:, scope: }
+    { sha:, ci: ci!(sha, branch: version == "v0.3.4" ? V034_CI_BRANCH : branch, required_jobs: !controls.nil?), branch:, version:, baseline:, scope: }
   end
 end

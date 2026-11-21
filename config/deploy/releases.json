@@ -8,5 +8,10 @@
     "sha": "1633c96d63c1a44e678e95292466ab49c0442103",
     "baseline": "024ed4aecd98984c00323377389cde5a6a35d16d",
     "scope": "https://github.com/harvj/muzeum/issues/28#issuecomment-7056901477"
+  },
+  "v0.3.5": {
+    "sha": "4da6c96424b6bf644cf5c6e7bc0398de61e5c08b",
+    "baseline": "1633c96d63c1a44e678e95292466ab49c0442103",
+    "scope": "https://github.com/harvj/muzeum/issues/28#issuecomment-7066206595"
   }
 }
