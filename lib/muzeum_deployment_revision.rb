@@ -13,7 +13,7 @@ module MuzeumDeploymentRevision
   V035_CONTROLS = "controls/v0.3.5"
   V036_SHA = "c37a00dcf058e87fdc59644e9e444c001e29622f"
   V036_CONTROLS = "controls/v0.3.6"
-  V040_SHA = "ef2b5d7e6a60bf833e03a308c7718aff6ac3aeae"
+  V040_SHA = "96597aa6f94e64b6bb9cfdb7399de1ed98124a11"
   V040_CONTROLS = "controls/v0.4.0"
   REQUIRED_JOBS = [
     "tests", "quality (bin/rubocop)", "quality (bin/brakeman --no-pager --exit-on-warn --exit-on-error)",
