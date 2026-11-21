@@ -2,7 +2,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main, release/v0.3.2, controls/v0.3.4, controls/v0.3.4-shell, controls/v0.3.5, controls/v0.3.6, controls/v0.4.0]
+    branches: [main, release/v0.3.2, controls/v0.3.4, controls/v0.3.4-shell, controls/v0.3.5, controls/v0.3.6, controls/v0.4.0, controls/minimal-capistrano]
 permissions:
   contents: read
 jobs:
@@ -23,6 +23,8 @@ jobs:
       BROWSER_TESTS: '1'
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - name: Verify Muzeum runtime selection
         run: |
           sudo useradd --system --no-create-home --shell /usr/sbin/nologin muzeum
@@ -58,6 +60,9 @@ jobs:
           SECRET_KEY_BASE_DUMMY: '1'
       - name: Validate Capistrano configuration without contacting the server
         run: bundle exec cap production -T
+      - name: Qualify minimal deployment on disposable Linux
+        if: github.ref_name == 'controls/minimal-capistrano' || github.head_ref == 'controls/minimal-capistrano'
+        run: bash ops/capistrano/qualify-linux.sh
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
