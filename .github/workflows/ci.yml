@@ -77,7 +77,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           repository: harvj/infrastructure
-          ref: f61cf730e920aac1b133f15ce7a82b82b2b470b9
+          ref: 0588826061ff0f7f16916beab763b484af06e514
           path: .standards/infrastructure
           ssh-key: ${{ secrets.INFRASTRUCTURE_STANDARDS_SSH_KEY }}
           ssh-strict: true
