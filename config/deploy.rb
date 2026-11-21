@@ -191,7 +191,11 @@ namespace :muzeum do
     on primary(:app) do
       if (version = fetch(:reviewed_release_version, nil))
         revision = fetch(:approved_revision)
-        expected = { "v0.3.4" => MuzeumDeploymentRevision::V034_SHA, "v0.3.5" => MuzeumDeploymentRevision::V035_SHA }.fetch(version)
+        expected = {
+          "v0.3.4" => MuzeumDeploymentRevision::V034_SHA,
+          "v0.3.5" => MuzeumDeploymentRevision::V035_SHA,
+          "v0.3.6" => MuzeumDeploymentRevision::V036_SHA
+        }.fetch(version)
         raise "Unexpected reviewed release metadata" unless revision == expected && capture(:cat, release_path.join("REVISION")) == revision
 
         upload! StringIO.new("#{revision} #{version}\n"), release_path.join("REVIEWED_RELEASE")

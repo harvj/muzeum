@@ -8,6 +8,7 @@ from pathlib import Path
 BASELINE = '024ed4aecd98984c00323377389cde5a6a35d16d'
 FORWARD = '1633c96d63c1a44e678e95292466ab49c0442103'
 HOTFIX = '8aa4b92e11d6e826ef7d5073398fe4cdfd4f1f6e'
+MAINTENANCE = 'c37a00dcf058e87fdc59644e9e444c001e29622f'
 ROLLBACK = '1abfe5a791c254a03e5e03a2ae4c4ecfe8459cd1'
 PATCHED = Path('/opt/muzeum/ruby-3.4.13/bin')
 MANIFEST = Path('/usr/local/lib/muzeum-runtime/runtime-sha256.json')
@@ -32,7 +33,7 @@ def protected(path, *, service_manifest=False):
 def runtime(sha):
     if sha == BASELINE:
         return Path('/opt/auth/ruby-3.4.12/bin'), APP / 'shared/bundle'
-    if sha not in (FORWARD, HOTFIX, ROLLBACK):
+    if sha not in (FORWARD, HOTFIX, MAINTENANCE, ROLLBACK):
         raise RuntimeError('Muzeum runtime requires an explicitly reviewed release SHA')
     protected(MANIFEST, service_manifest=True)
     checksums = json.loads(MANIFEST.read_text())

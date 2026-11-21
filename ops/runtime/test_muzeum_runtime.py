@@ -30,7 +30,7 @@ class RuntimeTests(unittest.TestCase):
             manifest = directory / 'runtime-sha256.json'
             manifest.write_text(json.dumps(checksums))
             with patch.object(selection, 'PATCHED', directory), patch.object(selection, 'MANIFEST', manifest), patch.object(selection, 'protected'):
-                for sha in (selection.FORWARD, selection.HOTFIX, selection.ROLLBACK):
+                for sha in (selection.FORWARD, selection.HOTFIX, selection.MAINTENANCE, selection.ROLLBACK):
                     self.assertEqual(selection.runtime(sha)[0], directory)
                 (directory / 'bundle').write_bytes(b'changed')
                 with self.assertRaisesRegex(RuntimeError, 'checksum mismatch'):

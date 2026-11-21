@@ -11,6 +11,8 @@ module MuzeumDeploymentRevision
   V034_CI_BRANCH = "candidate/v0.3.4-shell-revocation"
   V035_SHA = "8aa4b92e11d6e826ef7d5073398fe4cdfd4f1f6e"
   V035_CONTROLS = "controls/v0.3.5"
+  V036_SHA = "c37a00dcf058e87fdc59644e9e444c001e29622f"
+  V036_CONTROLS = "controls/v0.3.6"
   REQUIRED_JOBS = [
     "tests", "quality (bin/rubocop)", "quality (bin/brakeman --no-pager --exit-on-warn --exit-on-error)",
     "quality (bin/bundler-audit check --update)"
@@ -64,7 +66,7 @@ module MuzeumDeploymentRevision
   end
 
   def self.patched_runtime?(sha)
-    [ V034_SHA, V035_SHA ].include?(sha)
+    [ V034_SHA, V035_SHA, V036_SHA ].include?(sha)
   end
 
   def self.resolve_release!(version, checkout)
@@ -81,6 +83,7 @@ module MuzeumDeploymentRevision
     controls, pinned = case version
     when "v0.3.4" then [ V034_CONTROLS, V034_SHA ]
     when "v0.3.5" then [ V035_CONTROLS, V035_SHA ]
+    when "v0.3.6" then [ V036_CONTROLS, V036_SHA ]
     end
     raise "#{version} review must retain the pinned forward SHA" if pinned && sha != pinned
     control_sha = checkout!(controls || "main")
