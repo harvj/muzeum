@@ -98,7 +98,7 @@ class CutoverHost(DatabaseHost):
             self.query(database, 'DROP SCHEMA public CASCADE; CREATE SCHEMA public;')
         self.invoke(['psql', '-X', '-v', 'ON_ERROR_STOP=1', '-d', 'postgres', '-c',
                      "CREATE ROLE muzeum_runtime LOGIN PASSWORD 'p0-disposable'; "
-                     "CREATE ROLE muzeum_migrator NOLOGIN; CREATE ROLE muzeum_owner NOLOGIN;"])
+                     "CREATE ROLE muzeum_migrator LOGIN PASSWORD 'p0-disposable'; CREATE ROLE muzeum_owner NOLOGIN;"])
         self.rails(self.paths[BASELINE], ['db:migrate:primary'])
         self.rails(self.paths[BASELINE], ['runner', '-'], input="""%w[cache queue cable].each do |name|
   config = ActiveRecord::Base.configurations.configs_for(env_name: 'production', name: name)
@@ -110,6 +110,10 @@ end""")
                        "INSERT INTO deployment_fixture VALUES (1, 'retained source evidence'); "
                        "GRANT USAGE ON SCHEMA public TO muzeum_runtime; "
                        "GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA public TO muzeum_runtime;")
+        self.query(self.databases[0], "GRANT USAGE, CREATE ON SCHEMA public TO muzeum_migrator; "
+                   "ALTER TABLE resolution_decisions OWNER TO muzeum_migrator; "
+                   "GRANT SELECT, INSERT ON schema_migrations TO muzeum_migrator; "
+                   "GRANT SELECT, INSERT, UPDATE ON ar_internal_metadata TO muzeum_migrator;")
         self.runtime_environment = dict(self.migration_env())
         for name, database in self.connections():
             self.runtime_environment[name] = f'postgresql://muzeum_runtime:p0-disposable@127.0.0.1:{self.env["PGPORT"]}/{database}'
@@ -178,7 +182,9 @@ end""")
         directory = Path(shutil.which('ruby')).parent
         if directory != Path(shutil.which('bundle')).parent:
             raise RuntimeError('Expected Ruby and Bundler from same disposable runtime')
-        migration.execute_migrations(migrations, directory, release, self.migration_env(),
+        env = self.migration_env()
+        env['DATABASE_URL'] = f'postgresql://muzeum_migrator:p0-disposable@127.0.0.1:{self.env["PGPORT"]}/{self.databases[0]}'
+        migration.execute_migrations(migrations, directory, release, env,
                                      prefix=(), diagnostic=self.root / 'migration-error')
 
 

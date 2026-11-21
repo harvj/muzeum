@@ -9,6 +9,19 @@ RSpec.describe "Capistrano deployment/reporting integration" do
     JSON.parse(output.lines.find { |line| line.start_with?("HOOK_FIXTURE:") }.delete_prefix("HOOK_FIXTURE:")).merge("stderr" => errors)
   end
 
+  it "delegates production pointer changes to the installed coordinator" do
+    script = <<~RUBY
+      require "capistrano/all"
+      Rake.application = Capistrano::Application.new
+      Rake.application.init("cap")
+      Rake.application.load_rakefile
+      Rake::Task["production"].invoke
+      abort "unguarded promotion" unless Rake::Task["deploy:symlink:release"].actions.empty?
+    RUBY
+    _output, errors, status = Open3.capture3("bundle", "exec", "ruby", "-e", script)
+    expect(status).to be_success, errors
+  end
+
   it "runs the real preflight task without logging shims, deployment phases or GitHub records" do
     result = rehearse("preflight")
     expect(result["events"]).to eq([ [ "server", "preflight" ] ])
