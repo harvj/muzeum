@@ -81,12 +81,11 @@
         "SH-10"
       ],
       "argv": [
-        "bundle",
-        "exec",
-        "rspec",
-        "spec/operations/deployment_hooks_spec.rb"
+        "bash",
+        "-ec",
+        "bundle exec rspec spec/operations/deployment_hooks_spec.rb\ncd .standards/infrastructure/tests\npython3 -B -m unittest test_application_shell_gate.GateTests.test_lightweight_preflight_reports_actionable_outdated_and_failed_checks test_application_shell_gate.GateTests.test_lightweight_preflight_accepts_same_review_for_compatible_registry_patch test_application_shell_gate.GateTests.test_ci_receipt_binds_version_and_uses_the_deployment_review test_application_shell_gate.GateTests.test_expiry_outage_and_stale_evidence_are_blocked test_application_shell_gate.GateTests.test_tampered_pointer_and_bundle_are_rejected test_application_shell_gate.GateTests.test_pointer_renewal_replay_and_publication_change"
       ],
-      "evidence": "Existing disposable Capistrano hook test verifies production preparation stops on a failed shared Shell preflight"
+      "evidence": "Disposable Capistrano refuses failed preflight before server preparation; shared signed publication tests cover exact receipt binding, compatible patches, stale reviews, expiry, outage, tampering, replay and publication races"
     }
   ]
 }
