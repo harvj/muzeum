@@ -42,7 +42,40 @@ header {
 header .harvj-wordmark { position: static; flex: none; font-size: 24px; line-height: 1.2; }
 .header-navigation, header .account-nav { display: flex; align-items: center; gap: 20px; }
 header .account-nav { position: static; margin-inline-start: auto; }
-.anonymous-account-nav > a { order: 1; }
+.anonymous-appearance {
+  position: fixed;
+  inset-inline-end: max(12px, env(safe-area-inset-right));
+  inset-block-end: max(12px, env(safe-area-inset-bottom));
+  z-index: 3;
+}
+.anonymous-appearance > summary {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--card);
+  color: var(--ink);
+  font-size: 22px;
+  cursor: pointer;
+  list-style: none;
+}
+.anonymous-appearance > summary::-webkit-details-marker { display: none; }
+.anonymous-appearance > summary:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+.anonymous-appearance > .controls {
+  position: absolute;
+  inset-inline-end: 0;
+  inset-block-end: calc(100% + .5rem);
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  flex-wrap: wrap;
+  padding: .65rem;
+  border: 1px solid var(--line);
+  border-radius: .5rem;
+  background: var(--card);
+  color: var(--ink);
+}
 .library-nav { display: flex; flex-wrap: wrap; gap: 4px 20px; }
 header :is(.library-nav a, .account-nav > a, .harvj-session > summary) {
   display: inline-flex;
@@ -136,7 +169,6 @@ body:has(.library-nav) main { margin-top: 14px; }
   header .account-nav { grid-column: 2; grid-row: 1; min-width: 0; justify-content: flex-end; gap: 8px; }
   header .anonymous-account-nav { display: contents; }
   .anonymous-account-nav > a { grid-column: 2; grid-row: 1; justify-self: end; }
-  .anonymous-account-nav > .controls { grid-column: 1 / -1; grid-row: 3; justify-self: end; flex-wrap: wrap; }
   .library-nav { grid-column: 1 / -1; grid-row: 2; justify-content: flex-end; gap: 0 12px; }
   .harvj-session-panel { width: min(300px, calc(100vw - 56px)); }
   .site-footer { padding-inline: 28px; }
@@ -166,11 +198,12 @@ body:has(.library-nav) main { margin-top: 14px; }
 .day-count { margin-left: .55em; color: var(--muted); font-size: .75rem; font-weight: 400; }
 .play-name, .play-name > a:only-child, .plays-table .table-time a {
   display: block;
-  overflow: clip;
+  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.play-name > a:only-child { width: fit-content; max-width: 100%; }
+.play-recording-layout { display: flex; align-items: baseline; gap: .3em; }
+.play-recording-layout > .play-name { flex: 1; min-width: 0; }
 .play-name:focus-visible { outline-offset: -1px; }
 .play-row a:focus-visible { outline-offset: -1px; }
 .plays-tools { display: none; }
@@ -225,7 +258,7 @@ body:has(.library-nav) main { margin-top: 14px; }
   .play-recording { grid-area: recording; }
   .play-release { grid-area: release; color: var(--muted); font-size: .875rem; }
   .play-year { grid-area: year; }
-  :is(.full-play-names, .release-tracks) :is(.play-name, .play-name > a:only-child) { white-space: normal; }
+  :is(.full-play-names, .release-tracks) :is(.play-name, .play-name > a:only-child) { white-space: normal; overflow-wrap: anywhere; }
   .release-tracks .track-number { width: 2rem; }
   .release-tracks .table-number { width: 4.25rem; white-space: normal; }
 }
@@ -308,7 +341,7 @@ a:hover { text-decoration: none; }
   }
 }
 
-.play-identity-status { float: left; margin-inline-end: .3em; color: var(--muted); }
+.play-identity-status { flex: none; color: var(--muted); }
 .source-claim :is(.play-artist, .play-recording, .play-recording a:not(:hover, :focus-visible)) {
   color: var(--muted);
   font-style: italic;

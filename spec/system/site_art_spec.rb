@@ -39,7 +39,7 @@ RSpec.describe "Site Art appearance", type: :system do
         JS
       end
     end
-    select "Light", from: "Appearance"
+    select_appearance("Light")
     expect(page).to have_css("img.site-art-background[src='#{light}']", visible: :all)
     click_button "Pause light"
     expect(page.evaluate_script("getComputedStyle(document.querySelector('.stone-environment'), '::after').animationName")).to eq("none")
@@ -73,7 +73,6 @@ RSpec.describe "Site Art appearance", type: :system do
     expect(page).to have_css("header[data-art-treatment]")
     expect(page).to have_css("img.site-art-background[src='#{light}']", visible: :all)
     expect(overlay_property("color")).to eq("rgb(34, 34, 34)")
-    expect(overlay_property("color", "main .intro h1")).to eq("rgb(41, 39, 37)")
     expect(overlay_property("color", "footer span")).to eq("rgb(245, 241, 233)")
     expect(overlay_property("textShadow", "footer span")).to include("rgba(255, 248, 233, 0.3)")
     expect(overlay_property("backgroundImage", "footer span")).to eq("none")
@@ -87,7 +86,7 @@ RSpec.describe "Site Art appearance", type: :system do
     expect(overlay_property("backgroundColor")).to eq("rgb(41, 45, 44)")
     expect(overlay_property("textDecorationLine")).to eq("none")
     expect(overlay_property("textShadow")).to eq("none")
-    find("main h1").hover
+    find("main h2", text: "Import your Last.fm history").hover
     browser.action.send_keys(:tab).perform
     expect(page).to have_css(".shell-skip-link:focus-visible")
     browser.action.send_keys(:tab).perform
@@ -122,17 +121,17 @@ RSpec.describe "Site Art appearance", type: :system do
       };
       window.restoreDecode = () => { HTMLImageElement.prototype.decode = decode; };
     JS
-    select "Dark", from: "Appearance"
+    select_appearance("Dark")
     expect(page).to have_css("body[data-decode-pending]")
     expect(page).to have_css("img.site-art-background[src='#{light}']", visible: :all)
     expect(overlay_property("color")).to eq("rgb(34, 34, 34)")
-    select "Light", from: "Appearance"
+    select_appearance("Light")
     expect(page).to have_css("html[data-appearance='light']", visible: :all)
     browser.execute_async_script("window.finishObsoleteDecode(); window.restoreDecode(); requestAnimationFrame(arguments[0]);")
     expect(page).to have_css("img.site-art-background[src='#{light}']", visible: :all)
     expect(page.evaluate_script("document.querySelector('.site-art-background') === window.originalArtwork")).to be(true)
 
-    select "Dark", from: "Appearance"
+    select_appearance("Dark")
     expect(page).to have_css("img.site-art-background[src='#{dark}']", visible: :all)
     expect(page).to have_css("header[style*='#F5EFE3']")
     expect(overlay_property("color")).to eq("rgb(245, 239, 227)")
@@ -143,7 +142,7 @@ RSpec.describe "Site Art appearance", type: :system do
     expect(overlay_property("color", sign_in)).to eq("rgb(35, 38, 37)")
     expect(overlay_property("backgroundColor", sign_in)).to eq("rgb(241, 242, 237)")
     expect(overlay_property("textDecorationLine", sign_in)).to eq("none")
-    find("main h1").hover
+    find("main h2", text: "Import your Last.fm history").hover
     browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "forced-colors", value: "active" } ])
     expect(overlay_property("backgroundImage")).to eq("none")
     expect(overlay_property("color")).not_to eq("rgb(245, 239, 227)")
@@ -190,7 +189,7 @@ RSpec.describe "Site Art appearance", type: :system do
       };
     JS
     visit root_path
-    select "Light", from: "Appearance"
+    select_appearance("Light")
 
     sequence = fixtures.fetch("sequence")
     extra_cases = %w[unknown invalid_optional legacy plain invalid_core].map do |name|
@@ -239,13 +238,18 @@ RSpec.describe "Site Art appearance", type: :system do
   it "keeps the local theme and branded icon when remote candidates cannot decode" do
     allow(SiteArt).to receive(:snapshot).and_return(light: { url: "/", presentation: { foreground: "#123456" } }, favicon: "/")
     visit root_path
-    select "Light", from: "Appearance"
+    select_appearance("Light")
     expect(page).to have_link("Log In", href: login_path)
     expect(page).to have_css("link[rel=icon][href*='muzeum-favicon']", count: 1, visible: :all)
     expect(page).to have_no_css("img.site-art-background", visible: :all)
     expect(page).to have_no_css("[data-art-treatment]")
     expect(page.evaluate_script("getComputedStyle(document.querySelector('.stone-environment')).backgroundImage")).to include("limestone.jpg")
-    select "Dark", from: "Appearance"
+    select_appearance("Dark")
     expect(page.evaluate_script("getComputedStyle(document.querySelector('.stone-environment')).backgroundImage")).to include("onyx.jpg")
+  end
+
+  def select_appearance(mode)
+    find(".anonymous-appearance summary").click unless page.has_css?(".anonymous-appearance[open]", wait: 0)
+    select mode, from: "Appearance"
   end
 end

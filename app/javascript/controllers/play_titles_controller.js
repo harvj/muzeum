@@ -7,7 +7,7 @@ export default class extends Controller {
     this.resize = new ResizeObserver(() => {
       this.hide()
       for (const name of this.element.querySelectorAll("[data-overflow-name]")) {
-        const focusable = !this.mobile() && this.clipped(name) && !name.querySelector("a")
+        const focusable = this.clipped(name) && !name.querySelector("a")
         if (focusable) name.tabIndex = 0
         else name.removeAttribute("tabindex")
       }
@@ -21,7 +21,7 @@ export default class extends Controller {
 
   preview(event) {
     const name = event.target.closest("[data-overflow-name]")
-    if (!name || !this.clipped(name) || this.mobile()) return
+    if (!name || !this.clipped(name) || (event.type === "pointerover" && event.pointerType === "touch")) return
 
     const tooltip = this.tooltipTarget
     const bounds = name.getBoundingClientRect()
@@ -49,10 +49,6 @@ export default class extends Controller {
   clipped(name) {
     const text = name.querySelector(":scope > a:only-child") || name
     return text.scrollWidth > text.clientWidth
-  }
-
-  mobile() {
-    return matchMedia("(max-width: 700px)").matches
   }
 
   toggle(event) {

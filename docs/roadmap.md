@@ -48,6 +48,7 @@ The authoritative, living domain rules are [principles](domain/principles.md), [
    - **P1.5.3d — Application Shell v1.1.0.** Consume the signed registry and Auth consumer evidence v1. Keep eligibility bound to the exact local session and stop showing destinations on invalid evidence. Production activation depends on Auth’s separate rollout and exact-SHA Shell verification.
    - **v0.3.4 release gate — Resolution Evidence and Artist Enrichment.** Verify the combined P1.5.3 candidate on the patched Ruby and current Brakeman, then review the Muzeum-only production runtime handoff. [Readiness](deployment/v0.3.4-runtime-readiness.md) · [Draft release notes](releases/v0.3.4.md).
    - **v0.3.5 hotfix — Resolution Review.** Put original Last.fm claims above investigation details. Distinguish queued work, provider retries, terminal provider failures, and completed searches without a verified match. Keep investigation and assignment policies in place.
+   - **v0.3.6 maintenance — Homepage and Archive.** Remove the redundant homepage introduction, collapse signed-out appearance controls into a disclosure, and use the full Archive cell width for recording titles.
 
 9. **P1.6 — Profile onboarding (tentative).**
    - **P1.6a — Last.fm authentication and verified username.** Use Last.fm web authorization and bind only the returned username.

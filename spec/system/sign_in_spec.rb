@@ -23,6 +23,7 @@ RSpec.describe "Auth sign-in page", type: :system do
     expect(page).to have_content("Sign-in is temporarily unavailable")
     expect(OidcAttempt.count).to eq(0)
     if ENV["BROWSER_TESTS"] == "1"
+      find(".anonymous-appearance summary").send_keys(:enter)
       select "Dark", from: "Appearance"
       expect(page.evaluate_script("document.documentElement.dataset.appearance")).to eq("dark")
       click_button "Pause light"

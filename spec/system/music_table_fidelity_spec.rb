@@ -76,6 +76,41 @@ RSpec.describe "Music table fidelity", type: :system do
     expect(page).to have_link(album.title, href: release_path(album))
   end
 
+  it "uses the full recording cell for original titles and previews only genuine overflow" do
+    user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "archive-width", lastfm_username: "archive-width")
+    titles = [ "Vi", "des fleurs x stromae", LONG_TITLE + ("X" * 100) ]
+    titles.each_with_index do |title, index|
+      user.scrobbles.create!(played_at: Time.current - index.minutes,
+        payload: { artist_name: "Tove Lo", track_name: title, album_name: "ESTRUS" })
+    end
+    authenticate_fixture(user)
+    [ [ 1440, 960 ], [ 390, 844 ] ].each do |width, height|
+      viewport(width, height)
+      visit archive_path
+      expect(all(".play-recording a", count: titles.size).map(&:text)).to eq(titles)
+      measurement = page.evaluate_script(<<~JS)
+        [...document.querySelectorAll(".play-recording a")].map(link => {
+          const name = link.closest(".play-name")
+          const layout = link.closest(".play-recording-layout")
+          const unused = layout.getBoundingClientRect().right - name.getBoundingClientRect().right
+          return [link.scrollWidth > link.clientWidth, unused < 1, getComputedStyle(link).textOverflow]
+        })
+      JS
+      expect(measurement).to eq([ [ false, true, "ellipsis" ], [ false, true, "ellipsis" ], [ true, true, "ellipsis" ] ])
+      expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
+      if width > 700
+        find_link(titles[1]).hover
+        expect(page).to have_no_css(".plays-tooltip:popover-open")
+        find_link(titles.last).hover
+        expect(page).to have_css(".plays-tooltip:popover-open", text: titles.last)
+      end
+      find_link(titles.last).send_keys(:shift, :tab)
+      page.driver.browser.action.send_keys(:tab).perform
+      expect(page).to have_css(".play-recording a:focus-visible", text: titles.last)
+      expect(page).to have_css(".plays-tooltip:popover-open", text: titles.last)
+    end
+  end
+
   it "numbers a two-disc track listing continuously while retaining the stored positions" do
     user, album = seed_library
     authenticate_fixture(user)

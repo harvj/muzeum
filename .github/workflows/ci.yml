@@ -2,7 +2,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main, release/v0.3.2, release/v0.3.5, candidate/v0.3.4-shell, candidate/v0.3.4-shell-revocation]
+    branches: [main, release/v0.3.2, release/v0.3.5, release/v0.3.6, candidate/v0.3.4-shell, candidate/v0.3.4-shell-revocation]
 permissions:
   contents: read
 jobs:

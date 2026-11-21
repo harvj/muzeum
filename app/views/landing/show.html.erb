@@ -1,8 +1,4 @@
-<section class="intro">
-  <h1>Muzeum</h1>
-  <p>Explore listening histories and the artists, recordings, and releases behind them.</p>
-  <% unless current_user %><p><%= link_to "Open your archive", login_path, data: { turbo: false, turbo_prefetch: false } %></p><% end %>
-</section>
+<h1 class="visually-hidden">Muzeum</h1>
 <div class="columns">
   <section class="card library-card" aria-labelledby="import-heading">
     <h2 id="import-heading">Import your Last.fm history</h2>

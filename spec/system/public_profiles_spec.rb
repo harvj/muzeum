@@ -27,7 +27,21 @@ RSpec.describe "Public profile browsing", type: :system do
       visit root_path
       expect(page).to have_field("Last.fm username", disabled: true)
       expect(page).to have_button("Get Started", disabled: true)
-      expect(page).to have_link("Open your archive", href: login_path)
+      expect(page).to have_no_css("main .intro")
+      expect(page).to have_no_link("Open your archive")
+      expect(page).to have_no_select("Appearance")
+      trigger = find(".anonymous-appearance summary", text: "Appearance settings")
+      expect(page.evaluate_script(<<~JS)).to be(true)
+        (() => {
+          const icon = document.querySelector(".anonymous-appearance summary").getBoundingClientRect()
+          return icon.right > innerWidth - 24 && icon.bottom > innerHeight - 24
+        })()
+      JS
+      trigger.send_keys(:enter)
+      expect(page).to have_select("Appearance")
+      expect(page).to have_button("Pause light")
+      trigger.send_keys(:enter)
+      expect(page).to have_no_select("Appearance")
       verify_navigation
       verify_viewport(width, theme)
       capture("landing-#{theme}")

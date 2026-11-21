@@ -41,7 +41,6 @@
         <% else %>
           <div class="account-nav anonymous-account-nav">
             <%= link_to "Log In", login_path, class: "entity-link", data: { turbo: false, turbo_prefetch: false } %>
-            <%= render "shared/appearance" %>
           </div>
         <% end %>
       </div>
@@ -53,5 +52,11 @@
     <footer class="site-footer">
       <span>© <%= Date.current.year %> <%= link_to "Jim Harvey", "https://harvj.com/" %><% if (tag = published_release_tag) %> · Muzeum <%= tag %><% elsif Rails.env.production? %> · Muzeum · Version unavailable<% end %></span>
     </footer>
+    <% unless current_user %>
+      <details class="anonymous-appearance">
+        <summary title="Appearance settings"><span aria-hidden="true">◐</span><span class="visually-hidden">Appearance settings</span></summary>
+        <%= render "shared/appearance" %>
+      </details>
+    <% end %>
   </body>
 </html>
