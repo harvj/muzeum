@@ -6,14 +6,22 @@ def run_bounded(argv, *, cwd, env, timeout):
     process = subprocess.Popen(argv, cwd=cwd, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, start_new_session=True)
     try:
         stdout, stderr = process.communicate(timeout=timeout)
-    except subprocess.TimeoutExpired:
-        os.killpg(process.pid, signal.SIGTERM)
+    except (subprocess.TimeoutExpired, KeyboardInterrupt) as interrupted:
+        try:
+            os.killpg(process.pid, signal.SIGTERM)
+        except ProcessLookupError:
+            pass
         try:
             stdout, stderr = process.communicate(timeout=15)
         except subprocess.TimeoutExpired:
-            os.killpg(process.pid, signal.SIGKILL)
+            try:
+                os.killpg(process.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
             stdout, stderr = process.communicate()
-        return subprocess.CompletedProcess(argv, 124, stdout, stderr + b'\nBounded migration process group timed out; inspect schema before retry.\n')
+        code = 130 if isinstance(interrupted, KeyboardInterrupt) else 124
+        return subprocess.CompletedProcess(argv, code, stdout,
+                                           stderr + b'\nMigration did not finish; inspect schema before retry.\n')
     return subprocess.CompletedProcess(argv, process.returncode, stdout, stderr)
 
 
@@ -68,10 +76,15 @@ def migration_environment(values, directory, bundle_path, release, runtime_envir
 def execute_migrations(migrations, directory, release, env,
                        prefix=('/usr/sbin/runuser', '-u', 'muzeum-migrate', '--'),
                        diagnostic=Path('/etc/muzeum/migration-last-error')):
+    import time
+    deadline = time.monotonic() + 720
     for migration in sorted(migrations, key=lambda item: (int(item['version']), item['database'])):
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise RuntimeError('Migration time budget exhausted')
         result = run_bounded([*prefix, str(directory / 'ruby'), str(directory / 'bundle'),
                               'exec', 'rails', 'db:migrate:up:' + migration['database']],
-                             cwd=release, env=dict(env, VERSION=migration['version']), timeout=180)
+                             cwd=release, env=dict(env, VERSION=migration['version']), timeout=min(remaining, 180))
         if result.returncode:
             fd = os.open(diagnostic, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o600)
             with os.fdopen(fd, 'wb') as output:
@@ -79,9 +92,14 @@ def execute_migrations(migrations, directory, release, env,
             raise RuntimeError('Approved migration failed; confirm schema before retry')
 
 
+def interrupt(_signum, _frame):
+    raise KeyboardInterrupt()
+
+
 if __name__ == '__main__':
+    signal.signal(signal.SIGTERM, interrupt)
     try:
         main()
-    except Exception:
+    except (Exception, KeyboardInterrupt):
         print('Muzeum migration stopped; details suppressed; inspect protected diagnostics before retry.',file=sys.stderr)
         raise SystemExit(1)

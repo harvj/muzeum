@@ -1,6 +1,8 @@
 import importlib.machinery
 import importlib.util
 import os
+import signal
+import threading
 from pathlib import Path
 import sys
 import tempfile
@@ -29,3 +31,21 @@ class MigrationProcessTests(unittest.TestCase):
             result = migration.run_bounded([sys.executable, '-c', "import sys;print('private diagnostic',file=sys.stderr);sys.exit(3)"], cwd=root, env=os.environ.copy(), timeout=5)
             self.assertEqual(result.returncode, 3)
             self.assertIn(b'private diagnostic', result.stderr)
+
+    def test_operator_interrupt_terminates_the_migration_process_group(self):
+        with tempfile.TemporaryDirectory() as root:
+            marker = Path(root) / 'orphan-wrote-data'
+            child = "import time;from pathlib import Path;time.sleep(1);Path(" + repr(str(marker)) + ").touch()"
+            parent = "import subprocess,sys,time;subprocess.Popen([sys.executable,'-c'," + repr(child) + "]);time.sleep(30)"
+            previous = signal.signal(signal.SIGTERM, migration.interrupt)
+            timer = threading.Timer(0.2, os.kill, args=(os.getpid(), signal.SIGTERM))
+            try:
+                timer.start()
+                result = migration.run_bounded([sys.executable, '-c', parent], cwd=root, env=os.environ.copy(), timeout=10)
+            finally:
+                timer.cancel()
+                timer.join()
+                signal.signal(signal.SIGTERM, previous)
+            self.assertEqual(result.returncode, 130)
+            time.sleep(1.1)
+            self.assertFalse(marker.exists())
