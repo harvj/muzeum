@@ -9,7 +9,7 @@ module MuzeumDeploymentRevision
   V034_SHA = "1633c96d63c1a44e678e95292466ab49c0442103"
   V034_CONTROLS = "controls/v0.3.4-shell"
   V034_CI_BRANCH = "candidate/v0.3.4-shell-revocation"
-  V035_SHA = "4da6c96424b6bf644cf5c6e7bc0398de61e5c08b"
+  V035_SHA = "8aa4b92e11d6e826ef7d5073398fe4cdfd4f1f6e"
   V035_CONTROLS = "controls/v0.3.5"
   REQUIRED_JOBS = [
     "tests", "quality (bin/rubocop)", "quality (bin/brakeman --no-pager --exit-on-warn --exit-on-error)",
