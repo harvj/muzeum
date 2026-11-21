@@ -73,12 +73,19 @@ class ApplicationShellRegistry
   private
 
   def parse(json)
-    JSON.parse(json, object_class: UniqueObject)
+    value = JSON.parse(json, object_class: UniqueObject)
+    raise Invalid unless value.is_a?(Hash)
+
+    value
   end
 
   def local_bundle
     path = @state.exist? ? @state : @bootstrap
-    parse(path.binread(MAX_BYTES * 16)).transform_values { |data| Base64.strict_decode64(data) }
+    parse(path.binread(MAX_BYTES * 16)).transform_values do |data|
+      raise Invalid unless data.is_a?(String)
+
+      Base64.strict_decode64(data)
+    end
   end
 
   def fetch(name)

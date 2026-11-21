@@ -59,8 +59,10 @@ RSpec.describe ApplicationShellRegistry do
       next_bundle.each { |path, value| stub_request(:get, described_class::ORIGIN + path).to_return(body: value) }
       registry.refresh
       expect(registry.entries.find { |item| item.fetch("id") == "remote-gaming" }.fetch("availability")).to eq("withdrawn")
-      state.write("{}")
-      expect(registry.entries).to be_empty
+      [ "{}", "[]", '{"current.json":null}' ].each do |corrupt|
+        state.write(corrupt)
+        expect(registry.entries).to be_empty
+      end
     end
   end
 end

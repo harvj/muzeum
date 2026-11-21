@@ -42,6 +42,7 @@ header {
 header .harvj-wordmark { position: static; flex: none; font-size: 24px; line-height: 1.2; }
 .header-navigation, header .account-nav { display: flex; align-items: center; gap: 20px; }
 header .account-nav { position: static; margin-inline-start: auto; }
+.anonymous-account-nav > a { order: 1; }
 .library-nav { display: flex; flex-wrap: wrap; gap: 4px 20px; }
 header :is(.library-nav a, .account-nav > a, .harvj-session > summary) {
   display: inline-flex;
