@@ -2,6 +2,8 @@ class ApplicationShellController < ApplicationController
   skip_before_action :require_authentication
 
   def show
+    return head :service_unavailable if @session_verification_unavailable
+
     local_session = Current.session
     binding = request.headers["X-Muzeum-Shell-Session"].to_s
     return head :unauthorized unless local_session && ActiveSupport::SecurityUtils.secure_compare(
@@ -19,7 +21,8 @@ class ApplicationShellController < ApplicationController
     applications = ApplicationShellRegistry.entries.select do |entry|
       entry["availability"] == "production" && entry["id"] != "muzeum" && evidence.fetch(:ids).include?(entry["id"])
     end
-    render json: { username: evidence.fetch(:username), valid_for: valid_for, applications: applications }
+    username = remember_session_username(evidence.fetch(:username))
+    render json: { username: username, valid_for: valid_for, applications: applications }
   rescue OidcClient::Failure
     head :service_unavailable
   end

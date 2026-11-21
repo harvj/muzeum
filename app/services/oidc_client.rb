@@ -30,8 +30,8 @@ class OidcClient
   def exchange(code, attempt)
     client.authorization_code = code
     token = client.access_token!(code_verifier: attempt.verifier)
-    header = JSON::JWT.decode(token.id_token, :skip_verification)
-    raise Failure unless header.algorithm.to_s == "RS256"
+    claims = JSON::JWT.decode(token.id_token, :skip_verification)
+    raise Failure unless claims.algorithm.to_s == "RS256"
     identity = OpenIDConnect::ResponseObject::IdToken.decode(token.id_token, discovery)
     identity.verify!(issuer: ISSUER, client_id: ENV.fetch("OIDC_CLIENT_ID"), nonce: attempt.nonce)
     raise Failure if identity.sub.blank? || identity.iat.to_i > Time.current.to_i + 30
@@ -40,7 +40,7 @@ class OidcClient
     required_acr = ENV["OIDC_REQUIRED_ACR"].presence
     raise Failure if required_acr && identity.acr != required_acr
     raise Failure if token.refresh_token.blank?
-    [ identity.sub, token.refresh_token ]
+    [ identity.sub, token.refresh_token, claims["preferred_username"] ]
   rescue OpenIDConnect::Exception, Rack::OAuth2::Client::Error, JSON::JWT::Exception, Faraday::Error, URI::InvalidURIError
     raise Failure
   end

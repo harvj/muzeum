@@ -44,7 +44,7 @@ RSpec.describe "Application Shell navigation", type: :system do
       within(".harvj-session-panel") do
         expect(page).to have_link("Remote-Gaming", href: "https://gaming.harvj.com/")
         expect(page).to have_link("Continuum Engine", href: "https://funding.harvj.com/")
-        expect(all("[data-application-shell-target='links'] a").map(&:text)).to eq([ "Remote-Gaming", "Continuum Engine" ])
+        expect(all("[data-application-shell-target='links'] a", count: 2).map(&:text)).to eq([ "Remote-Gaming", "Continuum Engine" ])
         expect(page).to have_no_link("Muzeum")
       end
       expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
@@ -53,11 +53,65 @@ RSpec.describe "Application Shell navigation", type: :system do
       expect(page.evaluate_script("document.activeElement === document.querySelector('.harvj-session summary')")).to be(true)
     end
 
-    allow(provider).to receive(:shell_evidence).and_raise(OidcClient::Failure)
-    find(".harvj-session summary").click
-    expect(page).to have_css(".harvj-session summary", text: "Signed in")
+    page.execute_script(<<~JS)
+      const username = document.querySelector('[data-application-shell-target="username"]')
+      window.shellUsernameChanges = []
+      new MutationObserver(() => window.shellUsernameChanges.push(username.textContent))
+        .observe(username, { childList: true, subtree: true })
+    JS
+    trigger = find(".harvj-session summary")
+    2.times do
+      trigger.click
+      expect(page).to have_link("Remote-Gaming")
+      trigger.click
+      expect(page).to have_no_css(".harvj-session[open]")
+    end
+    expect(page.evaluate_script("window.shellUsernameChanges")).to eq([])
+
+    allow(provider).to receive(:shell_evidence).and_return(evidence.merge(username: "renamed", ids: %w[continuum-engine]))
+    trigger.click
     expect(page).to have_no_link("Remote-Gaming")
+    expect(page).to have_link("Continuum Engine")
+    expect(trigger).to have_text("alex")
+    trigger.click
+
+    allow(provider).to receive(:shell_evidence).and_raise(OidcClient::Failure)
+    trigger.click
+    expect(page).to have_no_link("Continuum Engine")
+    expect(trigger).to have_text("alex")
     expect(page).to have_button("Log Out")
+    expect(Session.exists?(local_session.id)).to be(true)
+    trigger.click
+
+    page.execute_script(<<~JS)
+      window.originalShellFetch = window.fetch
+      const originalTimeout = window.setTimeout
+      window.setTimeout = (fn, delay, ...args) => originalTimeout(fn, delay === 10000 ? 80 : delay, ...args)
+      window.fetch = (url, options) => new Promise((_, reject) => {
+        options.signal.addEventListener("abort", () => {
+          window.shellRefreshTimedOut = true
+          reject(new DOMException("Aborted", "AbortError"))
+        }, { once: true })
+      })
+    JS
+    trigger.click
+    expect(page).to have_no_link("Continuum Engine")
+    expect(page).to have_css(".harvj-session summary", text: "alex")
+    expect(page).to have_css(".harvj-session[open]")
+    page.evaluate_async_script(<<~JS)
+      const done = arguments[0]
+      const check = () => window.shellRefreshTimedOut ? done(true) : requestAnimationFrame(check)
+      check()
+    JS
+    expect(trigger).to have_text("alex")
+    expect(Session.exists?(local_session.id)).to be(true)
+    page.execute_script("window.fetch = window.originalShellFetch")
+    trigger.click
+
+    local_session.destroy!
+    trigger.click
+    expect(page).to have_link("Log In", href: login_path)
+    expect(page).to have_no_css(".harvj-session")
   end
 
   it "measures anonymous geometry and authenticates a long username for narrow touch and accessibility" do

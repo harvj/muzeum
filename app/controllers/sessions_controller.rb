@@ -41,11 +41,12 @@ class SessionsController < ApplicationController
     codes = response_fields.fetch("code", [])
     raise OidcClient::Failure unless attempt && codes.one? && codes.first.present? && !response_fields.key?("error")
 
-    subject, grant = OidcClient.new.exchange(codes.first, attempt)
+    subject, grant, username = OidcClient.new.exchange(codes.first, attempt)
     user = User.find_or_create_by!(oidc_issuer: OidcClient::ISSUER, oidc_subject: subject)
     raise OidcClient::Failure unless user.login_enabled?
 
     start_session(user, grant: grant)
+    remember_session_username(username)
     redirect_to destination, status: :see_other
   rescue OidcClient::Failure, Enumerable::SoleItemExpectedError, ArgumentError
     session[:oidc_auto_blocked] = true

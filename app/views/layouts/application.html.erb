@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
-    <% if @public_profile || controller_name == "landing" %><meta name="turbo-cache-control" content="no-cache"><% end %>
+    <% if current_user || @public_profile || controller_name == "landing" %><meta name="turbo-cache-control" content="no-cache"><% end %>
     <%= tag.link rel: "icon", href: asset_path("muzeum-favicon.svg"), type: "image/svg+xml", sizes: "any" %>
     <link rel="stylesheet" href="/identity/v1/identity.css">
     <link rel="stylesheet" href="/identity/v1/session.css">

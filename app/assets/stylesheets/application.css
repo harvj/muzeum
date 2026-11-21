@@ -338,8 +338,16 @@ main .review-candidate.recommended { border-color: #378c48; }
 .review-score { min-width: 6rem; align-self: center; }
 .review-score > strong { font: bold 1.65rem Georgia, serif; }
 .review-score-explanation { margin-block-start: .65rem; }
-.review-heading h1 { font-family: inherit; line-height: 1.3; font-size: .875rem; font-weight: 600; letter-spacing: normal; }
+.review-heading h1 { font-family: inherit; line-height: 1.3; font-size: clamp(1.55rem, 3vw, 2.25rem); font-weight: 750; letter-spacing: normal; overflow-wrap: anywhere; }
 .resolution-review .review-back { margin: 0 0 .5rem; font-size: .875rem; }
+.review-primary-section { font-weight: 700; }
+.review-failure { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: .75rem 1rem; padding: 1rem; border: 1px solid var(--line); border-radius: .5rem; background: var(--control); }
+.review-failure h2 { font-family: inherit; letter-spacing: normal; }
+.review-failure > div { flex: 1 1 27rem; }
+.resolution-review .review-failure form { margin: 0; }
+.review-failure button { color: var(--card); background: var(--ink); font-weight: 700; }
+.review-failure-summary { width: 100%; }
+
 .resolution-review .review-observation-meta { margin: .4rem 0 0; color: var(--muted); font-size: .875rem; }
 .review-source-claims { display: flex; flex-wrap: wrap; gap: .25rem 1.25rem; margin: .35rem 0 0; }
 .review-source-claims > div { align-items: baseline; justify-content: flex-start; gap: .45rem; margin: 0; min-width: 0; }

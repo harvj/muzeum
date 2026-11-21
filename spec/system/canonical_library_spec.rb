@@ -147,12 +147,13 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     request.update!(state: "failed", attempts: 5, request_count: 5, failure: "musicbrainz throttled (503)")
     click_link "Refresh status"
     within(".review-heading") do
-      expect(all("dt").map(&:text)).to eq(%w[TRACK ARTIST ALBUM])
-      expect(all("dd").map(&:text)).to eq(claims.values)
+      expect(all("dt").map(&:text)).to eq(%w[ARTIST ALBUM])
+      expect(page).to have_css("h1", exact_text: claims.fetch("track_name"))
+      expect(all("dd").map(&:text)).to eq(claims.values.drop(1))
       expect(page).to have_text("4 matching observations")
     end
-    expect(page).to have_text("MusicBrainz returned HTTP 503. Muzeum stopped after 5 attempts.")
-    expect(page).to have_button("Retry investigation")
+    expect(page).to have_text("5 recording-search attempts failed (HTTP 503).")
+    expect(page).to have_button("Retry search")
     expect(page).to have_no_text("No credible candidates in the retained evidence.")
 
     browser = page.driver.browser
@@ -160,8 +161,8 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
       browser.execute_cdp("Emulation.setDeviceMetricsOverride", width:, height:, deviceScaleFactor: 1, mobile: size == "mobile")
       expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
       expect(page.evaluate_script(<<~JS)).to be(true)
-        parseFloat(getComputedStyle(document.querySelector(".review-source-claims dd")).fontSize) >
-        parseFloat(getComputedStyle(document.querySelector(".review-heading h1")).fontSize)
+        parseFloat(getComputedStyle(document.querySelector(".review-heading h1")).fontSize) >
+        parseFloat(getComputedStyle(document.querySelector(".review-source-claims dd")).fontSize)
       JS
       capture_resolution("outage-#{size}")
     end

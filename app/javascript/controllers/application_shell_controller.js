@@ -39,7 +39,6 @@ export default class extends Controller {
     this.request = null
     clearTimeout(this.expiration)
     this.hideApplications()
-    this.usernameTarget.textContent = "Signed in"
   }
 
   hideApplications() {
@@ -60,12 +59,22 @@ export default class extends Controller {
         cache: "no-store", credentials: "same-origin", signal: request.signal,
         headers: { "X-Muzeum-Shell-Session": this.bindingValue }
       })
+      if (this.request !== request || request.signal.aborted) return
+      if (response.status === 401) {
+        this.clear()
+        this.element.hidden = true
+        window.location.replace("/")
+        return
+      }
       if (!response.ok) return
       const evidence = await response.json()
       if (this.request !== request || request.signal.aborted) return
       const remaining = evidence.valid_for * 1000 - (performance.now() - startedAt) - 1000
       if (!(remaining > 0 && remaining <= 60000)) return
-      this.usernameTarget.textContent = evidence.username
+      if (this.usernameTarget.hasAttribute("data-identity-pending") && evidence.username) {
+        this.usernameTarget.textContent = evidence.username
+        this.usernameTarget.removeAttribute("data-identity-pending")
+      }
       const links = evidence.applications.map(({ name, canonical_url }) => {
         const link = document.createElement("a")
         link.textContent = name

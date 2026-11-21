@@ -5,13 +5,25 @@ module Authentication
     before_action :prevent_private_caching
     before_action :resume_session
     before_action :require_authentication
-    helper_method :current_user
+    helper_method :current_user, :session_username
   end
 
   private
 
   def current_user
     Current.user
+  end
+
+  def session_username
+    session_id, username = session[:authenticated_username]
+    username if Current.session && session_id == Current.session.id
+  end
+
+  def remember_session_username(username)
+    if Current.session && !session_username && username.is_a?(String) && ApplicationShellEvidence::USERNAME.match?(username)
+      session[:authenticated_username] = [ Current.session.id, username ]
+    end
+    session_username
   end
 
   def resume_session
@@ -31,6 +43,7 @@ module Authentication
     end
     Current.session.update!(last_seen_at: Time.current) if request.get? && request.format.html?
   rescue OidcClient::Failure
+    @session_verification_unavailable = true
     session[:oidc_auto_blocked] = true
     Current.session = nil
   end

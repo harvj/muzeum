@@ -53,6 +53,28 @@ RSpec.describe "Application Shell evidence", type: :request do
     expect(WebMock).to have_requested(:post, "#{OidcClient::ISSUER}/introspect").times(7)
   end
 
+  it "renders the verified login name independently of unavailable grant evidence" do
+    finish_oidc(claims: { preferred_username: "jim" })
+    local_session = Session.last
+    get archive_path
+    expect(Nokogiri::HTML(response.body).at_css('[data-application-shell-target="username"]').text).to eq("jim")
+
+    binding = ApplicationShellEvidence.session_binding(local_session)
+    local_session.update!(verified_at: 61.seconds.ago)
+    stub_request(:post, "#{OidcClient::ISSUER}/introspect").to_return(status: 503)
+    get application_shell_path, headers: { "X-Muzeum-Shell-Session" => binding }
+    expect(response).to have_http_status(:service_unavailable)
+    expect(Session.exists?(local_session.id)).to be(true)
+
+    stub_request(:post, "#{OidcClient::ISSUER}/introspect").to_return(body: { active: false }.to_json)
+    get application_shell_path, headers: { "X-Muzeum-Shell-Session" => binding }
+    expect(response).to have_http_status(:unauthorized)
+    expect(Session.exists?(local_session.id)).to be(false)
+    get root_path
+    expect(response.body).to include("Log In")
+    expect(response.body).not_to include('data-application-shell-target="username"')
+  end
+
   it "does not authorize a page bound to the session replaced by a new login" do
     finish_oidc
     original = ApplicationShellEvidence.session_binding(Session.last)

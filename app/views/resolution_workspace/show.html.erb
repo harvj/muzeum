@@ -6,27 +6,30 @@
       @candidates.many? ? "Ambiguous" : "Unresolved"
     end %>
   <strong class="review-state"><%= review_state %></strong>
-  <p class="review-back"><%= link_to "Recording resolution", resolution_surfaces_path %></p>
   <% source = @selected_scrobble || @observation %>
-  <h1>Last.fm source claims</h1>
+  <p class="review-back"><%= link_to "Recording resolution", resolution_surfaces_path %> / Observation <%= source.id %></p>
+  <h1><%= observed_text(source.payload["track_name"], "Track") %></h1>
   <dl class="review-source-claims">
-    <% %w[Track Artist Album].each do |label| %>
+    <% %w[Artist Album].each do |label| %>
       <div><dt><%= label %></dt><dd><%= observed_text(source.payload["#{label.downcase}_name"], label) %></dd></div>
     <% end %>
   </dl>
-  <p class="review-observation-meta"><%= pluralize(@observations_count, "matching observation") %> · Observation <%= source.id %></p>
+  <p class="review-observation-meta">Original Last.fm strings · <%= pluralize(@observations_count, "matching observation") %></p>
 </section>
 <nav class="review-sections" aria-label="Review sections">
-  <a href="#review-candidates">Candidates</a>
+  <a href="#review-candidates" class="review-primary-section">Candidates</a>
   <a href="#review-evidence">Evidence</a>
   <a href="#review-observations">Observations (<%= @observations_count %>)</a>
   <a href="#review-history">History</a>
 </nav>
 <div class="review-grid">
 <section class="review-candidates" id="review-candidates">
-  <h2>Candidate recordings</h2>
   <% provider_incomplete = @assessment&.evidence&.fetch("partial", false) %>
   <% request_failed = @assessment_request&.state == "failed" %>
+  <% throttled = request_failed && @assessment_request.failure == "musicbrainz throttled (503)" %>
+  <% empty_failure = request_failed && @candidates.empty? %>
+  <% can_retry = @may_manage_observation && CatalogImport.worker_enabled? && !@assessment_request&.active? %>
+  <% unless empty_failure %><h2>Candidate recordings</h2><% end %>
   <% if @assessment_request&.active? %>
     <p role="status"><% if @assessment_request.state == "refreshing" %>Investigation in progress.
       <% elsif @assessment_request.attempts.positive? %>Investigation pending · Waiting to retry the provider.
@@ -36,11 +39,19 @@
   <% elsif @assessment_request&.failure == "Investigation expired before completion." %>
     <p role="status">Investigation expired. You can request another check.</p>
   <% elsif request_failed || provider_incomplete %>
-    <p role="status">Provider evidence unavailable or incomplete.
-      <% if @assessment_request&.failure == "musicbrainz throttled (503)" %>
-        MusicBrainz returned HTTP 503. Muzeum stopped after <%= pluralize(@assessment_request.attempts, "attempt") %>.
+    <div class="review-failure">
+      <div role="status">
+        <h2><%= throttled ? "MusicBrainz search unavailable" : "Provider evidence unavailable or incomplete" %></h2>
+        <p><% if throttled %>
+          <%= pluralize(@assessment_request.attempts, "recording-search attempt") %> failed (HTTP 503).
+        <% end %>
+        <% if @candidates.any? %>Retained candidates are shown below.<% else %>No verified candidates are available yet.<% end %></p>
+        <% if request_failed && can_retry %><p>Retrying the search preserves the original observation and its evidence.</p><% end %>
+      </div>
+      <% if request_failed && can_retry %>
+        <%= button_to "Retry search", investigate_resolution_surface_path(@selected_scrobble || @observation, play: @selected_scrobble&.id) %>
       <% end %>
-      <% if @candidates.any? %>Retained candidates are shown below.<% else %>No match could be verified from the available evidence.<% end %></p>
+    </div>
   <% elsif @assessment_request&.state == "incomplete" %>
     <p role="status">Investigation incomplete. <%= @assessment_request.failure %></p>
   <% elsif @assessment %>
@@ -67,9 +78,9 @@
   <% if @assessment %>
     <details><summary>Assessment evidence and provenance</summary><%= render "evidence", assessment: @assessment %></details>
   <% end %>
-  <% if @may_manage_observation && CatalogImport.worker_enabled? && !@assessment_request&.active? %>
-    <% if request_failed %>
-      <%= button_to "Retry investigation", investigate_resolution_surface_path(@selected_scrobble || @observation, play: @selected_scrobble&.id) %>
+  <% if can_retry %>
+    <% if request_failed && !throttled && @assessment_request.failure == "Investigation expired before completion." %>
+      <%= button_to "Retry search", investigate_resolution_surface_path(@selected_scrobble || @observation, play: @selected_scrobble&.id) %>
     <% end %>
     <details>
       <summary><%= request_failed ? "Look up a recording identifier" : "Retry or look up a recording identifier" %></summary>
@@ -97,6 +108,7 @@
 </section>
 
 <aside class="review-sidebar" aria-label="Resolution and investigation summary">
+<% if empty_failure %><details class="review-failure-summary"><summary>Resolution details</summary><% end %>
 <section class="review-sidebar-card" aria-labelledby="recording-status">
   <h2 id="recording-status">Resolution</h2>
   <% if @current_recording && Clients::Musicbrainz::MBID.match?(@current_recording.mbid.to_s) %>
@@ -139,6 +151,7 @@
       <% if @assessment_request && (!@assessment_request.active? || @assessment_request.request_count.positive?) %><div><dt>Provider calls</dt><dd><%= @assessment_request.request_count %></dd></div><% end %>
     </dl>
   </section>
+<% if empty_failure %></details><% end %>
 </aside>
 
 </div>
