@@ -257,4 +257,20 @@ RSpec.describe MuzeumDeploymentRevision do
     expect(described_class.resolve_release!("v0.3.6", Dir.pwd)).to include(sha: hotfix, baseline:, branch: release_branch)
     expect(described_class.patched_runtime?(baseline)).to be(true)
   end
+
+  it "pins the unified resolution release and verifies CI for both branches" do
+    hotfix = described_class::V040_SHA
+    baseline = described_class::V036_SHA
+    controls = "b" * 40
+    release_branch = "release/v0.4.0"
+    control_branch = "controls/v0.4.0"
+    allow(described_class).to receive(:checkout!).with(control_branch).and_return(controls)
+    allow(described_class).to receive(:checkout!).with(release_branch).and_return(hotfix)
+    expect(described_class).to receive(:ci!).with(controls, branch: control_branch, required_jobs: true).ordered
+    expect(described_class).to receive(:command).with("git", "merge-base", "--is-ancestor", baseline, hotfix).and_return("")
+    expect(described_class).to receive(:ci!).with(hotfix, branch: release_branch, required_jobs: true).ordered.and_return("https://example.test/ci")
+
+    expect(described_class.resolve_release!("v0.4.0", Dir.pwd)).to include(sha: hotfix, baseline:, branch: release_branch)
+    expect(described_class.patched_runtime?(baseline)).to be(true)
+  end
 end

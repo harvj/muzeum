@@ -194,7 +194,8 @@ namespace :muzeum do
         expected = {
           "v0.3.4" => MuzeumDeploymentRevision::V034_SHA,
           "v0.3.5" => MuzeumDeploymentRevision::V035_SHA,
-          "v0.3.6" => MuzeumDeploymentRevision::V036_SHA
+          "v0.3.6" => MuzeumDeploymentRevision::V036_SHA,
+          "v0.4.0" => MuzeumDeploymentRevision::V040_SHA
         }.fetch(version)
         raise "Unexpected reviewed release metadata" unless revision == expected && capture(:cat, release_path.join("REVISION")) == revision
 
