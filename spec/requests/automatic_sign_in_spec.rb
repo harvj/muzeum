@@ -123,6 +123,24 @@ RSpec.describe "Canonical OIDC entry", type: :request do
     expect(OidcAttempt.count).to eq(0)
   end
 
+  it "revokes only the current Muzeum grant through Auth's confidential JSON endpoint" do
+    enter_application
+    finish_oidc(initiate: false)
+    other_session = Session.sole.user.sessions.create!(expires_at: 1.day.from_now, last_seen_at: Time.current,
+      verified_at: Time.current, grant_token: "other-browser-grant")
+    revoke = stub_request(:post, "https://auth.harvj.com/revoke").with(
+      basic_auth: [ "muzeum-test", "test-only-secret" ],
+      headers: { "Accept" => "application/json", "Content-Type" => %r{\Aapplication/json(?:;|\z)} },
+      body: { "token" => "revocable-grant", "token_type_hint" => "refresh_token" }
+    ).to_return(status: 200)
+
+    delete session_path
+
+    expect(response).to redirect_to(root_path)
+    expect(revoke).to have_been_requested.once
+    expect(Session.sole).to eq(other_session)
+  end
+
   it "returns to public content after logout or rate limiting" do
     enter_application
     finish_oidc(initiate: false)

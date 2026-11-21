@@ -79,7 +79,7 @@ class OidcClient
   end
 
   def revoke(grant)
-    http.post("#{ISSUER}/revoke", form: { token: grant, token_type_hint: "refresh_token" })
+    http.headers("Accept" => "application/json").post("#{ISSUER}/revoke", json: { token: grant, token_type_hint: "refresh_token" })
   rescue HTTP::Error
     nil # Local logout is always available during provider outages.
   end
