@@ -62,9 +62,9 @@ jobs:
         if: ${{ !cancelled() }}
         id: shell-tooling
         env:
-          STANDARDS_TOKEN: ${{ secrets.INFRASTRUCTURE_STANDARDS_READ_TOKEN }}
+          STANDARDS_KEY: ${{ secrets.INFRASTRUCTURE_STANDARDS_SSH_KEY }}
         run: |
-          if [[ -n "$STANDARDS_TOKEN" ]]; then
+          if [[ -n "$STANDARDS_KEY" ]]; then
             echo 'available=true' >> "$GITHUB_OUTPUT"
           else
             echo '### Application Shell audit unavailable' >> "$GITHUB_STEP_SUMMARY"
@@ -79,7 +79,13 @@ jobs:
           repository: harvj/infrastructure
           ref: f61cf730e920aac1b133f15ce7a82b82b2b470b9
           path: .standards/infrastructure
-          token: ${{ secrets.INFRASTRUCTURE_STANDARDS_READ_TOKEN }}
+          ssh-key: ${{ secrets.INFRASTRUCTURE_STANDARDS_SSH_KEY }}
+          ssh-strict: true
+          sparse-checkout: |
+            .github/actions/application-shell-ci
+            bin
+            deploy/keys
+            lib
           persist-credentials: false
       - name: Report unavailable Application Shell contract
         if: ${{ !cancelled() && steps.shell-checkout.outcome == 'failure' }}

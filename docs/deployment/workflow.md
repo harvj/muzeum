@@ -165,9 +165,10 @@ Fixtures create only `muzeum_deploy_test_*` databases, synthetic observations/ra
 The controls-branch CI for `4e861c9` verified the release candidate without
 a Shell result. The new audit step runs in ordinary CI using a reviewed
 Infrastructure checkout and the existing deployment-hook fixture. Set up
-`INFRASTRUCTURE_STANDARDS_READ_TOKEN` with approved read-only access to the
-private Infrastructure repository. This is a test-job credential. The
-production coordinator never receives it.
+`INFRASTRUCTURE_STANDARDS_SSH_KEY` for the read-only Infrastructure deploy
+key. The standard checkout uses strict host checking and clears its
+credential before app checks run. The production coordinator never
+receives the key.
 
 The pilot covers the local activation-side portion of SH-10 and reports
 remaining cases through the audit findings. Keep the existing Muzeum Shell
