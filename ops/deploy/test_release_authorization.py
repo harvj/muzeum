@@ -83,7 +83,7 @@ class CutoverHost(DatabaseHost):
         super().__init__(root)
         self.audit = audit
         self.bundle_path = self.invoke(['bundle', 'exec', 'ruby', '-e',
-                                        'path = Bundler.settings[:path]; print File.expand_path(path) if path'])
+                                        'path = Bundler.settings.path.explicit_path; print File.expand_path(path) if path'])
         self.releases = self.root / 'releases'
         self.releases.mkdir()
         self.paths = {sha: self.releases / timestamp for sha, timestamp in (
