@@ -25,7 +25,7 @@ RSpec.describe "Dashboard appearance", type: :system do
     expect(page).to have_css(".listening-day", count: 3)
     expect(page).to have_content("© 2026 Jim Harvey")
     observation = user.scrobbles.order(:played_at).last
-    expect(page).to have_link("Fixture track 2", href: resolution_surface_path(observation, play: observation.id))
+    expect(page).to have_link("Fixture track 2", href: resolution_surface_path(observation))
     output = Pathname(ENV.fetch("P14_PREVIEW_DIR", Rails.root.join("docs/p1.1d/previews")))
     FileUtils.mkdir_p(output) if ENV["CAPTURE_PREVIEWS"] == "1"
     [ [ "desktop", 1440, 960 ], [ "mobile", 390, 844 ] ].each do |size, width, height|
