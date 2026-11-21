@@ -82,7 +82,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
 
     request = CatalogImport.where(kind: RecordingResolution::Investigation::KIND).sole
     CanonicalCatalog::Processor.new(request, session_factory: ->(*) { CatalogFixtures::Session.new }).call
-    click_link "Refresh results"
+    click_link "Refresh status"
     expect(page).to have_css(".review-candidate.recommended")
     expect(page).to have_text("2 current matching observations")
     expect(page).to have_css(".review-candidate[open] .review-tracks li", count: 3)
@@ -130,6 +130,43 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
   ensure
     browser&.execute_cdp("Emulation.clearDeviceMetricsOverride")
     browser&.execute_cdp("Emulation.setEmulatedMedia", features: [])
+  end
+
+  it "makes the original claims and the provider failure clear on desktop and mobile" do
+    user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "resolution-outage", lastfm_username: "resolution-outage")
+    claims = { "track_name" => "des fleurs x stromae", "artist_name" => "Tove Lo", "album_name" => "ESTRUS" }
+    observations = 4.times.map do |index|
+      Scrobble.create!(user:, lastfm_account: user.source_account, played_at: index.hours.ago, payload: claims)
+    end
+    sign_in(user)
+    visit resolution_surface_path(observations.first)
+    expect(page).to have_text("Queued for background review")
+    expect(page).to have_no_text("Provider calls")
+
+    request = CatalogImport.find_by!(kind: RecordingResolution::Investigation::KIND)
+    request.update!(state: "failed", attempts: 5, request_count: 5, failure: "musicbrainz throttled (503)")
+    click_link "Refresh status"
+    within(".review-heading") do
+      expect(all("dt").map(&:text)).to eq(%w[TRACK ARTIST ALBUM])
+      expect(all("dd").map(&:text)).to eq(claims.values)
+      expect(page).to have_text("4 matching observations")
+    end
+    expect(page).to have_text("MusicBrainz returned HTTP 503. Muzeum stopped after 5 attempts.")
+    expect(page).to have_button("Retry investigation")
+    expect(page).to have_no_text("No credible candidates in the retained evidence.")
+
+    browser = page.driver.browser
+    [ [ "desktop", 1440, 960 ], [ "mobile", 390, 844 ] ].each do |size, width, height|
+      browser.execute_cdp("Emulation.setDeviceMetricsOverride", width:, height:, deviceScaleFactor: 1, mobile: size == "mobile")
+      expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
+      expect(page.evaluate_script(<<~JS)).to be(true)
+        parseFloat(getComputedStyle(document.querySelector(".review-source-claims dd")).fontSize) >
+        parseFloat(getComputedStyle(document.querySelector(".review-heading h1")).fontSize)
+      JS
+      capture_resolution("outage-#{size}")
+    end
+  ensure
+    browser&.execute_cdp("Emulation.clearDeviceMetricsOverride")
   end
 
   def capture_resolution(name)
