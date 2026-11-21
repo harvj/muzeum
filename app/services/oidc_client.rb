@@ -57,6 +57,27 @@ class OidcClient
     raise Failure
   end
 
+  def shell_evidence(local_session)
+    metadata = HTTP.timeout(3).get("#{ISSUER}/.well-known/oauth-authorization-server")
+    raise Failure unless metadata.status.success?
+
+    data = JSON.parse(metadata.to_s)
+    endpoint = URI(data.fetch("introspection_endpoint"))
+    methods = data["introspection_endpoint_auth_methods_supported"]
+    unless data["issuer"] == ISSUER && methods.is_a?(Array) && methods.include?("client_secret_basic") && endpoint.scheme == "https" && endpoint.host == URI(ISSUER).host &&
+        endpoint.port == 443 && endpoint.userinfo.nil? && endpoint.query.nil? && endpoint.fragment.nil?
+      raise Failure
+    end
+
+    response = http.post(endpoint.to_s, form: { token: local_session.grant_token, token_type_hint: "refresh_token",
+      application_shell_version: "1" })
+    raise Failure unless response.status.success? && response.headers["Cache-Control"].to_s.split(",").map { |directive| directive.strip.downcase }.include?("no-store")
+
+    ApplicationShellEvidence.verify(JSON.parse(response.to_s), session: local_session, client_id: ENV.fetch("OIDC_CLIENT_ID"))
+  rescue HTTP::Error, JSON::ParserError, KeyError, TypeError, URI::InvalidURIError, ArgumentError, ApplicationShellEvidence::Invalid
+    raise Failure
+  end
+
   def revoke(grant)
     http.post("#{ISSUER}/revoke", form: { token: grant, token_type_hint: "refresh_token" })
   rescue HTTP::Error

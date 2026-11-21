@@ -89,6 +89,8 @@ RSpec.describe "Site Art appearance", type: :system do
     expect(overlay_property("textShadow")).to eq("none")
     find("main h1").hover
     browser.action.send_keys(:tab).perform
+    expect(page).to have_css(".shell-skip-link:focus-visible")
+    browser.action.send_keys(:tab).perform
     expect(page).to have_css(".harvj-wordmark:focus-visible")
     expect(overlay_property("outlineWidth")).to eq("2px")
     browser.execute_script("document.activeElement.blur()")

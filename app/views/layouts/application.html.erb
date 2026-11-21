@@ -16,6 +16,7 @@
   <body>
     <%= tag.div class: "stone-environment", aria: { hidden: true },
                 data: { controller: "site-art", site_art_urls_value: SiteArt.snapshot } %>
+    <a class="shell-skip-link" href="#main-content">Skip to content</a>
     <header>
       <a class="harvj-wordmark" href="https://muzeum.fm/">muzeum</a>
       <div class="header-navigation">
@@ -45,12 +46,12 @@
         <% end %>
       </div>
     </header>
-    <main>
+    <main id="main-content" tabindex="-1">
       <% flash.each do |_, message| %><p class="card flash" role="status"><%= message %></p><% end %>
       <%= yield %>
     </main>
     <footer class="site-footer">
-      <span>© 2026 <%= link_to "Jim Harvey", "https://harvj.com/" %><% if (tag = published_release_tag) %> · Muzeum <%= tag %><% end %></span>
+      <span>© <%= Date.current.year %> <%= link_to "Jim Harvey", "https://harvj.com/" %><% if (tag = published_release_tag) %> · Muzeum <%= tag %><% elsif Rails.env.production? %> · Muzeum · Version unavailable<% end %></span>
     </footer>
   </body>
 </html>

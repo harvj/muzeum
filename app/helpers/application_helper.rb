@@ -1,7 +1,9 @@
 module ApplicationHelper
   def published_release_tag
-    path = Rails.configuration.x.published_release_path
-    MuzeumPublishedRelease.from_file(path, revision: Rails.configuration.x.running_revision) if path
+    config = Rails.configuration.x
+    [ config.published_release_path, config.reviewed_release_path ].compact.lazy.filter_map do |path|
+      MuzeumPublishedRelease.from_file(path, revision: config.running_revision)
+    end.first
   end
 
   # The current Auth contract has no consumer administrator-role evidence.

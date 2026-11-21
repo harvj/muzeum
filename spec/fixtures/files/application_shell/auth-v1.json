@@ -1,0 +1,13 @@
+{
+  "contract_version": "1",
+  "cases": [
+    {"case": "verified", "binding": "current", "response": "active", "age_seconds": 20, "render": "verified username and ordered intersection"},
+    {"case": "no-eligible-destinations", "binding": "current", "response": "active with empty eligible_destination_ids", "render": "verified username; no Applications section"},
+    {"case": "revoked-or-missing-grant", "response": {"active": false}, "render": "no Applications section; discard evidence"},
+    {"case": "cross-client-or-subject", "binding": "mismatched", "response": "active", "render": "no Applications section; discard evidence"},
+    {"case": "replaced-local-session", "binding": "stale", "response": "active", "render": "no Applications section; discard evidence"},
+    {"case": "expired-evidence", "binding": "current", "age_seconds": 60, "ttl_seconds": 60, "render": "no Applications section"},
+    {"case": "auth-outage-before-expiry", "binding": "current", "response": "timeout", "age_seconds": 20, "ttl_seconds": 60, "render": "may retain previously verified evidence until expiry"},
+    {"case": "auth-outage-after-expiry", "binding": "current", "response": "timeout", "age_seconds": 60, "ttl_seconds": 60, "render": "no Applications section"}
+  ]
+}
