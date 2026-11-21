@@ -17,7 +17,9 @@ export default class extends Controller {
   }
 
   toggle(event) {
-    if (event.target === this.element && this.element.open) this.refresh()
+    if (event.target !== this.element) return
+    if (this.element.open) this.refresh()
+    else this.apply(this.usernameTarget.textContent, [])
   }
 
   escape(event) {
@@ -58,7 +60,7 @@ export default class extends Controller {
       const ttl = Math.min(60000, result.expires_at * 1000 - Date.now())
       if (request.signal.aborted || !(ttl > 0)) return
 
-      this.apply(result.username, result.destinations)
+      this.apply(result.username, this.element.open ? result.destinations : [])
       this.expiry = setTimeout(() => this.clear(), ttl)
     } catch (_) {
       // Unavailable evidence leaves the local session controls available.

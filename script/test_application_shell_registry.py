@@ -3,6 +3,7 @@
 import argparse
 import importlib.util
 import json
+import shutil
 from pathlib import Path
 import subprocess
 
@@ -38,18 +39,44 @@ try:
     refresh()
     with consumer() as first:
         assert read(first) == ["Remote-Gaming", "Library", "Continuum Engine"]
-        new = case.publication("1.1.1", 2, name="consumer-patch")
+        new = case.workspace / "consumer-patch"
+        payloads = {name: (fixtures.ROOT / path).read_bytes() for name, path in fixtures.PAYLOADS.items()}
+        name = "application-shell-registry.json"
+        registry = fixtures.decode(payloads[name])
+        registry["specification_version"] = "1.1.1"
+        registry["applications"][-1]["availability"] = "withdrawn"
+        registry["applications"][2:2] = [
+            {"id": app, "name": app.title(), "canonical_url": f"https://{app}.example/", "availability": "production"}
+            for app in ("zebra", "apple")
+        ]
+        payloads[name] = fixtures.encode(registry)
+        fixtures.publisher.build_publication(new, "b" * 40, "1.1.1", "shell-v1", 2, fixtures.NOW - 10,
+                                             payloads, case.publisher_key)
         case.release = new
+        approved = "muzeum remote-gaming zebra apple continuum continuum-engine"
+        expected = ["Remote-Gaming", "Zebra", "Apple", "Library"]
         refresh()
-        assert read(first) == ["Remote-Gaming", "Library"]
+        assert read(first, approved) == expected
+        unsupported = case.workspace / "unsupported-schema"
+        shutil.copytree(new, unsupported)
+        manifest_path = unsupported / "versions/1.1.1/manifest.json"
+        manifest = fixtures.decode(manifest_path.read_bytes())
+        manifest["registry_schema"] = 2
+        raw_manifest = fixtures.encode(manifest)
+        manifest_path.write_bytes(raw_manifest)
+        pointer_path = unsupported / "current.json"
+        pointer = fixtures.decode(pointer_path.read_bytes())
+        pointer.update(sequence=3, manifest_sha256=fixtures.digest(raw_manifest))
+        pointer_path.write_bytes(fixtures.encode(pointer))
+        case.sign(pointer_path, case.publisher_key)
         saved = path.read_bytes()
         pointer_sig = new / "current.json.sig"
         original_sig = pointer_sig.read_bytes()
         pointer_sig.write_bytes(b"invalid")
-        for scenario in ("tampered", "replay", "expired", "outage"):
+        for scenario in ("tampered", "replay", "expired", "outage", "unsupported"):
             if scenario != "tampered":
                 pointer_sig.write_bytes(original_sig)
-                case.release = {"replay": old, "expired": new, "outage": case.workspace / "unavailable"}[scenario]
+                case.release = {"replay": old, "expired": new, "outage": case.workspace / "unavailable", "unsupported": unsupported}[scenario]
             try:
                 refresh(fixtures.NOW + 86400 if scenario == "expired" else fixtures.NOW)
             except (fixtures.GateError, OSError):
@@ -57,12 +84,12 @@ try:
             else:
                 raise AssertionError(scenario)
             assert path.read_bytes() == saved
-            assert read(first) == ["Remote-Gaming", "Library"]
+            assert read(first, approved) == expected
         first.stdin.close()
     with consumer() as restarted:
-        assert read(restarted) == ["Remote-Gaming", "Library"]
+        assert read(restarted, approved) == expected
         assert read(restarted, "") == []
         restarted.stdin.close()
-    print("PASS: two signed versions, live replacement, failed refresh retention, restart, and empty eligibility.")
+    print("PASS: two signed versions, live replacement, insertion order, unsupported schema, failed refresh retention, restart, and empty eligibility.")
 finally:
     case.doCleanups()

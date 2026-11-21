@@ -45,6 +45,7 @@ RSpec.describe "Application Shell evidence", type: :request do
     expect(response.headers["Cache-Control"]).to include("no-store")
     expect(response.parsed_body).to eq("username" => "alex", "expires_at" => now + 60,
       "destinations" => [ { "name" => "Library", "url" => "https://library.harvj.com/" } ])
+    expect(Rails.logger).to receive(:warn).with("Application Shell could not verify current Auth identity evidence")
     get application_shell_path
     expect(response).to have_http_status(:no_content)
     expect(request).to have_been_requested.twice

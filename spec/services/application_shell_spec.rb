@@ -62,6 +62,11 @@ RSpec.describe ApplicationShellRegistry do
       replace(path, entries.dup.insert(2, *inserted), sequence: 2, version: "1.1.1")
       expect(described_class.destinations(allowed, path:).pluck(:name)).to eq([ "Remote-Gaming", "First", "Second", "Library" ])
       expect(described_class.destinations(allowed, path: "#{directory}/missing")).to be_empty
+      link = "#{directory}/symlink.json"
+      File.symlink(path, link)
+      expect(described_class.destinations(allowed, path: link)).to be_empty
+      File.chmod(0o664, path)
+      expect(described_class.destinations(allowed, path:)).to be_empty
     end
   end
 

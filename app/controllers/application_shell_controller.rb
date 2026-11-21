@@ -5,11 +5,18 @@ class ApplicationShellController < ApplicationController
     return head :unauthorized unless Current.session
 
     evidence = OidcClient.new.shell_evidence(Current.session.grant_token, subject: current_user.oidc_subject)
-    return head :no_content unless evidence
+    return unavailable_evidence unless evidence
 
     render json: { username: evidence.fetch(:username), expires_at: evidence.fetch(:expires_at),
       destinations: ApplicationShellRegistry.destinations(evidence.fetch(:destinations)) }
   rescue OidcClient::Failure
+    unavailable_evidence
+  end
+
+  private
+
+  def unavailable_evidence
+    Rails.logger.warn("Application Shell could not verify current Auth identity evidence")
     head :no_content
   end
 end

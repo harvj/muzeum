@@ -3,6 +3,21 @@
   "checks": [
     {
       "cases": [
+        "SH-01",
+        "SH-05"
+      ],
+      "argv": [
+        "env",
+        "BROWSER_TESTS=1",
+        "bundle",
+        "exec",
+        "rspec",
+        "spec/system/application_shell_spec.rb"
+      ],
+      "evidence": "Anonymous, authenticated and open-disclosure geometry at all fixture widths, safe areas, short and enlarged viewport, keyboard/touch and Chrome accessibility tree"
+    },
+    {
+      "cases": [
         "SH-02"
       ],
       "argv": [
@@ -16,6 +31,21 @@
         "spec/system/public_profiles_spec.rb"
       ],
       "evidence": "Anonymous home, deliberate same-origin login, verified Auth callback and public profile Shell exception exercised in Chromium"
+    },
+    {
+      "cases": [
+        "SH-03"
+      ],
+      "argv": [
+        "env",
+        "BROWSER_TESTS=1",
+        "bundle",
+        "exec",
+        "rspec",
+        "spec/system/automatic_sign_in_spec.rb",
+        "spec/requests/application_shell_spec.rb"
+      ],
+      "evidence": "Verified Auth flow, current primary link, ordered disclosure, contextual account link, protected local logout during provider failure and back/forward privacy"
     },
     {
       "cases": [
@@ -63,6 +93,19 @@
         "spec/operations/published_release_spec.rb"
       ],
       "evidence": "Short/long responsive footer and credit/year rollover, verified running release metadata and pointer switch"
+    },
+    {
+      "cases": [
+        "SH-08"
+      ],
+      "argv": [
+        "bundle",
+        "exec",
+        "rspec",
+        "spec/requests/application_shell_acceptance_spec.rb",
+        "spec/operations/deployment_hooks_spec.rb"
+      ],
+      "evidence": "Disposable canonical-host and route-class acceptance with the Muzeum-only guard; protected candidate and simulated deployment boundaries"
     },
     {
       "cases": [

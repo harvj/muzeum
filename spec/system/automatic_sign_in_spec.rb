@@ -164,6 +164,30 @@ RSpec.describe "Shared Auth browser navigation", type: :system do
     expect(Session.count).to eq(0)
   end
 
+  it "renders ordered session controls and restores signed-out state after logout during an Auth outage" do
+    allow_any_instance_of(OidcClient).to receive(:shell_evidence).and_return(
+      username: "alex", expires_at: 50.seconds.from_now.to_i, destinations: %w[continuum])
+    allow(ApplicationShellRegistry).to receive(:destinations).and_return([ { name: "Library", url: "https://library.harvj.com/" } ])
+    stub_request(:post, "https://auth.harvj.com/revoke").to_timeout
+    navigate_from_ce(:sso)
+    expect(page).to have_css(".library-nav a[aria-current=page]", text: "Archive")
+    find(".harvj-session > summary[aria-label='alex']").click
+    within(".harvj-session-panel") do
+      expect(page).to have_link("Library")
+      expect(page).to have_link("Account Settings", href: "https://auth.harvj.com/account?client_id=muzeum-test")
+      expect(all(:css, "h2, a[href*='/account?'], form button").map(&:text))
+        .to eq([ "Applications", "Muzeum settings", "Account Settings", "Log Out" ])
+      click_button "Log Out"
+    end
+    expect(page).to have_link("Log In", href: login_path)
+    page.go_back
+    expect(page).to have_no_css(".harvj-session")
+    expect(page).to have_no_link("Library")
+    page.go_forward
+    expect(page).to have_no_css(".harvj-session")
+    expect(Session.count).to eq(0)
+  end
+
   it "logs out without immediately starting a new provider session" do
     navigate_from_ce(:sso)
     expect(page).to have_link("Archive summary")
