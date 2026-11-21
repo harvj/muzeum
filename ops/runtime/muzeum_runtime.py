@@ -6,7 +6,7 @@ import stat
 from pathlib import Path
 
 BASELINE = '024ed4aecd98984c00323377389cde5a6a35d16d'
-FORWARD = 'f75c34f107543432c75e6b115576224d03eeb3d7'
+FORWARD = '1633c96d63c1a44e678e95292466ab49c0442103'
 ROLLBACK = '1abfe5a791c254a03e5e03a2ae4c4ecfe8459cd1'
 PATCHED = Path('/opt/muzeum/ruby-3.4.13/bin')
 MANIFEST = Path('/usr/local/lib/muzeum-runtime/runtime-sha256.json')

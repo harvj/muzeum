@@ -156,7 +156,7 @@ RSpec.describe MuzeumDeploymentRevision do
   context "with the pinned v0.3.4 exception" do
     let(:version) { "v0.3.4" }
     let(:controls) { "controls/v0.3.4-shell" }
-    let(:candidate_branch) { "candidate/v0.3.4-shell" }
+    let(:candidate_branch) { "candidate/v0.3.4-shell-revocation" }
     let(:release) { "release/v0.3.4" }
     let(:release_checkout) { File.expand_path("../release") }
     let(:manifest) { File.expand_path("../releases.json") }
