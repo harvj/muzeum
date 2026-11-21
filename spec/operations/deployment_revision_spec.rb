@@ -155,7 +155,8 @@ RSpec.describe MuzeumDeploymentRevision do
   end
   context "with the pinned v0.3.4 exception" do
     let(:version) { "v0.3.4" }
-    let(:controls) { "controls/v0.3.4" }
+    let(:controls) { "controls/v0.3.4-shell" }
+    let(:candidate_branch) { "candidate/v0.3.4-shell" }
     let(:release) { "release/v0.3.4" }
     let(:release_checkout) { File.expand_path("../release") }
     let(:manifest) { File.expand_path("../releases.json") }
@@ -178,7 +179,7 @@ RSpec.describe MuzeumDeploymentRevision do
       File.write(manifest, JSON.generate(version => { sha: @candidate, baseline: @sha,
         scope: "https://github.com/harvj/muzeum/issues/28#issuecomment-123" }))
       @job_rows = described_class::REQUIRED_JOBS.map { |name| { name:, status: "completed", conclusion: "success" } }
-      @forward_run = { databaseId: 2, headSha: @candidate, headBranch: "main", event: "push",
+      @forward_run = { databaseId: 2, headSha: @candidate, headBranch: candidate_branch, event: "push",
         status: "completed", conclusion: "success", url: "https://example.test/forward-ci" }
       @control_run = @forward_run.merge(databaseId: 1, headSha: @control_sha, headBranch: controls)
       allow(described_class).to receive(:command).and_wrap_original do |original, *arguments|
@@ -187,7 +188,7 @@ RSpec.describe MuzeumDeploymentRevision do
           "git@github.com:harvj/muzeum.git"
         when ->(args) { args.take(3) == %w[gh run list] }
           run = arguments.include?(controls) ? @control_run : @forward_run
-          expect(arguments).to include("--commit", "--branch", run.equal?(@control_run) ? controls : "main", "--event", "push")
+          expect(arguments).to include("--commit", "--branch", run.equal?(@control_run) ? controls : candidate_branch, "--event", "push")
           JSON.generate([ run ])
         when ->(args) { args.take(3) == %w[gh run view] }
           run = arguments.fetch(3) == "1" ? @control_run : @forward_run
@@ -198,7 +199,7 @@ RSpec.describe MuzeumDeploymentRevision do
       end
     end
 
-    it "keeps the approved release checkout while verifying main push CI and control push CI" do
+    it "keeps the approved release checkout while verifying candidate push CI and control push CI" do
       result = described_class.resolve_release!(version, release_checkout)
       expect(result).to include(sha: @candidate, branch: release, ci: @forward_run[:url])
     end
@@ -217,7 +218,7 @@ RSpec.describe MuzeumDeploymentRevision do
       expect { described_class.resolve_release!(version, release_checkout) }.to raise_error(/pinned forward SHA/)
     end
 
-    it "rejects a non-main forward run and an unauthorized control branch" do
+    it "rejects an unrelated forward CI branch and an unauthorized control branch" do
       @forward_run[:headBranch] = release
       expect { described_class.resolve_release!(version, release_checkout) }.to raise_error(/selected branch push/)
       git("switch", "main")

@@ -23,6 +23,7 @@ require_relative "../lib/muzeum_published_release"
 require_relative "../lib/muzeum_deployment_reporting"
 require "digest"
 require "securerandom"
+require "stringio"
 
 def muzeum_reporting
   git_directory = MuzeumDeploymentRevision.command("git", "rev-parse", "--git-common-dir")
@@ -83,7 +84,8 @@ namespace :muzeum do
     on primary(:app) do
       revision = capture(:cat, File.join(current, "REVISION"))
       MuzeumPublishedRelease.verify!(revision, tag:, command: MuzeumDeploymentRevision.method(:command))
-      execute "/home/muzeum/.rbenv/shims/ruby", File.join(current, "lib/muzeum_published_release.rb"), revision, tag
+      ruby = revision == MuzeumDeploymentRevision::V034_SHA ? "/opt/muzeum/ruby-3.4.13/bin/ruby" : "/home/muzeum/.rbenv/shims/ruby"
+      execute ruby, File.join(current, "lib/muzeum_published_release.rb"), revision, tag
       puts "Synchronized Muzeum #{tag} for live revision #{revision}"
     end
   end
@@ -98,9 +100,10 @@ namespace :muzeum do
   task :authorize do
     selection = fetch(:muzeum_release_selection, nil)
     approval = selection ? MuzeumDeploymentRevision.resolve_release!(*selection) : MuzeumDeploymentRevision.resolve!
-    if approval.fetch(:sha) == "641e09ec4a6de94f0043e3a7314d28674901485c"
+    if approval.fetch(:sha) == MuzeumDeploymentRevision::V034_SHA
       runtime = "/opt/muzeum/ruby-3.4.13/bin"
       SSHKit.config.command_map[:bundle] = "#{runtime}/bundle"
+      set :reviewed_release_version, approval.fetch(:version)
       set :default_env, fetch(:default_env).merge("PATH" => "#{runtime}:/usr/bin:/bin",
         "BUNDLE_PATH" => "/var/www/muzeum/shared/bundle/ruby-3.4.13", "RBENV_VERSION" => "3.4.13")
     end
@@ -145,6 +148,13 @@ namespace :muzeum do
 
   task :prepare do
     on primary(:app) do
+      if (version = fetch(:reviewed_release_version, nil))
+        revision = fetch(:approved_revision)
+        raise "Unexpected reviewed release metadata" unless version == "v0.3.4" &&
+          revision == MuzeumDeploymentRevision::V034_SHA && capture(:cat, release_path.join("REVISION")) == revision
+
+        upload! StringIO.new("#{revision} #{version}\n"), release_path.join("REVIEWED_RELEASE")
+      end
       execute :sudo, "-n", "/usr/local/sbin/muzeum-deploy", "prepare", fetch(:approved_revision), fetch(:deployment_token), release_path
     end
   end

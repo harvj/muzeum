@@ -57,7 +57,7 @@ end
 def self.capture(*args)
   if args.first == :cat
     $events << [ "remote revision", args.last ]
-    "a" * 40
+    $scenario == "stamp" ? MuzeumDeploymentRevision::V034_SHA : "a" * 40
   elsif args.last == "version"
     Digest::SHA256.hexdigest(File.binread("ops/deploy/muzeum_deploy.py") + File.binread("ops/deploy/inspect.rb") + File.binread("ops/runtime/muzeum_runtime.py"))
   else
@@ -80,6 +80,25 @@ def self.execute(*args)
     $phase = "failed"
     raise "Synthetic server health failure"
   end
+end
+
+def self.upload!(contents, destination)
+  $events << [ "stamp", contents.read, destination.to_s ]
+end
+
+if %w[stamp stamp_mismatch].include?($scenario)
+  set :approved_revision, MuzeumDeploymentRevision::V034_SHA
+  set :reviewed_release_version, "v0.3.4"
+  set :deployment_token, "a" * 32
+  set :release_path, Pathname("/disposable/release")
+  begin
+    Rake::Task["muzeum:prepare"].invoke
+  rescue RuntimeError => error
+    raise unless $scenario == "stamp_mismatch" && error.message.include?("Unexpected reviewed release metadata")
+  end
+  puts "HOOK_FIXTURE:" + JSON.generate({ events: $events })
+  FileUtils.remove_entry($local)
+  exit 0
 end
 
 if %w[sync sync_mismatch].include?($scenario)

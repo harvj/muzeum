@@ -67,4 +67,14 @@ RSpec.describe "Capistrano deployment/reporting integration" do
     expect(result["phase"]).to eq("failed")
     expect(result["states"]).to eq(%w[in_progress failure])
   end
+
+  it "stamps the reviewed version only after the packaged revision matches" do
+    expected_sha = "76d739af5001f9f4e5a0993be38bb0d4d2d44c3d"
+    expect(rehearse("stamp")["events"]).to eq([
+      [ "remote revision", "/disposable/release/REVISION" ],
+      [ "stamp", "#{expected_sha} v0.3.4\n", "/disposable/release/REVIEWED_RELEASE" ],
+      [ "server", "prepare" ]
+    ])
+    expect(rehearse("stamp_mismatch")["events"]).to eq([ [ "remote revision", "/disposable/release/REVISION" ] ])
+  end
 end
