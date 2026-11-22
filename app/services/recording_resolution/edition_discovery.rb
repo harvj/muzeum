@@ -13,12 +13,12 @@ module RecordingResolution
     def call(surface, claims, candidates, checked:, attempted:, search:, review_alternative: false, preferred: nil)
       @tracklists = {}
       results = [ checked ].compact
-      if checked.nil? && claims["album_mbid"].blank? && surface.album.present? && search
-        results.concat(related_editions(surface, candidates, attempted))
+      if surface.album.present? && search
+        results.concat(related_editions(surface, candidates, attempted || checked&.fetch("id", nil)))
       end
       results.each { |edition| retain(edition.fetch("id"), edition) }
       retain(attempted, nil) if attempted && checked.nil? && release_request(attempted)
-      found = results.flat_map { |edition| appearances(surface, claims, edition) }
+      found = results.flat_map { |edition| appearances(surface, edition) }
       # Preserve a fixed fallback budget even when search supplies many releases.
       return found unless preferred || review_alternative || results.empty?
 
@@ -27,7 +27,9 @@ module RecordingResolution
 
         Array(candidate["releases"]).find { |release| Clients::Musicbrainz::MBID.match?(release["id"].to_s) }&.fetch("id")
       end
-      [ preferred, *references ].compact.uniq.reject { |id| @tracklists.key?(id) || id == attempted }
+      album_hint = claims["album_mbid"].to_s.downcase
+      album_hint = nil unless Clients::Musicbrainz::MBID.match?(album_hint)
+      [ preferred, *references, album_hint ].compact.uniq.reject { |id| @tracklists.key?(id) || id == attempted }
         .first(1).each do |id|
         tracklist = nil
         local = Release.find_by(ingested_from_release_mbid: id)
@@ -35,7 +37,8 @@ module RecordingResolution
         if tracklist
           @tracklists[id] = tracklist
         else
-          lookup(id)
+          edition = lookup(id)
+          found.concat(appearances(surface, edition)) if edition && id == album_hint
         end
       end
       found
@@ -55,11 +58,14 @@ module RecordingResolution
 
     def lookup(id)
       edition = @musicbrainz.edition(@session, id, catalog: true)
-      retain(id, edition&.fetch("id", nil) == id ? edition : nil)
+      edition = nil unless edition&.fetch("id", nil) == id
+      retain(id, edition)
+      edition
     rescue ProviderError => error
       raise if error.deferred
 
       @tracklists[id] = { "state" => "unavailable", "provider" => "musicbrainz", "http_status" => error.http_status }.compact
+      nil
     end
 
     def related_editions(surface, candidates, attempted)
@@ -79,11 +85,10 @@ module RecordingResolution
       end
     end
 
-    def appearances(surface, claims, edition)
+    def appearances(surface, edition)
       id = edition["id"]
       return [] unless Clients::Musicbrainz::MBID.match?(id.to_s)
-      return [] if claims["album_mbid"].present? && !id.casecmp?(claims["album_mbid"])
-      return [] unless DiscoveryTitle.release_context?(surface.album, edition) || claims["album_mbid"].present?
+      return [] unless DiscoveryTitle.release_context?(surface.album, edition)
 
       media = Array(edition["media"])
       return [] unless media.sum { |medium| Array(medium["tracks"]).size } <= MAX_SLOTS
@@ -96,7 +101,7 @@ module RecordingResolution
         tracks.filter_map do |slot|
           recording = slot["recording"]
           next unless recording && Clients::Musicbrainz::MBID.match?(recording["id"].to_s) &&
-            DiscoveryTitle.match?(slot["title"], surface.track) && artist_matches?(surface, claims, recording)
+            DiscoveryTitle.match?(slot["title"], surface.track) && artist_matches?(surface, recording)
 
           appearance = edition.slice("id", "title", "disambiguation", "date", "country", "release-group").merge(
             "relationship" => (DiscoveryTitle.displayed_edition?(surface.album, edition) ? "matching_catalog_caption" : "related_catalog_title"),
@@ -107,13 +112,10 @@ module RecordingResolution
       end
     end
 
-    def artist_matches?(surface, claims, recording)
+    def artist_matches?(surface, recording)
       credits = Array(recording["artist-credit"])
-      ids = credits.filter_map { |credit| credit.dig("artist", "id") }
       names = credits.flat_map { |credit| [ credit["name"], credit.dig("artist", "name") ] }
       names << credits.map { |credit| "#{credit['name']}#{credit['joinphrase']}" }.join
-      artist_claim = claims["artist_mbid"]
-      return false if Clients::Musicbrainz::MBID.match?(artist_claim.to_s) && ids.any? && ids.none? { |id| id.casecmp?(artist_claim) }
 
       names.any? { |name| DiscoveryTitle.match?(name, surface.artist) }
     end

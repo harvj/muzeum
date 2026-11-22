@@ -46,7 +46,11 @@ class ResolutionWorkspaceController < ApplicationController
     legacy_request = CatalogImport.latest("assessment", @surface.id) if @assessment_request.nil? && @surface
     @assessment_request ||= legacy_request if legacy_request&.active?
     @ranking = if @assessment
-      @assessment.evidence["ranking"] || RecordingResolution::Ranking.call(@surface, @assessment.evidence)
+      if params[:assessment].present? && @assessment.evidence["ranking"]
+        @assessment.evidence["ranking"]
+      else
+        RecordingResolution::Ranking.call(@surface, @assessment.evidence, source_hints: true)
+      end
     else
       []
     end
@@ -267,7 +271,7 @@ class ResolutionWorkspaceController < ApplicationController
       return RecordingResolution::ListenerReleaseReview.new(current_user, target, assessment).read(params[:listener_ranking_token])
     end
 
-    assessment.evidence["ranking"] || RecordingResolution::Ranking.call(surface, assessment.evidence)
+    RecordingResolution::Ranking.call(surface, assessment.evidence, source_hints: true)
   end
 
   def authorize_management
@@ -302,16 +306,15 @@ class ResolutionWorkspaceController < ApplicationController
   def selection(assessment, target, edition: nil)
     candidate = RecordingResolution::Workspace.candidates(assessment).find { |item| item["id"] == params[:recording_mbid] }
     raise ArgumentError unless candidate
-    if !edition && assessment.evidence.key?("ranking") &&
-        assessment.evidence.fetch("ranking").none? { |entry| entry["recording_mbid"] == candidate["id"] }
+    if !edition && RecordingResolution::Ranking.call(@workspace.surface(target), assessment.evidence, source_hints: true)
+        .none? { |entry| entry["recording_mbid"] == candidate["id"] }
       raise ArgumentError
     end
 
     if edition && RecordingResolution::Workspace.editions(candidate, assessment).none? { |_, id| id == edition }
       raise ArgumentError
     end
-    observed_edition = assessment.evidence.dig("edition", "id")
-    context = { "album" => target.payload["album_name"], "observed_edition_mbid" => observed_edition,
+    context = { "album" => target.payload["album_name"],
       "edition_mbid" => edition, "assessment_id" => assessment.id }.compact
     [ CanonicalCatalog::Store.recording!(candidate), context ]
   end

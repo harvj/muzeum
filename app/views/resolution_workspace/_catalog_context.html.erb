@@ -9,5 +9,6 @@
     <% end %>
   </dl>
   <p class="compact-meta">Resolution <%= rows[1][1] ? "reuses the existing recording" : "creates a catalog entry for this recording" %> and applies it to this matching group.
-    The original Last.fm release text is preserved. The edition played stays unverified.</p>
+    The original Last.fm release text is preserved. The edition played stays unverified.
+    <% unless rows[2][1] %>Catalog enrichment checks for a supporting release separately. The catalog association may stay pending.<% end %></p>
 </section>

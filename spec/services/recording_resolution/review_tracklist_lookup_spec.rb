@@ -43,6 +43,20 @@ RSpec.describe RecordingResolution::EditionDiscovery do
     expect(discovery.tracklists.fetch(release_id)).to include("state" => "complete")
   end
 
+  it "keeps the same independently supported ranking with missing, stale, and misleading source IDs" do
+    supported = candidate.merge("title" => "Influence")
+    incompatible = candidate.merge("id" => SecureRandom.uuid, "title" => "Different track")
+    evidence = { "candidates" => [ incompatible, supported ],
+      "review_tracklists" => { release_id => RecordingResolution::ReviewRelease.project(edition) } }
+    [ {}, claims, { "track_mbid" => incompatible["id"], "artist_mbid" => SecureRandom.uuid, "album_mbid" => release_id } ].each do |hints|
+      ranks = RecordingResolution::Ranking.call(surface, evidence.merge("source_claims" => hints,
+        "verified_recording" => incompatible), source_hints: true)
+      expect(ranks.pluck("recording_mbid")).to eq([ supported["id"] ])
+      expect(ranks.first.dig("inputs", "recording_identifier", "weight")).to eq(0)
+      expect(ranks.first.dig("source", "claims")).to eq(hints)
+    end
+  end
+
   it "keeps disc grouping and leaves unknown durations empty" do
     corpus = JSON.parse(Rails.root.join("spec/fixtures/recording_resolution/discovery/corpus.json").read)
     concert = corpus.fetch("releases").fetch("1586bf99-c5dd-4b0b-9c1e-a94cf3925e52")

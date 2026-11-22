@@ -69,11 +69,11 @@ RSpec.describe RecordingResolution::EditionDiscovery do
     expect(result.fetch("surfaced")).to be(false)
   end
 
-  it "cannot add a recording with a contradictory canonical artist identifier" do
+  it "keeps a recording with independent credit despite a contradictory source artist hint" do
     example = examples.fetch("new-bonus-track")
     (example["claims"] ||= {})["artist_mbid"] = "dc6b33ac-c649-414d-bd5d-b6403d23969c"
 
-    expect(DiscoveryReplay.run(fixture, example, discover: true).fetch("surfaced")).to be(false)
+    expect(DiscoveryReplay.run(fixture, example, discover: true).fetch("surfaced")).to be(true)
   end
 
   it "finds the typographic title variant in a large local recording catalog" do

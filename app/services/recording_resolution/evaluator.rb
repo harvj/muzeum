@@ -30,27 +30,27 @@ module RecordingResolution
       reason("missing_album", "field" => "album") if surface.album.blank?
       reason("missing_source_mbid", "field" => "track_mbid") if claims["track_mbid"].blank?
 
-      verification = claims["track_mbid"].present? ? @musicbrainz.verify_recording(@session, claims["track_mbid"], catalog: @workspace) : {}
+      verification = @workspace ? {} : verify_source_hint(claims["track_mbid"])
       recording = verification["data"]
       evidence["verification"] = verification.except("data")
       evidence["verified_recording"] = recording && recording_evidence(recording)
       verified = verified_recording?(recording, verification["redirected_to"] || claims["track_mbid"])
       if verified
         assess_identity(surface, claims, recording, candidates)
-      else
+      elsif !@workspace
         reason("unverified_recording", evidence["verification"].merge("claimed_mbid" => claims["track_mbid"],
           "returned_mbid" => recording&.fetch("id", nil)))
       end
 
       releases = Array(recording&.fetch("releases", nil))
-      edition_id = claims["album_mbid"].presence || releases.find { |release| release["title"] == surface.album }&.fetch("id", nil)
+      edition_id = (claims["album_mbid"].presence || releases.find { |release| release["title"] == surface.album }&.fetch("id", nil)) unless @workspace
       if @workspace && edition_id.blank? && surface.album.present?
         relevant = candidates.flat_map { |candidate| Array(candidate["releases"]) }.select { |release| release["title"] == surface.album }
         ids = relevant.pluck("id").compact.uniq
         edition_id = ids.first if ids.one?
       end
       if edition_id && surface.album.present?
-        edition = @workspace ? @musicbrainz.edition(@session, edition_id, catalog: true) : @musicbrainz.edition(@session, edition_id)
+        edition = @musicbrainz.edition(@session, edition_id, catalog: @workspace)
       end
       if edition
         evidence["edition"] = edition.slice("id", "title", "release-group", "country", "date").merge(
@@ -60,11 +60,21 @@ module RecordingResolution
       end
       evidence["slots"] = edition_slots(edition)
       if @discover
-        related = !verified || DiscoveryTitle.album_base(surface.album) != surface.album || surface.album.to_s.match?(VERSION_MARKER)
+        related = !edition || evidence["slots"].none? { |slot| DiscoveryTitle.match?(slot["title"], surface.track) } ||
+          DiscoveryTitle.album_base(surface.album) != surface.album || surface.album.to_s.match?(VERSION_MARKER)
         search = related && (candidates.empty? || candidates.any? { |candidate| Array(candidate["releases"]).any? })
         discovery = EditionDiscovery.new(@musicbrainz, @session)
         merge_discovered(discovery.call(surface, claims, candidates, checked: edition, attempted: edition_id, search:, review_alternative: @review_alternative, preferred: @review_release))
         evidence["review_tracklists"] = discovery.tracklists if discovery.tracklists.any?
+      end
+      if @workspace && claims["track_mbid"].present?
+        verification = verify_source_hint(claims["track_mbid"])
+        evidence["verification"] = verification.except("data")
+        if (matched = verification["data"])
+          evidence["verified_recording"] = recording_evidence(matched)
+        elsif verification.present?
+          reason("unverified_recording", evidence["verification"].merge("claimed_mbid" => claims["track_mbid"]))
+        end
       end
       if verified
         slot_check = {
@@ -80,11 +90,27 @@ module RecordingResolution
       end
 
       compare_historical_fixture(surface, edition) if @discogs
-      evidence["suggested_mbid"] = recording.fetch("id") if evidence["reasons"].empty?
+      evidence["suggested_mbid"] = recording.fetch("id") if verified && evidence["reasons"].empty?
       evidence
     end
 
     private
+
+    def verify_source_hint(id)
+      return {} if id.blank?
+
+      optional_hint { @musicbrainz.verify_recording(@session, id, catalog: @workspace) } || {}
+    end
+
+    def optional_hint
+      yield
+    rescue ProviderError => error
+      raise unless @workspace
+      return if error.deferred
+
+      (evidence["source_hint_failures"] ||= []) << (@session.current_request || {}).merge("http_status" => error.http_status).compact
+      nil
+    end
 
     def merge_discovered(discovered)
       by_id = discovered.group_by { |candidate| candidate["id"] }

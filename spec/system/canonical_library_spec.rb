@@ -96,7 +96,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     expect(page).to have_link("MusicBrainz release", href: "https://musicbrainz.org/release/#{CatalogFixtures::IDS[:edition]}")
     expect(page).to have_no_css(".resolution-review img")
     find(".review-score-explanation summary").send_keys(:enter)
-    expect(page).to have_css(".review-score-explanation[open]", text: "Verified source recording identifier")
+    expect(page).to have_css(".review-score-explanation[open]", text: "A checked MusicBrainz edition contains this track slot")
     expect(page).to have_text("Scores express relative evidence strength.")
     capture_resolution("ranked-desktop")
 

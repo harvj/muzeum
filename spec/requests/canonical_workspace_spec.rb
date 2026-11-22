@@ -182,7 +182,7 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     CanonicalCatalog::Processor.new(request, session_factory: ->(*) { CatalogFixtures::Session.new }).call
     expect(request.reload.state).to eq("imported")
     get resolution_surface_path(second)
-    expect(response.body).to include("Muzeum’s recommendation", "Verified source recording identifier", "2 matching observations")
+    expect(response.body).to include("Muzeum’s recommendation", "A checked MusicBrainz edition contains this track slot", "2 matching observations")
 
     assessment = RecordingResolution::Ledger.assessments(user).sole
     post decide_resolution_surface_path(second), params: { mode: "resolved", scope: "surface",
@@ -191,7 +191,7 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     decision = RecordingResolution::Decision.sole
     expect(decision).to have_attributes(reason: "Confirmed candidate", assessment_id: assessment.id, actor: "listener", user_id: user.id)
     expect(decision.evidence).to include("reason_code" => "confirmed_candidate", "comment" => "Checked the studio version",
-      "scoring_version" => RecordingResolution::Ranking::VERSION, "affected_scope" => "surface")
+      "scoring_version" => RecordingResolution::Ranking::SOURCE_HINTS_VERSION, "affected_scope" => "surface")
     get resolution_surface_path(second)
     expect(response.body).to include("Inherited from your exact-surface assignment", "Checked the studio version")
     expect(decision.evidence.fetch("candidate_scores").first.fetch("recording_mbid")).to eq(CatalogFixtures::IDS[:studio])
@@ -199,7 +199,7 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     expect(snapshot).to include("feedback" => "selected", "candidate_mbid" => CatalogFixtures::IDS[:studio],
       "affected_observation_count" => 2, "ranking" => assessment.evidence.fetch("ranking"))
     expect(snapshot.fetch("assessment")).to include("id" => assessment.id, "digest" => assessment.digest)
-    expect(snapshot.fetch("ranking").first.dig("inputs", "recording_identifier", "state")).to eq("positive")
+    expect(snapshot.fetch("ranking").first.dig("inputs", "recording_identifier", "weight")).to eq(0)
 
     post defer_resolution_surface_path(second), params: { feedback: "rejected", assessment_id: assessment.id,
       recording_mbid: CatalogFixtures::IDS[:studio], head: decision.id }

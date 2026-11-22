@@ -135,7 +135,7 @@ RSpec.describe CanonicalCatalog::Processor do
 
     expect { expect(process(request).state).to eq("imported") }.not_to change(RecordingResolution::Decision, :count)
     evidence = RecordingResolution::Ledger.assessments(listener).sole.evidence
-    expect(evidence.fetch("ranking").first).to include("recording_mbid" => CatalogFixtures::IDS[:studio], "version" => RecordingResolution::Ranking::VERSION)
+    expect(evidence.fetch("ranking").first).to include("recording_mbid" => CatalogFixtures::IDS[:studio], "version" => RecordingResolution::Ranking::SOURCE_HINTS_VERSION)
     expect(session.provenance.pluck("provider").uniq).to eq([ "musicbrainz" ])
   end
 end

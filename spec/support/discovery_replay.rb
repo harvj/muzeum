@@ -17,7 +17,7 @@ module DiscoveryReplay
         candidates = @example.fetch("candidates")
         { "recordings" => candidates, "count" => candidates.size, "offset" => params.fetch(:offset) }
       when "/ws/2/release"
-        { "releases" => @fixture.fetch("searches").fetch(@example.fetch("release_search")) }
+        { "releases" => @fixture.fetch("searches").fetch(@example.fetch("release_search"), []) }
       when %r{\A/ws/2/release/}
         @fixture.fetch("releases")[path.split("/").last]
       when %r{\A/ws/2/recording/}

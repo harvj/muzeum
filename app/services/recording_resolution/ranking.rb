@@ -1,11 +1,12 @@
 module RecordingResolution
   class Ranking
     VERSION = "recording-ranking-v1"
+    SOURCE_HINTS_VERSION = "recording-ranking-v2-source-hints"
     VERSION_MARKERS = /\b(live|remix|acoustic|demo|alternate|edit|instrumental|remaster)(?:ed)?\b/i
 
-    def self.call(surface, evidence, discovery: true, caption_bonus: false)
+    def self.call(surface, evidence, discovery: true, caption_bonus: false, source_hints: false)
       Workspace.candidate_evidence(evidence).filter_map do |candidate|
-        new(surface, evidence, candidate, discovery:, caption_bonus:).evaluate
+        new(surface, evidence, candidate, discovery:, caption_bonus:, source_hints:).evaluate
       end.sort_by { |row| [ -row.fetch("score"), row.fetch("recording_mbid") ] }
     end
 
@@ -20,21 +21,24 @@ module RecordingResolution
         %w[recording_identifier edition_slot].any? { |key| first.dig("inputs", key, "state") == "positive" }
     end
 
-    def initialize(surface, evidence, candidate, discovery:, caption_bonus:)
+    def initialize(surface, evidence, candidate, discovery:, caption_bonus:, source_hints:)
       @surface, @evidence, @candidate = surface, evidence, candidate
       @inputs = {}
       @discovery = discovery
       @caption_bonus = caption_bonus
+      @source_hints = source_hints
     end
 
     def evaluate
-      claims = @evidence.fetch("source_claims", {})
+      source_claims = @evidence.fetch("source_claims", {})
+      claims = @source_hints ? {} : source_claims
       id = @candidate.fetch("id")
       credits = Array(@candidate["artist-credit"])
       names = credits.flat_map { |credit| [ credit["name"], credit.dig("artist", "name") ] }.compact
       names << credits.map { |credit| "#{credit['name']}#{credit['joinphrase']}" }.join if credits.any?
       artist_ids = credits.filter_map { |credit| credit.dig("artist", "id") }
-      expected_id = (@evidence.dig("verification", "redirected_to") || claims["track_mbid"]).to_s
+      expected_id = (@evidence.dig("verification", "redirected_to") || claims["track_mbid"]).to_s unless @source_hints
+      expected_id = expected_id.to_s
       verified = expected_id.present? && id.casecmp?(expected_id) &&
         (@evidence.dig("verified_recording", "id") == id || @candidate["verified_local_claim"] == true)
 
@@ -94,7 +98,7 @@ module RecordingResolution
         "version" => version(independent_release_support, appearance), "inputs" => @inputs,
         "provenance" => @candidate.fetch("resolution_candidate_source", "musicbrainz"),
         "source" => { "artist" => @surface.artist, "track" => @surface.track,
-          "album" => @surface.album, "claims" => claims },
+          "album" => @surface.album, "claims" => source_claims },
         "catalog" => @candidate.slice("title", "artist-credit", "length", "disambiguation", "video")
       }.tap { |result| result["local_release_context"] = context if context }
     end
@@ -102,6 +106,7 @@ module RecordingResolution
     private
 
     def version(independent_release_support, appearance)
+      return SOURCE_HINTS_VERSION if @source_hints
       return "recording-ranking-v1-release-discovery-v2" if appearance && !@caption_bonus
       return "recording-ranking-v1-release-discovery-v1" if appearance || @typographic_match
       return "recording-ranking-v1-local-release-v1" if independent_release_support

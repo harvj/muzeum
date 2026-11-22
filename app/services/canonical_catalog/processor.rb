@@ -141,8 +141,8 @@ module CanonicalCatalog
 
       appearances = Array(recording["releases"])
       matching = appearances.select { |release| release["title"] == album }
-      ids = [ context["observed_edition_mbid"], *matching.pluck("id") ].compact.uniq
-      return if ids.size > MAX_EDITIONS && context["observed_edition_mbid"].blank?
+      ids = matching.pluck("id").compact.uniq
+      return if ids.size > MAX_EDITIONS
 
       # The exact observed edition can supply strong context even when the title has many variants.
       editions = ids.first(MAX_EDITIONS).filter_map do |id|
@@ -182,15 +182,11 @@ module CanonicalCatalog
         return complete("incomplete", "Observation claims no longer match this investigation.")
       end
       @local_candidates = RecordingResolution::LocalCandidates.call(surface, @claims)
-      local_evidence = { "source_claims" => @claims, "candidates" => @local_candidates, "reasons" => [] }
-      local_evidence.merge!(RecordingResolution::LocalCandidates.checked_edition(@claims, @local_candidates))
-      local_ranking = RecordingResolution::Ranking.call(surface, local_evidence)
-      known_identifier = @local_candidates.any? { |candidate| candidate["verified_local_claim"] }
-      unambiguous_slot = @claims["track_mbid"].blank? && local_evidence["edition"].present? && local_ranking.one?
-      if (known_identifier || unambiguous_slot) &&
-          @request.context["refresh"] != true &&
-          RecordingResolution::Ranking.recommended?(local_ranking)
-        return complete { write_assessment(local_evidence) }
+      unless @request.context["refresh"] == true
+        local_evidence = { "source_claims" => @claims, "candidates" => @local_candidates, "reasons" => [] }
+        local_evidence.merge!(RecordingResolution::LocalCandidates.checked_edition(surface, @local_candidates))
+        ranks = RecordingResolution::Ranking.call(surface, local_evidence, source_hints: true)
+        return complete { write_assessment(local_evidence) } if ranks.one? && RecordingResolution::Ranking.recommended?(ranks)
       end
       @evaluator = RecordingResolution::Evaluator.new(@session, discogs: nil, workspace: true,
         review_alternative: @request.context["refresh"] == true, review_release: @request.context["release_mbid"])
@@ -234,7 +230,7 @@ module CanonicalCatalog
       if verified && (local = local_contexts[verified["id"]])
         evidence["verified_recording"] = verified.merge(local.slice("local_release_context"))
       end
-      evidence["ranking"] = RecordingResolution::Ranking.call(@surface, evidence)
+      evidence["ranking"] = RecordingResolution::Ranking.call(@surface, evidence, source_hints: true)
       evidence["ranking_version"] = evidence["ranking"].first&.fetch("version") || RecordingResolution::Ranking::VERSION
       group = @group || RecordingResolution::Group.create_or_find_by!(surface_id: @surface.id,
         version: RecordingResolution::Ledger::VERSION, claims: @claims)
