@@ -25,6 +25,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
+          persist-credentials: false
       - name: Verify Muzeum runtime selection
         run: |
           sudo useradd --system --no-create-home --shell /usr/sbin/nologin muzeum

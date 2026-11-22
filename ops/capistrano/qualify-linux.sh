@@ -22,9 +22,13 @@ for directory in storage log tmp/pids tmp/sockets; do
   sudo install -d -o muzeum -m 0755 "$app/shared/$directory"
 done
 sudo install -d -o "$deploy" -m 0755 "$bundle_path"
-cp -a . "$work/controls"
+cached_bundle=$(bundle exec ruby -e 'puts Bundler.bundle_path')
+test -d "$cached_bundle/gems"
+sudo cp -a "$cached_bundle/../../." "$bundle_path/"
+sudo chown -R "$deploy:$deploy" "$bundle_path"
+mkdir "$work/controls"
+tar --exclude=./vendor/bundle --exclude=./.bundle -cf - . | tar -xf - -C "$work/controls"
 sudo chown -R "$deploy:$deploy" "$work/controls"
-sudo install -d -o "$deploy" -m 0755 "$work/control-bundle"
 sudo -u "$deploy" git clone --mirror --no-local "$work/controls" "$app/repo"
 for revision in "$base" "$candidate"; do
   sudo -u "$deploy" git --git-dir="$app/repo" cat-file -e "$revision^{commit}"
@@ -33,14 +37,8 @@ cat <<'RUBY' | sudo -u "$deploy" tee "$work/controls/ops/capistrano/config/deplo
 SSHKit.config.backend = SSHKit::Backend::Local
 server "localhost", roles: %w[app web]
 RUBY
-sudo -u "$deploy" env PATH="$runtime:/usr/bin:/bin" BUNDLE_PATH="$bundle_path" \
-  BUNDLE_DEPLOYMENT=true BUNDLE_WITHOUT=development:test "$runtime/bundle" install --gemfile "$work/controls/Gemfile"
-# Install Capistrano's operator bundle separately from the application bundle.
-sudo -u "$deploy" env PATH="$runtime:/usr/bin:/bin" BUNDLE_PATH="$work/control-bundle" \
-  "$runtime/bundle" install --gemfile "$work/controls/Gemfile"
-# The production app bundle excludes development tasks. Run Capistrano from its operator bundle.
 cap_select() {
-  sudo -u "$deploy" env PATH="$runtime:/usr/bin:/bin" BUNDLE_PATH="$work/control-bundle" \
+  sudo -u "$deploy" env PATH="$runtime:/usr/bin:/bin" BUNDLE_PATH="$bundle_path" BUNDLE_IGNORE_CONFIG=1 \
     MUZEUM_STAGED_RELEASE="$1" MUZEUM_REVISION="$2" MUZEUM_BASELINE="$3" \
     bash -c 'cd "$1/controls/ops/capistrano"; exec bundle exec cap qualification muzeum:select' _ "$work"
 }
