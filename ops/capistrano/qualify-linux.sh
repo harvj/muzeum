@@ -38,7 +38,7 @@ ssh_dir=/home/$deploy/.ssh
 sudo install -d -m 0700 -o "$deploy" "$ssh_dir"
 sudo -u "$deploy" ssh-keygen -q -t ed25519 -N "" -f "$ssh_dir/id_ed25519"
 sudo -u "$deploy" cp "$ssh_dir/id_ed25519.pub" "$ssh_dir/authorized_keys"
-sudo chmod 0600 "$ssh_dir/authorized_keys"
+sudo chmod 0600 "$ssh_dir/authorized_keys" "$ssh_dir/id_ed25519"
 printf '127.0.0.1 %s\n' "$(cat /etc/ssh/ssh_host_ed25519_key.pub)" |
   sudo -u "$deploy" tee "$ssh_dir/known_hosts" >/dev/null
 sudo systemctl start ssh
