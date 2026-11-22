@@ -119,7 +119,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     all(".review-candidate-summary").last.send_keys(:enter)
     expect(page).to have_css(".review-candidate:nth-of-type(2)[open]")
     expect(page).to have_css(".review-candidate[open]", count: 1)
-    expect(page).to have_text("Catalog appearance only. The edition played is unverified.")
+    expect(page).to have_text("The edition played is unverified.")
     expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
     capture_resolution("ambiguous-mobile")
 
@@ -222,6 +222,46 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     expect(page).to have_link("Existing exception")
   ensure
     browser&.execute_cdp("Emulation.clearDeviceMetricsOverride")
+  end
+
+  it "shows the three separate stored bad days identities before confirmation on desktop and mobile" do
+    edition = JSON.parse(Rails.root.join("spec/fixtures/musicbrainz/releases/blue_lips.json").read)
+    track = edition.fetch("media").flat_map { |medium| medium.fetch("tracks") }.find { |slot| slot["title"] == "bad days" }
+    candidate = track.fetch("recording").merge("releases" => [ edition.slice("id", "title", "date") ])
+    artist_id = candidate.fetch("artist-credit").first.dig("artist", "id")
+    artist = Artist.create!(mbid: artist_id, name: "Tove Lo")
+    recording = Recording.create!(mbid: candidate["id"], title: "bad days")
+    release = Release.create!(title: edition["title"], ingested_from_release_mbid: edition["id"], catalog_verified_at: Time.current)
+    user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "bad-days-review", lastfm_username: "bad-days-review")
+    play = Scrobble.create!(user:, lastfm_account: user.source_account, played_at: Time.current,
+      payload: { artist_name: "Tove Lo", track_name: "bad days", album_name: edition["title"] })
+    surface = RecordingResolution::Ledger.attach!(play)
+    group = RecordingResolution::Group.create!(surface_id: surface.id, version: RecordingResolution::Ledger::VERSION, claims: {})
+    evidence = { "candidates" => [ candidate ], "review_tracklists" => { edition["id"] => RecordingResolution::ReviewRelease.project(edition) } }
+    RecordingResolution::Assessment.create!(group_id: group.id, version: "fixture", actor: "fixture", digest: SecureRandom.hex(32), evidence:)
+    sign_in(user)
+    browser = page.driver.browser
+    browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "prefers-color-scheme", value: "dark" } ])
+    [ [ 1440, 960, false ], [ 390, 844, true ] ].each do |width, height, mobile|
+      browser.execute_cdp("Emulation.setDeviceMetricsOverride", width:, height:, deviceScaleFactor: 1, mobile:)
+      visit resolution_surface_path(play)
+      within(".review-catalog-context") do
+        expect(all("dt").map { |label| label.text.delete_prefix("✓").strip }).to eq(%w[Artist Recording Release])
+        expect(page).to have_css(".review-catalog-mark.present", count: 3)
+        expect(page).to have_link(artist.name, href: artist_path(artist))
+        expect(page).to have_link(recording.title, href: recording_path(recording))
+        expect(page).to have_link(release.title, href: release_path(release))
+        expect(page).to have_text("The original Last.fm release text is preserved. The edition played stays unverified.")
+      end
+      expect(page).to have_css(".review-track-match", text: "bad days")
+      expect(page).to have_button("Resolve 1 observation")
+      expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
+      capture_resolution(mobile ? "bad-days-mobile" : "bad-days-desktop")
+    end
+    expect(RecordingResolution::Ledger.effective(user).find(play.id).effective_recording_id).to be_nil
+  ensure
+    browser&.execute_cdp("Emulation.clearDeviceMetricsOverride")
+    browser&.execute_cdp("Emulation.setEmulatedMedia", features: [])
   end
 
   def capture_resolution(name)

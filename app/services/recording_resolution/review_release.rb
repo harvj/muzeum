@@ -30,7 +30,8 @@ module RecordingResolution
 
     def self.from_local(release)
       fields = ReleaseTracklist.new(release).assessment_fields
-      fields.fetch("edition").merge("state" => "complete", "media" => grouped_slots(fields["slots"]))
+      fields.fetch("edition").merge("state" => "complete", "media" => grouped_slots(fields["slots"]),
+        "provider" => "musicbrainz", "retrieved_at" => release.catalog_verified_at&.utc&.iso8601, "source" => "verified_local_catalog")
     rescue ArgumentError
       nil
     end

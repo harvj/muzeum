@@ -5,12 +5,13 @@ module RecordingResolution
 
     attr_reader :evidence
 
-    def initialize(session, discogs:, workspace: false, discover: workspace, review_alternative: false)
+    def initialize(session, discogs:, workspace: false, discover: workspace, review_alternative: false, review_release: nil)
       @session = session
       @discogs = DiscogsEvidence.new(discogs, expanded: workspace) if discogs
       @workspace = workspace
       @discover = discover
       @review_alternative = review_alternative
+      @review_release = review_release
       @musicbrainz = Clients::Musicbrainz.new
     end
 
@@ -62,7 +63,7 @@ module RecordingResolution
         related = !verified || DiscoveryTitle.album_base(surface.album) != surface.album || surface.album.to_s.match?(VERSION_MARKER)
         search = related && (candidates.empty? || candidates.any? { |candidate| Array(candidate["releases"]).any? })
         discovery = EditionDiscovery.new(@musicbrainz, @session)
-        merge_discovered(discovery.call(surface, claims, candidates, checked: edition, attempted: edition_id, search:, review_alternative: @review_alternative))
+        merge_discovered(discovery.call(surface, claims, candidates, checked: edition, attempted: edition_id, search:, review_alternative: @review_alternative, preferred: @review_release))
         evidence["review_tracklists"] = discovery.tracklists if discovery.tracklists.any?
       end
       if verified

@@ -28,11 +28,13 @@ module RecordingResolution
         raise ProviderError.new("Discogs API has been retired", terminal: true)
       end
       @current_request = { "provider" => provider.to_s, "endpoint" => path, "parameters" => params.stringify_keys }
-      # The public search projection is context-free. Edition and verification requests remain request-scoped.
+      # The public search projection is context-free. Catalog release lookups use a shared, versioned projection.
       scope = if @catalog && WIKIMEDIA.include?(provider)
         [ "catalog-wikimedia-v1", projection ]
       elsif @catalog && provider == :musicbrainz && path == "/ws/2/recording"
         "catalog-recording-search-v1"
+      elsif @catalog && provider == :musicbrainz && path.start_with?("/ws/2/release/") && params[:inc] == "recordings+artist-credits+release-groups+url-rels"
+        "catalog-release-tracklist-v1"
       else
         @catalog ? [ "catalog-v1", @work.id ] : [ "v1", @pilot.id ]
       end

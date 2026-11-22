@@ -1,15 +1,25 @@
 <h3>Release tracklist</h3>
 <% if release_id && Clients::Musicbrainz::MBID.match?(release_id) %>
   <p class="compact-meta"><%= link_to "MusicBrainz release", "https://musicbrainz.org/release/#{release_id}" %>
-    · Catalog appearance only. The edition played is unverified.</p>
+    · The edition played is unverified.</p>
+<% end %>
+<% verified = Array(release&.fetch("media", nil)).any? { |medium| Array(medium["tracks"]).any? { |track| track["recording_mbid"] == mbid } } %>
+<% if verified %>
+  <p class="compact-meta">Verified catalog appearance.</p>
+<% elsif release&.fetch("state", nil) == "complete" %>
+  <p class="compact-meta">This recording identifier does not appear in the complete tracklist.</p>
 <% end %>
 <% case release&.fetch("state", nil) %>
 <% when "complete" %><p class="compact-meta">Complete tracklist.</p>
 <% when "incomplete" %><p class="compact-meta">Muzeum retrieved this release, but the retained tracklist is incomplete.</p>
 <% when "missing" %><p class="compact-meta">MusicBrainz did not supply a tracklist.</p>
-<% when "unavailable" %><p class="compact-meta">MusicBrainz could not complete the tracklist request.</p>
+<% when "unavailable" %><p class="compact-meta">MusicBrainz could not complete the tracklist request<%= " (HTTP #{release["http_status"]})" if release["http_status"] %>.</p>
 <% else %>
   <p class="compact-meta"><%= release_id ? "Muzeum has not retrieved this release’s tracklist." : "MusicBrainz did not provide a supporting release." %></p>
+<% end %>
+<% if release_id.present? && release&.fetch("state", nil) != "complete" && @may_manage_observation && @assessment_matches_claims && !@assessment_request&.active? %>
+  <%= button_to "Retry tracklist evidence", investigate_resolution_surface_path(@observation),
+    params: { release_mbid: release_id, assessment_id: @assessment.id } %>
 <% end %>
 <% Array(release&.fetch("media", nil)).each do |medium| %>
   <% next if medium["tracks"].blank? %>

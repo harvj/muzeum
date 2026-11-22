@@ -26,6 +26,7 @@
     </span>
     <span class="review-score">Score <strong><%= rank["score"] %></strong></span>
   </summary>
+  <%= render "catalog_context", rows: @catalog_context.rows(candidate, release_id) %>
   <% if @may_manage_observation && @assessment_matches_claims %>
   <%= form_with url: decide_resolution_surface_path(@observation) do |form| %>
     <%= form.hidden_field :recording_mbid, value: mbid, id: nil %>

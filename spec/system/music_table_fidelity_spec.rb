@@ -97,14 +97,13 @@ RSpec.describe "Music table fidelity", type: :system do
         [...document.querySelectorAll(".play-recording a")].map(link => {
           const name = link.closest(".play-name")
           const layout = link.closest(".play-recording-layout")
-          const badge = layout.querySelector(".play-identity-status")
-          const right = badge ? badge.getBoundingClientRect().left - parseFloat(getComputedStyle(layout).columnGap) : layout.getBoundingClientRect().right
+          const right = layout.getBoundingClientRect().right
           const unused = right - name.getBoundingClientRect().right
           return [link.scrollWidth > link.clientWidth, unused < 1, getComputedStyle(link).textOverflow]
         })
       JS
       expect(page).to have_css(".play-row.source-claim .play-recording a[aria-label='Vi, Unresolved']")
-      expect(page).to have_css(".play-row.partially-resolved .play-recording", text: "Partial")
+      expect(page).to have_css(".play-row.partially-resolved .play-recording a[aria-label$='Partially resolved']")
       expect(page).to have_css(".play-row:not(.source-claim) .play-recording", text: titles.last)
       expect(page.evaluate_script(<<~JS)).to eq(%w[italic italic normal])
         [...document.querySelectorAll(".play-recording")].map(cell => getComputedStyle(cell).fontStyle)
@@ -113,7 +112,10 @@ RSpec.describe "Music table fidelity", type: :system do
       expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
       if width > 700
         find_link(titles[1]).hover
-        expect(page).to have_css(".plays-tooltip:popover-open", exact_text: "Partially resolved")
+        expect(page).to have_no_css(".plays-tooltip:popover-open")
+        expect(page.evaluate_script("getComputedStyle(document.querySelector('.play-row.partially-resolved .play-recording a')).fontStyle")).to eq("italic")
+        find(".library-nav a", text: "Resolution").hover
+        expect(page.evaluate_script("parseFloat(getComputedStyle(document.querySelector('.library-nav a:hover')).borderRadius)")).to be > 0
         find_link(titles.last).hover
         expect(page).to have_css(".plays-tooltip:popover-open", text: titles.last)
       end
