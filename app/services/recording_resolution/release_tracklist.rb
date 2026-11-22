@@ -14,20 +14,23 @@ module RecordingResolution
       signature = slots.map { |slot| [ slot.medium, slot.position, slot.recording.mbid ] }
       digest = Digest::SHA256.hexdigest(signature.to_json)
       @revision = CatalogRevision.where(entity_type: "Release", entity_id: release.id)
-        .where("evidence @> ?", { edition_mbid: release.ingested_from_release_mbid, track_count: slots.size, tracklist_digest: digest }.to_json)
+        .where("evidence @> ?", { track_count: slots.size, tracklist_digest: digest }.to_json)
+        .where("(evidence->>'edition_mbid' = ? OR evidence @> ?)",
+          release.ingested_from_release_mbid, { reviewed_correction: true }.to_json)
         .order(id: :desc).first
-      raise ArgumentError unless revision
+      @edition_mbid = revision&.evidence&.fetch("edition_mbid", nil)
+      raise ArgumentError unless Clients::Musicbrainz::MBID.match?(@edition_mbid.to_s)
     end
 
     def evidence
-      { "release_id" => release.id, "edition_mbid" => release.ingested_from_release_mbid,
+      { "release_id" => release.id, "edition_mbid" => @edition_mbid,
         "revision_id" => revision.id, "tracklist_digest" => revision.evidence.fetch("tracklist_digest"),
         "requests" => revision.evidence["requests"] }.compact
     end
 
     def assessment_fields
       date = release.attributes.values_at("release_year", "release_month", "release_day").take_while(&:present?)
-      { "edition" => { "id" => release.ingested_from_release_mbid, "title" => release.title,
+      { "edition" => { "id" => @edition_mbid, "title" => release.title,
           "date" => date.map { |part| format("%02d", part) }.join("-").presence,
           "country" => release.catalog_country, "complete_tracklist" => true },
         "slots" => slots.map do |slot|

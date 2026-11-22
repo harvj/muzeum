@@ -30,7 +30,7 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     expect(response.body).not_to include("Review release correction")
 
     old_head = CanonicalCatalog::ReviewedConstruction.head(release)
-    release.update!(release_day: 3)
+    release.update!(release_day: 3, ingested_from_release_mbid: added.edition_mbid)
     release.catalog_track_slots.base_sequence.first.destroy!
     release.catalog_track_slots.additional_appearances.update_all(appearance_date: "2004-08")
     post decide_resolution_surface_path(plays.first), params: params.merge(
@@ -44,6 +44,8 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     expect(release.reload.release_day).to eq(2)
     expect(release.catalog_track_slots.base_sequence.count).to eq(13)
     expect(release.catalog_track_slots.additional_appearances.sole.appearance_date).to eq("2004-08-21")
+    expect(RecordingResolution::ReleaseTracklist.new(release).evidence["edition_mbid"]).to eq(original.fetch("id"))
+    expect(release.ingested_from_release_mbid).to eq(added.edition_mbid)
 
     patch chronology_recording_path(added.recording_id),
       params: { chronology: { start_date: "2003", end_date: "2004-01", source: "Session notes" } }
