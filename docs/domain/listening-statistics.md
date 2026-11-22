@@ -10,7 +10,7 @@ Status: **Authoritative accounting semantics; aggregation implementation and dur
 
 **STAT-003 — Membership views show all recording activity.** A release page lists its member recordings and, for each, shows the **complete recording listening history**, regardless of which release received credit for those events. This may repeat the same event across different release pages as a *view*, not as multiple source listens.
 
-**STAT-004 — Release rankings use effective credit.** For rankings by play count or listening time, each play contributes to **at most one** credited release. Unassigned/unresolved credit contributes to no release ranking until resolved. Changing a play's credited release moves its ranking contribution and time, never duplicates them.
+**STAT-004 — Deferred per-play credit.** v0.5.0 release histories use recording membership. Combined counts use the union of distinct observations across selected releases. For a future distinct per-play credit statistic, For rankings by play count or listening time, each play contributes to **at most one** credited release. Unassigned/unresolved credit contributes to no release ranking until resolved. Changing a play's credited release moves its ranking contribution and time, never duplicates them.
 
 **STAT-005 — Distinguish two release metrics explicitly.** 'Activity of included recordings' (sum or listing of plays for member recordings, possibly overlapping other releases) is not 'credited release plays' (disjoint allocation for rankings). Do not label both 'release plays' without qualification. The default ranking metric is credited plays/time, not sum of member recording plays.
 

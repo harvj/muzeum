@@ -2,19 +2,15 @@
 
 Status: **Authoritative semantics; algorithmic thresholds remain open.** See [principles](principles.md), [recording resolution](recording-resolution.md), and [listening statistics](listening-statistics.md).
 
-## Separate concepts
+## Release listening context (v0.5.0)
 
-**REL-001 — Membership is not credit.** A recording may belong to many release collections, and its entire listening history may appear in each collection's track listing. Separately, each play has **zero or one effective credited release** for release rankings. This is not a claim that the listener physically played that particular edition.
+**REL-001 — Membership defines the release history.** A recording can belong to multiple verified release collections. Each release contributes the distinct effective observations resolved to its member recordings regardless of the Last.fm album string. For multiple releases, count the union of observations. This history does not identify which edition played.
 
-**REL-002 — Automatic default is the normal path.** For each resolved play, Muzeum attempts to select a credited release automatically. A listener should normally correct exceptions rather than manually assign their whole history. When no defensible candidate exists, retain explicit unresolved credit rather than fabricate certainty. Resolution of recording identity may be a prerequisite to release credit.
+**REL-014 — Admission follows corroborated recording membership.** Confirmation queues verification of original MusicBrainz albums, singles and EPs that contain the exact recording. Reuse equivalent editions with matching ordered recording membership; check uncertain or conflicting collections separately and leave unresolved memberships pending. Keep the provider edition identifiers as evidence. Never recursively traverse the releases of imported tracks.
 
-**REL-003 — User overrides prevail.** A listener may reassign any individual play to an eligible release without changing its canonical recording. An explicit user override takes precedence over subsequent automatic reassessments until the listener explicitly returns the play to automatic management. Bulk corrections of selected plays or a listening session may be offered, but must not eliminate individual control. A revert appends a new decision with provenance.
+**REL-015 — Keep source and interpretation separate.** Importing release tracks does not create observations. Preserve the immutable Last.fm input and effective recording override precedence. Each release retains its title, date and ordered tracks. Muzeum does not designate a primary release for listening attribution.
 
-## Release admission versus listening credit
-
-**REL-014 — Admission is deliberate.** A verified recording resolution may trigger import of one contextually justified canonical release collection and its full track listing; it must not traverse every compilation, reissue, edition or other release appearance. Original album context is generally preferred when justified, including over an earlier single, while original singles/EPs, distinct collections, live albums and explicitly selected compilations can qualify. No arbitrary chronology window is approved. See DOM-016–DOM-019.
-
-**REL-015 — Complete membership is not automatic credit.** Importing all tracks of an admitted release establishes catalog relationships, not historical listening events or per-play release credit. An unresolvable release choice leaves the recording available with a pending association. A listener's explicit credited compilation remains permissible even if that compilation was not the automatic import default; deliberate admission and credited-release assignment are independently auditable.
+The sections below describe the deferred per-play credit proposal. It does not govern v0.5.0 release histories or combined totals.
 
 ## Default evidence and chronology
 
