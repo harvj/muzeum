@@ -1,3 +1,12 @@
+<% if @recording_chronology %>
+  <section class="card library-card" id="recording-chronology">
+    <h2>Chronology</h2>
+    <dl>
+      <div><dt>Recording date</dt><dd><%= @recording_chronology.values_at("start_date", "end_date").compact.join(" to ").presence || "Unknown" %></dd></div>
+      <div><dt>First release date reported by MusicBrainz</dt><dd><%= @first_release_claim.presence || "Unknown" %></dd></div>
+    </dl>
+  </section>
+<% end %>
 <% unless Clients::Musicbrainz::MBID.match?(@entry.mbid.to_s) %>
   <p class="muted">Partially resolved · The provider identity is unverified.</p>
 <% end %>

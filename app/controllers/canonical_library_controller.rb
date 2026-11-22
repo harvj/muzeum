@@ -35,13 +35,15 @@ class CanonicalLibraryController < ApplicationController
         .order(id: :desc).first
       load_artist_listening
     when Release
-      slots = @entry.catalog_track_slots.order(:medium, :position)
+      slots = @entry.catalog_track_slots.base_sequence.order(:medium, :position)
       cursor = slots.find_by(id: params[:after_track]) if params[:after_track].present?
       if cursor
         @track_offset = slots.where("(medium, position) <= (?, ?)", cursor.medium, cursor.position).count
         slots = slots.where("(medium, position) > (?, ?)", cursor.medium, cursor.position)
       end
       @slots = slots.includes(:recording).limit(101).to_a
+      @additional_appearances = @entry.catalog_track_slots.additional_appearances
+        .order(:appearance_date, :edition_mbid, :medium, :position).includes(:recording)
       @next_track = @slots.pop && @slots.last.id if @slots.size > 100
       if @slots.empty? && !@public_profile && !cursor
         legacy_slots = @entry.release_recordings.order(:position, :id)
@@ -65,6 +67,13 @@ class CanonicalLibraryController < ApplicationController
       @next_release_play = @plays.pop && @plays.last.id if @plays.size > PAGE
       @activity_recordings = Recording.where(id: @plays.map(&:effective_recording_id)).index_by(&:id)
     when Recording
+      if CatalogTrackSlot.edition_slots_supported?
+        @recording_chronology = CatalogRevision.where(entity_type: "RecordingChronology", entity_id: @entry.id)
+          .order(id: :desc).pick(:evidence) || {}
+        @first_release_claim = CatalogRevision.where(entity_type: "Recording", entity_id: @entry.id)
+          .where("evidence->'musicbrainz' ? 'first-release-date'").order(id: :desc)
+          .pick(Arel.sql("evidence->'musicbrainz'->>'first-release-date'"))
+      end
       @releases = @entry.admitted_releases.order(:title, :id).includes(release_artists: :artist)
       @releases = @releases.merge(@profile_catalog.releases) if @public_profile
       cursor = @releases.find_by(id: params[:after_appearance]) if params[:after_appearance].present?

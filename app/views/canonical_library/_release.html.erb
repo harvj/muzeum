@@ -35,6 +35,21 @@
   <% end %>
 </section>
 
+<% if @additional_appearances.any? %>
+  <section class="card library-card" id="additional-edition-appearances">
+    <h2>Additional edition appearances</h2>
+    <ul class="catalog-list">
+      <% @additional_appearances.each do |slot| %>
+        <li><%= entity_link slot.title, catalog_entry_path(slot.recording) %> · <%= slot.appearance_date %> · Disc <%= slot.medium %>, track <%= slot.number.presence || slot.position %>
+          <% if Clients::Musicbrainz::MBID.match?(slot.edition_mbid.to_s) %>
+            · <%= link_to "MusicBrainz edition", "https://musicbrainz.org/release/#{slot.edition_mbid}" %>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  </section>
+<% end %>
+
 <section class="card library-card" id="listening-activity">
   <h2><%= @activity_releases.many? ? "Combined listening history" : "Release listening history" %></h2>
   <% if @activity_releases.many? %>

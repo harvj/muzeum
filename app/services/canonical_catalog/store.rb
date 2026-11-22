@@ -87,7 +87,7 @@ module CanonicalCatalog
 
       slots.each do |slot|
         track_recording = self.recording(slot.fetch(:recording))
-        release.catalog_track_slots.find_or_create_by!(medium: slot.fetch(:medium), position: slot.fetch(:position)) do |row|
+        release.catalog_track_slots.base_sequence.find_or_create_by!(medium: slot.fetch(:medium), position: slot.fetch(:position)) do |row|
           row.assign_attributes(slot.except(:recording).merge(recording: track_recording))
         end
       end
@@ -112,7 +112,7 @@ module CanonicalCatalog
     end
 
     def release_signature(release)
-      release.catalog_track_slots.order(:medium, :position).includes(:recording).map do |slot|
+      release.catalog_track_slots.base_sequence.order(:medium, :position).includes(:recording).map do |slot|
         [ slot.medium, slot.position, slot.recording.mbid ]
       end
     end
