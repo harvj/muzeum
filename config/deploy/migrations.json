@@ -42,6 +42,18 @@
       "risk": "additive",
       "quiesce": true,
       "review": "Adds one concurrent partial index for catalog listening lookups. No decision or source observation rewrite. Require existing guarded migration and recovery checks."
+    },
+    "db/migrate/20261122170000_create_musical_identity_decisions.rb": {
+      "sha256": "03f0ad572609fa20e2d4484d6615edcdcb865172f9b969375d648c4ff987cc85",
+      "risk": "additive",
+      "quiesce": true,
+      "review": "Adds an empty decision-history table with a user foreign key, palette array, and entity-history lookup index. No backfill or writes to existing rows. Quiesce Muzeum and use the existing four-database recovery procedure."
+    },
+    "db/migrate/20261122170100_add_edition_appearances_to_catalog_track_slots.rb": {
+      "sha256": "bcb291ff246e16c7cfbaa94900cf8a1ddf1de9adcd04e254df937cf086c4f847",
+      "risk": "additive",
+      "quiesce": true,
+      "review": "Adds nullable edition and appearance-date columns with no backfill. Before dropping the old global position index, creates two unique partial indexes in the same transaction. Existing rows have NULL edition identity and retain unique base positions; additional positions are unique per release and edition. Quiesce Muzeum for the table lock and index build. Retain the upgraded schema during application rollback. The existing exact-index preservation check must explicitly account for the replaced index before deployment."
     }
   }
 }
