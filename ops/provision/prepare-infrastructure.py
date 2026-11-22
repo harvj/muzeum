@@ -29,6 +29,8 @@ def write(path,data,uid=0,gid=0,mode=0o600):
 
 def main():
     if os.geteuid()!=0:raise RuntimeError('Root required')
+    if (Path('/var/www/muzeum/current').is_symlink() or Path('/home/muzeum-deploy').exists()):
+        raise RuntimeError('Legacy bootstrap required an uninstalled host')
     os.umask(0o077)
     receipt=json.loads(Path('/var/lib/harvj-backups/muzeum/escrow/independent-verification.json').read_text())
     if not receipt.get('verified_at'):raise RuntimeError('Independent backup escrow required')

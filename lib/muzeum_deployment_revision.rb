@@ -4,17 +4,6 @@ require "open3"
 module MuzeumDeploymentRevision
   VERSION = /\Av(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\z/
   SHA = /\A[0-9a-f]{40}\z/
-  RELEASES = File.expand_path("../config/deploy/releases.json", __dir__)
-
-  V034_SHA = "1633c96d63c1a44e678e95292466ab49c0442103"
-  V034_CONTROLS = "controls/v0.3.4-shell"
-  V034_CI_BRANCH = "candidate/v0.3.4-shell-revocation"
-  V035_SHA = "8aa4b92e11d6e826ef7d5073398fe4cdfd4f1f6e"
-  V035_CONTROLS = "controls/v0.3.5"
-  V036_SHA = "c37a00dcf058e87fdc59644e9e444c001e29622f"
-  V036_CONTROLS = "controls/v0.3.6"
-  V040_SHA = "96597aa6f94e64b6bb9cfdb7399de1ed98124a11"
-  V040_CONTROLS = "controls/v0.4.0"
   REQUIRED_JOBS = [
     "tests", "quality (bin/rubocop)", "quality (bin/brakeman --no-pager --exit-on-warn --exit-on-error)",
     "quality (bin/bundler-audit check --update)"
@@ -60,43 +49,5 @@ module MuzeumDeploymentRevision
       end
     end
     run.fetch("url")
-  end
-
-  def self.resolve!
-    sha = checkout!("main")
-    { sha: sha, ci: ci!(sha) }
-  end
-
-  def self.patched_runtime?(sha)
-    [ V034_SHA, V035_SHA, V036_SHA, V040_SHA ].include?(sha)
-  end
-
-  def self.resolve_release!(version, checkout)
-    raise "Expected a stable vX.Y.Z release version" unless VERSION.match?(version.to_s)
-    raise "Release checkout path is required" if checkout.to_s.empty?
-
-    review = JSON.parse(File.read(RELEASES)).fetch(version) { raise "Release version is not reviewed" }
-    sha, baseline, scope = review.values_at("sha", "baseline", "scope")
-    unless SHA.match?(sha.to_s) && SHA.match?(baseline.to_s) && sha != baseline &&
-        scope.is_a?(String) && scope.match?(%r{\Ahttps://github\.com/harvj/muzeum/issues/\d+\#issuecomment-\d+\z})
-      raise "Release requires a pinned SHA, production baseline and reviewed scope record"
-    end
-
-    controls, pinned = case version
-    when "v0.3.4" then [ V034_CONTROLS, V034_SHA ]
-    when "v0.3.5" then [ V035_CONTROLS, V035_SHA ]
-    when "v0.3.6" then [ V036_CONTROLS, V036_SHA ]
-    when "v0.4.0" then [ V040_CONTROLS, V040_SHA ]
-    end
-    raise "#{version} review must retain the pinned forward SHA" if pinned && sha != pinned
-    control_sha = checkout!(controls || "main")
-    ci!(control_sha, branch: controls, required_jobs: true) if controls
-    branch = "release/#{version}"
-    # The release worktree must retain the same approved repository and track its own upstream.
-    Dir.chdir(File.realpath(checkout)) do
-      raise "Release checkout does not match reviewed SHA" unless checkout!(branch) == sha
-      command("git", "merge-base", "--is-ancestor", baseline, sha)
-    end
-    { sha:, ci: ci!(sha, branch: version == "v0.3.4" ? V034_CI_BRANCH : branch, required_jobs: !controls.nil?), branch:, version:, baseline:, scope: }
   end
 end

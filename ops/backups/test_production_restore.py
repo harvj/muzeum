@@ -1,4 +1,4 @@
-import importlib.util,sys,unittest
+import sys,unittest
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).parent))
 import production_restore as module
@@ -14,6 +14,17 @@ class RecoveryIsolationTests(unittest.TestCase):
         for key in self.values():self.assertIn('/muzeum_recovery_',env[key]);self.assertNotIn('/muzeum_production',env[key])
         self.assertIn('default_transaction_read_only=on',env['PGOPTIONS'])
         self.assertEqual(env['BUNDLE_WITHOUT'],'development:test')
+
+    def test_fixed_runtime_discards_captured_loader_and_bundle_overrides(self):
+        targets={source:'muzeum_recovery_'+str(i)*16 for i,source in enumerate(module.production_capture.DATABASES)}
+        values=self.values() | {'BUNDLE_PATH':'/untrusted', 'RUBYOPT':'-r/tmp/bootstrap',
+                                'LD_PRELOAD':'/tmp/override.so', 'PATH':'/unexpected'}
+        env=module.recovery_environment(values,targets,Path('/reviewed/release'))
+        self.assertEqual(env['PATH'],'/opt/muzeum/ruby-3.4.13/bin:/usr/bin:/bin')
+        self.assertEqual(env['BUNDLE_PATH'],'/var/www/muzeum/shared/bundle/ruby-3.4.13')
+        self.assertEqual(env['DISABLE_BOOTSNAP'],'1')
+        self.assertNotIn('RUBYOPT',env)
+        self.assertNotIn('LD_PRELOAD',env)
 
     def test_rejects_production_or_missing_recovery_targets(self):
         with self.assertRaises(RuntimeError):module.recovery_environment(self.values(),{},Path('/reviewed/release'))

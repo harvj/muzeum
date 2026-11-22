@@ -2,7 +2,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main, release/v0.3.2, controls/v0.3.4, controls/v0.3.4-shell, controls/v0.3.5, controls/v0.3.6, controls/v0.4.0, controls/minimal-capistrano]
+    branches: [main, release/v0.3.2, controls/v0.3.4, controls/v0.3.4-shell, controls/v0.3.5, controls/v0.3.6, controls/v0.4.0, controls/minimal-capistrano, controls/retire-legacy-deploy]
 permissions:
   contents: read
 jobs:
@@ -26,10 +26,8 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Verify Muzeum runtime selection
-        run: |
-          sudo useradd --system --no-create-home --shell /usr/sbin/nologin muzeum
-          sudo env MUZEUM_RUNTIME_TEST_USER=muzeum python3 -B -m unittest discover -s ops/runtime -p 'test_*.py'
+      - name: Create the disposable Muzeum runtime account
+        run: sudo useradd --system --no-create-home --shell /usr/sbin/nologin muzeum
       - uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
@@ -46,7 +44,7 @@ jobs:
         run: python3 -m unittest discover -s ops/catalog -p 'test_*.py'
       - name: Install disposable recovery-test dependency
         run: sudo apt-get update && sudo apt-get install -y restic postgresql-client-16
-      - name: Rehearse Muzeum deploy success and failure paths in disposable databases
+      - name: Verify read-only Muzeum inspection against disposable databases
         run: python3 -m unittest discover -s ops/deploy -p 'test_*.py' -v
         env:
           MUZEUM_DEPLOY_TEST_PGPORT: '5432'
@@ -60,9 +58,9 @@ jobs:
           RAILS_ENV: production
           SECRET_KEY_BASE_DUMMY: '1'
       - name: Validate Capistrano configuration without contacting the server
-        run: bundle exec cap production -T
+        run: cd ops/capistrano && bundle exec cap production -T
       - name: Qualify minimal deployment on disposable Linux
-        if: github.ref_name == 'controls/minimal-capistrano' || github.head_ref == 'controls/minimal-capistrano'
+        if: contains(fromJSON('["controls/minimal-capistrano","controls/retire-legacy-deploy"]'), github.head_ref || github.ref_name)
         run: bash ops/capistrano/qualify-linux.sh
       - uses: actions/upload-artifact@v4
         if: failure()

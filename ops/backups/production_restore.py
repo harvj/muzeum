@@ -3,7 +3,6 @@ import datetime,json,os,re,secrets,shutil,subprocess,time
 from pathlib import Path
 import production_capture
 import monitoring
-import sys
 
 
 
@@ -11,9 +10,12 @@ def recovery_environment(values,targets,release):
     from urllib.parse import urlsplit,urlunsplit
     if set(targets)!=set(production_capture.DATABASES) or any(not re.fullmatch('muzeum_recovery_[a-f0-9]{16}',v) for v in targets.values()):
         raise RuntimeError('Exact isolated recovery targets required')
-    env=dict(values,HOME='/home/muzeum',
+    env=dict({key:value for key,value in values.items() if not
+              key.startswith(('LD_', 'DYLD_', 'BUNDLE_', 'RUBY', 'GEM_', 'RBENV_'))},
+             PATH='/opt/muzeum/ruby-3.4.13/bin:/usr/bin:/bin',
+             BUNDLE_PATH='/var/www/muzeum/shared/bundle/ruby-3.4.13',HOME='/home/muzeum',
              BUNDLE_IGNORE_CONFIG='1',BUNDLE_WITHOUT='development:test',BUNDLE_DEPLOYMENT='true',BUNDLE_FROZEN='true',
-             BUNDLE_GEMFILE=str(release/'Gemfile'),BOOTSNAP_READONLY='1',PGOPTIONS='-c default_transaction_read_only=on -c statement_timeout=30000')
+             BUNDLE_GEMFILE=str(release/'Gemfile'),DISABLE_BOOTSNAP='1',PGOPTIONS='-c default_transaction_read_only=on -c statement_timeout=30000')
     for key,source in zip(('DATABASE_URL','CACHE_DATABASE_URL','QUEUE_DATABASE_URL','CABLE_DATABASE_URL'),production_capture.DATABASES):
         url=urlsplit(values[key])
         if url.hostname!='127.0.0.1' or url.username!='muzeum_runtime' or url.path!='/'+source:
@@ -24,7 +26,9 @@ def recovery_environment(values,targets,release):
 
 def verify_application(restored,targets,metadata,invoke):
     release=Path('/var/www/muzeum/current').resolve(strict=True)
-    if release.parent!=Path('/var/www/muzeum/releases') or (release/'REVISION').read_text().strip()!=metadata['release_sha']:
+    sha = metadata['release_sha']
+    if (release.parent != Path('/var/www/muzeum/releases') or not re.fullmatch(r'[0-9]{14}', release.name)
+            or not re.fullmatch(r'[a-f0-9]{40}', sha) or (release/'REVISION').read_text().strip() != sha):
         raise RuntimeError('Restore requires the matching reviewed application code')
     values={}
     for line in (restored/'files/var/www/muzeum/shared/.env').read_text().splitlines():
@@ -36,12 +40,8 @@ def verify_application(restored,targets,metadata,invoke):
     script='''raise 'Unexpected identity' if User.where.not(oidc_subject:nil).any? { |u| !u.login_enabled? && u.disabled_at.nil? }
 Session.find_each { |s| raise 'Session recovery failed' if s.grant_token.blank? }
 puts 'MUZEUM_RECOVERY_PROOF:'+{users:User.count,sessions:Session.count,scrobbles:Scrobble.count,raw_pages:ImportPage.count,grant_decryption_verified:true}.to_json'''
-    sys.path.insert(0, '/usr/local/lib/muzeum-runtime')
-    from muzeum_runtime import release_runtime, runtime_environment
-    directory, bundle_path = release_runtime(release)
-    env = runtime_environment(env, directory, bundle_path)
-    env.update(BUNDLE_IGNORE_CONFIG='1', BUNDLE_DEPLOYMENT='true', BUNDLE_FROZEN='true', BUNDLE_WITHOUT='development:test', BUNDLE_GEMFILE=str(release/'Gemfile'))
-    result=subprocess.run(['/usr/sbin/runuser','-u','muzeum','--',str(directory / 'bundle'),'exec','rails','runner',script],
+    ruby = '/opt/muzeum/ruby-3.4.13/bin/'
+    result=subprocess.run(['/usr/sbin/runuser','-u','muzeum','--',ruby+'ruby',ruby+'bundle','exec','rails','runner',script],
                           cwd=release,env=env,capture_output=True,text=True,timeout=60)
     if result.returncode:raise RuntimeError('Isolated application identity/session recovery failed')
     line=next((line for line in result.stdout.splitlines() if line.startswith('MUZEUM_RECOVERY_PROOF:')),None)
