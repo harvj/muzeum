@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Run only on an ephemeral GitHub-hosted Ubuntu runner using fixture credentials.
 set -euo pipefail
-[[ ${RUNNER_OS:-} == Linux && ${GITHUB_ACTIONS:-} == true ]]
+[[ ${RUNNER_OS:-} == Linux && ${RUNNER_ENVIRONMENT:-} == github-hosted && ${GITHUB_ACTIONS:-} == true ]]
 work=$(mktemp -d /tmp/muzeum-cutover.XXXXXX)
 chmod 0755 "$work"
 trap 'sudo journalctl -u muzeum-web -u muzeum-worker -u muzeum-qualification-caddy --no-pager -n 35' ERR
@@ -33,9 +33,19 @@ sudo -u "$deploy" git clone --mirror --no-local "$work/controls" "$app/repo"
 for revision in "$base" "$candidate"; do
   sudo -u "$deploy" git --git-dir="$app/repo" cat-file -e "$revision^{commit}"
 done
+# Exercise the same SSH transport with the runner's independently known host key.
+ssh_dir=/home/$deploy/.ssh
+sudo install -d -m 0700 -o "$deploy" "$ssh_dir"
+sudo -u "$deploy" ssh-keygen -q -t ed25519 -N "" -f "$ssh_dir/id_ed25519"
+sudo -u "$deploy" cp "$ssh_dir/id_ed25519.pub" "$ssh_dir/authorized_keys"
+sudo chmod 0600 "$ssh_dir/authorized_keys"
+printf '127.0.0.1 %s\n' "$(cat /etc/ssh/ssh_host_ed25519_key.pub)" |
+  sudo -u "$deploy" tee "$ssh_dir/known_hosts" >/dev/null
+sudo systemctl start ssh
+sudo -u "$deploy" ssh -o BatchMode=yes -o StrictHostKeyChecking=yes 127.0.0.1 true
 cat <<'RUBY' | sudo -u "$deploy" tee "$work/controls/ops/capistrano/config/deploy/qualification.rb" >/dev/null
-SSHKit.config.backend = SSHKit::Backend::Local
-server "localhost", roles: %w[app web]
+server "127.0.0.1", user: "muzeum-deploy", roles: %w[app web],
+  ssh_options: { keys: ["/home/muzeum-deploy/.ssh/id_ed25519"], keys_only: true }
 RUBY
 cap_select() {
   sudo -u "$deploy" env PATH="$runtime:/usr/bin:/bin" BUNDLE_PATH="$bundle_path" BUNDLE_IGNORE_CONFIG=1 \
@@ -64,10 +74,12 @@ done
 # Reject modified code even if the staged REVISION still carries the approved SHA.
 boot=$app/releases/20261122000000/config/boot.rb
 printf '\n# fixture substitution\n' | sudo -u "$deploy" tee -a "$boot" >/dev/null
-if cap_select 20261122000000 "$candidate" "$base"; then
+if cap_select 20261122000000 "$candidate" "$base" > "$work/modified-tree.log" 2>&1; then
   echo 'Modified tree unexpectedly accepted' >&2
   exit 1
 fi
+cat "$work/modified-tree.log"
+grep -q "config/boot.rb: needs update" "$work/modified-tree.log"
 test "$(cat "$app/current/REVISION")" = "$base"
 git show "$candidate:config/boot.rb" | sudo -u "$deploy" tee "$boot" >/dev/null
 
