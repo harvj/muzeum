@@ -45,6 +45,9 @@ RSpec.describe CanonicalCatalog::Processor do
     CanonicalCatalog::Store.new(alias_request, session).recording(alias_evidence)
     surface = RecordingResolution::RealCorpusEvaluation::Observation.new(artist: "Wiz", album: "Lady Wood", track: "Influence")
     expect(RecordingResolution::LocalCandidates.catalog_identity(surface)).to include(artist_mbid: wiz.mbid)
+    ranking = RecordingResolution::Ranking.call(surface, { "candidates" => [ data ],
+      "canonical_artist_mbid" => wiz.mbid }, source_hints: true)
+    expect(ranking.first.dig("inputs", "artist_name", "state")).to eq("positive")
     [ tove, wiz ].each do |artist|
       surface = RecordingResolution::RealCorpusEvaluation::Observation.new(artist: artist.name, album: "Lady Wood", track: "Influence")
       expect(RecordingResolution::LocalCandidates.catalog_identity(surface)).to include(artist_mbid: artist.mbid, recording_mbid: entry.mbid)

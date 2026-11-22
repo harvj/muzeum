@@ -23,6 +23,7 @@ module RecordingResolution
         return evidence
       end
 
+      evidence["canonical_artist_mbid"] = @catalog_identity[:artist_mbid] if @catalog_identity[:artist_mbid]
       page = recording_page(surface)
       candidates = page.fetch("recordings")
       evidence["search"] = page.slice("count", "offset").merge("returned" => candidates.size)

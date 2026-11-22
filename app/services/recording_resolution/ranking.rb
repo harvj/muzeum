@@ -48,8 +48,12 @@ module RecordingResolution
       factor("different_verified_recording", claimed_other ? false : nil, 0, -6, nil, "The source recording identifier resolves to a different recording")
       factor("title", comparable(@surface.track, @candidate["title"]), 2, -3,
         "Recording title matches after text normalization", "Recording title differs")
-      factor("artist_name", names.empty? || @surface.artist.blank? ? nil : names.any? { |name| comparable(@surface.artist, name) },
-        2, -3, "Artist name or credited name matches", "Artist credit differs")
+      catalog_artist = @evidence["canonical_artist_mbid"] if @source_hints
+      catalog_match = catalog_artist.present? && artist_ids.include?(catalog_artist)
+      artist_match = catalog_match || names.any? { |name| comparable(@surface.artist, name) } unless names.empty? || @surface.artist.blank?
+      factor("artist_name", catalog_match ? true : artist_match, 2, -3,
+        catalog_match ? "Verified Muzeum artist identity matches a credited artist" : "Artist name or credited name matches",
+        "Artist credit differs")
       artist_id = claims["artist_mbid"]
       factor("artist_identifier", !Clients::Musicbrainz::MBID.match?(artist_id.to_s) || artist_ids.empty? ? nil : artist_ids.any? { |other| artist_id.casecmp?(other) },
         3, -4, "The source artist identifier matches a credited artist", "The source artist identifier differs from the credited artists")
