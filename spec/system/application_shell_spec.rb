@@ -44,7 +44,8 @@ RSpec.describe "Application Shell navigation", type: :system do
       within(".harvj-session-panel") do
         expect(page).to have_link("Remote-Gaming", href: "https://gaming.harvj.com/")
         expect(page).to have_link("Continuum Engine", href: "https://funding.harvj.com/")
-        expect(all("[data-application-shell-target='links'] a", count: 2).map(&:text)).to eq([ "Remote-Gaming", "Continuum Engine" ])
+        expect(page).to have_css("[data-application-shell-target='links'] > a:nth-child(1)", exact_text: "Remote-Gaming")
+        expect(page).to have_css("[data-application-shell-target='links'] > a:nth-child(2)", exact_text: "Continuum Engine")
         expect(page).to have_no_link("Muzeum")
       end
       expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)

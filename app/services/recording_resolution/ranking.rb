@@ -71,6 +71,13 @@ module RecordingResolution
         @inputs.fetch("local_release_history")["provenance"] = context
       end
       appearance = @candidate["release_discovery"] unless slot
+      unless slot || appearance
+        reference = Array(@candidate["releases"]).first
+        tracklist = @evidence.dig("review_tracklists", reference["id"]) if reference
+        if tracklist && Array(tracklist["media"]).any? { |disc| Array(disc["tracks"]).any? { |track| track["recording_mbid"] == id } }
+          appearance = reference.merge("relationship" => "verified_catalog_tracklist")
+        end
+      end
       if appearance
         weight = @caption_bonus && appearance["relationship"] == "matching_catalog_caption" ? 2 : 1
         factor("catalog_release_appearance", true, weight, 0,

@@ -41,7 +41,7 @@ RSpec.describe RecordingResolution::EditionDiscovery do
     expect(lists.values.map { |list| list.fetch("media").first.fetch("tracks").size }).to eq([ 18, 14, 4 ])
     expect(lists.fetch(daytrotter.fetch("id")).fetch("media").first.fetch("tracks").second)
       .to include("number" => "2", "length" => 123000, "recording_mbid" => "914eb7fc-0faf-4067-87b1-9f74db1d4f99")
-    expect(result.fetch("ranking").pluck("score")).to eq([ 8, 8, 7 ])
+    expect(result.fetch("ranking").pluck("score")).to eq([ 8, 8, 8 ])
   end
 
   it "distinguishes missing provider track data from a retained incomplete medium" do

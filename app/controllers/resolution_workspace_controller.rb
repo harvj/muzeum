@@ -61,6 +61,7 @@ class ResolutionWorkspaceController < ApplicationController
     end
     legacy_candidates = RecordingResolution::Workspace.candidates(@assessment).index_by { |candidate| candidate["id"] }
     @candidates = @ranking.filter_map { |rank| legacy_candidates[rank["recording_mbid"]] }
+    @catalog_context = RecordingResolution::CatalogContext.new(@candidates, @review_releases)
     current = @scrobbles.find { |play| play.id == target.id } || RecordingResolution::Ledger.effective(current_user).find(target.id)
     @current_decision = @inherited_head
     if (@assessment.nil? || @assessment.evidence["partial"]) && @assessment_request.nil? && @inherited_head&.recording_id.nil? && @may_manage_observation &&
@@ -96,7 +97,19 @@ class ResolutionWorkspaceController < ApplicationController
     if manual && !Clients::Musicbrainz::MBID.match?(manual)
       return redirect_to resolution_surface_path(@observation), alert: "Enter a MusicBrainz recording identifier.", status: :see_other
     end
-    RecordingResolution::Investigation.new(current_user, @observation).request(refresh: true, manual_mbid: manual)
+    release_mbid = params[:release_mbid].presence
+    if release_mbid
+      assessment = @workspace.assessments(@workspace.surface(@observation)).find(params[:assessment_id])
+      references = RecordingResolution::Workspace.candidates(assessment).flat_map do |candidate|
+        Array(candidate["releases"]).pluck("id") + [ candidate.dig("release_discovery", "id"), candidate.dig("local_release_context", "edition_mbid") ]
+      end
+      references << assessment.evidence.dig("edition", "id")
+      unless assessment_matches_claims?(assessment, @observation) &&
+          Clients::Musicbrainz::MBID.match?(release_mbid.to_s) && references.include?(release_mbid)
+        return redirect_to resolution_surface_path(@observation), alert: "Select a supporting release from this assessment.", status: :see_other
+      end
+    end
+    RecordingResolution::Investigation.new(current_user, @observation).request(refresh: true, manual_mbid: manual, release_mbid:)
     redirect_to resolution_surface_path(@observation, play: params[:play].presence), status: :see_other
   end
 

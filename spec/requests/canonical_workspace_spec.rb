@@ -42,7 +42,7 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     session = DiscoveryReplay::Session.new(fixture, example)
     evidence = RecordingResolution::Evaluator.new(session, discogs: nil, workspace: true, review_alternative: true).call(surface, claims)
     # Reproduce the historical scoring that production stored before the caption rule changed.
-    evidence["ranking"] = RecordingResolution::Ranking.call(surface, evidence, caption_bonus: true)
+    evidence["ranking"] = RecordingResolution::Ranking.call(surface, evidence.except("review_tracklists"), caption_bonus: true)
     assessment = RecordingResolution::Assessment.create!(group_id: group.id, version: "fixture", actor: "fixture",
       digest: SecureRandom.hex(32), evidence:)
 

@@ -10,46 +10,56 @@ module RecordingResolution
       @session = session
     end
 
-    def call(surface, claims, candidates, checked:, attempted:, search:, review_alternative: false)
+    def call(surface, claims, candidates, checked:, attempted:, search:, review_alternative: false, preferred: nil)
+      @tracklists = {}
       results = [ checked ].compact
-      # An explicit source edition has already had its one lookup, even when unavailable.
       if checked.nil? && claims["album_mbid"].blank? && surface.album.present? && search
         results.concat(related_editions(surface, candidates, attempted))
       end
-      @tracklists = results.to_h { |edition| [ edition.fetch("id"), ReviewRelease.project(edition) ] }
+      results.each { |edition| retain(edition.fetch("id"), edition) }
+      retain(attempted, nil) if attempted && checked.nil? && release_request(attempted)
       found = results.flat_map { |edition| appearances(surface, claims, edition) }
-      retain_alternative(candidates, found) if review_alternative && found.any?
+      # Preserve a fixed fallback budget even when search supplies many releases.
+      return found unless preferred || review_alternative || results.empty?
+
+      references = candidates.filter_map do |candidate|
+        next if found.any? { |row| row["id"] == candidate["id"] }
+
+        Array(candidate["releases"]).find { |release| Clients::Musicbrainz::MBID.match?(release["id"].to_s) }&.fetch("id")
+      end
+      [ preferred, *references ].compact.uniq.reject { |id| @tracklists.key?(id) || id == attempted }
+        .first(1).each do |id|
+        tracklist = nil
+        local = Release.find_by(ingested_from_release_mbid: id)
+        tracklist = ReviewRelease.from_local(local) if local
+        if tracklist
+          @tracklists[id] = tracklist
+        else
+          lookup(id)
+        end
+      end
       found
     end
 
     private
 
-    # One additional lookup for display during an explicit refresh. It never feeds ranking.
-    def retain_alternative(candidates, found)
-      covered = found.pluck("id")
-      candidate = candidates.find do |row|
-        !covered.include?(row["id"]) && Array(row["releases"]).any? do |release|
-          Clients::Musicbrainz::MBID.match?(release["id"].to_s) && !@tracklists.key?(release["id"])
-        end
-      end
-      return unless candidate
+    def retain(id, edition)
+      request = release_request(id)
+      @tracklists[id] = (edition ? ReviewRelease.project(edition) : { "state" => "missing" }).merge(
+        "provider" => "musicbrainz", "retrieved_at" => request&.fetch("retrieved_at", nil))
+    end
 
-      reference = candidate.fetch("releases").find do |release|
-        Clients::Musicbrainz::MBID.match?(release["id"].to_s) && !@tracklists.key?(release["id"])
-      end
-      id = reference.fetch("id")
-      local = Release.find_by(ingested_from_release_mbid: id)
-      if local && (tracklist = ReviewRelease.from_local(local))
-        @tracklists[id] = tracklist
-        return
-      end
+    def release_request(id)
+      @session.provenance.reverse.find { |entry| entry["endpoint"] == "/ws/2/release/#{id}" }
+    end
 
+    def lookup(id)
       edition = @musicbrainz.edition(@session, id, catalog: true)
-      @tracklists[id] = edition&.fetch("id", nil) == id ? ReviewRelease.project(edition) : { "state" => "missing" }
+      retain(id, edition&.fetch("id", nil) == id ? edition : nil)
     rescue ProviderError => error
       raise if error.deferred
 
-      @tracklists[id] = { "state" => "unavailable" }
+      @tracklists[id] = { "state" => "unavailable", "provider" => "musicbrainz", "http_status" => error.http_status }.compact
     end
 
     def related_editions(surface, candidates, attempted)

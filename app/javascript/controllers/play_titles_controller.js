@@ -7,7 +7,7 @@ export default class extends Controller {
     this.resize = new ResizeObserver(() => {
       this.hide()
       for (const name of this.element.querySelectorAll("[data-overflow-name]")) {
-        const focusable = (this.clipped(name) || name.dataset.resolutionStatus) && !name.querySelector("a")
+        const focusable = this.clipped(name) && !name.querySelector("a")
         if (focusable) name.tabIndex = 0
         else name.removeAttribute("tabindex")
       }
@@ -21,13 +21,11 @@ export default class extends Controller {
 
   preview(event) {
     const name = event.target.closest("[data-overflow-name]")
-    if (!name || (!this.clipped(name) && !name.dataset.resolutionStatus) || (event.type === "pointerover" && event.pointerType === "touch")) return
+    if (!name || !this.clipped(name) || (event.type === "pointerover" && event.pointerType === "touch")) return
 
     const tooltip = this.tooltipTarget
     const bounds = name.getBoundingClientRect()
-    const status = name.dataset.resolutionStatus
-    const text = name.querySelector("a")?.textContent.trim() || name.firstChild.textContent.trim()
-    tooltip.textContent = status ? (this.clipped(name) ? `${text} · ${status}` : status) : name.textContent.trim()
+    tooltip.textContent = name.querySelector("a")?.textContent.trim() || name.firstChild?.textContent.trim()
     tooltip.showPopover()
     const left = Math.max(8, Math.min(bounds.left, innerWidth - tooltip.offsetWidth - 8))
     const top = bounds.bottom + tooltip.offsetHeight <= innerHeight ? bounds.bottom : bounds.top - tooltip.offsetHeight
