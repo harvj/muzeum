@@ -53,12 +53,11 @@
       <nav aria-label="Help"><%= link_to "Guide", "#guide-overview", class: "entity-link guide-trigger", data: { action: "guide#open" } %></nav>
       <span>© <%= Date.current.year %> <%= link_to "Jim Harvey", "https://harvj.com/" %><% if (tag = published_release_tag) %> · Muzeum <%= tag %><% elsif Rails.env.production? %> · Muzeum · Version unavailable<% end %></span>
     </footer>
-    <% unless current_user %>
-      <details class="anonymous-appearance">
-        <summary title="Appearance settings"><span aria-hidden="true">◐</span><span class="visually-hidden">Appearance settings</span></summary>
-        <%= render "shared/appearance" %>
-      </details>
-    <% end %>
+    <details class="shell-appearance" hidden data-controller="appearance"
+      data-action="keydown.esc->appearance#dismiss">
+      <summary aria-label="Appearance settings"><span aria-hidden="true">◐</span></summary>
+      <%= render "shared/appearance" %>
+    </details>
     <%= render "shared/guide" %>
   </body>
 </html>

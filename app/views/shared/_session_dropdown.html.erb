@@ -7,10 +7,6 @@
       <p class="profile-label">Applications</p>
       <div data-application-shell-target="links"></div>
     </div>
-    <div class="profile-settings">
-      <p class="profile-label">Muzeum settings</p>
-      <%= render "shared/appearance" %>
-    </div>
     <% if OidcClient.configured? %>
       <%= link_to "Account Settings", "#{OidcClient::ISSUER}/account?#{URI.encode_www_form(client_id: ENV.fetch('OIDC_CLIENT_ID'))}" %>
     <% end %>

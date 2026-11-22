@@ -1,4 +1,5 @@
 require "rails_helper"
+require_relative "../support/site_art_pair"
 
 RSpec.describe "Music table fidelity", type: :system do
   LONG_TITLE = "A Very Long Recording Title for a Late Night Listening Session, including the complete unabridged alternate take and the full session notes"
@@ -164,8 +165,7 @@ RSpec.describe "Music table fidelity", type: :system do
 
   it "centers the shared footer at the viewport bottom or after long content in either theme" do
     user, = seed_library
-    allow(SiteArt).to receive(:snapshot).and_return(
-      light: { url: "/environments/stone/limestone.jpg" }, dark: { url: "/environments/stone/onyx.jpg" })
+    allow(SiteArt).to receive(:snapshot).and_return(SiteArtPair::SNAPSHOT)
     revision = "a" * 40
     metadata = Tempfile.create("muzeum-footer")
     metadata.write("#{revision} v0.2.1\n")

@@ -6,10 +6,15 @@ module MuzeumDeploymentRevision
   SHA = /\A[0-9a-f]{40}\z/
   RELEASES = File.expand_path("../config/deploy/releases.json", __dir__)
 
-  def self.command(*arguments)
+  REQUIRED_JOBS = [
+    "tests", "quality (bin/rubocop)", "quality (bin/brakeman --no-pager --exit-on-warn --exit-on-error)",
+    "quality (bin/bundler-audit check --update)"
+  ].freeze
+
+  def self.command(*arguments, raw: false)
     output, _errors, status = Open3.capture3({ "GIT_TERMINAL_PROMPT" => "0", "GH_PROMPT_DISABLED" => "true", "GIT_SSH_COMMAND" => "ssh -o BatchMode=yes -o StrictHostKeyChecking=yes" }, *arguments)
     raise "Deployment preflight command failed: #{arguments.first}" unless status.success?
-    output.strip
+    raw ? output : output.strip
   end
 
   def self.checkout!(branch)
@@ -26,13 +31,25 @@ module MuzeumDeploymentRevision
     sha
   end
 
-  def self.ci!(sha, branch: nil)
+  def self.ci!(sha, branch: nil, required_jobs: false)
     runs = JSON.parse(command("gh", "run", "list", "--repo", "harvj/muzeum", "--commit", sha,
-      "--workflow", "CI", "--limit", "1", "--json", "headSha,headBranch,event,status,conclusion,url",
+      "--workflow", "CI", "--limit", "1", "--json", "databaseId,headSha,headBranch,event,status,conclusion,url",
       *([ "--branch", branch, "--event", "push" ] if branch)))
     run = runs.first
     raise "Latest CI run for exact SHA must pass" unless run && run["headSha"] == sha && run["status"] == "completed" && run["conclusion"] == "success"
     raise "Release CI must come from the selected branch push" if branch && (run["headBranch"] != branch || run["event"] != "push")
+    if required_jobs
+      id = run.fetch("databaseId").to_s
+      raise "Invalid CI run ID" unless /\A[1-9][0-9]*\z/.match?(id)
+      detail = JSON.parse(command("gh", "run", "view", id, "--repo", "harvj/muzeum",
+        "--json", "headSha,status,conclusion,jobs"))
+      jobs = detail.fetch("jobs")
+      successful = jobs.select { |job| job["status"] == "completed" && job["conclusion"] == "success" }.map { |job| job["name"] }
+      unless detail.values_at("headSha", "status", "conclusion") == [ sha, "completed", "success" ] &&
+          (REQUIRED_JOBS - successful).empty? && jobs.all? { |job| successful.include?(job["name"]) && job["conclusion"] == "success" && job["status"] == "completed" }
+        raise "Required CI jobs for exact SHA must pass"
+      end
+    end
     run.fetch("url")
   end
 
