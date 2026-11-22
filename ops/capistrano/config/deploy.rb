@@ -90,7 +90,7 @@ namespace :muzeum do
       raise "Staged revision mismatch" unless capture(:cat, release_path.join("REVISION")) == fetch(:branch)
       verify_muzeum_tree(fetch(:branch))
       execute :mkdir, "-p", shared_path.join("release-candidates"), shared_path.join("release-publications")
-      execute :ruby, release_path.join("lib/muzeum_release_workflow.rb"), "package", fetch(:target_version), fetch(:branch)
+      execute :ruby, release_path.join("ops/capistrano/release_identity.rb"), "package", fetch(:target_version), fetch(:branch)
 
       puts "Staged #{fetch(:branch)} at #{release_path}"
     end
@@ -106,10 +106,10 @@ namespace :muzeum do
     on primary(:app) do
       raise "Unexpected running release" unless capture(:cat, current_path.join("REVISION")) == current
       raise "Staged revision mismatch" unless capture(:cat, release_path.join("REVISION")) == revision
-      packaged = test(:test, "-f", release_path.join("lib/muzeum_release_workflow.rb"))
+      packaged = test(:test, "-f", release_path.join("ops/capistrano/release_identity.rb"))
       verify_muzeum_tree(revision, packaged:)
       if packaged
-        execute :ruby, release_path.join("lib/muzeum_release_workflow.rb"), "verify", revision
+        execute :ruby, release_path.join("ops/capistrano/release_identity.rb"), "verify", revision
       end
     end
     invoke "deploy:publishing"
@@ -127,7 +127,7 @@ namespace :muzeum do
   end
 
   desc "Verify independent GitHub evidence and refresh the running candidate footer"
-  task :sync_publication, [:deployment, :status] do |_, args|
+  task :sync_publication, [ :deployment, :status ] do |_, args|
     on primary(:app) do
       artifact = capture(:readlink, "-f", current_path)
       unless artifact.match?(%r{\A#{Regexp.escape(releases_path.to_s)}/[0-9]{14}\z})
@@ -136,7 +136,7 @@ namespace :muzeum do
       revision = capture(:cat, "#{artifact}/REVISION")
       raise "Invalid running release SHA" unless MuzeumDeploymentRevision::SHA.match?(revision)
 
-      workflow = "#{artifact}/lib/muzeum_release_workflow.rb"
+      workflow = "#{artifact}/ops/capistrano/release_identity.rb"
       candidate = JSON.parse(capture(:ruby, workflow, "verify", revision))
       receipt = MuzeumPublicationReceipt.verify!(candidate, deployment_id: args[:deployment], status_id: args[:status],
         command: MuzeumDeploymentRevision.method(:command),

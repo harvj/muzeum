@@ -6,7 +6,7 @@ class MuzeumPublicationReceipt
   ASSET = "muzeum-artifact.json"
 
   def self.verify!(candidate, deployment_id:, status_id:, command:, asset_command: command)
-    unless [deployment_id, status_id].all? { |id| /\A[1-9]\d*\z/.match?(id.to_s) }
+    unless [ deployment_id, status_id ].all? { |id| /\A[1-9]\d*\z/.match?(id.to_s) }
       raise "Expected exact GitHub deployment and status IDs"
     end
 
@@ -64,7 +64,7 @@ class MuzeumPublicationReceipt
         raise "Invalid retained publication receipt" unless previous
         next unless previous.fetch("final_version") == receipt.fetch("final_version")
 
-        evidence_fields = MuzeumArtifactIdentity::PUBLICATION_KEYS - ["verified_at"]
+        evidence_fields = MuzeumArtifactIdentity::PUBLICATION_KEYS - [ "verified_at" ]
         unless previous_path == path && previous.values_at(*evidence_fields) == receipt.values_at(*evidence_fields)
           raise "Target version already belongs to a different publication receipt"
         end

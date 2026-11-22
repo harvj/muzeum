@@ -22,11 +22,11 @@ class MuzeumReleasePackage
         unless RUNTIME_LINKS.include?(relative) && target == shared.join(relative)
           raise "Unexpected release symlink: #{relative}"
         end
-        entries << [relative, "link", relative]
+        entries << [ relative, "link", relative ]
       elsif info.directory?
-        entries << [relative, "directory"]
+        entries << [ relative, "directory" ]
       elsif info.file?
-        entries << [relative, "file", info.mode & 0o111, Digest::SHA256.file(path).hexdigest]
+        entries << [ relative, "file", info.mode & 0o111, Digest::SHA256.file(path).hexdigest ]
       else
         raise "Unsupported release file: #{relative}"
       end
@@ -40,7 +40,7 @@ class MuzeumReleasePackage
 
     artifact_sha256 = digest(release, shared:)
     existing = MuzeumArtifactIdentity.read(release.join(IDENTITY))
-    if existing && existing.values_at("artifact_sha256", "source_sha", "target_version") != [artifact_sha256, revision, version]
+    if existing && existing.values_at("artifact_sha256", "source_sha", "target_version") != [ artifact_sha256, revision, version ]
       raise "Candidate identity has already been bound"
     end
     number = MuzeumCandidateNumber.allocate(shared.join("release-candidates"), version:, revision:, artifact_sha256:)

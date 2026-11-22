@@ -10,11 +10,11 @@ RSpec.describe MuzeumPublicationReceipt do
     tag = "v#{candidate.fetch('target_version')}"
     raw = JSON.generate(candidate)
     release = { "tag_name" => tag, "draft" => false, "prerelease" => false, "published_at" => "2023-02-01T00:00:00Z",
-      "assets" => [{"name" => "muzeum-artifact.json", "id" => 9, "size" => raw.bytesize,
-        "digest" => "sha256:#{Digest::SHA256.hexdigest(raw)}"}] }
+      "assets" => [ { "name" => "muzeum-artifact.json", "id" => 9, "size" => raw.bytesize,
+        "digest" => "sha256:#{Digest::SHA256.hexdigest(raw)}" } ] }
     deployment = { "sha" => sha, "environment" => "production", "production_environment" => true,
-      "payload" => candidate, "creator" => {"login" => "release-operator"} }
-    status = { "environment" => "production", "state" => "success", "creator" => {"login" => "release-operator"},
+      "payload" => candidate, "creator" => { "login" => "release-operator" } }
+    status = { "environment" => "production", "state" => "success", "creator" => { "login" => "release-operator" },
       "created_at" => "2023-01-01T00:00:00Z" }
     command = lambda do |*argv|
       case argv.fetch(2)

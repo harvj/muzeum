@@ -1,10 +1,10 @@
-require_relative "muzeum_release_package"
-require_relative "muzeum_publication_receipt"
+require_relative "../../lib/muzeum_release_package"
+require_relative "../../lib/muzeum_publication_receipt"
 
 # Invoked with the existing Capistrano SSH deployment identity.
 if $PROGRAM_NAME == __FILE__
   action, *arguments = ARGV
-  release = Pathname(__FILE__).realpath.dirname.parent
+  release = Pathname(__FILE__).realpath.dirname.parent.parent
   shared = release.parent.parent.join("shared")
   case action
   when "package"

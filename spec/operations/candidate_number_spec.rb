@@ -9,13 +9,13 @@ RSpec.describe MuzeumCandidateNumber do
       source = "a" * 40
       digest = "1" * 64
 
-      candidates = ["0.6.1", "0.6.1", "0.6.1", "0.6.1", "0.6.2"]
-        .zip([source, source, source, "b" * 40, source], [digest, digest, "2" * 64, digest, digest])
+      candidates = [ "0.6.1", "0.6.1", "0.6.1", "0.6.1", "0.6.2" ]
+        .zip([ source, source, source, "b" * 40, source ], [ digest, digest, "2" * 64, digest, digest ])
       numbers = candidates.map do |version, revision, artifact_sha256|
         described_class.allocate(directory, version:, revision:, artifact_sha256:)
       end
 
-      expect(numbers).to eq([1, 1, 2, 3, 1])
+      expect(numbers).to eq([ 1, 1, 2, 3, 1 ])
     end
   end
 
@@ -29,7 +29,7 @@ RSpec.describe MuzeumCandidateNumber do
       processes = inputs.map { |input| fork { exit!(allocate.call(input).positive? ? 0 : 1) } }
 
       expect(processes.map { |pid| Process.wait2(pid).last }).to all(be_success)
-      expect(inputs.map(&allocate).sort).to eq([1, 2, 3, 4])
+      expect(inputs.map(&allocate).sort).to eq([ 1, 2, 3, 4 ])
     end
   end
 end
