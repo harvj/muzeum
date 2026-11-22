@@ -59,11 +59,13 @@ RSpec.describe "Application Shell v2 appearance control", type: :system, if: ENV
     visit archive_path
     expect_dark_pair
     browser.execute_cdp("Emulation.setTouchEmulationEnabled", enabled: true)
-    tap = page.evaluate_script(<<~JS)
-      const rect = document.querySelector(".shell-appearance summary").getBoundingClientRect()
-      return {x: rect.left + rect.width / 2, y: rect.top + rect.height / 2}
+    x, y = page.evaluate_script(<<~JS)
+      (() => {
+        const rect = document.querySelector(".shell-appearance summary").getBoundingClientRect();
+        return [rect.left + rect.width / 2, rect.top + rect.height / 2];
+      })()
     JS
-    browser.execute_cdp("Input.dispatchTouchEvent", type: "touchStart", touchPoints: [ tap ])
+    browser.execute_cdp("Input.dispatchTouchEvent", type: "touchStart", touchPoints: [ { x:, y: } ])
     browser.execute_cdp("Input.dispatchTouchEvent", type: "touchEnd", touchPoints: [])
     expect(page).to have_select("Appearance", selected: "Dark")
     find(".shell-appearance summary").send_keys(:escape)
