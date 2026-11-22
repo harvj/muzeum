@@ -115,6 +115,39 @@ RSpec.describe CanonicalCatalog::Processor do
     expect(Release.count).to eq(1)
   end
 
+  it "preserves later release appearances outside the base slots and retains source tags" do
+    original = session.edition
+    later = original.deep_dup
+    later.merge!("id" => SecureRandom.uuid, "date" => "2020-08-21", "tags" => [ { "name" => "alternative rock", "count" => 2 } ])
+    bonus = later["media"].last["tracks"].first.deep_dup
+    bonus.merge!("id" => SecureRandom.uuid, "position" => 2, "title" => "Bonus track")
+    bonus["recording"].merge!("id" => SecureRandom.uuid, "title" => "Bonus track")
+    later["media"].last["tracks"] << bonus
+    later["media"].last["track-count"] += 1
+    documents = [ original, later ].index_by { |edition| edition.fetch("id") }
+    documents[recording.mbid] = original["media"].first["tracks"].first["recording"].merge(
+      "releases" => documents.values.map { |edition| edition.except("media") },
+      "tags" => [ { "name" => "indie rock", "count" => 1 } ]
+    )
+    allow(session).to receive(:get) do |_provider, path, params:, &projection|
+      { "data" => projection.call(documents.fetch(path.split("/").last)) }
+    end
+
+    request = process(CatalogImport.request!("recording", recording.id))
+    expect(request.state).to eq("imported")
+    expect(Release.sole.catalog_track_slots.base_sequence.size).to eq(3)
+    addition = Release.sole.catalog_track_slots.additional_appearances.sole
+    expect(addition.recording.mbid).to eq(bonus.dig("recording", "id"))
+    expect(addition.appearance_date).to eq("2020-08-21")
+    expect(addition.recording.admitted_releases).to contain_exactly(Release.sole)
+    evidence = CatalogRevision.find_by!(catalog_import: request, entity_type: "Release").evidence
+    expect(evidence.fetch("checked_recording_appearances").last.fetch("additional_tracks")).to contain_exactly(
+      include("recording_mbid" => bonus.dig("recording", "id"), "edition_appearance_date" => "2020-08-21")
+    )
+    recording_evidence = CatalogRevision.find_by!(catalog_import: request, entity_type: "Recording", entity_id: recording.id).evidence
+    expect(recording_evidence.dig("musicbrainz", "tags")).to eq([ { "name" => "indie rock", "count" => 1 } ])
+  end
+
   it "refreshes previously verified metadata and preserves missing fields and separately corrected values" do
     artist = Artist.create!(mbid: CatalogFixtures::IDS[:artist], name: "Night Lines")
     first = CatalogImport.request!("artist", artist.id)

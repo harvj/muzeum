@@ -3,8 +3,29 @@ module CanonicalLibraryHelper
     entry.is_a?(Artist) ? entry.name : entry.title
   end
 
-  def catalog_link(entry)
-    entity_link catalog_title(entry), catalog_entry_path(entry)
+  def catalog_link(entry, title: catalog_title(entry))
+    safe_join([ musical_identity_badge(entry), entity_link(title, catalog_entry_path(entry)) ])
+  end
+
+  def musical_identity(entry)
+    @musical_identities&.fetch([ entry.class.name, entry.id ], nil)
+  end
+
+  def musical_identity_attributes(entry)
+    colors = musical_identity(entry)&.colors || []
+    %i[identity_first identity_second identity_third].zip(colors).filter_map { |position, color| [ position, color ] if color }.to_h
+  end
+
+  def musical_identity_badge(entry, detailed: false)
+    colors = musical_identity(entry)&.colors || []
+    return if colors.empty? && !detailed
+
+    label = colors.map { |color| MusicalIdentity::Palette::COLORS.fetch(color) }.to_sentence.presence || "unclassified"
+    link_to(detailed ? "#guide-assignment" : "#guide-colors", class: "identity-badge",
+      data: { action: "guide#open", **musical_identity_attributes(entry) },
+      aria: { label: "Musical identity for #{catalog_title(entry)}: #{label}" }) do
+      tag.span(class: "identity-swatch", aria: { hidden: true })
+    end
   end
 
   def catalog_entry_path(entry, **options)

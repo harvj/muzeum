@@ -10,7 +10,7 @@
       <tbody>
         <% @slots.each.with_index(@track_offset.to_i + 1) do |slot, number| %>
           <tr><td class="track-number"><%= number %></td>
-            <th scope="row"><span class="play-name" data-overflow-name><%= entity_link slot.title, catalog_entry_path(slot.recording) %></span></th>
+            <th scope="row"><span class="play-name" data-overflow-name><%= catalog_link(slot.recording, title: slot.title) %></span></th>
             <td class="table-number"><%= recording_duration(slot.recording.duration_ms) if slot.recording.duration_ms %></td>
             <td class="table-number">
               <% count = @track_counts.fetch(slot.recording_id, 0) %>
@@ -35,6 +35,19 @@
   <% end %>
 </section>
 
+<% if @additional_appearances.any? %>
+  <section class="card library-card">
+    <h2>Additional edition appearances</h2>
+    <ul class="catalog-list">
+      <% @additional_appearances.each do |slot| %>
+        <li><%= catalog_link(slot.recording, title: slot.title) %> · <%= slot.appearance_date %> ·
+          <%= link_to "MusicBrainz edition", "https://musicbrainz.org/release/#{slot.edition_mbid}" %>
+          · Disc <%= slot.medium %>, track <%= slot.number.presence || slot.position %></li>
+      <% end %>
+    </ul>
+  </section>
+<% end %>
+
 <section class="card library-card" id="listening-activity">
   <h2><%= @activity_releases.many? ? "Combined listening history" : "Release listening history" %></h2>
   <% if @activity_releases.many? %>
@@ -43,6 +56,7 @@
   <% if @archive_available %>
     <p><strong><%= estimated_listening_time(@listening_total) %></strong> estimated listening time</p>
     <%= render "duration_coverage", totals: @listening_total %>
+    <%= render "artist_timeline", metric: :milliseconds if @timeline&.any? { |_, totals| totals.plays.positive? } %>
     <p><%= pluralize(@observation_count, "distinct resolved observation") %> across the member recordings.</p>
     <% if @plays.any? %>
       <ol class="catalog-list">

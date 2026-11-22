@@ -55,6 +55,8 @@ The authoritative, living domain rules are [principles](domain/principles.md), [
    - **v0.5.0 — Canonical release context.** Admit verified overlapping original release memberships after recording confirmation and count distinct observations within each release and across any combined set. Retire the edition picker. Add the Artist listening-history chart and rankings, with estimated listening time for artist and release contexts and play counts for recordings. [Release plan](releases/v0.5.0.md).
    - **v0.5.1 — Site Art and live catalog refresh.** Remove the shell bands, use shared translucent content surfaces, and update persisted canonical memberships in Resolution Review as verification finishes. [Visual review](design/verification/v0.5.1/README.md).
 
+   - **v0.6.0 — Musical Identity & Release Construction.** P1 constructs musical collections from edition evidence. P2 stores manual Artist, Release, and Recording color decisions and displays them in catalog badges and entity charts. P3 explains both through a contextual Guide. [Implementation and open work](v0.6.0/implementation.md).
+
 9. **P1.6 — Profile onboarding (tentative).**
    - **P1.6a — Last.fm authentication and verified username.** Use Last.fm web authorization and bind only the returned username.
    - **P1.6b — Self-service account linking.** Resolve duplicate claims, relinking and provider session security.

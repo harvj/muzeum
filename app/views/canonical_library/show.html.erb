@@ -2,9 +2,9 @@
   <p><%= link_to @section.capitalize, catalog_index_path(@section) %></p>
   <% if @entry.is_a?(Release) %>
     <p><%= catalog_artists(@entry).presence || "Artist credits pending" %></p>
-    <h1><%= catalog_title(@entry) %><% if @entry.release_year %> <span><%= @entry.release_year %></span><% end %></h1>
+    <h1><%= musical_identity_badge(@entry, detailed: true) %><%= catalog_title(@entry) %><% if @entry.release_year %> <span><%= @entry.release_year %></span><% end %></h1>
   <% else %>
-    <h1><%= catalog_title(@entry) %></h1>
+    <h1><%= musical_identity_badge(@entry, detailed: true) %><%= catalog_title(@entry) %></h1>
     <% if @entry.is_a?(Recording) %><p><%= verified_recording_credit(@entry).presence || "Artist credits pending" %></p><% end %>
   <% end %>
   <%= render "artist_metadata" if @entry.is_a?(Artist) %>

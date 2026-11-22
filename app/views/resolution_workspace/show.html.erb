@@ -9,12 +9,13 @@
   <% source = @selected_scrobble || @observation %>
   <p class="review-back"><%= link_to "Recording resolution", resolution_surfaces_path %> / Observation <%= source.id %></p>
   <h1><%= observed_text(source.payload["track_name"], "Track") %></h1>
+  <p class="review-string-label">Recording string</p>
   <dl class="review-source-claims">
     <% %w[Artist Album].each do |label| %>
-      <div><dt><%= label %></dt><dd><%= observed_text(source.payload["#{label.downcase}_name"], label) %></dd></div>
+      <div><dt><%= label %> string</dt><dd><%= observed_text(source.payload["#{label.downcase}_name"], label) %></dd></div>
     <% end %>
   </dl>
-  <p class="review-observation-meta">Original Last.fm strings · <%= pluralize(@observations_count, "matching observation") %></p>
+  <p class="review-observation-meta"><%= pluralize(@observations_count, "matching observation") %></p>
 </section>
 <nav class="review-sections" aria-label="Review sections">
   <a href="#review-candidates" class="review-primary-section">Candidates</a>

@@ -72,7 +72,11 @@ These documents supersede contradictory *proposals* in dated P1.0 design notes. 
 - Whether user-level release preferences are needed in addition to individual-play overrides.
 - How to handle cases where a single song has multiple distinct recordings with ambiguous source metadata.
 
+**DOM-020 — Musical identity is revisable.** Separate assertions about a recording's musical characteristics, provider metadata, listener color decisions, and predictions. Preserve provenance and uncertainty. A listener's current manual choice takes precedence over automatic predictions. Artist and release presentation derives from recordings without multiplying the underlying listening observations.
+
 ## Revision history
+
+- v0.6.0: Clarified that edition evidence supports canonical release construction while recording, publication, and edition dates remain separate assertions.
 
 - 2026-11-19: Recorded the #26 decision to retire new Discogs API requests and preserve historical provenance.
 

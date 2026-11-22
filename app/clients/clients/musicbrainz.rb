@@ -126,6 +126,7 @@ module Clients
       return { "status" => "invalid" } unless MBID.match?(mbid.to_s)
 
       params = { fmt: "json", inc: "artist-credits+releases+release-groups+isrcs" }
+      params[:inc] += "+genres+tags" if catalog
       projection = method(:project_recording) if catalog
       first = session.get(:musicbrainz, "/ws/2/recording/#{mbid.downcase}", params:, &projection)
       return first unless first["redirect"]
@@ -139,18 +140,29 @@ module Clients
 
       projection = method(:project_edition) if catalog
       session.get(:musicbrainz, "/ws/2/release/#{mbid}", params: {
-        fmt: "json", inc: catalog ? "recordings+artist-credits+release-groups+url-rels" : "recordings+artist-credits+release-groups"
+        fmt: "json", inc: catalog ? "recordings+artist-credits+release-groups+url-rels+genres+tags" : "recordings+artist-credits+release-groups"
       }, &projection)["data"]
+    end
+
+    def collection_editions(session, group_mbid, limit:)
+      response = session.get(:musicbrainz, "/ws/2/release", params: { fmt: "json", "release-group" => group_mbid, limit: }) do |data|
+        data.slice("release-count").merge("releases" => Array(data["releases"]).map { |row| row.slice("id", "title", "date", "status") })
+      end["data"]
+      unless response && response["release-count"].is_a?(Integer) && response["release-count"] == response["releases"].size
+        raise CanonicalCatalog::Store::Unverified, "Release collection exceeds the evidence budget or could not be verified"
+      end
+
+      response.fetch("releases")
     end
 
     def catalog_artist(session, mbid)
       return unless MBID.match?(mbid.to_s)
 
-      session.get(:musicbrainz, "/ws/2/artist/#{mbid}", params: { fmt: "json", inc: "url-rels" }) do |data|
+      session.get(:musicbrainz, "/ws/2/artist/#{mbid}", params: { fmt: "json", inc: "url-rels+genres+tags" }) do |data|
         urls = Array(data["relations"]).select { |relation| relation["type"] == "wikidata" }.filter_map do |relation|
           relation.dig("url", "resource").to_s[%r{\Ahttps://www\.wikidata\.org/wiki/(Q[1-9][0-9]{0,11})\z}, 1]
         end.uniq
-        data.slice("id", "name", "country", "area", "begin-area").merge("wikidata_ids" => urls.first(12))
+        data.slice("id", "name", "country", "area", "begin-area", "genres", "tags").merge("wikidata_ids" => urls.first(12))
       end["data"]
     end
 
@@ -159,7 +171,7 @@ module Clients
     private
 
     def project_recording(data)
-      data.slice("id", "title", "length", "video", "disambiguation", "first-release-date", "isrcs").merge(
+      data.slice("id", "title", "length", "video", "disambiguation", "first-release-date", "isrcs", "genres", "tags").merge(
         "artist-credit" => project_credits(data["artist-credit"]),
         "releases" => Array(data["releases"]).map do |release|
           release.slice("id", "title", "date", "country", "disambiguation", "status").merge(
@@ -168,7 +180,7 @@ module Clients
     end
 
     def project_edition(data)
-      result = data.slice("id", "title", "status", "country", "date", "disambiguation")
+      result = data.slice("id", "title", "status", "country", "date", "disambiguation", "genres", "tags")
       result["release-events"] = Array(data["release-events"]).filter_map do |event|
         codes = Array(event.dig("area", "iso-3166-1-codes"))
         { "country_codes" => codes } if codes.any?

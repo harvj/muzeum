@@ -126,7 +126,7 @@ module CanonicalCatalog
         group = appearance["release-group"]
         classified = appearance["status"].present? && group&.fetch("primary-type", nil).present? &&
           group["first-release-date"].present?
-        next if classified && !Edition.original_context?(appearance)
+        next if classified && !Edition.collection_context?(appearance)
 
         id = appearance["id"]
         id if Clients::Musicbrainz::MBID.match?(id.to_s)
@@ -138,27 +138,35 @@ module CanonicalCatalog
       pending = false
       editions = ids.filter_map do |id|
         edition = fetch_edition(id, recording_mbid: mbid)
-        edition if Edition.original_context?(edition.data)
+        edition if Edition.collection_context?(edition.data)
       rescue Store::Unverified
         pending = true
         nil
       end
       contexts = editions.group_by { |edition| edition.data.dig("release-group", "id") }
       pending ||= contexts.empty?
-      contexts.each_value do |matches|
-        signatures = matches.group_by { |edition| edition.slots.map { |slot| slot.dig(:recording, "id") } }
-        base = signatures.keys.min_by(&:length)
-        if signatures.keys.any? { |signature| signature.first(base.length) != base }
-          pending = true
-          next
+      remaining_editions = MAX_EDITIONS - ids.size
+      contexts.each do |group, matches|
+        unless matches.any? { |edition| Edition.original_context?(edition.data) }
+          original_date = matches.first.data.dig("release-group", "first-release-date")
+          originals = @musicbrainz.collection_editions(@session, group, limit: MAX_EDITIONS).select do |row|
+            row["status"] == "Official" && row["date"] == original_date
+          end
+          if originals.size > remaining_editions
+            raise Store::Unverified, "Original tracklists exceed the evidence budget"
+          end
+          remaining_editions -= originals.size
+          matches += originals.map { |row| fetch_edition(row.fetch("id")) }.select do |edition|
+            edition.data.dig("release-group", "id") == group && Edition.original_context?(edition.data)
+          end
         end
-
-        base_editions = signatures.fetch(base)
-        ids = base_editions.map { |edition| edition.data.fetch("id") }
-        stored = Release.where(ingested_from_release_mbid: ids).order(:id).pick(:ingested_from_release_mbid)
-        edition = base_editions.find { |item| item.data["id"] == stored } || base_editions.first
-        checked = matches.map { |item| item.data.slice("id", "title", "date").merge("track_count" => item.slots.size) }
-        locked { @store.release(edition.data, edition.slots, strict_collection: true, checked_editions: checked) }
+        construction = Construction.new(matches)
+        edition = construction.base
+        pending ||= (edition.slots + construction.additional_slots).none? { |slot| slot.dig(:recording, "id") == mbid }
+        locked do
+          @store.release(edition.data, edition.slots, strict_collection: true,
+            checked_editions: construction.appearances, additional_slots: construction.additional_slots)
+        end
       rescue Store::Unverified
         pending = true
       end

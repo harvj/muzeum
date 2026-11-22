@@ -13,7 +13,7 @@
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
-  <body>
+  <body data-controller="guide" data-action="hashchange@window->guide#openFromLocation">
     <%= tag.div class: "stone-environment", aria: { hidden: true },
                 data: { controller: "site-art", site_art_urls_value: SiteArt.snapshot } %>
     <a class="shell-skip-link" href="#main-content">Skip to content</a>
@@ -50,6 +50,7 @@
       <%= yield %>
     </main>
     <footer class="site-footer">
+      <nav aria-label="Help"><%= link_to "Guide", "#guide-overview", class: "entity-link guide-trigger", data: { action: "guide#open" } %></nav>
       <span>© <%= Date.current.year %> <%= link_to "Jim Harvey", "https://harvj.com/" %><% if (tag = published_release_tag) %> · Muzeum <%= tag %><% elsif Rails.env.production? %> · Muzeum · Version unavailable<% end %></span>
     </footer>
     <% unless current_user %>
@@ -58,5 +59,6 @@
         <%= render "shared/appearance" %>
       </details>
     <% end %>
+    <%= render "shared/guide" %>
   </body>
 </html>

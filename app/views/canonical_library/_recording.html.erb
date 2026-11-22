@@ -1,3 +1,5 @@
+<%= render "recording_chronology" %>
+
 <% unless Clients::Musicbrainz::MBID.match?(@entry.mbid.to_s) %>
   <p class="muted">Partially resolved · The provider identity is unverified.</p>
 <% end %>
@@ -17,6 +19,7 @@
     <p><strong><%= pluralize(@observation_count, "resolved listening observation") %></strong></p>
     <p>Estimated listening time: <%= estimated_listening_time(@listening_total) %></p>
     <%= render "duration_coverage", totals: @listening_total %>
+    <%= render "artist_timeline", metric: :plays if @timeline&.any? { |_, totals| totals.plays.positive? } %>
     <% unless @public_profile %><p class="muted">Unresolved observations are outside this count.</p><% end %>
     <% if @plays.any? %>
       <%= dense_table("Listening activity") do %>

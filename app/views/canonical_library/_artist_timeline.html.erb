@@ -1,20 +1,23 @@
-<% maximum = [ @timeline.map { |_, totals| totals.milliseconds }.max, 1 ].max %>
+<% metric = local_assigns.fetch(:metric, :milliseconds) %>
+<% counts = metric == :plays %>
+<% maximum = [ @timeline.map { |_, totals| totals.public_send(metric) }.max, 1 ].max %>
 <% spacing = @timeline.size > 1 ? (@timeline[1][0] - @timeline[0][0]).to_i : 0 %>
 <% date_format = spacing >= 365 ? "%Y" : (spacing >= 28 ? "%b %y" : "%b %-d") %>
 <% step = [ (@timeline.size / 7.0).ceil, 1 ].max %>
-<figure class="artist-timeline" aria-label="Estimated listening time by date">
+<%= tag.figure class: "artist-timeline identity-chart", data: @activity_releases&.many? ? {} : musical_identity_attributes(@entry),
+  aria: { label: counts ? "Plays by date" : "Estimated listening time by date" } do %>
   <div class="artist-timeline-axis" aria-hidden="true">
-    <% [ maximum, maximum / 2, 0 ].each do |value| %><span><%= compact_listening_time(value) %></span><% end %>
+    <% [ maximum, maximum / 2, 0 ].each do |value| %><span><%= counts ? value : compact_listening_time(value) %></span><% end %>
   </div>
   <div class="artist-timeline-bars" aria-hidden="true">
     <% @timeline.each_with_index do |(date, totals), index| %>
       <div class="artist-timeline-column">
-        <div class="artist-timeline-fill" data-controller="listening-scale" data-listening-scale-percent-value="<%= 100.0 * totals.milliseconds / maximum %>" title="<%= date.iso8601 %> · <%= estimated_listening_time(totals) %>"></div>
+        <div class="artist-timeline-fill" data-controller="listening-scale" data-listening-scale-percent-value="<%= 100.0 * totals.public_send(metric) / maximum %>" title="<%= date.iso8601 %> · <%= counts ? pluralize(totals.plays, "play") : estimated_listening_time(totals) %>"></div>
         <% if (index % step).zero? %><span><%= date.strftime(date_format) %></span><% end %>
       </div>
     <% end %>
   </div>
-</figure>
+<% end %>
 <details class="artist-timeline-data">
   <summary>Listening history data</summary>
   <ul>

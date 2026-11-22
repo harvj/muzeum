@@ -14,6 +14,7 @@ class CanonicalLibraryController < ApplicationController
     records = records.where("#{field} ILIKE ?", "%#{@model.sanitize_sql_like(@query)}%") if @query.present?
     @entries = with_artist_credits(records).limit(PAGE + 1).to_a
     @next_page = @entries.pop && @entries.last.id if @entries.size > PAGE
+    @musical_identities = MusicalIdentityDecision.latest_for(@entries)
     if @model == Artist
       @geographies = CatalogRevision.where(entity_type: CanonicalCatalog::ArtistGeography::ENTITY_TYPE, entity_id: @entries.map(&:id))
         .select("DISTINCT ON (entity_id) entity_id, evidence").order(:entity_id, id: :desc).index_by(&:entity_id)
@@ -35,13 +36,15 @@ class CanonicalLibraryController < ApplicationController
         .order(id: :desc).first
       load_artist_listening
     when Release
-      slots = @entry.catalog_track_slots.order(:medium, :position)
+      slots = @entry.catalog_track_slots.base_sequence.order(:medium, :position)
       cursor = slots.find_by(id: params[:after_track]) if params[:after_track].present?
       if cursor
         @track_offset = slots.where("(medium, position) <= (?, ?)", cursor.medium, cursor.position).count
         slots = slots.where("(medium, position) > (?, ?)", cursor.medium, cursor.position)
       end
       @slots = slots.includes(:recording).limit(101).to_a
+      @additional_appearances = @entry.catalog_track_slots.additional_appearances
+        .order(:appearance_date, :edition_mbid, :medium, :position).includes(:recording).limit(200)
       @next_track = @slots.pop && @slots.last.id if @slots.size > 100
       if @slots.empty? && !@public_profile && !cursor
         legacy_slots = @entry.release_recordings.order(:position, :id)
@@ -61,10 +64,15 @@ class CanonicalLibraryController < ApplicationController
       release_plays = recording_plays(member_ids)
       @listening_total = CatalogListening.new(release_plays).total
       @observation_count = @listening_total.plays
+      @timeline = CatalogListening.new(release_plays).timeline("all") if @archive_available
       @plays = ListeningPage.chronological(release_plays, before: params[:before_play]).limit(PAGE + 1).to_a
       @next_release_play = @plays.pop && @plays.last.id if @plays.size > PAGE
       @activity_recordings = Recording.where(id: @plays.map(&:effective_recording_id)).index_by(&:id)
     when Recording
+      @chronology = CanonicalCatalog::RecordingChronology.latest(@entry)
+      @first_release_claim = CatalogRevision.where(entity_type: "Recording", entity_id: @entry.id)
+        .where("evidence->'musicbrainz' ? 'first-release-date'").order(id: :desc)
+        .pick(Arel.sql("evidence->'musicbrainz'->>'first-release-date'"))
       @releases = @entry.admitted_releases.order(:title, :id).includes(release_artists: :artist)
       @releases = @releases.merge(@profile_catalog.releases) if @public_profile
       cursor = @releases.find_by(id: params[:after_appearance]) if params[:after_appearance].present?
@@ -74,7 +82,9 @@ class CanonicalLibraryController < ApplicationController
       @releases = @releases.limit(PAGE + 1).to_a
       @next_appearance = @releases.pop && @releases.last.id if @releases.size > PAGE
       plays = recording_plays([ @entry.id ])
-      @listening_total = CatalogListening.new(plays).total
+      listening = CatalogListening.new(plays)
+      @listening_total = listening.total
+      @timeline = listening.timeline("all") if @archive_available
       @observation_count = @listening_total.plays
       if @public_profile
         plays = ListeningPage.chronological(plays, before: params[:before])
@@ -85,6 +95,45 @@ class CanonicalLibraryController < ApplicationController
       @plays = plays.limit(PAGE + 1).to_a
       @next_page = @plays.pop && @plays.last.id if @plays.size > PAGE
     end
+    related = [ *@recording_rows&.map(&:first), *@release_rows&.map(&:first), *@slots&.map(&:recording), *@additional_appearances&.map(&:recording), *@releases ]
+    @musical_identities = MusicalIdentityDecision.latest_for([ @entry, *related ])
+    @may_edit_identity = @may_import && (@entry.is_a?(Release) ? @entry.catalog_verified_at.present? : Clients::Musicbrainz::MBID.match?(@entry.mbid.to_s))
+  end
+
+  def musical_identity
+    entry = catalog_scope.find(params[:id])
+    verified = entry.is_a?(Release) ? entry.catalog_verified_at.present? : Clients::Musicbrainz::MBID.match?(entry.mbid.to_s)
+    return head :forbidden unless verified && current_user.managed_archive_grants.exists?
+
+    input = params.expect(musical_identity: [ :head, :rationale, colors: [] ])
+    entry.with_lock do
+      previous = MusicalIdentityDecision.latest_for([ entry ])[[ entry.class.name, entry.id ]]
+      if previous&.id.to_s != input[:head].to_s
+        flash[:alert] = "Musical identity changed. Review the latest assignment before editing."
+      else
+        decision = MusicalIdentityDecision.new(entity: entry, user: current_user,
+          colors: Array(input[:colors]).reject(&:blank?), rationale: input[:rationale])
+        if decision.save
+          flash[:notice] = "Musical identity saved."
+        else
+          flash[:alert] = decision.errors.full_messages.to_sentence
+        end
+      end
+    end
+    redirect_to helpers.catalog_entry_path(entry, anchor: "guide-assignment"), status: :see_other
+  end
+
+  def chronology
+    recording = Recording.find(params[:id])
+    unless current_user.managed_archive_grants.exists? && Clients::Musicbrainz::MBID.match?(recording.mbid.to_s)
+      return head :forbidden
+    end
+
+    input = params.expect(chronology: [ :start_date, :end_date, :source, :head ])
+    CanonicalCatalog::RecordingChronology.record!(recording, current_user, **input.to_h.symbolize_keys)
+    redirect_to recording_path(recording, anchor: "recording-chronology"), notice: "Recording date saved.", status: :see_other
+  rescue ArgumentError, ActiveRecord::StaleObjectError => error
+    redirect_to recording_path(recording, anchor: "recording-chronology"), alert: error.message, status: :see_other
   end
 
   def import

@@ -3,7 +3,7 @@ module RecordingResolution
     MAX_LOOKUPS = 2
     MAX_SLOTS = 100
 
-    attr_reader :tracklists
+    attr_reader :tracklists, :construction_editions
 
     def initialize(musicbrainz, session, artist_mbid: nil)
       @musicbrainz = musicbrainz
@@ -13,11 +13,13 @@ module RecordingResolution
 
     def call(surface, candidates, checked:, attempted:, search:, review_alternative: false, preferred: nil)
       @tracklists = {}
+      @construction_editions = {}
       results = [ checked ].compact
       if surface.album.present? && search
         results.concat(related_editions(surface, candidates, attempted || checked&.fetch("id", nil)))
       end
       results.each { |edition| retain(edition.fetch("id"), edition) }
+      retain_original_for_later_edition
       retain(attempted, nil) if attempted && checked.nil? && release_request(attempted)
       found = results.flat_map { |edition| appearances(surface, edition) }
       # Preserve a fixed fallback budget even when search supplies many releases.
@@ -45,7 +47,36 @@ module RecordingResolution
 
     private
 
+    def retain_original_for_later_edition
+      later = @construction_editions.values.first
+      return unless later && @construction_editions.values.none? { |edition| CanonicalCatalog::Edition.original_context?(edition) }
+
+      group = later.fetch("release-group")
+      references = @musicbrainz.collection_editions(@session, group.fetch("id"), limit: 25).select do |row|
+        row["status"] == "Official" && row["date"] == group["first-release-date"] &&
+          DiscoveryTitle.match?(DiscoveryTitle.album_base(row["title"]), group["title"])
+      end
+      return unless references.size.between?(1, MAX_LOOKUPS)
+
+      originals = references.map do |row|
+        @musicbrainz.edition(@session, row.fetch("id"), catalog: true)
+      end
+      return unless originals.zip(references).all? do |edition, row|
+        edition && edition["id"] == row["id"] && edition.dig("release-group", "id") == group["id"] &&
+          CanonicalCatalog::Edition.original_context?(edition)
+      end
+
+      originals.each { |edition| retain(edition.fetch("id"), edition) }
+    rescue CanonicalCatalog::Store::Unverified, ProviderError
+      # The verified recording remains usable if the original sequence is unavailable.
+      nil
+    end
+
     def retain(id, edition)
+      if edition && CanonicalCatalog::Edition.collection_context?(edition) &&
+          Array(edition["media"]).sum { |medium| Array(medium["tracks"]).size } <= MAX_SLOTS
+        @construction_editions[id] = edition
+      end
       request = release_request(id)
       @tracklists[id] = (edition ? ReviewRelease.project(edition) : { "state" => "missing" }).merge(
         "provider" => "musicbrainz", "retrieved_at" => request&.fetch("retrieved_at", nil))

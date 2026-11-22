@@ -1,0 +1,32 @@
+<section id="guide-assignment" tabindex="-1" aria-labelledby="guide-assignment-heading">
+  <h3 id="guide-assignment-heading"><%= catalog_title(entry) %></h3>
+  <% if flash[:alert].present? %><p role="alert"><%= flash[:alert] %></p><% end %>
+  <% if flash[:notice].present? %><p role="status"><%= flash[:notice] %></p><% end %>
+  <% colors = decision&.colors || [] %>
+  <p><%= colors.map { |color| MusicalIdentity::Palette::COLORS.fetch(color) }.to_sentence.presence || "No colors assigned" %></p>
+  <% if decision && !@public_profile %>
+    <p>Manually revised <%= browser_time(decision.created_at, date_only: true) %>.</p>
+    <% if decision.rationale.present? %><p><%= decision.rationale %></p><% end %>
+  <% end %>
+  <% if @may_edit_identity %>
+    <%= form_with scope: :musical_identity, url: polymorphic_path([:musical_identity, entry]), method: :patch,
+      data: { turbo: false } do |form| %>
+      <%= form.hidden_field :head, value: decision&.id %>
+      <% options = MusicalIdentity::Palette::COLORS.map { |key, description| [description, key] } %>
+      <% ["First color", "Second color", "Exceptional third color"].each_with_index do |label, index| %>
+        <%= label_tag "identity-color-#{index}", label %>
+        <%= select_tag "musical_identity[colors][]", options_for_select(options, colors[index]),
+          include_blank: "None", id: "identity-color-#{index}" %>
+      <% end %>
+      <%= form.label :rationale, "Musical rationale (required for three colors)" %>
+      <%= form.text_area :rationale, value: decision&.rationale, maxlength: 1000 %>
+      <%= form.submit "Save colors" %>
+    <% end %>
+  <% end %>
+  <% evidence = @revision&.evidence&.fetch("musicbrainz", {}) || {} %>
+  <% terms = (Array(evidence["genres"]) + Array(evidence["tags"])).pluck("name").compact.uniq %>
+  <% if terms.any? %>
+    <p>MusicBrainz evidence for this <%= entry.model_name.human.downcase %></p>
+    <ul><% terms.each do |term| %><li><%= term %></li><% end %></ul>
+  <% end %>
+</section>

@@ -33,6 +33,7 @@
     <%= render "catalog_context", rows: catalog_rows %>
   </section>
   <% if @may_manage_observation && @assessment_matches_claims %>
+  <% proposal = CanonicalCatalog::ReviewedConstruction.for(@assessment, mbid).find { |item| CanonicalCatalog::ReviewedConstruction.needs_review?(item, catalog_recording) } %>
   <%= form_with url: decide_resolution_surface_path(@observation) do |form| %>
     <%= form.hidden_field :recording_mbid, value: mbid, id: nil %>
     <%= form.hidden_field :assessment_id, value: @assessment.id, id: nil %>
@@ -44,7 +45,26 @@
       <%= form.text_field :comment, id: "comment-#{mbid}", maxlength: 500 %>
     </details>
     <p class="muted">Future exact matches inherit this decision. Individual overrides are preserved.</p>
+    <% if proposal %>
+      <% base = proposal.construction.base %>
+      <details>
+        <summary><%= proposal.existing ? "Review release correction" : "Review release construction" %></summary>
+        <p><%= base.data.dig("release-group", "title").presence || base.data["title"] %> · <%= base.data["date"] %></p>
+        <ol>
+          <% base.slots.each do |slot| %><li><%= slot[:title] %></li><% end %>
+        </ol>
+        <% if proposal.construction.additional_slots.any? %>
+          <p>Additional edition appearances</p>
+          <ul><% proposal.construction.additional_slots.each do |slot| %><li><%= slot[:title] %> · <%= slot[:appearance_date] %></li><% end %></ul>
+        <% end %>
+      </details>
+      <%= form.hidden_field :construction_head, value: CanonicalCatalog::ReviewedConstruction.head(proposal.existing), id: nil %>
+    <% end %>
     <div class="catalog-actions">
+      <% if proposal %>
+        <%= form.button "#{proposal.existing ? 'Correct' : 'Construct'} release & resolve #{pluralize(@affected_count, 'observation')}",
+          name: "construct_release", value: proposal.construction.base.data.dig("release-group", "id") %>
+      <% end %>
       <%= form.button(@affected_count.positive? ? "Resolve #{pluralize(@affected_count, "observation")}" : "Resolve future exact matches", name: "mode", value: "resolved") %>
       <%= form.button "Defer", name: "feedback", value: "deferred", formaction: defer_resolution_surface_path(@observation) %>
       <%= form.button "Reject candidate", name: "feedback", value: "rejected", formaction: defer_resolution_surface_path(@observation) %>

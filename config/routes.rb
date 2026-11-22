@@ -19,6 +19,8 @@ Rails.application.routes.draw do
   %i[artists releases recordings].each do |section|
     resources section, only: %i[index show], controller: "canonical_library", defaults: { section: } do
       post :import, on: :member
+      patch :musical_identity, on: :member
+      patch :chronology, on: :member if section == :recordings
     end
   end
   resources :resolution_surfaces, path: "resolution", controller: "resolution_workspace", only: %i[index show] do

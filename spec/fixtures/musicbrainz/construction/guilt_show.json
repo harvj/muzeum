@@ -1,0 +1,1259 @@
+[
+  {
+    "id": "bb53ef0f-8e06-4cb1-b0ef-7ef2188e2750",
+    "title": "Guilt Show",
+    "status": "Official",
+    "date": "2004-03-02",
+    "country": "US",
+    "release-group": {
+      "id": "fcd9c6ae-a4a8-3e59-828e-55f6b1a70198",
+      "title": "Guilt Show",
+      "first-release-date": "2004-03-02",
+      "primary-type": "Album",
+      "secondary-types": []
+    },
+    "artist-credit": [
+      {
+        "name": "The Get Up Kids",
+        "joinphrase": "",
+        "artist": {
+          "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+          "name": "The Get Up Kids",
+          "country": "US"
+        }
+      }
+    ],
+    "media": [
+      {
+        "position": 1,
+        "track-count": 13,
+        "format": "CD",
+        "tracks": [
+          {
+            "id": "db435b3f-9314-3ee6-a495-3264ed604629",
+            "position": 1,
+            "number": "1",
+            "title": "Man of Conviction",
+            "length": 93666,
+            "artist-credit": [
+              {
+                "name": "The Get Up Kids",
+                "joinphrase": "",
+                "artist": {
+                  "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                  "name": "The Get Up Kids",
+                  "country": "US"
+                }
+              }
+            ],
+            "recording": {
+              "id": "b5499090-90ea-40eb-8133-eddf20ac9536",
+              "title": "Man of Conviction",
+              "length": 93666,
+              "first-release-date": "2004-03-02",
+              "artist-credit": [
+                {
+                  "name": "The Get Up Kids",
+                  "joinphrase": "",
+                  "artist": {
+                    "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                    "name": "The Get Up Kids",
+                    "country": "US"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "b4fa6701-7049-3cb7-9272-b5be0f324660",
+            "position": 2,
+            "number": "2",
+            "title": "The One You Want",
+            "length": 195040,
+            "artist-credit": [
+              {
+                "name": "The Get Up Kids",
+                "joinphrase": "",
+                "artist": {
+                  "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                  "name": "The Get Up Kids",
+                  "country": "US"
+                }
+              }
+            ],
+            "recording": {
+              "id": "2c088045-3d6e-44ed-a3b9-56ee54fe2fc1",
+              "title": "The One You Want",
+              "length": 195040,
+              "first-release-date": "2004-03-02",
+              "artist-credit": [
+                {
+                  "name": "The Get Up Kids",
+                  "joinphrase": "",
+                  "artist": {
+                    "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                    "name": "The Get Up Kids",
+                    "country": "US"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "8b0e99b5-7e35-3dc0-a49c-8fe4e6686f92",
+            "position": 3,
+            "number": "3",
+            "title": "Never Be Alone",
+            "length": 197226,
+            "artist-credit": [
+              {
+                "name": "The Get Up Kids",
+                "joinphrase": "",
+                "artist": {
+                  "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                  "name": "The Get Up Kids",
+                  "country": "US"
+                }
+              }
+            ],
+            "recording": {
+              "id": "e375b2a3-1ffa-4497-86de-19f202f89557",
+              "title": "Never Be Alone",
+              "length": 197226,
+              "first-release-date": "2004-03-02",
+              "artist-credit": [
+                {
+                  "name": "The Get Up Kids",
+                  "joinphrase": "",
+                  "artist": {
+                    "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                    "name": "The Get Up Kids",
+                    "country": "US"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "32a2b29f-e716-3fb8-afa6-c2e6ab41002f",
+            "position": 4,
+            "number": "4",
+            "title": "Wouldn\u2019t Believe It",
+            "length": 227080,
+            "artist-credit": [
+              {
+                "name": "The Get Up Kids",
+                "joinphrase": "",
+                "artist": {
+                  "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                  "name": "The Get Up Kids",
+                  "country": "US"
+                }
+              }
+            ],
+            "recording": {
+              "id": "0bdeb1be-d9b5-4120-8c7c-cddf50a2588e",
+              "title": "Wouldn\u2019t Believe It",
+              "length": 227080,
+              "first-release-date": "2004-03-02",
+              "artist-credit": [
+                {
+                  "name": "The Get Up Kids",
+                  "joinphrase": "",
+                  "artist": {
+                    "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                    "name": "The Get Up Kids",
+                    "country": "US"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "fb5bd2cf-937a-335f-90c9-dfad72e37e4c",
+            "position": 5,
+            "number": "5",
+            "title": "Holy Roman",
+            "length": 170773,
+            "artist-credit": [
+              {
+                "name": "The Get Up Kids",
+                "joinphrase": "",
+                "artist": {
+                  "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                  "name": "The Get Up Kids",
+                  "country": "US"
+                }
+              }
+            ],
+            "recording": {
+              "id": "6a5f248f-2bc2-49c0-b067-183d47a34c89",
+              "title": "Holy Roman",
+              "length": 170773,
+              "first-release-date": "2004-03-02",
+              "artist-credit": [
+                {
+                  "name": "The Get Up Kids",
+                  "joinphrase": "",
+                  "artist": {
+                    "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                    "name": "The Get Up Kids",
+                    "country": "US"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "4a5a949b-0c65-3b2d-a4a8-aa99485cf3ab",
+            "position": 6,
+            "number": "6",
+            "title": "Martyr Me",
+            "length": 206480,
+            "artist-credit": [
+              {
+                "name": "The Get Up Kids",
+                "joinphrase": "",
+                "artist": {
+                  "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                  "name": "The Get Up Kids",
+                  "country": "US"
+                }
+              }
+            ],
+            "recording": {
+              "id": "42f9b3f3-44e8-4805-9924-24752b78d793",
+              "title": "Martyr Me",
+              "length": 206480,
+              "first-release-date": "2004-03-02",
+              "artist-credit": [
+                {
+                  "name": "The Get Up Kids",
+                  "joinphrase": "",
+                  "artist": {
+                    "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                    "name": "The Get Up Kids",
+                    "country": "US"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "d2720377-7c9a-3156-a0f2-38ea627d3e82",
+            "position": 7,
+            "number": "7",
+            "title": "How Long Is Too Long",
+            "length": 144546,
+            "artist-credit": [
+              {
+                "name": "The Get Up Kids",
+                "joinphrase": "",
+                "artist": {
+                  "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                  "name": "The Get Up Kids",
+                  "country": "US"
+                }
+              }
+            ],
+            "recording": {
+              "id": "ac768f32-300c-462c-b6a5-28335702768c",
+              "title": "How Long Is Too Long",
+              "length": 144546,
+              "first-release-date": "2004-03-02",
+              "artist-credit": [
+                {
+                  "name": "The Get Up Kids",
+                  "joinphrase": "",
+                  "artist": {
+                    "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                    "name": "The Get Up Kids",
+                    "country": "US"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "a83a0bbf-e6c2-31ff-8d8a-d9fd19850195",
+            "position": 8,
+            "number": "8",
+            "title": "Sick in Her Skin",
+            "length": 265346,
+            "artist-credit": [
+              {
+                "name": "The Get Up Kids",
+                "joinphrase": "",
+                "artist": {
+                  "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                  "name": "The Get Up Kids",
+                  "country": "US"
+                }
+              }
+            ],
+            "recording": {
+              "id": "ffb735b0-ed2c-4bb0-bb38-2d70c190b780",
+              "title": "Sick in Her Skin",
+              "length": 265346,
+              "first-release-date": "2004-03-02",
+              "artist-credit": [
+                {
+                  "name": "The Get Up Kids",
+                  "joinphrase": "",
+                  "artist": {
+                    "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                    "name": "The Get Up Kids",
+                    "country": "US"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "1754a6b8-419b-3a90-a5b6-6f3abdd3eb31",
+            "position": 9,
+            "number": "9",
+            "title": "In Your Sea",
+            "length": 182266,
+            "artist-credit": [
+              {
+                "name": "The Get Up Kids",
+                "joinphrase": "",
+                "artist": {
+                  "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                  "name": "The Get Up Kids",
+                  "country": "US"
+                }
+              }
+            ],
+            "recording": {
+              "id": "c695376c-30b8-4423-b24d-f725dc428a54",
+              "title": "In Your Sea",
+              "length": 182266,
+              "first-release-date": "2004-03-02",
+              "artist-credit": [
+                {
+                  "name": "The Get Up Kids",
+                  "joinphrase": "",
+                  "artist": {
+                    "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                    "name": "The Get Up Kids",
+                    "country": "US"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "5e7eff0c-c4c9-321b-bae8-876d6c1fccaf",
+            "position": 10,
+            "number": "10",
+            "title": "Sympathy",
+            "length": 189440,
+            "artist-credit": [
+              {
+                "name": "The Get Up Kids",
+                "joinphrase": "",
+                "artist": {
+                  "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                  "name": "The Get Up Kids",
+                  "country": "US"
+                }
+              }
+            ],
+            "recording": {
+              "id": "f7b7c9a5-7a1a-48d9-8647-808cc82f6a60",
+              "title": "Sympathy",
+              "length": 189440,
+              "first-release-date": "2004-03-02",
+              "artist-credit": [
+                {
+                  "name": "The Get Up Kids",
+                  "joinphrase": "",
+                  "artist": {
+                    "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                    "name": "The Get Up Kids",
+                    "country": "US"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "983165bf-e213-3eea-82c7-e708172a530a",
+            "position": 11,
+            "number": "11",
+            "title": "The Dark Night of the Soul",
+            "length": 181320,
+            "artist-credit": [
+              {
+                "name": "The Get Up Kids",
+                "joinphrase": "",
+                "artist": {
+                  "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                  "name": "The Get Up Kids",
+                  "country": "US"
+                }
+              }
+            ],
+            "recording": {
+              "id": "41571242-34f0-40e7-9b9d-6af934a34625",
+              "title": "The Dark Night of the Soul",
+              "length": 181320,
+              "first-release-date": "2004-03-02",
+              "artist-credit": [
+                {
+                  "name": "The Get Up Kids",
+                  "joinphrase": "",
+                  "artist": {
+                    "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                    "name": "The Get Up Kids",
+                    "country": "US"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "8ffe41ff-ffb6-3080-8553-d782d3ad70b5",
+            "position": 12,
+            "number": "12",
+            "title": "Is There a Way Out",
+            "length": 380293,
+            "artist-credit": [
+              {
+                "name": "The Get Up Kids",
+                "joinphrase": "",
+                "artist": {
+                  "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                  "name": "The Get Up Kids",
+                  "country": "US"
+                }
+              }
+            ],
+            "recording": {
+              "id": "ca92b541-6a04-4f70-8c63-7f83414af9c1",
+              "title": "Is There a Way Out",
+              "length": 380293,
+              "first-release-date": "2004-03-02",
+              "artist-credit": [
+                {
+                  "name": "The Get Up Kids",
+                  "joinphrase": "",
+                  "artist": {
+                    "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                    "name": "The Get Up Kids",
+                    "country": "US"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "2f9897f9-ba66-3212-8499-77dc0aa2a2ac",
+            "position": 13,
+            "number": "13",
+            "title": "Conversation",
+            "length": 298493,
+            "artist-credit": [
+              {
+                "name": "The Get Up Kids",
+                "joinphrase": "",
+                "artist": {
+                  "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                  "name": "The Get Up Kids",
+                  "country": "US"
+                }
+              }
+            ],
+            "recording": {
+              "id": "a82d5d8c-1ef4-446a-a336-138cb9c6cfca",
+              "title": "Conversation",
+              "length": 298493,
+              "first-release-date": "2004-03-02",
+              "artist-credit": [
+                {
+                  "name": "The Get Up Kids",
+                  "joinphrase": "",
+                  "artist": {
+                    "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                    "name": "The Get Up Kids",
+                    "country": "US"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "4a374416-da6d-4cc5-9138-16d8cc42ab33",
+    "title": "Guilt Show",
+    "status": "Official",
+    "date": "2004-08-21",
+    "country": "JP",
+    "release-group": {
+      "id": "fcd9c6ae-a4a8-3e59-828e-55f6b1a70198",
+      "title": "Guilt Show",
+      "first-release-date": "2004-03-02",
+      "primary-type": "Album",
+      "secondary-types": []
+    },
+    "artist-credit": [
+      {
+        "name": "The Get Up Kids",
+        "joinphrase": "",
+        "artist": {
+          "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+          "name": "The Get Up Kids",
+          "country": "US"
+        }
+      }
+    ],
+    "media": [
+      {
+        "position": 1,
+        "track-count": 14,
+        "format": "Enhanced CD",
+        "tracks": [
+          {
+            "id": "11ccf17e-5cf8-4936-9e14-25a397e22bdc",
+            "position": 1,
+            "number": "1",
+            "title": "Man of Conviction",
+            "length": 93666,
+            "artist-credit": [
+              {
+                "name": "The Get Up Kids",
+                "joinphrase": "",
+                "artist": {
+                  "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                  "name": "The Get Up Kids",
+                  "country": "US"
+                }
+              }
+            ],
+            "recording": {
+              "id": "b5499090-90ea-40eb-8133-eddf20ac9536",
+              "title": "Man of Conviction",
+              "length": 93666,
+              "first-release-date": "2004-03-02",
+              "artist-credit": [
+                {
+                  "name": "The Get Up Kids",
+                  "joinphrase": "",
+                  "artist": {
+                    "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                    "name": "The Get Up Kids",
+                    "country": "US"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "d512224e-417b-4d21-91db-3ba658fd037c",
+            "position": 2,
+            "number": "2",
+            "title": "The One You Want",
+            "length": 195040,
+            "artist-credit": [
+              {
+                "name": "The Get Up Kids",
+                "joinphrase": "",
+                "artist": {
+                  "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                  "name": "The Get Up Kids",
+                  "country": "US"
+                }
+              }
+            ],
+            "recording": {
+              "id": "2c088045-3d6e-44ed-a3b9-56ee54fe2fc1",
+              "title": "The One You Want",
+              "length": 195040,
+              "first-release-date": "2004-03-02",
+              "artist-credit": [
+                {
+                  "name": "The Get Up Kids",
+                  "joinphrase": "",
+                  "artist": {
+                    "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                    "name": "The Get Up Kids",
+                    "country": "US"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "a0ecd805-c6a4-43a9-ac44-b621025176b8",
+            "position": 3,
+            "number": "3",
+            "title": "Never Be Alone",
+            "length": 197226,
+            "artist-credit": [
+              {
+                "name": "The Get Up Kids",
+                "joinphrase": "",
+                "artist": {
+                  "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                  "name": "The Get Up Kids",
+                  "country": "US"
+                }
+              }
+            ],
+            "recording": {
+              "id": "e375b2a3-1ffa-4497-86de-19f202f89557",
+              "title": "Never Be Alone",
+              "length": 197226,
+              "first-release-date": "2004-03-02",
+              "artist-credit": [
+                {
+                  "name": "The Get Up Kids",
+                  "joinphrase": "",
+                  "artist": {
+                    "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                    "name": "The Get Up Kids",
+                    "country": "US"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "9a29d249-44c1-42da-b8a8-b9b697c321e9",
+            "position": 4,
+            "number": "4",
+            "title": "Wouldn\u2019t Believe It",
+            "length": 227080,
+            "artist-credit": [
+              {
+                "name": "The Get Up Kids",
+                "joinphrase": "",
+                "artist": {
+                  "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                  "name": "The Get Up Kids",
+                  "country": "US"
+                }
+              }
+            ],
+            "recording": {
+              "id": "0bdeb1be-d9b5-4120-8c7c-cddf50a2588e",
+              "title": "Wouldn\u2019t Believe It",
+              "length": 227080,
+              "first-release-date": "2004-03-02",
+              "artist-credit": [
+                {
+                  "name": "The Get Up Kids",
+                  "joinphrase": "",
+                  "artist": {
+                    "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                    "name": "The Get Up Kids",
+                    "country": "US"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "08c21e2a-3d17-42e3-b30a-b5a6c8153035",
+            "position": 5,
+            "number": "5",
+            "title": "Holy Roman",
+            "length": 170773,
+            "artist-credit": [
+              {
+                "name": "The Get Up Kids",
+                "joinphrase": "",
+                "artist": {
+                  "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                  "name": "The Get Up Kids",
+                  "country": "US"
+                }
+              }
+            ],
+            "recording": {
+              "id": "6a5f248f-2bc2-49c0-b067-183d47a34c89",
+              "title": "Holy Roman",
+              "length": 170773,
+              "first-release-date": "2004-03-02",
+              "artist-credit": [
+                {
+                  "name": "The Get Up Kids",
+                  "joinphrase": "",
+                  "artist": {
+                    "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                    "name": "The Get Up Kids",
+                    "country": "US"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "89a50ffc-65fb-406c-bd87-2a38f1e3a162",
+            "position": 6,
+            "number": "6",
+            "title": "Martyr Me",
+            "length": 206480,
+            "artist-credit": [
+              {
+                "name": "The Get Up Kids",
+                "joinphrase": "",
+                "artist": {
+                  "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                  "name": "The Get Up Kids",
+                  "country": "US"
+                }
+              }
+            ],
+            "recording": {
+              "id": "42f9b3f3-44e8-4805-9924-24752b78d793",
+              "title": "Martyr Me",
+              "length": 206480,
+              "first-release-date": "2004-03-02",
+              "artist-credit": [
+                {
+                  "name": "The Get Up Kids",
+                  "joinphrase": "",
+                  "artist": {
+                    "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                    "name": "The Get Up Kids",
+                    "country": "US"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "bfc10613-de88-40a2-b920-f3ce88fc19fc",
+            "position": 7,
+            "number": "7",
+            "title": "How Long Is Too Long",
+            "length": 144000,
+            "artist-credit": [
+              {
+                "name": "The Get Up Kids",
+                "joinphrase": "",
+                "artist": {
+                  "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                  "name": "The Get Up Kids",
+                  "country": "US"
+                }
+              }
+            ],
+            "recording": {
+              "id": "ac768f32-300c-462c-b6a5-28335702768c",
+              "title": "How Long Is Too Long",
+              "length": 144546,
+              "first-release-date": "2004-03-02",
+              "artist-credit": [
+                {
+                  "name": "The Get Up Kids",
+                  "joinphrase": "",
+                  "artist": {
+                    "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                    "name": "The Get Up Kids",
+                    "country": "US"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "5efc5aaf-9926-4901-9826-2d5e386d5c2c",
+            "position": 8,
+            "number": "8",
+            "title": "Sick in Her Skin",
+            "length": 266000,
+            "artist-credit": [
+              {
+                "name": "The Get Up Kids",
+                "joinphrase": "",
+                "artist": {
+                  "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                  "name": "The Get Up Kids",
+                  "country": "US"
+                }
+              }
+            ],
+            "recording": {
+              "id": "ffb735b0-ed2c-4bb0-bb38-2d70c190b780",
+              "title": "Sick in Her Skin",
+              "length": 265346,
+              "first-release-date": "2004-03-02",
+              "artist-credit": [
+                {
+                  "name": "The Get Up Kids",
+                  "joinphrase": "",
+                  "artist": {
+                    "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                    "name": "The Get Up Kids",
+                    "country": "US"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "d8b3bf88-9cd6-43cc-bff3-51e3808b0add",
+            "position": 9,
+            "number": "9",
+            "title": "In Your Sea",
+            "length": 182266,
+            "artist-credit": [
+              {
+                "name": "The Get Up Kids",
+                "joinphrase": "",
+                "artist": {
+                  "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                  "name": "The Get Up Kids",
+                  "country": "US"
+                }
+              }
+            ],
+            "recording": {
+              "id": "c695376c-30b8-4423-b24d-f725dc428a54",
+              "title": "In Your Sea",
+              "length": 182266,
+              "first-release-date": "2004-03-02",
+              "artist-credit": [
+                {
+                  "name": "The Get Up Kids",
+                  "joinphrase": "",
+                  "artist": {
+                    "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                    "name": "The Get Up Kids",
+                    "country": "US"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "89d4fef4-9336-48b6-9948-a15ab7dae807",
+            "position": 10,
+            "number": "10",
+            "title": "Sympathy",
+            "length": 189440,
+            "artist-credit": [
+              {
+                "name": "The Get Up Kids",
+                "joinphrase": "",
+                "artist": {
+                  "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                  "name": "The Get Up Kids",
+                  "country": "US"
+                }
+              }
+            ],
+            "recording": {
+              "id": "f7b7c9a5-7a1a-48d9-8647-808cc82f6a60",
+              "title": "Sympathy",
+              "length": 189440,
+              "first-release-date": "2004-03-02",
+              "artist-credit": [
+                {
+                  "name": "The Get Up Kids",
+                  "joinphrase": "",
+                  "artist": {
+                    "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                    "name": "The Get Up Kids",
+                    "country": "US"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "04e18408-3ddd-49ca-a93a-5f5d5c691b3f",
+            "position": 11,
+            "number": "11",
+            "title": "The Dark Night of the Soul",
+            "length": 181320,
+            "artist-credit": [
+              {
+                "name": "The Get Up Kids",
+                "joinphrase": "",
+                "artist": {
+                  "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                  "name": "The Get Up Kids",
+                  "country": "US"
+                }
+              }
+            ],
+            "recording": {
+              "id": "41571242-34f0-40e7-9b9d-6af934a34625",
+              "title": "The Dark Night of the Soul",
+              "length": 181320,
+              "first-release-date": "2004-03-02",
+              "artist-credit": [
+                {
+                  "name": "The Get Up Kids",
+                  "joinphrase": "",
+                  "artist": {
+                    "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                    "name": "The Get Up Kids",
+                    "country": "US"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "0780b956-1774-4634-9e06-bb9b11922914",
+            "position": 12,
+            "number": "12",
+            "title": "Is There a Way Out",
+            "length": 380293,
+            "artist-credit": [
+              {
+                "name": "The Get Up Kids",
+                "joinphrase": "",
+                "artist": {
+                  "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                  "name": "The Get Up Kids",
+                  "country": "US"
+                }
+              }
+            ],
+            "recording": {
+              "id": "ca92b541-6a04-4f70-8c63-7f83414af9c1",
+              "title": "Is There a Way Out",
+              "length": 380293,
+              "first-release-date": "2004-03-02",
+              "artist-credit": [
+                {
+                  "name": "The Get Up Kids",
+                  "joinphrase": "",
+                  "artist": {
+                    "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                    "name": "The Get Up Kids",
+                    "country": "US"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "bbff5027-152a-48d7-a466-d1a7e28f07ab",
+            "position": 13,
+            "number": "13",
+            "title": "Conversation",
+            "length": 298493,
+            "artist-credit": [
+              {
+                "name": "The Get Up Kids",
+                "joinphrase": "",
+                "artist": {
+                  "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                  "name": "The Get Up Kids",
+                  "country": "US"
+                }
+              }
+            ],
+            "recording": {
+              "id": "a82d5d8c-1ef4-446a-a336-138cb9c6cfca",
+              "title": "Conversation",
+              "length": 298493,
+              "first-release-date": "2004-03-02",
+              "artist-credit": [
+                {
+                  "name": "The Get Up Kids",
+                  "joinphrase": "",
+                  "artist": {
+                    "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                    "name": "The Get Up Kids",
+                    "country": "US"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "1ace336b-e51c-4ecf-ad62-7694d1852fdb",
+            "position": 14,
+            "number": "14",
+            "title": "Like a Man Possessed",
+            "length": 248000,
+            "artist-credit": [
+              {
+                "name": "The Get Up Kids",
+                "joinphrase": "",
+                "artist": {
+                  "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                  "name": "The Get Up Kids",
+                  "country": "US"
+                }
+              }
+            ],
+            "recording": {
+              "id": "62508842-6976-4f26-875d-f43d9f7961b9",
+              "title": "Like a Man Possessed",
+              "length": 247360,
+              "first-release-date": "2004-06-22",
+              "artist-credit": [
+                {
+                  "name": "The Get Up Kids",
+                  "joinphrase": "",
+                  "artist": {
+                    "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                    "name": "The Get Up Kids",
+                    "country": "US"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "b014e00a-f4fa-40ce-8a29-dbd9b8118018",
+    "title": "Guilt Show Bonus Web Content",
+    "status": "Official",
+    "date": "2004-03-02",
+    "country": "XW",
+    "release-group": {
+      "id": "fcd9c6ae-a4a8-3e59-828e-55f6b1a70198",
+      "title": "Guilt Show",
+      "first-release-date": "2004-03-02",
+      "primary-type": "Album",
+      "secondary-types": []
+    },
+    "artist-credit": [
+      {
+        "name": "The Get Up Kids",
+        "joinphrase": "",
+        "artist": {
+          "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+          "name": "The Get Up Kids",
+          "country": "US"
+        }
+      }
+    ],
+    "media": [
+      {
+        "position": 1,
+        "track-count": 6,
+        "format": "Digital Media",
+        "tracks": [
+          {
+            "id": "084d04cc-9a38-48d3-b2d0-577569eb8253",
+            "position": 1,
+            "number": "1",
+            "title": "I'll Catch You (acoustic)",
+            "length": 226000,
+            "artist-credit": [
+              {
+                "name": "The Get Up Kids",
+                "joinphrase": "",
+                "artist": {
+                  "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                  "name": "The Get Up Kids",
+                  "country": "US"
+                }
+              }
+            ],
+            "recording": {
+              "id": "0550b72f-33df-4a74-bfd4-c51b42a4d731",
+              "title": "I'll Catch You (acoustic)",
+              "length": 226000,
+              "first-release-date": "2004-03-02",
+              "artist-credit": [
+                {
+                  "name": "The Get Up Kids",
+                  "joinphrase": "",
+                  "artist": {
+                    "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                    "name": "The Get Up Kids",
+                    "country": "US"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "add2e640-d875-4f43-bcc4-2a00d0cc2e65",
+            "position": 2,
+            "number": "2",
+            "title": "Wish You Were Here (demo)",
+            "length": 211000,
+            "artist-credit": [
+              {
+                "name": "The Get Up Kids",
+                "joinphrase": "",
+                "artist": {
+                  "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                  "name": "The Get Up Kids",
+                  "country": "US"
+                }
+              }
+            ],
+            "recording": {
+              "id": "6271d5ce-f6a7-4177-bd80-9b631d473aca",
+              "title": "Wish You Were Here (demo)",
+              "length": 211000,
+              "first-release-date": "2004-03-02",
+              "artist-credit": [
+                {
+                  "name": "The Get Up Kids",
+                  "joinphrase": "",
+                  "artist": {
+                    "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                    "name": "The Get Up Kids",
+                    "country": "US"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "572b327c-425e-4384-bddb-8424a47cf3d8",
+            "position": 3,
+            "number": "3",
+            "title": "Walking on a Wire (Ed Rose mix)",
+            "length": 294000,
+            "artist-credit": [
+              {
+                "name": "The Get Up Kids",
+                "joinphrase": "",
+                "artist": {
+                  "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                  "name": "The Get Up Kids",
+                  "country": "US"
+                }
+              }
+            ],
+            "recording": {
+              "id": "ba1a0abb-0764-4cda-a289-c0751c8bfb45",
+              "title": "Walking on a Wire (Ed Rose mix)",
+              "length": 294000,
+              "first-release-date": "2004-03-02",
+              "artist-credit": [
+                {
+                  "name": "The Get Up Kids",
+                  "joinphrase": "",
+                  "artist": {
+                    "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                    "name": "The Get Up Kids",
+                    "country": "US"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "1b3a0414-9668-4b86-8027-01c56314a112",
+            "position": 4,
+            "number": "4",
+            "title": "Overdue (Ed Rose mix)",
+            "length": 191000,
+            "artist-credit": [
+              {
+                "name": "The Get Up Kids",
+                "joinphrase": "",
+                "artist": {
+                  "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                  "name": "The Get Up Kids",
+                  "country": "US"
+                }
+              }
+            ],
+            "recording": {
+              "id": "caa289a0-f367-4554-b0fd-5739882e735e",
+              "title": "Overdue (Ed Rose mix)",
+              "length": 191000,
+              "first-release-date": "2004-03-02",
+              "artist-credit": [
+                {
+                  "name": "The Get Up Kids",
+                  "joinphrase": "",
+                  "artist": {
+                    "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                    "name": "The Get Up Kids",
+                    "country": "US"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "c9a70d35-323c-4c8c-9789-370325b16db4",
+            "position": 5,
+            "number": "5",
+            "title": "Lost in the Light",
+            "length": 267000,
+            "artist-credit": [
+              {
+                "name": "The Get Up Kids",
+                "joinphrase": "",
+                "artist": {
+                  "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                  "name": "The Get Up Kids",
+                  "country": "US"
+                }
+              }
+            ],
+            "recording": {
+              "id": "8f0ab0f1-32e7-4c1b-8c2a-03b9c89ed6d4",
+              "title": "Lost in the Light",
+              "length": 267000,
+              "first-release-date": "2004-03-02",
+              "artist-credit": [
+                {
+                  "name": "The Get Up Kids",
+                  "joinphrase": "",
+                  "artist": {
+                    "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                    "name": "The Get Up Kids",
+                    "country": "US"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "02e1b02c-5dc5-4474-93f9-c64ded4bb419",
+            "position": 6,
+            "number": "6",
+            "title": "Send Us a Saint",
+            "length": 235000,
+            "artist-credit": [
+              {
+                "name": "The Get Up Kids",
+                "joinphrase": "",
+                "artist": {
+                  "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                  "name": "The Get Up Kids",
+                  "country": "US"
+                }
+              }
+            ],
+            "recording": {
+              "id": "dbc3759e-e7b5-44cd-9cba-4ca93367fb1f",
+              "title": "Send Us a Saint",
+              "length": 235000,
+              "first-release-date": "2004-03-02",
+              "artist-credit": [
+                {
+                  "name": "The Get Up Kids",
+                  "joinphrase": "",
+                  "artist": {
+                    "id": "1b54e90c-638e-4fdd-a20e-4ab09db9fdaf",
+                    "name": "The Get Up Kids",
+                    "country": "US"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+]

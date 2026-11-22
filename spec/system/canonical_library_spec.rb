@@ -1,8 +1,10 @@
 require "rails_helper"
 require_relative "../support/catalog_fixtures"
+require_relative "../support/guilt_show_fixture"
 
 RSpec.describe "Canonical library resolution workflow", type: :system do
   include CatalogFixtures
+  include GuiltShowFixture
 
   before do
     skip "Run with BROWSER_TESTS=1 for canonical workspace browser verification" unless ENV["BROWSER_TESTS"] == "1"
@@ -12,6 +14,23 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     driven_by :selenium, using: :headless_chrome do |options|
       options.binary = ENV["CHROME_BINARY"] if ENV["CHROME_BINARY"]
     end
+  end
+
+  it "constructs Guilt Show and keeps the later appearance outside the original sequence" do
+    user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "construction-browser", lastfm_username: "guilt-show-browser")
+    plays, = guilt_show_assessment(user)
+    sign_in(user)
+    visit resolution_surface_path(plays.first)
+    expect(page).to have_button("Construct release & resolve 3 observations")
+    find("summary", text: "Review release construction").click
+    expect(page).to have_text("Like a Man Possessed · 2004-08-21")
+    verify_appearances("resolution-guilt-show")
+    click_button "Construct release & resolve 3 observations"
+    expect(page).to have_text("Recording decision saved.")
+    within(".review-catalog-context") { click_link "Guilt Show" }
+    expect(page).to have_text("Additional edition appearances")
+    expect(page).to have_text("Like a Man Possessed · 2004-08-21")
+    expect(page).to have_text("3 distinct resolved observations")
   end
 
   it "reviews a candidate, applies it using the keyboard, and opens the admitted track listing" do
@@ -85,12 +104,29 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     expect(page).to have_text("No resolved plays in this period.")
     find("#listening-history a", text: "All").click
     expect(page).to have_css("#artist-recordings tbody tr:first-child .listening-bar[data-listening-scale-percent-value='100.0']", text: "1")
-    visit find("#artist-recordings a", text: "Title")[:href]
+    within("#artist-recordings") { click_link "Title" }
     expect(page).to have_css("#artist-recordings tbody tr:first-child", text: "Different Song")
     expect(page).to have_css("#artist-releases .listening-bar", text: "3m")
     expect(page).to have_css("#artist-releases", text: "1 play")
     visit artist_path(Artist.find_by!(name: "Night Lines"))
     verify_appearances("artist")
+    artist = Artist.find_by!(name: "Night Lines")
+    MusicalIdentityDecision.create!(entity: Recording.find(request.entity_id), user:, colors: %w[pink])
+    visit artist_path(artist)
+    find(".intro .identity-badge").click
+    within("#guide-assignment") do
+      select "Jazz", from: "First color"
+      select "Soul, R&B, and funk", from: "Second color"
+      fill_in "Musical rationale (required for three colors)", with: "Harmonic vocabulary and funk groove"
+      capture_resolution("identity-correction")
+      click_button "Save colors"
+    end
+    expect(page).to have_css("dialog[open]", text: "Musical identity saved.")
+    click_button "Close"
+    expect(page).to have_css('.identity-chart[data-identity-first="light-green"][data-identity-second="blue"]')
+    expect(page).to have_css('#artist-recordings .identity-badge[data-identity-first="pink"]')
+    expect(page).to have_no_css('#artist-recordings .listening-bar[data-identity-first]')
+    verify_appearances("artist-colors")
 
     visit resolution_surface_path(observation, play: observation.id)
     expect(page).to have_button("Resolve 1 observation")
@@ -201,7 +237,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     request.update!(state: "failed", attempts: 5, request_count: 5, failure: "musicbrainz throttled (503)")
     click_link "Refresh status"
     within(".review-heading") do
-      expect(all("dt").map(&:text)).to eq(%w[ARTIST ALBUM])
+      expect(all("dt").map(&:text)).to eq([ "Artist string", "Album string" ])
       expect(page).to have_css("h1", exact_text: claims.fetch("track_name"))
       expect(all("dd").map(&:text)).to eq(claims.values.drop(1))
       expect(page).to have_text("4 matching observations")
@@ -373,16 +409,43 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
         find(".harvj-session[open] > summary").send_keys(:enter) if page.has_css?(".harvj-session[open]", wait: 0)
         expect(page.evaluate_script("document.documentElement.dataset.appearance")).to eq(mode)
         expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
-        if section == "release"
+        if section.start_with?("resolution")
+          page.execute_script("window.scrollTo(0, 0)")
+          capture_resolution("#{section}-#{size}-#{mode}", full: true)
+        elsif section == "release"
           expect(page).to have_css("#listening-activity", text: "1 distinct resolved observation")
           capture_resolution("release-listening-#{size}-#{mode}")
-        elsif section == "artist"
+        elsif section.start_with?("artist")
           expect(page).to have_css("#artist-recordings .listening-bar", text: "1")
           expect(page).to have_css("#artist-releases .listening-bar", text: "3m")
           table_ids = page.all("main .library-card[id]").map { |card| card[:id] }
           expect(table_ids).to include("listening-history", "artist-recordings", "artist-releases")
           page.execute_script("window.scrollTo(0, 0)")
-          capture_resolution("artist-listening-#{size}-#{mode}", full: true)
+          capture_resolution("#{section}-listening-#{size}-#{mode}", full: true)
+          if section == "artist-colors"
+            paint = page.evaluate_script(<<~JS)
+              (() => {
+                const fill = document.querySelector(".identity-chart .artist-timeline-fill")
+                const bar = document.querySelector("#artist-recordings .listening-bar span")
+                const ink = document.createElement("span")
+                ink.style.color = "var(--ink)"
+                bar.append(ink)
+                const result = [getComputedStyle(fill).backgroundImage, getComputedStyle(bar).backgroundColor === getComputedStyle(ink).color]
+                ink.remove()
+                return result
+              })()
+            JS
+            expect(paint.first).to include("linear-gradient", "rgb(162, 217, 206) 50%", "rgb(46, 134, 193) 50%")
+            expect(paint.last).to be(true)
+            find(".intro .identity-badge").click
+            expect(page).to have_css("dialog[open] #guide-assignment")
+            page.evaluate_async_script(<<~JS)
+              const done = arguments[0]
+              Promise.all(document.querySelector("dialog").getAnimations().map(a => a.finished)).then(() => done())
+            JS
+            capture_resolution("identity-correction-#{size}-#{mode}")
+            click_button "Close"
+          end
         end
         expect(page.evaluate_script(<<~JS)).to be(true)
           (() => {

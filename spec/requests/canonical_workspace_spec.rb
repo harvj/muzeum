@@ -2,12 +2,76 @@ require "rails_helper"
 require_relative "../support/oidc_flow"
 require_relative "../support/catalog_fixtures"
 require_relative "../support/discovery_replay"
+require_relative "../support/guilt_show_fixture"
 
 RSpec.describe "Canonical library and resolution workspace", type: :request do
   include OidcFlow
   include CatalogFixtures
+  include GuiltShowFixture
   before { prepare_oidc }
   after { restore_oidc }
+
+  it "constructs and corrects the Guilt Show fixture while assigning the same group" do
+    finish_oidc
+    user = User.find_by!(oidc_subject: @subject)
+    LastfmAccount.associate!(user, "guilt-show")
+    plays, assessment, recording, original = guilt_show_assessment(user)
+    params = { scope: "surface", recording_mbid: recording["id"], assessment_id: assessment.id,
+      construct_release: original.dig("release-group", "id") }
+    post decide_resolution_surface_path(plays.first), params: params
+    expect(flash[:notice]).to eq("Recording decision saved.")
+    release = Release.sole
+    expect(release.attributes.values_at("release_year", "release_month", "release_day")).to eq([ 2004, 3, 2 ])
+    expect(release.catalog_track_slots.base_sequence.count).to eq(13)
+    added = release.catalog_track_slots.additional_appearances.sole
+    expect(added).to have_attributes(position: 14, appearance_date: "2004-08-21")
+    expect(RecordingResolution::Ledger.effective(user).where(id: plays.map(&:id)).map(&:effective_recording_id).uniq).to eq([ added.recording_id ])
+    get resolution_surface_path(plays.first)
+    expect(response.body).not_to include("Review release correction")
+
+    old_head = CanonicalCatalog::ReviewedConstruction.head(release)
+    release.update!(release_day: 3)
+    release.catalog_track_slots.base_sequence.first.destroy!
+    release.catalog_track_slots.additional_appearances.update_all(appearance_date: "2004-08")
+    post decide_resolution_surface_path(plays.first), params: params.merge(
+      head: RecordingResolution::Decision.sole.id, construction_head: old_head)
+    expect(flash[:alert]).to include("changed")
+    expect(release.reload.release_day).to eq(3)
+    post decide_resolution_surface_path(plays.first), params: params.merge(
+      head: RecordingResolution::Decision.sole.id, construction_head: CanonicalCatalog::ReviewedConstruction.head(release.reload))
+    expect(flash[:notice]).to eq("Recording decision saved.")
+    expect(Release.sole.id).to eq(release.id)
+    expect(release.reload.release_day).to eq(2)
+    expect(release.catalog_track_slots.base_sequence.count).to eq(13)
+    expect(release.catalog_track_slots.additional_appearances.sole.appearance_date).to eq("2004-08-21")
+
+    patch chronology_recording_path(added.recording_id),
+      params: { chronology: { start_date: "2003", end_date: "2004-01", source: "Session notes" } }
+    expect(flash[:notice]).to eq("Recording date saved.")
+    get recording_path(added.recording_id)
+    expect(response.body).to include("2003 to 2004-01", "First release date reported by MusicBrainz")
+  end
+
+  it "appends entity-specific corrections with provenance and rejects unjustified or stale edits" do
+    finish_oidc
+    user = User.find_by!(oidc_subject: @subject)
+    LastfmAccount.associate!(user, "colors-owner")
+    artist = Artist.create!(name: "Color test", mbid: SecureRandom.uuid)
+    endpoint = musical_identity_artist_path(artist)
+    patch endpoint, params: { musical_identity: { colors: %w[light-green blue], head: "" } }
+    expect(response).to redirect_to(artist_path(artist, anchor: "guide-assignment"))
+    first = MusicalIdentityDecision.sole
+    expect(first).to have_attributes(entity: artist, user:, colors: %w[light-green blue])
+
+    patch endpoint, params: { musical_identity: { colors: %w[pink], head: "" } }
+    patch endpoint, params: { musical_identity: { colors: %w[black blue gray], head: first.id } }
+    expect(MusicalIdentityDecision.count).to eq(1)
+
+    patch endpoint, params: { musical_identity: { colors: %w[black blue gray], head: first.id, rationale: "Three distinct musical traits" } }
+    latest = MusicalIdentityDecision.latest_for([ artist ]).fetch([ "Artist", artist.id ])
+    expect(latest.colors).to eq(%w[black blue gray])
+    expect(first.reload.colors).to eq(%w[light-green blue])
+  end
 
   it "admits the real ESTRUS album and single, counting overlapping listening observations once" do
     finish_oidc
@@ -49,7 +113,7 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     album = Release.find_by!(title: "ESTRUS")
     single = Release.find_by!(title: "I’m your girl right?")
     recording = Recording.find_by!(mbid:)
-    expect(album.catalog_track_slots.count).to eq(13)
+    expect(album.catalog_track_slots.base_sequence.count).to eq(13)
     expect(single.catalog_track_slots.count).to eq(1)
     expect(album.release_month).to eq(9)
     expect(single.release_month).to eq(5)
@@ -64,7 +128,7 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     [ album, single ].each do |release|
       get release_path(release)
       expect(response.body).to include("8 distinct resolved observations")
-      expect(Nokogiri::HTML(response.body).css("#listening-activity li").size).to eq(8)
+      expect(Nokogiri::HTML(response.body).css("#listening-activity > ol > li").size).to eq(8)
     end
     get recording_path(recording)
     expect(response.body).to include("8 resolved listening observations")
@@ -139,7 +203,7 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     expect(response).to have_http_status(:ok)
     doc = Nokogiri::HTML(response.body)
     expect(doc.at_css(".review-heading h1").text).to eq(source.fetch("track"))
-    expect(doc.css(".review-source-claims dt").map(&:text)).to eq(%w[Artist Album])
+    expect(doc.css(".review-source-claims dt").map(&:text)).to eq([ "Artist string", "Album string" ])
     expect(doc.css(".review-source-claims dd").map(&:text)).to eq(source.values_at("artist", "album"))
     expect(doc.css(".review-edition").map(&:text).join(" ")).to include("deluxe edition", "2011", "Daytrotter Session")
     expect(doc.css(".review-candidate").map { |card| card.css(".review-tracks li").size }).to eq([ 18, 14, 4 ])

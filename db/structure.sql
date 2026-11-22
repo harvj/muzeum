@@ -376,6 +376,8 @@ CREATE TABLE public.catalog_track_slots (
     number character varying,
     track_mbid character varying NOT NULL,
     title character varying NOT NULL,
+    edition_mbid character varying,
+    appearance_date character varying,
     CONSTRAINT catalog_track_slot_position CHECK (((medium > 0) AND ("position" > 0)))
 );
 
@@ -747,6 +749,41 @@ CREATE SEQUENCE public.listening_profiles_id_seq
 --
 
 ALTER SEQUENCE public.listening_profiles_id_seq OWNED BY public.listening_profiles.id;
+
+
+--
+-- Name: musical_identity_decisions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.musical_identity_decisions (
+    id bigint NOT NULL,
+    entity_type character varying NOT NULL,
+    entity_id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    colors character varying[] DEFAULT '{}'::character varying[] NOT NULL,
+    rationale text,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: musical_identity_decisions_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.musical_identity_decisions_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: musical_identity_decisions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.musical_identity_decisions_id_seq OWNED BY public.musical_identity_decisions.id;
 
 
 --
@@ -1621,6 +1658,13 @@ ALTER TABLE ONLY public.listening_profiles ALTER COLUMN id SET DEFAULT nextval('
 
 
 --
+-- Name: musical_identity_decisions id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.musical_identity_decisions ALTER COLUMN id SET DEFAULT nextval('public.musical_identity_decisions_id_seq'::regclass);
+
+
+--
 -- Name: oidc_attempts id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -1835,6 +1879,14 @@ ALTER TABLE ONLY public.listening_profile_publication_events
 
 ALTER TABLE ONLY public.listening_profiles
     ADD CONSTRAINT listening_profiles_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: musical_identity_decisions musical_identity_decisions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.musical_identity_decisions
+    ADD CONSTRAINT musical_identity_decisions_pkey PRIMARY KEY (id);
 
 
 --
@@ -2077,17 +2129,30 @@ CREATE INDEX due_lastfm_accounts ON public.lastfm_accounts USING btree (next_pol
 
 
 --
+-- Name: idx_catalog_track_slots_edition_position; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_catalog_track_slots_edition_position ON public.catalog_track_slots USING btree (release_id, edition_mbid, medium, "position") WHERE (edition_mbid IS NOT NULL);
+
+--
+-- Name: idx_catalog_track_slots_base_position; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_catalog_track_slots_base_position ON public.catalog_track_slots USING btree (release_id, medium, "position") WHERE (edition_mbid IS NULL);
+
+
+--
+-- Name: idx_on_entity_type_entity_id_id_c7b7191f51; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_on_entity_type_entity_id_id_c7b7191f51 ON public.musical_identity_decisions USING btree (entity_type, entity_id, id);
+
+
+--
 -- Name: idx_on_listening_profile_id_24b6f2d861; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_on_listening_profile_id_24b6f2d861 ON public.listening_profile_publication_events USING btree (listening_profile_id);
-
-
---
--- Name: idx_on_release_id_medium_position_5d7e315be8; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX idx_on_release_id_medium_position_5d7e315be8 ON public.catalog_track_slots USING btree (release_id, medium, "position");
 
 
 --
@@ -2319,6 +2384,13 @@ CREATE UNIQUE INDEX index_listening_profiles_on_lastfm_account_id ON public.list
 --
 
 CREATE INDEX index_listening_profiles_on_owner_id ON public.listening_profiles USING btree (owner_id);
+
+
+--
+-- Name: index_musical_identity_decisions_on_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_musical_identity_decisions_on_user_id ON public.musical_identity_decisions USING btree (user_id);
 
 
 --
@@ -3174,6 +3246,14 @@ ALTER TABLE ONLY public.import_pages
 
 
 --
+-- Name: musical_identity_decisions fk_rails_89e2521d19; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.musical_identity_decisions
+    ADD CONSTRAINT fk_rails_89e2521d19 FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
 -- Name: source_deliveries fk_rails_91dfac599f; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3404,6 +3484,8 @@ ALTER TABLE ONLY public.resolution_work
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261122170100'),
+('20261122170000'),
 ('20261121160000'),
 ('20261119150200'),
 ('20261119150100'),

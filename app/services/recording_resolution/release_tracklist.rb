@@ -8,7 +8,7 @@ module RecordingResolution
       @release = release
       raise ArgumentError unless release.catalog_verified_at? && Clients::Musicbrainz::MBID.match?(release.ingested_from_release_mbid.to_s)
 
-      @slots = release.catalog_track_slots.order(:medium, :position).limit(MAX_SLOTS + 1).includes(recording: :artists).to_a
+      @slots = release.catalog_track_slots.base_sequence.order(:medium, :position).limit(MAX_SLOTS + 1).includes(recording: :artists).to_a
       raise ArgumentError unless (1..MAX_SLOTS).cover?(slots.size)
 
       signature = slots.map { |slot| [ slot.medium, slot.position, slot.recording.mbid ] }

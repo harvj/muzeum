@@ -10,6 +10,10 @@ Status: **Authoritative semantics; algorithmic thresholds remain open.** See [pr
 
 **REL-015 — Keep source and interpretation separate.** Importing release tracks does not create observations. Preserve the immutable Last.fm input and effective recording override precedence. Each release retains its title, date and ordered tracks. Muzeum does not designate a primary release for listening attribution.
 
+**REL-016 — Construct the musical collection from evidence.** Treat MusicBrainz editions as provenance for title, credits, dates, track order, and recording appearances. Construct the original published sequence when sufficiently supported. Retain additional edition tracks and their dates separately, without backdating additional recordings or inferring the edition played. Resolve independent recording identity even while construction is pending.
+
+**REL-017 — Independent chronology.** Preserve recording date, canonical publication date, recording first publication, and specific edition appearances as distinct facts. Retain unknown dates and source precision, including ranges. A publication date cannot establish when a performance was captured.
+
 The sections below describe the deferred per-play credit proposal. It does not govern v0.5.0 release histories or combined totals.
 
 ## Default evidence and chronology
@@ -57,6 +61,8 @@ A listener hears Radiohead's **High and Dry → Fake Plastic Trees → Bones** i
 - Whether credit can be explicitly 'none' by user choice in addition to unresolved automation.
 
 ## Revision history
+
+- v0.6.0: Clarified that edition evidence supports canonical release construction while recording, publication, and edition dates remain separate assertions.
 
 - 2026-11-17: Clarified deliberate release admission, bounded full-tracklist enrichment and separation from per-play release credit.
 

@@ -121,7 +121,7 @@ class ResolutionWorkspaceController < ApplicationController
 
   def decide
     scope = { "surface" => :surface, "scrobble" => :scrobble }.fetch(params[:scope]) { raise ArgumentError }
-    mode = params[:mode].presence_in(%w[resolved unresolved inherit]) || raise(ArgumentError)
+    mode = (params[:construct_release].present? ? "resolved" : params[:mode]).presence_in(%w[resolved unresolved inherit]) || raise(ArgumentError)
     options = RecordingResolution::DecisionReasons::OPTIONS.fetch(mode)
     code = params[:reason_code].to_s.presence
     comment = params[:comment].to_s.strip.presence
@@ -157,7 +157,12 @@ class ResolutionWorkspaceController < ApplicationController
           candidate_mbid: recording&.mbid, affected_count: affected_count(target, surface, scope)) }.compact
       RecordingResolution::Ledger.record!(listener: current_user, scrobble: target, scope:, mode:, reason:, recording:,
         assessment:, metadata:, expected_head: params[:head].presence&.then { |value| Integer(value) })
-      request = CatalogImport.request!("recording", recording.id, context) if recording
+      if recording
+        request = CatalogImport.request!("recording", recording.id, context)
+        if scope == :surface && params[:construct_release].present?
+          construct_reviewed_release!(assessment, recording)
+        end
+      end
     end
     request&.dispatch
     notice = "Recording decision saved."
@@ -269,6 +274,26 @@ class ResolutionWorkspaceController < ApplicationController
   def assessment_matches_claims?(assessment, target)
     RecordingResolution::Group.find(assessment.group_id).claims ==
       target.payload.slice(*RecordingResolution::PilotRunner::CLAIM_FIELDS)
+  end
+
+  def construct_reviewed_release!(assessment, recording)
+    proposal = CanonicalCatalog::ReviewedConstruction.for(assessment, recording.mbid).find do |item|
+      item.construction.base.data.dig("release-group", "id") == params[:construct_release]
+    end
+    raise ArgumentError unless proposal
+
+    existing = proposal.existing
+    if existing
+      existing.lock!
+      unless CanonicalCatalog::ReviewedConstruction.head(existing) == params[:construction_head]
+        raise ActiveRecord::StaleObjectError.new(existing, "correct release")
+      end
+    end
+    return unless CanonicalCatalog::ReviewedConstruction.needs_review?(proposal, recording)
+
+    review = CatalogImport.create!(kind: "release_construction", entity_id: recording.id, due_at: Time.current,
+      state: "imported", context: { "assessment_id" => assessment.id, "reviewer_id" => current_user.id })
+    CanonicalCatalog::ReviewedConstruction.apply!(proposal, review, assessment, corrected_release: existing)
   end
 
   def selection(assessment, target)

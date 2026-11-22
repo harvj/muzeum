@@ -3,7 +3,12 @@
     <% rows.each do |label, entries, status| %>
       <div>
         <dt><span class="review-catalog-mark<%= " present" if entries.any? %>" aria-hidden="true"><%= entries.any? ? "✓" : "—" %></span><%= label %></dt>
-        <dd><% if entries.any? %><%= safe_join(entries.map { |entry| catalog_link(entry) }, ", ") %><% else %><%= status || "No verified catalog match" %><% end %></dd>
+        <dd><% if entries.any? %><%= safe_join(entries.map { |entry|
+        date = if entry.is_a?(Release) && entry.release_year
+          [entry.release_year, entry.release_month, entry.release_day].compact.map { |part| part.to_s.rjust(2, "0") }.join("-")
+        end
+        safe_join([catalog_link(entry), (tag.span(" · #{date}", class: "compact-meta") if date)].compact)
+      }, ", ") %><% else %><%= status || "No verified catalog match" %><% end %></dd>
       </div>
     <% end %>
   </dl>
