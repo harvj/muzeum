@@ -6,6 +6,9 @@ RSpec.describe RecordingResolution::EditionDiscovery do
   let(:examples) { fixture.fetch("cases").index_by { |example| example.fetch("id") } }
 
   it "recovers all seven reviewed identities within the replay request budget" do
+    original = examples.fetch("original-edition")
+    original["release_search"] = "original"
+    fixture.fetch("searches")["original"] = [ fixture.fetch("releases").fetch("a6d2beb7-6acf-4bfb-a2bf-e2a6249f6504").slice("id", "title") ]
     examples.each_value do |example|
       baseline = DiscoveryReplay.run(fixture, example, discover: false)
       discovered = DiscoveryReplay.run(fixture, example, discover: true)
@@ -36,7 +39,7 @@ RSpec.describe RecordingResolution::EditionDiscovery do
 
     result = DiscoveryReplay.run(fixture, examples.fetch("regents-court-292999"), discover: true, review_alternative: true)
     lists = result.fetch("tracklists")
-    expect(result.fetch("calls")).to eq(6)
+    expect(result.fetch("calls")).to eq(5)
     expect(lists.values.pluck("state")).to all(eq("complete"))
     expect(lists.values.map { |list| list.fetch("media").first.fetch("tracks").size }).to eq([ 18, 14, 4 ])
     expect(lists.fetch(daytrotter.fetch("id")).fetch("media").first.fetch("tracks").second)
@@ -57,7 +60,7 @@ RSpec.describe RecordingResolution::EditionDiscovery do
 
   it "withholds a badge when a verified studio identifier conflicts with a checked live appearance" do
     example = examples.fetch("wembley-misleading-studio-only")
-    expect(DiscoveryReplay.run(fixture, example, discover: false).fetch("recommendation")).to eq("false_positive")
+    expect(DiscoveryReplay.run(fixture, example, discover: false).fetch("recommendation")).to eq("withheld")
     expect(DiscoveryReplay.run(fixture, example, discover: true).fetch("recommendation")).to eq("withheld")
   end
 
@@ -87,7 +90,7 @@ RSpec.describe RecordingResolution::EditionDiscovery do
       artist: "The Get Up Kids", album: "There Are Rules (Deluxe Edition)", track: "Regent's Court")
 
     started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-    expect(RecordingResolution::LocalCandidates.call(surface, {}).pluck("id")).to eq([ recording.mbid ])
+    expect(RecordingResolution::LocalCandidates.call(surface).pluck("id")).to eq([ recording.mbid ])
     elapsed = (Process.clock_gettime(Process::CLOCK_MONOTONIC) - started) * 1_000
     warn format("Local discovery, 20k distractors: %.2f ms", elapsed) if ENV["MEASURE_DISCOVERY"]
   end

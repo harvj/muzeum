@@ -5,7 +5,8 @@ module RecordingResolution
     VERSION_MARKERS = /\b(live|remix|acoustic|demo|alternate|edit|instrumental|remaster)(?:ed)?\b/i
 
     def self.call(surface, evidence, discovery: true, caption_bonus: false, source_hints: false)
-      Workspace.candidate_evidence(evidence).filter_map do |candidate|
+      candidates = source_hints ? evidence.except("verified_recording") : evidence
+      Workspace.candidate_evidence(candidates).filter_map do |candidate|
         new(surface, evidence, candidate, discovery:, caption_bonus:, source_hints:).evaluate
       end.sort_by { |row| [ -row.fetch("score"), row.fetch("recording_mbid") ] }
     end

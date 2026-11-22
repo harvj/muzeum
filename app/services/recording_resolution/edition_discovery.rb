@@ -5,12 +5,13 @@ module RecordingResolution
 
     attr_reader :tracklists
 
-    def initialize(musicbrainz, session)
+    def initialize(musicbrainz, session, artist_mbid: nil)
       @musicbrainz = musicbrainz
       @session = session
+      @artist_mbid = artist_mbid
     end
 
-    def call(surface, claims, candidates, checked:, attempted:, search:, review_alternative: false, preferred: nil)
+    def call(surface, candidates, checked:, attempted:, search:, review_alternative: false, preferred: nil)
       @tracklists = {}
       results = [ checked ].compact
       if surface.album.present? && search
@@ -27,9 +28,7 @@ module RecordingResolution
 
         Array(candidate["releases"]).find { |release| Clients::Musicbrainz::MBID.match?(release["id"].to_s) }&.fetch("id")
       end
-      album_hint = claims["album_mbid"].to_s.downcase
-      album_hint = nil unless Clients::Musicbrainz::MBID.match?(album_hint)
-      [ preferred, *references, album_hint ].compact.uniq.reject { |id| @tracklists.key?(id) || id == attempted }
+      [ preferred, *references ].compact.uniq.reject { |id| @tracklists.key?(id) || id == attempted }
         .first(1).each do |id|
         tracklist = nil
         local = Release.find_by(ingested_from_release_mbid: id)
@@ -38,7 +37,7 @@ module RecordingResolution
           @tracklists[id] = tracklist
         else
           edition = lookup(id)
-          found.concat(appearances(surface, edition)) if edition && id == album_hint
+          found.concat(appearances(surface, edition)) if edition
         end
       end
       found
@@ -72,7 +71,7 @@ module RecordingResolution
       references = candidates.flat_map { |candidate| Array(candidate["releases"]) }
       refs = references.uniq { |row| row["id"] }.select { |row| DiscoveryTitle.release_context?(surface.album, row) }
       unless refs.any? { |ref| DiscoveryTitle.displayed_edition?(surface.album, ref) }
-        search = @musicbrainz.release_candidates(@session, artist: surface.artist, title: DiscoveryTitle.album_base(surface.album))
+        search = @musicbrainz.release_candidates(@session, artist: surface.artist, title: DiscoveryTitle.album_base(surface.album), artist_mbid: @artist_mbid)
           .select { |row| DiscoveryTitle.release_context?(surface.album, row) }
         refs = (search + refs).uniq { |row| row["id"] }
       end
@@ -114,6 +113,8 @@ module RecordingResolution
 
     def artist_matches?(surface, recording)
       credits = Array(recording["artist-credit"])
+      return credits.any? { |credit| credit.dig("artist", "id") == @artist_mbid } if @artist_mbid
+
       names = credits.flat_map { |credit| [ credit["name"], credit.dig("artist", "name") ] }
       names << credits.map { |credit| "#{credit['name']}#{credit['joinphrase']}" }.join
 

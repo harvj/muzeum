@@ -2,14 +2,10 @@ module RecordingResolution
   class LocalCandidates
     LIMIT = 25
 
-    def self.call(surface, claims)
+    def self.call(surface)
       title = DiscoveryTitle.key(surface.track)
       titles = [ surface.track.to_s.downcase, title, title.tr("'", "’") ].uniq
-      id = claims["track_mbid"].to_s.downcase
       rows = Recording.where("lower(title) IN (?)", titles).order(:id).limit(LIMIT).includes(:artists).to_a
-      if Clients::Musicbrainz::MBID.match?(id) && rows.none? { |recording| recording.mbid == id }
-        hint = Recording.includes(:artists).find_by(mbid: id)
-      end
       direct = rows.map do |recording|
         {
           "id" => recording.mbid, "title" => recording.title, "length" => recording.duration_ms,
@@ -19,25 +15,18 @@ module RecordingResolution
           }
         }
       end
-      context = release_candidates(surface, claims, rows.map(&:id)).index_by { |candidate| candidate["id"] }
+      context = release_candidates(surface, rows.map(&:id)).uniq { |candidate| candidate["id"] }.index_by { |candidate| candidate["id"] }
       direct = direct.map { |candidate| candidate.merge(context.delete(candidate["id"]) || {}) }
-      candidates = (direct + context.values).first(LIMIT)
-      if hint && candidates.none? { |candidate| candidate["id"] == id }
-        candidates << ReleaseTracklist.candidate(hint, {}).except("local_release_context")
-      end
-      candidates
+      (direct + context.values).first(LIMIT)
     end
 
-    def self.release_candidates(surface, claims, recording_ids)
-      return [] if surface.album.blank? && claims["album_mbid"].blank?
+    def self.release_candidates(surface, recording_ids)
+      return [] if surface.album.blank?
 
-      editions = Release.where.not(catalog_verified_at: nil)
-      independent = editions.where(title: [ surface.album, DiscoveryTitle.album_base(surface.album) ].uniq,
-        id: CatalogTrackSlot.where(recording_id: recording_ids).select(:release_id))
-      editions = independent.order(:id).limit(4).to_a
-      hint = Release.where.not(catalog_verified_at: nil).find_by(ingested_from_release_mbid: claims["album_mbid"].to_s.downcase) if claims["album_mbid"].present?
-      editions |= [ hint ] if hint
-      editions.flat_map do |release|
+      Release.where.not(catalog_verified_at: nil)
+        .where(title: [ surface.album, DiscoveryTitle.album_base(surface.album) ].uniq,
+          id: CatalogTrackSlot.where(recording_id: recording_ids).select(:release_id))
+        .order(:id).limit(4).flat_map do |release|
         tracklist = ReleaseTracklist.new(release)
         matching = tracklist.slots.select do |slot|
           [ slot.title, slot.recording.title ].any? { |title| DiscoveryTitle.match?(title, surface.track) }
@@ -50,6 +39,39 @@ module RecordingResolution
       end
     end
     private_class_method :release_candidates
+
+    def self.catalog_identity(surface)
+      artist = stored_artist(surface.artist)
+      return {} unless artist && Clients::Musicbrainz::MBID.match?(artist.mbid.to_s)
+
+      editions = Release.where(id: artist.release_artists.select(:release_id), title: surface.album, catalog_verified_at: ..Time.current)
+        .where.not(ingested_from_release_mbid: nil).limit(2).to_a
+      identity = { artist_mbid: artist.mbid }
+      recordings = artist.recordings.where("lower(recordings.title) = ?", surface.track.to_s.downcase).limit(2).to_a
+      if recordings.one? && Clients::Musicbrainz::MBID.match?(recordings.first.mbid.to_s) &&
+          CatalogRevision.exists?(entity_type: "Recording", entity_id: recordings.first.id)
+        identity[:recording_mbid] = recordings.first.mbid
+      end
+      if editions.one? && Clients::Musicbrainz::MBID.match?(editions.first.ingested_from_release_mbid.to_s)
+        identity[:edition_mbid] = editions.first.ingested_from_release_mbid
+      end
+      identity
+    end
+
+    def self.stored_artist(name)
+      artists = Artist.where("lower(name) = ?", name.to_s.downcase).limit(2).to_a
+      return artists.first if artists.one?
+      return if artists.any? || name.blank?
+
+      # Only aliases retained from verified provider credits are eligible for reuse.
+      rows = CatalogRevision.where(entity_type: "Recording")
+        .where("evidence @> ?", { artist_credit: [ { credited_name: name } ] }.to_json)
+        .joins("CROSS JOIN LATERAL jsonb_array_elements(catalog_revisions.evidence->'artist_credit') AS credit")
+        .where("credit->>'credited_name' = ?", name)
+        .distinct.limit(2).pluck(Arel.sql("credit->>'artist_mbid'"))
+      Artist.find_by(mbid: rows.first) if rows.one?
+    end
+    private_class_method :stored_artist
 
     def self.checked_edition(surface, candidates)
       contexts = candidates.pluck("local_release_context").compact.uniq

@@ -14,6 +14,43 @@ RSpec.describe CanonicalCatalog::Processor do
     request.reload
   end
 
+  it "reuses and creates the complete ordered Influence credit on repeated verified imports" do
+    edition = JSON.parse(Rails.root.join("spec/fixtures/musicbrainz/releases/lady_wood_vinyl.json").read)
+    data = edition.fetch("media").flat_map { |medium| medium.fetch("tracks") }
+      .find { |track| track["title"] == "Influence" }.fetch("recording")
+    tove_data, wiz_data = data.fetch("artist-credit").map { |credit| credit.fetch("artist") }
+    tove = Artist.create!(mbid: tove_data.fetch("id"), name: tove_data.fetch("name"))
+    entry = CanonicalCatalog::Store.recording!(data)
+    request = CatalogImport.request!("recording", entry.id)
+
+    expect do
+      CanonicalCatalog::Store.new(request, session).recording(data)
+    end.to change(Artist, :count).by(1).and change(RecordingArtist, :count).by(2)
+    wiz = Artist.find_by!(mbid: wiz_data.fetch("id"))
+    expect(entry.recording_artists.order(:position).pluck(:artist_id)).to eq([ tove.id, wiz.id ])
+    expect(CatalogRevision.find_by!(entity_type: "Recording", entity_id: entry.id).evidence.fetch("artist_credit"))
+      .to eq([
+        { "artist_mbid" => tove.mbid, "credited_name" => "Tove Lo", "join_phrase" => " feat. " },
+        { "artist_mbid" => wiz.mbid, "credited_name" => "Wiz Khalifa", "join_phrase" => "" }
+      ])
+    request.update!(state: "imported")
+    refresh = CatalogImport.request!("recording", entry.id)
+    expect do
+      CanonicalCatalog::Store.new(refresh, session).recording(data)
+    end.not_to change { [ Artist.count, Recording.count, RecordingArtist.count ] }
+    alias_evidence = data.deep_dup
+    alias_evidence["artist-credit"].last["name"] = "Wiz"
+    refresh.update!(state: "imported")
+    alias_request = CatalogImport.request!("recording", entry.id)
+    CanonicalCatalog::Store.new(alias_request, session).recording(alias_evidence)
+    surface = RecordingResolution::RealCorpusEvaluation::Observation.new(artist: "Wiz", album: "Lady Wood", track: "Influence")
+    expect(RecordingResolution::LocalCandidates.catalog_identity(surface)).to include(artist_mbid: wiz.mbid)
+    [ tove, wiz ].each do |artist|
+      surface = RecordingResolution::RealCorpusEvaluation::Observation.new(artist: artist.name, album: "Lady Wood", track: "Influence")
+      expect(RecordingResolution::LocalCandidates.catalog_identity(surface)).to include(artist_mbid: artist.mbid, recording_mbid: entry.mbid)
+    end
+  end
+
   it "admits one contextual edition with a complete multi-disc listing and no new plays" do
     observation = catalog_observation(listener)
     original = observation.attributes

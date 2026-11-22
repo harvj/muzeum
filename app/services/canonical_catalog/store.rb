@@ -136,7 +136,8 @@ module CanonicalCatalog
 
       credits.each_with_index do |credit, index|
         credited_artist = artist(credit.fetch("artist"))
-        join.create_or_find_by!(association => entity, artist: credited_artist) { |row| row.position = index }
+        row = join.create_or_find_by!(association => entity, artist: credited_artist) { |created| created.position = index }
+        row.update!(position: index) if row.is_a?(RecordingArtist) && row.position != index
       end
     end
 

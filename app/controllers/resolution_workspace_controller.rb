@@ -63,7 +63,9 @@ class ResolutionWorkspaceController < ApplicationController
         @listener_ranking_token = review.token(@ranking)
       end
     end
-    legacy_candidates = RecordingResolution::Workspace.candidates(@assessment).index_by { |candidate| candidate["id"] }
+    display_evidence = @assessment&.evidence || {}
+    display_evidence = display_evidence.except("verified_recording") if @ranking.first&.fetch("version") == RecordingResolution::Ranking::SOURCE_HINTS_VERSION
+    legacy_candidates = RecordingResolution::Workspace.candidate_evidence(display_evidence).index_by { |candidate| candidate["id"] }
     @candidates = @ranking.filter_map { |rank| legacy_candidates[rank["recording_mbid"]] }
     @catalog_context = RecordingResolution::CatalogContext.new(@candidates, @review_releases)
     current = @scrobbles.find { |play| play.id == target.id } || RecordingResolution::Ledger.effective(current_user).find(target.id)
@@ -304,7 +306,8 @@ class ResolutionWorkspaceController < ApplicationController
   end
 
   def selection(assessment, target, edition: nil)
-    candidate = RecordingResolution::Workspace.candidates(assessment).find { |item| item["id"] == params[:recording_mbid] }
+    candidate = RecordingResolution::Workspace.candidate_evidence(assessment.evidence.except("verified_recording"))
+      .find { |item| item["id"] == params[:recording_mbid] }
     raise ArgumentError unless candidate
     if !edition && RecordingResolution::Ranking.call(@workspace.surface(target), assessment.evidence, source_hints: true)
         .none? { |entry| entry["recording_mbid"] == candidate["id"] }

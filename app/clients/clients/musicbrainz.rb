@@ -92,8 +92,10 @@ module Clients
 
     MBID = /\A[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\z/i
 
-    def candidate_page(session, artist:, title:, offset: 0, catalog: false)
-      params = { query: build_recording_query(artist:, recording: title, release: nil), limit: 25, offset:, fmt: "json" }
+    def candidate_page(session, artist:, title:, offset: 0, catalog: false, artist_mbid: nil)
+      query = build_recording_query(artist:, recording: title, release: nil)
+      query = %(arid:#{artist_mbid} AND recording:"#{escape_phrase(title)}") if MBID.match?(artist_mbid.to_s)
+      params = { query:, limit: 25, offset:, fmt: "json" }
       session.get(:musicbrainz, "/ws/2/recording", params:) do |data|
         unless data["count"].is_a?(Integer) && data["offset"] == offset && data["recordings"].is_a?(Array) &&
             data["recordings"].all? { |recording| recording.is_a?(Hash) && MBID.match?(recording["id"].to_s) }
@@ -108,8 +110,9 @@ module Clients
       end.fetch("data") { raise RecordingResolution::ProviderError, "MusicBrainz search endpoint unavailable" }
     end
 
-    def release_candidates(session, artist:, title:)
+    def release_candidates(session, artist:, title:, artist_mbid: nil)
       query = "artist:\"#{escape_phrase(artist)}\" AND release:\"#{escape_phrase(title)}\""
+      query = %(arid:#{artist_mbid} AND release:"#{escape_phrase(title)}") if MBID.match?(artist_mbid.to_s)
       response = session.get(:musicbrainz, "/ws/2/release", params: { fmt: "json", limit: 5, query: }) do |data|
         releases = data["releases"]
         raise RecordingResolution::ProviderError, "MusicBrainz release search envelope is incomplete" unless releases.is_a?(Array)

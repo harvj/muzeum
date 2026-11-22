@@ -36,6 +36,20 @@ module CanonicalLibraryHelper
     safe_join(credits.sort_by { |credit| [ credit.position || Float::INFINITY, credit.id ] }.map { |credit| catalog_link(credit.artist) }, ", ")
   end
 
+  def verified_recording_credit(recording)
+    credits = CatalogRevision.where(entity_type: "Recording", entity_id: recording.id)
+      .where("evidence ? 'artist_credit'").order(id: :desc).pick(:evidence)&.fetch("artist_credit", nil)
+    return catalog_artists(recording) if credits.blank?
+
+    artists = recording.artists.index_by(&:mbid)
+    return catalog_artists(recording) unless credits.all? { |credit| artists.key?(credit["artist_mbid"]) }
+
+    safe_join(credits.flat_map do |credit|
+      artist = artists.fetch(credit.fetch("artist_mbid"))
+      [ entity_link(credit["credited_name"].presence || artist.name, catalog_entry_path(artist)), credit["join_phrase"].to_s ]
+    end)
+  end
+
   def import_status(request, verified: false)
     case request&.state
     when "pending" then request.failure.present? ? "Pending retry" : "Pending enrichment"

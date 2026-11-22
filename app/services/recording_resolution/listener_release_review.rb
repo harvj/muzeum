@@ -10,7 +10,7 @@ module RecordingResolution
 
     def ranked(surface)
       evidence = @assessment.evidence
-      candidates = Workspace.candidate_evidence(evidence)
+      candidates = Workspace.candidate_evidence(evidence.except("verified_recording"))
       supported = {}
       candidates.group_by { |candidate| candidate.dig("local_release_context", "release_id") }.each do |release_id, rows|
         next unless release_id && (release = Release.find_by(id: release_id))

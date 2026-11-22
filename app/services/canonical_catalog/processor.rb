@@ -181,7 +181,7 @@ module CanonicalCatalog
       if @group && (@group.claims != @claims || !RecordingResolution::Workspace.new(user).surface(observation)&.id.eql?(surface.id))
         return complete("incomplete", "Observation claims no longer match this investigation.")
       end
-      @local_candidates = RecordingResolution::LocalCandidates.call(surface, @claims)
+      @local_candidates = RecordingResolution::LocalCandidates.call(surface)
       unless @request.context["refresh"] == true
         local_evidence = { "source_claims" => @claims, "candidates" => @local_candidates, "reasons" => [] }
         local_evidence.merge!(RecordingResolution::LocalCandidates.checked_edition(surface, @local_candidates))
@@ -189,7 +189,8 @@ module CanonicalCatalog
         return complete { write_assessment(local_evidence) } if ranks.one? && RecordingResolution::Ranking.recommended?(ranks)
       end
       @evaluator = RecordingResolution::Evaluator.new(@session, discogs: nil, workspace: true,
-        review_alternative: @request.context["refresh"] == true, review_release: @request.context["release_mbid"])
+        review_alternative: @request.context["refresh"] == true, review_release: @request.context["release_mbid"],
+        catalog_identity: RecordingResolution::LocalCandidates.catalog_identity(surface))
       evidence = @evaluator.call(surface, @claims)
       if (manual = @request.context["manual_mbid"]).present?
         result = @musicbrainz.verify_recording(@session, manual, catalog: true)

@@ -5,13 +5,14 @@ module RecordingResolution
 
     attr_reader :evidence
 
-    def initialize(session, discogs:, workspace: false, discover: workspace, review_alternative: false, review_release: nil)
+    def initialize(session, discogs:, workspace: false, discover: workspace, review_alternative: false, review_release: nil, catalog_identity: {})
       @session = session
       @discogs = DiscogsEvidence.new(discogs, expanded: workspace) if discogs
       @workspace = workspace
       @discover = discover
       @review_alternative = review_alternative
       @review_release = review_release
+      @catalog_identity = catalog_identity
       @musicbrainz = Clients::Musicbrainz.new
     end
 
@@ -22,7 +23,7 @@ module RecordingResolution
         return evidence
       end
 
-      page = @musicbrainz.candidate_page(@session, artist: surface.artist, title: surface.track, catalog: @workspace)
+      page = recording_page(surface)
       candidates = page.fetch("recordings")
       evidence["search"] = page.slice("count", "offset").merge("returned" => candidates.size)
       evidence["candidates"] = candidates.map { |candidate| recording_evidence(candidate) }
@@ -30,7 +31,11 @@ module RecordingResolution
       reason("missing_album", "field" => "album") if surface.album.blank?
       reason("missing_source_mbid", "field" => "track_mbid") if claims["track_mbid"].blank?
 
-      verification = @workspace ? {} : verify_source_hint(claims["track_mbid"])
+      verification = if !@workspace && claims["track_mbid"].present?
+        @musicbrainz.verify_recording(@session, claims["track_mbid"])
+      else
+        {}
+      end
       recording = verification["data"]
       evidence["verification"] = verification.except("data")
       evidence["verified_recording"] = recording && recording_evidence(recording)
@@ -44,6 +49,7 @@ module RecordingResolution
 
       releases = Array(recording&.fetch("releases", nil))
       edition_id = (claims["album_mbid"].presence || releases.find { |release| release["title"] == surface.album }&.fetch("id", nil)) unless @workspace
+      edition_id ||= @catalog_identity[:edition_mbid] if @workspace
       if @workspace && edition_id.blank? && surface.album.present?
         relevant = candidates.flat_map { |candidate| Array(candidate["releases"]) }.select { |release| release["title"] == surface.album }
         ids = relevant.pluck("id").compact.uniq
@@ -62,19 +68,10 @@ module RecordingResolution
       if @discover
         related = !edition || evidence["slots"].none? { |slot| DiscoveryTitle.match?(slot["title"], surface.track) } ||
           DiscoveryTitle.album_base(surface.album) != surface.album || surface.album.to_s.match?(VERSION_MARKER)
-        search = related && (candidates.empty? || candidates.any? { |candidate| Array(candidate["releases"]).any? })
-        discovery = EditionDiscovery.new(@musicbrainz, @session)
-        merge_discovered(discovery.call(surface, claims, candidates, checked: edition, attempted: edition_id, search:, review_alternative: @review_alternative, preferred: @review_release))
+        search = related
+        discovery = EditionDiscovery.new(@musicbrainz, @session, **@catalog_identity.slice(:artist_mbid))
+        merge_discovered(discovery.call(surface, candidates, checked: edition, attempted: edition_id, search:, review_alternative: @review_alternative, preferred: @review_release))
         evidence["review_tracklists"] = discovery.tracklists if discovery.tracklists.any?
-      end
-      if @workspace && claims["track_mbid"].present?
-        verification = verify_source_hint(claims["track_mbid"])
-        evidence["verification"] = verification.except("data")
-        if (matched = verification["data"])
-          evidence["verified_recording"] = recording_evidence(matched)
-        elsif verification.present?
-          reason("unverified_recording", evidence["verification"].merge("claimed_mbid" => claims["track_mbid"]))
-        end
       end
       if verified
         slot_check = {
@@ -96,20 +93,19 @@ module RecordingResolution
 
     private
 
-    def verify_source_hint(id)
-      return {} if id.blank?
+    def recording_page(surface)
+      if (id = @catalog_identity[:recording_mbid])
+        data = @musicbrainz.verify_recording(@session, id, catalog: true)["data"]
+        if data&.fetch("id", nil) == id
+          return { "count" => 1, "offset" => 0, "recordings" => [ data ] }
+        end
+      end
 
-      optional_hint { @musicbrainz.verify_recording(@session, id, catalog: @workspace) } || {}
-    end
+      scope = @catalog_identity.slice(:artist_mbid)
+      page = @musicbrainz.candidate_page(@session, artist: surface.artist, title: surface.track, catalog: @workspace, **scope)
+      return page if scope.empty? || page.fetch("recordings").any?
 
-    def optional_hint
-      yield
-    rescue ProviderError => error
-      raise unless @workspace
-      return if error.deferred
-
-      (evidence["source_hint_failures"] ||= []) << (@session.current_request || {}).merge("http_status" => error.http_status).compact
-      nil
+      @musicbrainz.candidate_page(@session, artist: surface.artist, title: surface.track, catalog: @workspace)
     end
 
     def merge_discovered(discovered)

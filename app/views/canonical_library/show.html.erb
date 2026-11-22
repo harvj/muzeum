@@ -5,7 +5,7 @@
     <h1><%= catalog_title(@entry) %><% if @entry.release_year %> <span><%= @entry.release_year %></span><% end %></h1>
   <% else %>
     <h1><%= catalog_title(@entry) %></h1>
-    <% if @entry.is_a?(Recording) %><p><%= catalog_artists(@entry).presence || "Artist credits pending" %></p><% end %>
+    <% if @entry.is_a?(Recording) %><p><%= verified_recording_credit(@entry).presence || "Artist credits pending" %></p><% end %>
   <% end %>
 </section>
 <%= render "release" if @entry.is_a?(Release) %>
