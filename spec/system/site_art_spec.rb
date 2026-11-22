@@ -79,8 +79,8 @@ RSpec.describe "Site Art appearance", type: :system do
     expect(overlay_property("textShadow")).to eq("rgba(255, 248, 233, 0.95) 0px 2px 3px")
     expect(overlay_property("backgroundImage")).to eq("none")
     expect(overlay_property("boxShadow")).to eq("none")
-    expect(overlay_property("backgroundColor", "header")).to eq("rgba(255, 255, 255, 0.54)")
-    expect(overlay_property("backgroundColor", "footer")).to eq("rgba(0, 0, 0, 0.57)")
+    expect_transparent_shell
+    expect(overlay_property("backgroundColor", "main .card")).to eq("color(srgb 1 1 1 / 0.84)")
     find(".harvj-wordmark").hover
     expect(overlay_property("color")).to eq("rgb(255, 255, 255)")
     expect(overlay_property("backgroundColor")).to eq("rgb(41, 45, 44)")
@@ -136,6 +136,7 @@ RSpec.describe "Site Art appearance", type: :system do
     expect(page).to have_css("header[style*='#F5EFE3']")
     expect(overlay_property("color")).to eq("rgb(245, 239, 227)")
     expect(overlay_property("color", "footer span")).to eq("rgb(245, 239, 227)")
+    expect_transparent_shell
     sign_in = "header .entity-link"
     expect(overlay_property("color", sign_in)).to eq("rgb(245, 239, 227)")
     find(sign_in).hover
@@ -228,6 +229,14 @@ RSpec.describe "Site Art appearance", type: :system do
         end
       end
       release = release == "f" * 64 ? "a" * 64 : "f" * 64
+    end
+  end
+
+  def expect_transparent_shell
+    %w[header footer].each do |selector|
+      expect(overlay_property("backgroundColor", selector)).to eq("rgba(0, 0, 0, 0)")
+      expect(overlay_property("backgroundImage", selector)).to eq("none")
+      expect(overlay_property("backdropFilter", selector)).to eq("none")
     end
   end
 

@@ -49,7 +49,11 @@ RSpec.describe MuzeumPublishedRelease do
 
       expect(described_class.from_file(path, revision:)).to be_nil
       described_class.synchronize!(root, revision, verify)
+      expect(path.stat.mode & 0o777).to eq(0o640)
       expect(described_class.from_file(path, revision:)).to eq(tag)
+
+      described_class.synchronize!(root, revision, verify)
+      expect(path.stat.mode & 0o777).to eq(0o640)
 
       newer = "b" * 40
       marker.write("#{newer}\n")

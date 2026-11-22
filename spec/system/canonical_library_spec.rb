@@ -32,10 +32,24 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
 
     request = CatalogImport.find_by!(kind: "recording")
     expect(request.state).to eq("pending")
+    expect(page).to have_css("turbo-cable-stream-source[connected]", visible: :all)
+    expect(page).to have_css(".review-catalog-context", text: "Checking supported release memberships")
     session = CatalogFixtures::Session.new
     allow(RecordingResolution::ProviderSession).to receive(:new).and_return(session)
     CanonicalCatalogJob.perform_now(request.id)
     expect(request.reload.state).to eq("imported")
+    expect(page).to have_css(".review-catalog-context dl > div:last-child .review-catalog-mark.present")
+    expect(page).to have_link("Night Drive", href: release_path(Release.find_by!(title: "Night Drive")))
+    expect(page).to have_css(".review-candidate[open]")
+    release = Release.find_by!(title: "Night Drive")
+    within(".candidate", text: "Signals") { click_button "Resolve 1 observation" }
+    expect(page).to have_text("Recording decision saved.")
+    second_import = CatalogImport.latest("recording", request.entity_id)
+    expect(second_import.id).not_to eq(request.id)
+    CanonicalCatalogJob.perform_now(second_import.id)
+    expect(second_import.reload.state).to eq("imported")
+    expect(Release.where(title: "Night Drive").pluck(:id)).to eq([ release.id ])
+    expect(page).to have_css(".review-catalog-context a[href='#{release_path(release)}']")
 
     click_link "Releases"
     click_link "Night Drive"
@@ -83,6 +97,27 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     expect(page).to have_text("Resolve only this observation")
     expect(page).to have_text("Inherited from your exact-surface assignment")
     verify_appearances("resolution")
+  end
+
+  it "automatically shows pending release verification when the saved recording has no complete release evidence" do
+    user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "catalog-pending", lastfm_username: "catalog-pending")
+    observation = catalog_observation(user)
+    catalog_assessment(observation)
+    sign_in(user)
+    visit resolution_surface_path(observation)
+    click_button "Resolve 1 observation"
+    expect(page).to have_text("Recording decision saved.")
+    expect(page).to have_css("turbo-cable-stream-source[connected]", visible: :all)
+    expect(page).to have_css(".review-catalog-context", text: "Checking supported release memberships")
+
+    provider = CatalogFixtures::Session.new
+    allow(provider).to receive(:edition).and_return(provider.edition.merge("media" => []))
+    allow(RecordingResolution::ProviderSession).to receive(:new).and_return(provider)
+    request = CatalogImport.find_by!(kind: "recording")
+    CanonicalCatalogJob.perform_now(request.id)
+    expect(request.reload.state).to eq("incomplete")
+    expect(page).to have_css(".review-catalog-context", text: "Release verification pending")
+    expect(page).to have_no_css(".review-catalog-context dl > div:last-child .review-catalog-mark.present")
   end
 
   it "shows pending, ranked, ambiguous and resolved identities across desktop and mobile" do
@@ -247,7 +282,9 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     artist_id = candidate.fetch("artist-credit").first.dig("artist", "id")
     artist = Artist.create!(mbid: artist_id, name: "Tove Lo")
     recording = Recording.create!(mbid: candidate["id"], title: "bad days")
+    recording.recording_artists.create!(artist:, role: :primary)
     release = Release.create!(title: edition["title"], ingested_from_release_mbid: edition["id"], catalog_verified_at: Time.current)
+    release.catalog_track_slots.create!(recording:, medium: 1, position: track.fetch("position"), track_mbid: track.fetch("id"), title: track.fetch("title"))
     user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "bad-days-review", lastfm_username: "bad-days-review")
     play = Scrobble.create!(user:, lastfm_account: user.source_account, played_at: Time.current,
       payload: { artist_name: "Tove Lo", track_name: "bad days", album_name: edition["title"] })
@@ -300,8 +337,14 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
         const link = document.querySelector(".catalog-table a:hover, .catalog-table a:focus-visible");
         if (!link) return false;
         const style = getComputedStyle(link);
-        const normal = getComputedStyle(document.querySelector(".library-card"));
-        return style.color === normal.backgroundColor && style.backgroundColor === normal.color;
+        const base = document.createElement("span");
+        base.style.color = "var(--card)";
+        base.style.backgroundColor = "var(--surface-highlight)";
+        link.appendChild(base);
+        const expectedForeground = getComputedStyle(base).color;
+        const expectedBackground = getComputedStyle(base).backgroundColor;
+        base.remove();
+        return style.color === expectedForeground && style.backgroundColor === expectedBackground;
       })()
     JS
   end
@@ -351,11 +394,19 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
         expect(page.evaluate_script(<<~'JS')).to be >= 4.5
           (() => {
             const style = getComputedStyle(document.querySelector(".library-card"));
-            const luminance = rgb => rgb.match(/\d+/g).slice(0, 3).map(Number).map(v => {
+            const canvas = document.createElement("canvas");
+            canvas.width = canvas.height = 1;
+            const pixel = canvas.getContext("2d", { willReadFrequently: true });
+            const luminance = () => Array.from(pixel.getImageData(0, 0, 1, 1).data).slice(0, 3).map(v => {
               v /= 255;
               return v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4;
             }).reduce((sum, value, i) => sum + value * [.2126, .7152, .0722][i], 0);
-            const pair = [luminance(style.color), luminance(style.backgroundColor)].sort((a, b) => b - a);
+            const paint = color => { pixel.fillStyle = color; pixel.fillRect(0, 0, 1, 1); };
+            paint(style.color);
+            const ink = luminance();
+            paint(ink < .18 ? "#000" : "#fff");
+            paint(style.backgroundColor);
+            const pair = [ink, luminance()].sort((a, b) => b - a);
             return (pair[0] + .05) / (pair[1] + .05);
           })()
         JS

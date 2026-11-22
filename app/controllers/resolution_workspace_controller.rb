@@ -67,7 +67,7 @@ class ResolutionWorkspaceController < ApplicationController
     display_evidence = display_evidence.except("verified_recording") if @ranking.first&.fetch("version") == RecordingResolution::Ranking::SOURCE_HINTS_VERSION
     legacy_candidates = RecordingResolution::Workspace.candidate_evidence(display_evidence).index_by { |candidate| candidate["id"] }
     @candidates = @ranking.filter_map { |rank| legacy_candidates[rank["recording_mbid"]] }
-    @catalog_context = RecordingResolution::CatalogContext.new(@candidates, @review_releases)
+    @catalog_context = RecordingResolution::CatalogContext.new(@candidates)
     current = @scrobbles.find { |play| play.id == target.id } || RecordingResolution::Ledger.effective(current_user).find(target.id)
     @current_decision = @inherited_head
     if (@assessment.nil? || @assessment.evidence["partial"]) && @assessment_request.nil? && @inherited_head&.recording_id.nil? && @may_manage_observation &&

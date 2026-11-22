@@ -54,6 +54,10 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     expect(album.release_month).to eq(9)
     expect(single.release_month).to eq(5)
     expect(recording.admitted_releases).to contain_exactly(album, single)
+    get resolution_surface_path(plays.first)
+    panel = Nokogiri::HTML(response.body).at_css(".review-catalog-context")
+    expect(panel.css("dl > div:last-child a").map { |link| link["href"] }).to contain_exactly(release_path(album), release_path(single))
+    expect(panel.at_css("dl > div:last-child .review-catalog-mark.present").text).to eq("✓")
     expect(Release.member_recording_ids([ album, single ]).count(recording.id)).to eq(1)
     expect(plays.map { |play| play.reload.payload }).to eq(original)
 

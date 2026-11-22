@@ -1,14 +1,12 @@
-<section class="review-catalog-context" aria-label="Canonical in Muzeum">
   <h3>Canonical in Muzeum</h3>
   <dl>
-    <% rows.each do |label, entry, status| %>
+    <% rows.each do |label, entries, status| %>
       <div>
-        <dt><span class="review-catalog-mark<%= " present" if entry %>" aria-hidden="true"><%= entry ? "✓" : "—" %></span><%= label %></dt>
-        <dd><% if entry %><%= catalog_link(entry) %><% else %><%= status || "No verified catalog match" %><% end %></dd>
+        <dt><span class="review-catalog-mark<%= " present" if entries.any? %>" aria-hidden="true"><%= entries.any? ? "✓" : "—" %></span><%= label %></dt>
+        <dd><% if entries.any? %><%= safe_join(entries.map { |entry| catalog_link(entry) }, ", ") %><% else %><%= status || "No verified catalog match" %><% end %></dd>
       </div>
     <% end %>
   </dl>
-  <p class="compact-meta">Resolution <%= rows[1][1] ? "reuses the existing recording" : "creates a catalog entry for this recording" %> and applies it to this matching group.
+  <p class="compact-meta">Resolution <%= rows[1][1].any? ? "reuses the existing recording" : "creates a catalog entry for this recording" %> and applies it to this matching group.
     The original Last.fm release text is preserved. The edition played stays unverified.
-    <% unless rows[2][1] %>Muzeum checks supported release memberships automatically. Uncertain memberships stay pending.<% end %></p>
-</section>
+    <% if rows[2][1].empty? %>Muzeum checks supported release memberships automatically. Uncertain memberships stay pending.<% end %></p>

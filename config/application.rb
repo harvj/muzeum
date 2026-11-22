@@ -24,8 +24,7 @@ module Muzeum
     # Initialize configuration defaults for originally generated Rails version.
     config.load_defaults 8.1
 
-    # Enable only after scoped authorization/subscription policies exist.
-    config.action_cable.mount_path = nil
+    # Resolution catalog streams use the existing authenticated session and signed stream names.
     config.active_storage.draw_routes = false
 
     # Please, add to the `ignore` list any other `lib` subdirectories that do

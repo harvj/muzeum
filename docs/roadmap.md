@@ -53,6 +53,7 @@ The authoritative, living domain rules are [principles](domain/principles.md), [
    - **P1.5.4 · v0.4.0 — Unified Recording Resolution.** Default to the exact matching group, keep individual exceptions in the same review, and show the group’s effective state and counts. Clarify Archive source status and optimize source statistics and catalog listening queries.
 
    - **v0.5.0 — Canonical release context.** Admit verified overlapping original release memberships after recording confirmation and count distinct observations within each release and across any combined set. Retire the edition picker. Add the Artist listening-history chart and rankings, with estimated listening time for artist and release contexts and play counts for recordings. [Release plan](releases/v0.5.0.md).
+   - **v0.5.1 — Site Art and live catalog refresh.** Remove the shell bands, use shared translucent content surfaces, and update persisted canonical memberships in Resolution Review as verification finishes. [Visual review](design/verification/v0.5.1/README.md).
 
 9. **P1.6 — Profile onboarding (tentative).**
    - **P1.6a — Last.fm authentication and verified username.** Use Last.fm web authorization and bind only the returned username.

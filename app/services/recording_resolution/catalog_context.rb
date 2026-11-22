@@ -1,26 +1,46 @@
 module RecordingResolution
   class CatalogContext
-    def initialize(candidates, releases)
-      @recordings = Recording.where(mbid: candidates.pluck("id")).index_by(&:mbid)
+    def initialize(candidates)
+      @recordings = Recording.where(mbid: candidates.pluck("id"))
+        .includes(:admitted_releases, recording_artists: :artist).index_by(&:mbid)
       artist_ids = candidates.flat_map { |candidate| credit_ids(candidate) }
       @artists = Artist.where(mbid: artist_ids).index_by(&:mbid)
-      release_ids = candidates.flat_map do |candidate|
-        [ candidate.dig("local_release_context", "edition_mbid"), candidate.dig("release_discovery", "id"),
-          *Array(candidate["releases"]).pluck("id") ]
-      end
-      @releases = Release.where(ingested_from_release_mbid: release_ids.compact + releases.keys)
-        .where.not(catalog_verified_at: nil).index_by(&:ingested_from_release_mbid)
     end
 
-    def rows(candidate, release_id)
-      credits = credit_ids(candidate)
+    def rows(candidate)
       recording = @recordings[candidate["id"]]
-      release = @releases[release_id]
+      artists = if recording
+        recording.recording_artists.map(&:artist).uniq
+      else
+        @artists.values_at(*credit_ids(candidate)).compact
+      end
+      self.class.rows(recording, artists:, worker_enabled: CatalogImport.worker_enabled?)
+    end
+
+    def self.rows(recording, artists: recording&.recording_artists&.map(&:artist)&.uniq || [], worker_enabled: CatalogImport.worker_enabled?)
+      releases = recording&.admitted_releases&.select(&:catalog_verified_at)&.sort_by { |release| [ release.title, release.id ] } || []
+      state = CatalogImport.latest("recording", recording.id)&.state if recording
+      pending = worker_enabled && state.in?(CatalogImport::ACTIVE)
+      release_status = if pending
+        "Checking supported release memberships…"
+      elsif recording
+        "Release verification pending"
+      else
+        "No verified catalog match"
+      end
       [
-        [ "Artist", (@artists[credits.first] if credits.one?), ("Multiple credited artists" if credits.many?) ],
-        [ "Recording", recording, nil ],
-        [ "Release", release, ("Supporting release unknown" if release_id.blank?) ]
+        [ "Artist", artists, nil ],
+        [ "Recording", [ recording ].compact, nil ],
+        [ "Release", releases, release_status ]
       ]
+    end
+
+    def self.stream(recording)
+      "resolution_catalog:#{recording.id}"
+    end
+
+    def self.target(recording)
+      "catalog_context_#{recording.id}"
     end
 
     private
