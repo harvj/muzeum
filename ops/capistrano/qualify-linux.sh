@@ -203,6 +203,9 @@ verify_recovery() {
   for database in muzeum_production{,_cache,_queue,_cable}; do
     pg_dump -Fc "$database" > "$work/backup/$database.dump"
   done
+  mkdir -p "$work/backup/files/var/www/muzeum/shared"
+  cp "$env_file" "$work/backup/files/var/www/muzeum/shared/.env"
+  jq -n --arg revision "$revision" '{release_sha: $revision}' > "$work/backup/production.json"
   restic backup "$work/backup" --tag "$revision"
   snapshot=$(restic snapshots --json --tag "$revision" | jq -er '.[-1].id')
   restic restore "$snapshot" --target "$work/recovery" --verify
@@ -220,9 +223,8 @@ verify_recovery() {
     pg_restore --exit-on-error -d "$target" "$restored"
     test "$(psql -XAt -d "$target" -c 'SELECT count(*) FROM schema_migrations')" =       "$(psql -XAt -d "$database" -c 'SELECT count(*) FROM schema_migrations')"
   done
-  mkdir -p "$work/recovery/files/var/www/muzeum/shared"
-  cp "$env_file" "$work/recovery/files/var/www/muzeum/shared/.env"
-  sudo env PGHOST="$PGHOST" PGUSER="$PGUSER" PGPASSWORD="$PGPASSWORD" python3 -IB - "$PWD" "$work/recovery" "$revision" "$suffix" <<'PYTHON'
+  sudo env PGHOST="$PGHOST" PGUSER="$PGUSER" PGPASSWORD="$PGPASSWORD" python3 -IB - "$PWD" "$work/recovery$work/backup" "$revision" "$suffix" <<'PYTHON'
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -237,7 +239,10 @@ def invoke(argv, **kwargs):
     # The qualification server is the CI PostgreSQL container rather than a host socket.
     subprocess.run(argv[4:], check=True, **kwargs)
 
-proof = production_restore.verify_application(Path(sys.argv[2]), targets, {'release_sha': sys.argv[3]}, invoke)
+restored = Path(sys.argv[2])
+metadata = json.loads((restored / 'production.json').read_text())
+assert metadata['release_sha'] == sys.argv[3]
+proof = production_restore.verify_application(restored, targets, metadata, invoke)
 assert proof['grant_decryption_verified'] is True and proof['sessions'] == 1
 PYTHON
   echo "Fixed-runtime recovery verified for $revision in encrypted snapshot $snapshot"
