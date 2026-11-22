@@ -1,0 +1,20 @@
+  <% geography = @geography&.evidence %>
+  <% if geography&.fetch("status") == "verified" %>
+    <p>Origin <%= render "shared/geographic_place", place: geography.fetch("origin") %>
+      <% geography.fetch("hierarchy").drop(1).each do |parent| %> · <%= render "shared/geographic_place", place: parent %><% end %>
+    </p>
+    <% if geography.dig("origin", "id") != geography.dig("founding_location", "id") %>
+      <p>Founded in <%= render "shared/geographic_place", place: geography.fetch("founding_location") %></p>
+    <% end %>
+    <% checked = Array(geography["requests"]).find { |request| request["provider"] == "wikidata" }&.fetch("retrieved_at", nil) %>
+    <% if checked && Time.iso8601(checked) < 7.days.ago %><p class="muted">Wikidata evidence is due for refresh.</p><% end %>
+  <% elsif geography %>
+    <p class="muted"><%= geography.fetch("status").start_with?("conflicting") ?
+      "The geographic evidence conflicts. A specific origin could not be verified." : "Wikidata evidence is incomplete or the artist link could not be verified." %></p>
+  <% end %>
+  <p>Country (MusicBrainz) <%= render "shared/geographic_place", country: @entry.country %>
+    <% if Clients::Musicbrainz::MBID.match?(@entry.mbid.to_s) %> · <%= link_to "MusicBrainz artist", "https://musicbrainz.org/artist/#{@entry.mbid}" %><% end %>
+    <% if geography && Clients::Wikimedia::ENTITY.match?(geography["entity_id"].to_s) %> ·
+      <%= link_to "Wikidata artist statements", "https://www.wikidata.org/wiki/#{geography.fetch("entity_id")}" %>
+    <% end %>
+  </p>

@@ -33,11 +33,7 @@ class CanonicalLibraryController < ApplicationController
     when Artist
       @geography = CatalogRevision.where(entity_type: CanonicalCatalog::ArtistGeography::ENTITY_TYPE, entity_id: @entry.id)
         .order(id: :desc).first
-      @recordings = @entry.recordings.order(:title, :id).includes(recording_artists: :artist)
-      @recordings = @recordings.merge(@profile_catalog.recordings) if @public_profile
-      performed_on = CatalogTrackSlot.where(recording_id: @entry.recording_artists.select(:recording_id)).select(:release_id)
-      @releases = Release.where(id: @entry.release_artists.select(:release_id)).or(Release.where(id: performed_on)).order(:title, :id).includes(release_artists: :artist)
-      @releases = @releases.merge(@profile_catalog.releases) if @public_profile
+      load_artist_listening
     when Release
       slots = @entry.catalog_track_slots.order(:medium, :position)
       cursor = slots.find_by(id: params[:after_track]) if params[:after_track].present?
@@ -63,7 +59,8 @@ class CanonicalLibraryController < ApplicationController
       @activity_releases = catalog_scope.where(id: [ @entry.id, *other_ids ]).order(:id).to_a
       member_ids = Release.member_recording_ids(@activity_releases.map(&:id))
       release_plays = recording_plays(member_ids)
-      @observation_count = release_plays.count(:id)
+      @listening_total = CatalogListening.new(release_plays).total
+      @observation_count = @listening_total.plays
       @plays = ListeningPage.chronological(release_plays, before: params[:before_play]).limit(PAGE + 1).to_a
       @next_release_play = @plays.pop && @plays.last.id if @plays.size > PAGE
       @activity_recordings = Recording.where(id: @plays.map(&:effective_recording_id)).index_by(&:id)
@@ -77,7 +74,8 @@ class CanonicalLibraryController < ApplicationController
       @releases = @releases.limit(PAGE + 1).to_a
       @next_appearance = @releases.pop && @releases.last.id if @releases.size > PAGE
       plays = recording_plays([ @entry.id ])
-      @observation_count = plays.count(:id)
+      @listening_total = CatalogListening.new(plays).total
+      @observation_count = @listening_total.plays
       if @public_profile
         plays = ListeningPage.chronological(plays, before: params[:before])
       else
@@ -100,6 +98,46 @@ class CanonicalLibraryController < ApplicationController
   end
 
   private
+
+  def load_artist_listening
+    recordings = Recording.where(id: @entry.recording_artists.select(:recording_id))
+    recordings = recordings.merge(@profile_catalog.recordings) if @public_profile
+    releases = Release.where(id: @entry.release_artists.select(:release_id)).or(
+      Release.where(id: CatalogTrackSlot.where(recording_id: recordings.select(:id)).select(:release_id)))
+    releases = releases.merge(@profile_catalog.releases) if @public_profile
+    memberships = CatalogTrackSlot.where(release_id: releases.select(:id)).distinct.pluck(:release_id, :recording_id)
+      .group_by(&:first)
+    records = recordings.to_a
+    artist_listening = CatalogListening.new(recording_plays(records.map(&:id)))
+    stats = artist_listening.by_recording
+    @listening_total = stats.values.reduce(CatalogListening::EMPTY, :+)
+    @history_range = params[:range].to_s
+    @history_range = "all" unless CatalogListening::RANGES.key?(@history_range)
+    @timeline = artist_listening.timeline(@history_range)
+    @recording_count = records.size
+    @recording_sort = %w[plays title length recent].find { |sort| sort == params[:recording_sort] } || "plays"
+    @recording_rows = records.map { |record| [ record, stats.fetch(record.id, CatalogListening::EMPTY) ] }
+    @recording_rows.sort_by! do |record, totals|
+      key = case @recording_sort
+      when "title" then record.title.downcase
+      when "length" then -(record.duration_ms || 0)
+      when "recent" then -(totals.last_played&.to_i || 0)
+      else -totals.plays
+      end
+      [ key, record.title.downcase, record.id ]
+    end
+    @play_bar_max = @recording_rows.map { |_, totals| totals.plays }.max.to_i
+    @recording_page = params[:recording_page].to_i.clamp(0, [ (@recording_count - 1) / 10, 0 ].max)
+    @recording_rows = @recording_rows.slice(@recording_page * 10, 10) || []
+
+    external_ids = memberships.values.flatten(1).map(&:last).uniq - records.map(&:id)
+    stats.merge!(CatalogListening.new(recording_plays(external_ids)).by_recording) if external_ids.any?
+    @release_rows = releases.map do |release|
+      totals = memberships.fetch(release.id, []).map { |_, id| stats.fetch(id, CatalogListening::EMPTY) }
+      [ release, totals.reduce(CatalogListening::EMPTY, :+) ]
+    end.sort_by { |release, totals| [ -totals.milliseconds, release.title.downcase, release.id ] }
+    @time_bar_max = @release_rows.first&.last&.milliseconds.to_i
+  end
 
   def section
     @section = request.path_parameters.fetch(:section).to_s

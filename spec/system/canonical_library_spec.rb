@@ -65,6 +65,18 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     click_link "Night Lines"
     expect(page).to have_link("Different Song")
     expect(page).to have_link("Night Drive")
+    expect(page).to have_css("#listening-history", text: "3m estimated listening time")
+    expect(page).to have_css(".artist-timeline-fill[data-listening-scale-percent-value='100.0']")
+    find("#listening-history a", text: "30d").click
+    expect(page).to have_text("No resolved plays in this period.")
+    find("#listening-history a", text: "All").click
+    expect(page).to have_css("#artist-recordings tbody tr:first-child .listening-bar[data-listening-scale-percent-value='100.0']", text: "1")
+    find("#artist-recordings a", text: "Title").click
+    expect(page).to have_css("#artist-recordings tbody tr:first-child", text: "Different Song")
+    expect(page).to have_css("#artist-releases .listening-bar", text: "3m")
+    expect(page).to have_css("#artist-releases", text: "1 play")
+    visit artist_path(Artist.find_by!(name: "Night Lines"))
+    verify_appearances("artist")
 
     visit resolution_surface_path(observation, play: observation.id)
     expect(page).to have_button("Resolve 1 observation")
@@ -268,11 +280,17 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     browser&.execute_cdp("Emulation.setEmulatedMedia", features: [])
   end
 
-  def capture_resolution(name)
+  def capture_resolution(name, full: false)
     return unless ENV["P151_PREVIEW_DIR"]
 
     page.evaluate_async_script("const done = arguments[0]; document.fonts.ready.then(() => requestAnimationFrame(() => done(true)))")
-    screenshot = page.driver.browser.execute_cdp("Page.captureScreenshot", format: "webp", quality: 88)
+    browser = page.driver.browser
+    options = { format: "webp", quality: 88 }
+    if full
+      dimensions = browser.execute_cdp("Page.getLayoutMetrics").fetch("cssContentSize")
+      options.merge!(captureBeyondViewport: true, clip: dimensions.slice("x", "y", "width", "height").merge("scale" => 1))
+    end
+    screenshot = browser.execute_cdp("Page.captureScreenshot", **options)
     File.binwrite(File.join(ENV.fetch("P151_PREVIEW_DIR"), "#{name}.webp"), Base64.decode64(screenshot.fetch("data")))
   end
 
@@ -307,14 +325,21 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     [ [ "desktop", 1440, 960 ], [ "mobile", 390, 844 ] ].each do |size, width, height|
       page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width:, height:, deviceScaleFactor: 1, mobile: size == "mobile")
       %w[light dark].each do |mode|
-        find(".harvj-session > summary").send_keys(:enter)
+        find(".harvj-session > summary").send_keys(:enter) unless page.has_css?(".harvj-session[open]", wait: 0)
         select mode.capitalize, from: "Appearance"
-        find(".harvj-session > summary").send_keys(:enter)
+        find(".harvj-session[open] > summary").send_keys(:enter) if page.has_css?(".harvj-session[open]", wait: 0)
         expect(page.evaluate_script("document.documentElement.dataset.appearance")).to eq(mode)
         expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
         if section == "release"
           expect(page).to have_css("#listening-activity", text: "1 distinct resolved observation")
           capture_resolution("release-listening-#{size}-#{mode}")
+        elsif section == "artist"
+          expect(page).to have_css("#artist-recordings .listening-bar", text: "1")
+          expect(page).to have_css("#artist-releases .listening-bar", text: "3m")
+          table_ids = page.all("main .library-card[id]").map { |card| card[:id] }
+          expect(table_ids).to include("listening-history", "artist-recordings", "artist-releases")
+          page.execute_script("window.scrollTo(0, 0)")
+          capture_resolution("artist-listening-#{size}-#{mode}", full: true)
         end
         expect(page.evaluate_script(<<~JS)).to be(true)
           (() => {

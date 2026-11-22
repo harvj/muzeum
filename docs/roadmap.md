@@ -52,7 +52,7 @@ The authoritative, living domain rules are [principles](domain/principles.md), [
    - **v0.3.6 maintenance — Homepage and Archive.** Remove the redundant homepage introduction, collapse signed-out appearance controls into a disclosure, and use the full Archive cell width for recording titles.
    - **P1.5.4 · v0.4.0 — Unified Recording Resolution.** Default to the exact matching group, keep individual exceptions in the same review, and show the group’s effective state and counts. Clarify Archive source status and optimize source statistics and catalog listening queries.
 
-   - **v0.5.0 — Canonical release context.** Admit verified overlapping original release memberships after recording confirmation and count distinct observations within each release and across any combined set. Retire the edition picker. [Release plan](releases/v0.5.0.md).
+   - **v0.5.0 — Canonical release context.** Admit verified overlapping original release memberships after recording confirmation and count distinct observations within each release and across any combined set. Retire the edition picker. Add the Artist listening-history chart and rankings, with estimated listening time for artist and release contexts and play counts for recordings. [Release plan](releases/v0.5.0.md).
 
 9. **P1.6 — Profile onboarding (tentative).**
    - **P1.6a — Last.fm authentication and verified username.** Use Last.fm web authorization and bind only the returned username.

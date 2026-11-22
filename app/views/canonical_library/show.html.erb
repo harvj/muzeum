@@ -7,11 +7,16 @@
     <h1><%= catalog_title(@entry) %></h1>
     <% if @entry.is_a?(Recording) %><p><%= verified_recording_credit(@entry).presence || "Artist credits pending" %></p><% end %>
   <% end %>
+  <%= render "artist_metadata" if @entry.is_a?(Artist) %>
 </section>
 <%= render "release" if @entry.is_a?(Release) %>
+<% if @entry.is_a?(Artist) %><%= render "artist" %><% end %>
 <% unless @public_profile %>
-<section class="card library-card">
-  <h2>Catalog import</h2>
+<% if @entry.is_a?(Artist) %>
+<details class="card library-card artist-metadata-tools"><summary>Catalog tools</summary>
+<% else %>
+<section class="card library-card"><h2>Catalog import</h2>
+<% end %>
   <p role="status"><%= import_status(@import_request, verified: @revision.present?) %></p>
   <% if @import_request&.active? && !CatalogImport.worker_enabled? %><p>Background imports are paused in this environment.</p><% end %>
   <% if @import_request&.failure.present? %><p><%= @import_request.failure %></p><% end %>
@@ -24,9 +29,6 @@
       <% if @revision.evidence["conflicts"].present? %><p>Existing values kept for review: <%= @revision.evidence["conflicts"].keys.join(", ").humanize %>.</p><% end %>
     </details>
   <% end %>
-</section>
+<% if @entry.is_a?(Artist) %></details><% else %></section><% end %>
 <% end %>
-<% case @entry
-   when Artist %><%= render "artist" %>
-<% when Recording %><%= render "recording" %>
-<% end %>
+<%= render "recording" if @entry.is_a?(Recording) %>

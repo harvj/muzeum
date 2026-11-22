@@ -67,13 +67,37 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     get release_path(album, with_release: [ single.id ])
     expect(response.body).to include("Combined listening history", "8 distinct resolved observations")
 
-    Scrobble.create!(user:, lastfm_account: user.source_account, played_at: 1.minute.from_now, payload:)
+    Scrobble.create!(user:, lastfm_account: user.source_account, played_at: 1.day.from_now, payload:)
     get release_path(album, with_release: [ single.id ])
     expect(response.body).to include("9 distinct resolved observations")
     RecordingResolution::Ledger.record!(listener: user, scrobble: plays.last, scope: :scrobble,
       mode: "unresolved", reason: "Individual exception")
     get release_path(album, with_release: [ single.id ])
     expect(response.body).to include("8 distinct resolved observations")
+
+    artist = Artist.find_by!(name: "Tove Lo")
+    featured = Artist.create!(name: "Featured artist", mbid: SecureRandom.uuid)
+    recording.recording_artists.create!(artist: featured, role: :featured)
+    recording.update!(duration_ms: 180_000)
+    Scrobble.create!(user:, lastfm_account: user.source_account, played_at: 40.days.ago, payload:)
+    missing = Recording.create!(title: "Unknown duration", mbid: SecureRandom.uuid)
+    missing.recording_artists.create!(artist: featured, role: :featured)
+    extra = Scrobble.create!(user:, lastfm_account: user.source_account, played_at: 2.days.ago,
+      payload: { artist_name: "Archive source", track_name: "Unknown duration" })
+    RecordingResolution::Ledger.record!(listener: user, scrobble: extra, scope: :scrobble,
+      mode: "resolved", recording: missing, reason: "Verified fixture")
+    [ artist, featured ].each do |entry|
+      get artist_path(entry, range: "30d")
+      document = Nokogiri::HTML(response.body)
+      expect(document.at_css("#artist-recordings tr:first-child td a").text).to include("girl right?")
+      expect(document.at_css("#artist-recordings .listening-bar").text).to include("9")
+      expect(document.at_css("#listening-history").text).to include("27m estimated listening time")
+      expect(document.at_css("#listening-history [aria-current=true]").text).to eq("30d")
+      expect(document.css(".artist-timeline-data li").sum { |row| row["data-duration-ms"].to_i }).to eq(1_260_000)
+      expect(document.css("#artist-releases .listening-bar").size).to eq(2)
+      expect(document.css("#artist-releases .listening-bar").map(&:text)).to all(include("27m"))
+    end
+    expect(response.body).to include("Duration known for 9 of 10 plays.", "Unknown duration")
 
     refresh = CatalogImport.request!("recording", recording.id)
     expect do

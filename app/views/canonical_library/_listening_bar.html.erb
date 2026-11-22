@@ -1,0 +1,7 @@
+<% if value.positive? %>
+  <div class="listening-bar" data-controller="listening-scale" data-listening-scale-percent-value="<%= 100.0 * value / maximum %>">
+    <span aria-label="<%= accessible_label %>"><%= label %></span>
+  </div>
+<% else %>
+  <span aria-label="<%= accessible_label %>"><%= label %></span>
+<% end %>

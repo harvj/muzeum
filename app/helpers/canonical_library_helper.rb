@@ -70,6 +70,24 @@ module CanonicalLibraryHelper
     format("%d:%02d", minutes, seconds)
   end
 
+  def compact_listening_time(milliseconds)
+    minutes, seconds = (milliseconds / 1000).divmod(60)
+    return "#{minutes / 60}h #{minutes % 60}m" if minutes >= 60
+    return "#{minutes}m" if minutes.positive?
+
+    "#{seconds}s"
+  end
+
+  def estimated_listening_time(totals)
+    return "Time unknown" if totals.plays.positive? && totals.known_durations.zero?
+
+    compact_listening_time(totals.milliseconds)
+  end
+
+  def duration_coverage(totals)
+    "Duration known for #{totals.known_durations} of #{totals.plays} plays."
+  end
+
   def review_factor_label(key, factor)
     return factor["explanation"] unless key == "catalog_release_appearance"
 
@@ -94,8 +112,8 @@ module CanonicalLibraryHelper
     value
   end
 
-  def browser_time(time, clock: false)
-    content_tag(:time, time.utc.strftime("%Y-%m-%d %H:%M UTC"),
-      datetime: time.utc.iso8601, data: { controller: "local-time", local_time_clock_value: clock })
+  def browser_time(time, clock: false, date_only: false)
+    content_tag(:time, time.utc.strftime(date_only ? "%Y-%m-%d" : "%Y-%m-%d %H:%M UTC"),
+      datetime: time.utc.iso8601, data: { controller: "local-time", local_time_clock_value: clock, local_time_date_only_value: date_only })
   end
 end
