@@ -102,7 +102,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
 
     assessment = RecordingResolution::Ledger.assessments(user).sole
     surface = RecordingResolution::Surface.find(RecordingResolution::Group.find(assessment.group_id).surface_id)
-    first = assessment.evidence.fetch("verified_recording")
+    first = assessment.evidence.fetch("candidates").first
     alternate = first.merge("id" => CatalogFixtures::IDS[:other], "disambiguation" => "")
     evidence = { "candidates" => [ first, alternate ] }
     evidence["ranking"] = RecordingResolution::Ranking.call(surface, evidence)
