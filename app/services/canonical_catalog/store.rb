@@ -46,13 +46,14 @@ module CanonicalCatalog
       artist
     end
 
-    def release(data, slots, comparison: {})
+    def release(data, slots, comparison: {}, strict_collection: false, checked_editions: [])
       edition = self.class.mbid!(data["id"])
-      title = self.class.name!(data["title"])
+      title = self.class.name!(data.dig("release-group", "title").presence || data["title"])
       group = data.dig("release-group", "id")
       signature = slots.map { |slot| [ slot.fetch(:medium), slot.fetch(:position), slot.fetch(:recording).fetch("id") ] }
       evidence = { "edition_mbid" => edition, "release_group_mbid" => group, "track_count" => slots.size,
         "tracklist_digest" => Digest::SHA256.hexdigest(signature.to_json), "discogs" => comparison }
+      evidence["checked_recording_appearances"] = checked_editions if checked_editions.present?
       release = Release.find_by(ingested_from_release_mbid: edition)
       unless release
         lock_collection(group) if group.present?
@@ -61,6 +62,9 @@ module CanonicalCatalog
         if equivalent
           refresh(equivalent, {}, evidence.merge("equivalent_edition" => true))
           return equivalent
+        end
+        if strict_collection && !release && Release.where(release_group_mbid: group).where.not(catalog_verified_at: nil).exists?
+          raise Unverified, "A verified catalog collection already exists with conflicting edition evidence"
         end
       end
       release ||= Release.create_or_find_by!(ingested_from_release_mbid: edition) do |row|

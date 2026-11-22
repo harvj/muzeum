@@ -59,6 +59,14 @@ class CanonicalLibraryController < ApplicationController
       recording_ids = @slots.map(&:recording_id)
       @track_counts = recording_plays(recording_ids)
         .group("effective_resolution.recording_id").count(:id)
+      other_ids = Array(params[:with_release]).first(PAGE).map { |id| Integer(id, exception: false) }.compact
+      @activity_releases = catalog_scope.where(id: [ @entry.id, *other_ids ]).order(:id).to_a
+      member_ids = Release.member_recording_ids(@activity_releases.map(&:id))
+      release_plays = recording_plays(member_ids)
+      @observation_count = release_plays.count(:id)
+      @plays = ListeningPage.chronological(release_plays, before: params[:before_play]).limit(PAGE + 1).to_a
+      @next_release_play = @plays.pop && @plays.last.id if @plays.size > PAGE
+      @activity_recordings = Recording.where(id: @plays.map(&:effective_recording_id)).index_by(&:id)
     when Recording
       @releases = @entry.admitted_releases.order(:title, :id).includes(release_artists: :artist)
       @releases = @releases.merge(@profile_catalog.releases) if @public_profile

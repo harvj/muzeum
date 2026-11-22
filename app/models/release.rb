@@ -6,6 +6,10 @@ class Release < ApplicationRecord
   has_many :release_recordings, dependent: :destroy
   has_many :recordings, dependent: :destroy
 
+  def self.member_recording_ids(releases)
+    CatalogTrackSlot.where(release_id: releases).distinct.pluck(:recording_id)
+  end
+
   enum :primary_type, {
     album: 0,
     ep: 1,

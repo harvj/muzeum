@@ -1,7 +1,7 @@
 class ResolutionWorkspaceController < ApplicationController
   before_action :workspace
   before_action :observation, except: :index
-  before_action :authorize_management, only: %i[investigate decide admit defer release_batch confirm_release_batch]
+  before_action :authorize_management, only: %i[investigate decide defer release_batch confirm_release_batch]
 
   def index
     @filter = params[:filter].presence_in(RecordingResolution::Workspace::FILTERS)
@@ -205,40 +205,6 @@ class ResolutionWorkspaceController < ApplicationController
     redirect_to resolution_surface_path(@observation), alert: "This assignment changed. Review the current decision and submit again.", status: :see_other
   end
 
-  def admit
-    target = params[:play_id].present? ? @workspace.matching(@observation).find(params[:play_id]) : @observation
-    request = nil
-    ActiveRecord::Base.transaction do
-      current_user.managed_archive_grants.lock.find_by!(lastfm_account_id: target.lastfm_account_id)
-      surface = @workspace.surface(target)
-      surface&.lock!
-      assessment = @workspace.assessments(surface).find(params[:assessment_id])
-      edition = params[:edition_mbid].presence || raise(ArgumentError)
-      recording, context = selection(assessment, target, edition:)
-
-      if params[:play_id].present?
-        current = RecordingResolution::Ledger.effective(current_user).find(target.id).effective_recording_id
-      else
-        history = @workspace.history(surface).where(scrobble_id: nil)
-        head = history.find_by(user_id: current_user.id)
-        head = history.find_by(user_id: nil) if head.nil? || head.mode == "inherit"
-        current = head&.recording_id
-      end
-      raise ArgumentError unless current == recording.id
-
-      request = CatalogImport.request!("recording", recording.id, context)
-    end
-    request.dispatch
-    notice = if request.context["edition_mbid"] == params[:edition_mbid]
-      "Release verification requested."
-    else
-      "Another import is in progress. Request this release again after it finishes."
-    end
-    redirect_to resolution_surface_path(@observation, play: params[:play_id].presence), notice:, status: :see_other
-  rescue ArgumentError, CanonicalCatalog::Store::Unverified
-    redirect_to resolution_surface_path(@observation), alert: "Choose a release for the current recording assignment.", status: :see_other
-  end
-
   def release_batch
     @batch = build_release_batch
     @proposals = @batch.proposals
@@ -305,20 +271,16 @@ class ResolutionWorkspaceController < ApplicationController
       target.payload.slice(*RecordingResolution::PilotRunner::CLAIM_FIELDS)
   end
 
-  def selection(assessment, target, edition: nil)
+  def selection(assessment, target)
     candidate = RecordingResolution::Workspace.candidate_evidence(assessment.evidence.except("verified_recording"))
       .find { |item| item["id"] == params[:recording_mbid] }
     raise ArgumentError unless candidate
-    if !edition && RecordingResolution::Ranking.call(@workspace.surface(target), assessment.evidence, source_hints: true)
+    if RecordingResolution::Ranking.call(@workspace.surface(target), assessment.evidence, source_hints: true)
         .none? { |entry| entry["recording_mbid"] == candidate["id"] }
       raise ArgumentError
     end
 
-    if edition && RecordingResolution::Workspace.editions(candidate, assessment).none? { |_, id| id == edition }
-      raise ArgumentError
-    end
-    context = { "album" => target.payload["album_name"],
-      "edition_mbid" => edition, "assessment_id" => assessment.id }.compact
+    context = { "assessment_id" => assessment.id }
     [ CanonicalCatalog::Store.recording!(candidate), context ]
   end
 end

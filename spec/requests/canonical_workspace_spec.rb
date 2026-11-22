@@ -9,15 +9,76 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
   before { prepare_oidc }
   after { restore_oidc }
 
-  it "withholds indistinguishable edition choices" do
-    candidate = { "id" => CatalogFixtures::IDS[:studio], "releases" => [
-      { "title" => "ESTRUS", "id" => CatalogFixtures::IDS[:edition] },
-      { "title" => "ESTRUS", "id" => CatalogFixtures::IDS[:other] },
-      { "title" => "ESTRUS", "id" => CatalogFixtures::IDS[:track], "date" => "2026", "country" => "US" }
-    ] }
-    assessment = RecordingResolution::Assessment.new(evidence: {})
-    expect(RecordingResolution::Workspace.editions(candidate, assessment)).to eq(
-      [ [ "ESTRUS · 2026 · US", CatalogFixtures::IDS[:track] ] ])
+  it "admits the real ESTRUS album and single, counting overlapping listening observations once" do
+    finish_oidc
+    user = User.find_by!(oidc_subject: @subject)
+    LastfmAccount.associate!(user, "estrus-release-context")
+    ids = %w[798b4b4f-07fd-469b-87ad-54f7f9182bca f268e723-fb4d-41bd-9ba8-326b8d9a7fc0 5aef7cd0-1673-473f-bfb2-c2ac4fbe616b]
+    editions = ids.to_h { |id| [ id, JSON.parse(Rails.root.join("spec/fixtures/musicbrainz/releases/#{id}.json").read) ] }
+    single_data = editions.fetch(ids.first)
+    recording_data = single_data.fetch("media").first.fetch("tracks").first.fetch("recording")
+      .merge("releases" => editions.values.map { |edition| edition.slice("id", "title") })
+    mbid = recording_data.fetch("id")
+    payload = { artist_name: "Tove Lo", album_name: "ESTRUS", track_name: "I'm your girl right?", album_mbid: SecureRandom.uuid }
+    plays = 8.times.map do |i|
+      Scrobble.create!(user:, lastfm_account: user.source_account, played_at: Time.current - i.minutes, payload:)
+    end
+    original = plays.map(&:payload)
+    surface = RecordingResolution::Ledger.attach!(plays.first)
+    claims = plays.first.payload.slice(*RecordingResolution::PilotRunner::CLAIM_FIELDS)
+    group = RecordingResolution::Group.create!(surface_id: surface.id, version: RecordingResolution::Ledger::VERSION, claims:)
+    assessment = RecordingResolution::Assessment.create!(group_id: group.id, version: "release-context", actor: "fixture",
+      digest: SecureRandom.hex(32), evidence: { "candidates" => [ recording_data ], "review_tracklists" =>
+        editions.transform_values { |edition| RecordingResolution::ReviewRelease.project(edition) } })
+    get resolution_surface_path(plays.first)
+    expect(response.body).to include("Resolve 8 observations", "Release tracklist", "candidate recording")
+    expect(response.body).not_to include("Verify selected release")
+
+    post decide_resolution_surface_path(plays.first), params: { mode: "resolved", scope: "surface",
+      recording_mbid: mbid, assessment_id: assessment.id }
+    expect(response).to have_http_status(:see_other)
+    request = CatalogImport.where(kind: "recording").sole
+    session = double(provenance: [])
+    allow(session).to receive(:get) do |_provider, path, params:, &projection|
+      id = path.split("/").last
+      data = id == mbid ? recording_data : editions.fetch(id)
+      { "data" => projection.call(data) }
+    end
+    CanonicalCatalog::Processor.new(request, session_factory: ->(*) { session }).call
+    expect(request.reload.state).to eq("imported")
+    album = Release.find_by!(title: "ESTRUS")
+    single = Release.find_by!(title: "I’m your girl right?")
+    recording = Recording.find_by!(mbid:)
+    expect(album.catalog_track_slots.count).to eq(13)
+    expect(single.catalog_track_slots.count).to eq(1)
+    expect(album.release_month).to eq(9)
+    expect(single.release_month).to eq(5)
+    expect(recording.admitted_releases).to contain_exactly(album, single)
+    expect(Release.member_recording_ids([ album, single ]).count(recording.id)).to eq(1)
+    expect(plays.map { |play| play.reload.payload }).to eq(original)
+
+    [ album, single ].each do |release|
+      get release_path(release)
+      expect(response.body).to include("8 distinct resolved observations")
+      expect(Nokogiri::HTML(response.body).css("#listening-activity li").size).to eq(8)
+    end
+    get recording_path(recording)
+    expect(response.body).to include("8 resolved listening observations")
+    get release_path(album, with_release: [ single.id ])
+    expect(response.body).to include("Combined listening history", "8 distinct resolved observations")
+
+    Scrobble.create!(user:, lastfm_account: user.source_account, played_at: 1.minute.from_now, payload:)
+    get release_path(album, with_release: [ single.id ])
+    expect(response.body).to include("9 distinct resolved observations")
+    RecordingResolution::Ledger.record!(listener: user, scrobble: plays.last, scope: :scrobble,
+      mode: "unresolved", reason: "Individual exception")
+    get release_path(album, with_release: [ single.id ])
+    expect(response.body).to include("8 distinct resolved observations")
+
+    refresh = CatalogImport.request!("recording", recording.id)
+    expect do
+      CanonicalCatalog::Processor.new(refresh, session_factory: ->(*) { session }).call
+    end.not_to change { [ Release.count, Recording.count, Artist.count, CatalogTrackSlot.count ] }
   end
 
   it "renders the Regent's Court source, three checked tracklists and explicit decision scopes" do
@@ -127,15 +188,8 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     import = CatalogImport.where(kind: "recording").sole
     expect(import.context).not_to have_key("edition_mbid")
     get resolution_surface_path(example)
-    page = Nokogiri::HTML(response.body)
-    expect(page.at_css("select[name='edition_mbid']").ancestors("form").first["action"]).to eq(admit_resolution_surface_path(example))
-    expect(response.body).to include("checked disc 1, track 1")
-    import.update!(state: "imported")
-    expect do
-      post admit_resolution_surface_path(example), params: choice.merge(edition_mbid: CatalogFixtures::IDS[:edition])
-    end.not_to change(RecordingResolution::Decision, :count)
-    expect(flash[:notice]).to include("Release verification requested")
-    expect(CatalogImport.active.sole.context["edition_mbid"]).to eq(CatalogFixtures::IDS[:edition])
+    expect(response.body).to include("Muzeum checks supported release memberships automatically.")
+    expect(response.body).not_to include("Verify selected release", 'name="edition_mbid"')
     expect { post decide_resolution_surface_path(example), params: choice }.not_to change(RecordingResolution::Decision, :count)
     expect(flash[:alert]).to include("changed")
 

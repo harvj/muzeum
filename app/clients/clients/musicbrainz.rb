@@ -161,7 +161,10 @@ module Clients
     def project_recording(data)
       data.slice("id", "title", "length", "video", "disambiguation", "first-release-date", "isrcs").merge(
         "artist-credit" => project_credits(data["artist-credit"]),
-        "releases" => Array(data["releases"]).map { |release| release.slice("id", "title", "date", "country", "disambiguation") })
+        "releases" => Array(data["releases"]).map do |release|
+          release.slice("id", "title", "date", "country", "disambiguation", "status").merge(
+            "release-group" => release["release-group"]&.slice("id", "title", "primary-type", "secondary-types", "first-release-date"))
+        end)
     end
 
     def project_edition(data)
@@ -170,7 +173,7 @@ module Clients
         codes = Array(event.dig("area", "iso-3166-1-codes"))
         { "country_codes" => codes } if codes.any?
       end
-      result["release-group"] = data["release-group"]&.slice("id", "primary-type", "secondary-types", "first-release-date")
+      result["release-group"] = data["release-group"]&.slice("id", "title", "primary-type", "secondary-types", "first-release-date")
       result["artist-credit"] = project_credits(data["artist-credit"])
       result["relations"] = Array(data["relations"]).select { |relation| relation["type"] == "discogs" }.map do |relation|
         { "url" => relation.fetch("url").slice("resource") }

@@ -34,3 +34,26 @@
     <p>No verified track listing is available.</p>
   <% end %>
 </section>
+
+<section class="card library-card" id="listening-activity">
+  <h2><%= @activity_releases.many? ? "Combined listening history" : "Release listening history" %></h2>
+  <% if @activity_releases.many? %>
+    <p><%= safe_join(@activity_releases.map { |release| catalog_link(release) }, ", ") %></p>
+  <% end %>
+  <% if @archive_available %>
+    <p><%= pluralize(@observation_count, "distinct resolved observation") %> across the member recordings.</p>
+    <% if @plays.any? %>
+      <ol class="catalog-list">
+        <% @plays.each do |play| %>
+          <li><%= @public_profile ? browser_time(play.played_at) : entity_link(browser_time(play.played_at), resolution_surface_path(play)) %>
+            · <%= catalog_link(@activity_recordings.fetch(play.effective_recording_id)) %></li>
+        <% end %>
+      </ol>
+      <% if @next_release_play %>
+        <p><%= link_to "Older observations", catalog_entry_path(@entry, before_play: @next_release_play, with_release: @activity_releases.reject { |release| release == @entry }.map(&:id), anchor: "listening-activity") %></p>
+      <% end %>
+    <% end %>
+  <% else %>
+    <p>Listening history is unavailable.</p>
+  <% end %>
+</section>

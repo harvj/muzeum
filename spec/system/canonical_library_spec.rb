@@ -40,6 +40,10 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     click_link "Releases"
     click_link "Night Drive"
     expect(page).to have_text("Track listing")
+    within("#listening-activity") do
+      expect(page).to have_text("1 distinct resolved observation")
+      expect(page).to have_link("Signals")
+    end
     expect(all("tbody tr").length).to eq(3)
     expect(all(".track-number", minimum: 4).map(&:text)).to eq([ "#", "1", "2", "3" ])
     verify_appearances("release")
@@ -308,6 +312,10 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
         find(".harvj-session > summary").send_keys(:enter)
         expect(page.evaluate_script("document.documentElement.dataset.appearance")).to eq(mode)
         expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
+        if section == "release"
+          expect(page).to have_css("#listening-activity", text: "1 distinct resolved observation")
+          capture_resolution("release-listening-#{size}-#{mode}")
+        end
         expect(page.evaluate_script(<<~JS)).to be(true)
           (() => {
             const nav = document.querySelector(".library-nav").getBoundingClientRect()

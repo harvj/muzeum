@@ -25,7 +25,6 @@ Rails.application.routes.draw do
     post :investigate, on: :member
     post :defer, on: :member
     post :decide, on: :member
-    post :admit, on: :member
     get :release_batch, on: :member
     post :confirm_release_batch, on: :member
   end

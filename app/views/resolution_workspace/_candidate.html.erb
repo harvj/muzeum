@@ -57,6 +57,17 @@
         </p>
       <% end %>
       <%= render "review_tracklist", release:, release_id:, mbid: %>
+      <% other_contexts = @review_releases.values.select do |listing|
+        listing["id"] != release_id && listing["state"] == "complete" && listing["title"].present? &&
+          (listing["release_group_mbid"].blank? || listing["release_group_mbid"] != release&.fetch("release_group_mbid", nil)) &&
+          Array(listing["media"]).any? { |medium| Array(medium["tracks"]).any? { |track| track["recording_mbid"] == mbid } }
+      end.uniq { |listing| listing["release_group_mbid"] || listing["id"] }.first(3) %>
+      <% other_contexts.each do |listing| %>
+        <details>
+          <summary><%= listing["title"] %><%= " · #{listing["date"]}" if listing["date"].present? %></summary>
+          <%= render "review_tracklist", release: listing, release_id: listing["id"], mbid: %>
+        </details>
+      <% end %>
     </div>
     <div class="review-factors">
       <h3>For</h3>
@@ -94,21 +105,5 @@
       <%= form.button "Resolve observation #{target.id} only", name: "mode", value: "resolved" %>
     <% end %>
   </details>
-  <% if @current_recording&.mbid == mbid %>
-    <% editions = RecordingResolution::Workspace.editions(candidate, @assessment) %>
-    <h3>Release edition</h3>
-    <% if editions.any? %>
-      <p>Request verification of an edition you recognize. Muzeum checks its complete track listing before admission.</p>
-      <%= form_with url: admit_resolution_surface_path(@observation) do |form| %>
-        <%= form.hidden_field :recording_mbid, value: mbid, id: nil %>
-        <%= form.hidden_field :assessment_id, value: @assessment.id, id: nil %>
-        <%= form.label :edition_mbid, "Release edition to verify", for: "edition-#{mbid}" %>
-        <%= form.select :edition_mbid, editions, { include_blank: "Choose a release edition" }, id: "edition-#{mbid}", required: true %>
-        <%= form.submit "Verify selected release" %>
-      <% end %>
-    <% else %>
-      <p>The available evidence does not distinguish a release edition. You can keep the recording assignment while the release is pending.</p>
-    <% end %>
-  <% end %>
   <% end %>
 </details>

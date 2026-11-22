@@ -1,4 +1,4 @@
-<h3>Release tracklist</h3>
+<h3>Release tracklist<%= " — #{release["title"]}" if release&.fetch("title", nil).present? %></h3>
 <% if release_id && Clients::Musicbrainz::MBID.match?(release_id) %>
   <p class="compact-meta"><%= link_to "MusicBrainz release", "https://musicbrainz.org/release/#{release_id}" %>
     · The edition played is unverified.</p>

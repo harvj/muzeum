@@ -97,31 +97,6 @@ module RecordingResolution
         .uniq { |item| item["id"] }
     end
 
-    def self.editions(candidate, assessment)
-      checked = assessment.evidence["edition"]
-      slots = Array(assessment.evidence["slots"]).select { |slot| slot["recording_mbid"] == candidate["id"] }
-      appearances = Array(candidate["releases"])
-      appearances = [ checked, *appearances ] if checked && slots.any?
-      choices = appearances.filter_map do |edition|
-        id, title = edition.values_at("id", "title")
-        next unless title.present? && Clients::Musicbrainz::MBID.match?(id.to_s)
-
-        details = edition.values_at("date", "country").compact_blank
-        if checked && id == checked["id"] && slots.any?
-          details += slots.map { |slot| "checked disc #{slot['medium']}, track #{slot['position']}" }
-        end
-        [ title, details, id ]
-      end.uniq(&:last)
-      choices.group_by(&:first).values.flat_map do |versions|
-        versions.group_by { |_, details, _| details }.values.filter_map do |matches|
-          title, details, id = matches.first
-          next unless matches.one? && (versions.one? || details.any?)
-
-          [ ([ title ] + details).join(" · "), id ]
-        end
-      end.first(25)
-    end
-
     private
 
     def filter_surfaces(rows, filter)

@@ -25,9 +25,9 @@ module CanonicalCatalog
       end
     end
 
-    def original_context?(title)
+    def self.original_context?(data)
       group = data["release-group"] || {}
-      data["title"] == title && data["status"] == "Official" && data["date"].present? &&
+      Clients::Musicbrainz::MBID.match?(group["id"].to_s) && data["status"] == "Official" && data["date"].present? &&
         data["date"] == group["first-release-date"] &&
         ((group["primary-type"] == "Album" && Array(group["secondary-types"]).empty?) ||
           (group["primary-type"].in?(%w[Single EP]) && Array(group["secondary-types"]).empty?))

@@ -80,17 +80,38 @@ RSpec.describe CanonicalCatalog::Processor do
     expect(Release.count).to eq(1)
   end
 
-  it "keeps the decision and recording if release evidence is incomplete, and admits a deliberate eligible choice later" do
+  it "preserves the resolved recording while an incomplete release stays pending" do
     observation = catalog_observation(listener)
     decision = RecordingResolution::Ledger.record!(listener:, scrobble: observation, scope: :scrobble, mode: "resolved",
       recording:, reason: "Confirmed recording")
-    request = CatalogImport.request!("recording", recording.id, "album" => "Something else")
-    expect(process(request).state).to eq("incomplete")
+    edition = session.edition
+    edition["media"].first["tracks"].pop
+    allow(session).to receive(:edition).and_return(edition)
+    expect(process(CatalogImport.request!("recording", recording.id)).state).to eq("incomplete")
     expect(Release.count).to eq(0)
     expect(recording.reload.artists.pluck(:name)).to eq([ "Night Lines" ])
     expect(RecordingResolution::Decision.sole).to eq(decision)
-    explicit = CatalogImport.request!("recording", recording.id, "edition_mbid" => CatalogFixtures::IDS[:edition])
-    expect(process(explicit).state).to eq("imported")
+  end
+
+  it "keeps conflicting track order pending without blocking a separate verified single" do
+    album = session.edition
+    alternate = album.deep_dup
+    alternate["id"] = SecureRandom.uuid
+    alternate["media"].first["tracks"].first(2).each { |track| track["position"] = 3 - track["position"] }
+    single = album.deep_dup
+    single["id"] = SecureRandom.uuid
+    single["title"] = "Signals"
+    single["release-group"].merge!("id" => SecureRandom.uuid, "primary-type" => "Single")
+    single["media"] = [ single["media"].first.merge("track-count" => 1, "tracks" => [ single["media"].first["tracks"].first ]) ]
+    all_editions = [ album, alternate, single ].index_by { |edition| edition["id"] }
+    recording_data = album["media"].first["tracks"].first["recording"].merge("releases" =>
+      all_editions.values.map { |edition| edition.slice("id", "title") })
+    allow(session).to receive(:get) do |_provider, path, params:, &projection|
+      id = path.split("/").last
+      { "data" => projection.call(all_editions.fetch(id) { recording_data }) }
+    end
+    expect(process(CatalogImport.request!("recording", recording.id)).state).to eq("incomplete")
+    expect(recording.admitted_releases.pluck(:title)).to eq([ "Signals" ])
     expect(Release.count).to eq(1)
   end
 
@@ -111,17 +132,12 @@ RSpec.describe CanonicalCatalog::Processor do
     expect(CatalogRevision.order(:id).last.evidence["changes"]).to eq("country" => [ "US", "GB" ])
   end
 
-  it "does not admit a contextual compilation unless a listener deliberately selects it" do
+  it "leaves compilation appearances outside automatic admission" do
     edition = session.edition
     edition.fetch("release-group")["secondary-types"] = [ "Compilation" ]
     allow(session).to receive(:edition).and_return(edition)
-    context = { "album" => "Night Drive", "observed_edition_mbid" => CatalogFixtures::IDS[:edition] }
-    expect(process(CatalogImport.request!("recording", recording.id, context)).state).to eq("incomplete")
+    expect(process(CatalogImport.request!("recording", recording.id)).state).to eq("incomplete")
     expect(Release.count).to eq(0)
-
-    context["edition_mbid"] = CatalogFixtures::IDS[:edition]
-    expect(process(CatalogImport.request!("recording", recording.id, context)).state).to eq("imported")
-    expect(Release.sole).to be_compilation
   end
 
   it "checks provider evidence for one authorized observation without assigning a recording" do

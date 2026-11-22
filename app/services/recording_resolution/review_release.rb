@@ -16,7 +16,7 @@ module RecordingResolution
         "incomplete"
       end
       edition.slice("id", "title", "date", "country", "disambiguation").merge(
-        "state" => state, "countries" => Array(edition["release-events"]).flat_map { |event| Array(event["country_codes"]) }.uniq,
+        "state" => state, "release_group_mbid" => edition.dig("release-group", "id"), "countries" => Array(edition["release-events"]).flat_map { |event| Array(event["country_codes"]) }.uniq,
         "media" => slots <= MAX_SLOTS ? media.map { |medium| project_medium(medium) } : [])
     end
 

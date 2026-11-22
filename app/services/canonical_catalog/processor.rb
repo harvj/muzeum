@@ -1,7 +1,7 @@
 module CanonicalCatalog
   class Processor
     MAX_ATTEMPTS = 5
-    MAX_EDITIONS = 3
+    MAX_EDITIONS = 25
 
     def initialize(request, session_factory: nil)
       @request = request
@@ -122,40 +122,47 @@ module CanonicalCatalog
       raise Store::Unverified, "Selected recording identity could not be verified" unless data && data["id"] == mbid
 
       locked { @store.recording(data, expected: mbid) }
-      context = @request.context
-      return complete if context.blank?
+      ids = Array(data["releases"]).filter_map do |appearance|
+        group = appearance["release-group"]
+        classified = appearance["status"].present? && group&.fetch("primary-type", nil).present? &&
+          group["first-release-date"].present?
+        next if classified && !Edition.original_context?(appearance)
 
-      edition = select_edition(data, context)
-      return complete("incomplete", "Release association pending. Select a verified edition to continue.") unless edition
+        id = appearance["id"]
+        id if Clients::Musicbrainz::MBID.match?(id.to_s)
+      end.uniq.sort
+      if ids.size > MAX_EDITIONS
+        return complete("incomplete", "Release memberships pending. More editions require verification than this import can check.")
+      end
 
-      complete { @store.release(edition.data, edition.slots) }
-    end
-
-    def select_edition(recording, context)
-      mbid = recording.fetch("id")
-      explicit = context["edition_mbid"]
-      return fetch_edition(explicit, recording_mbid: mbid) if explicit.present?
-
-      album = context["album"]
-      return if album.blank?
-
-      appearances = Array(recording["releases"])
-      matching = appearances.select { |release| release["title"] == album }
-      ids = matching.pluck("id").compact.uniq
-      return if ids.size > MAX_EDITIONS
-
-      # The exact observed edition can supply strong context even when the title has many variants.
-      editions = ids.first(MAX_EDITIONS).filter_map do |id|
+      pending = false
+      editions = ids.filter_map do |id|
         edition = fetch_edition(id, recording_mbid: mbid)
-        edition if edition.original_context?(album)
+        edition if Edition.original_context?(edition.data)
       rescue Store::Unverified
+        pending = true
         nil
       end
-      # Compare collection content rather than interpreting a provider group as a collection identity.
-      albums = editions.select { |edition| edition.data.dig("release-group", "primary-type") == "Album" }
-      editions = albums if albums.any?
-      collections = editions.group_by { |edition| edition.slots.map { |slot| slot.dig(:recording, "id") } }
-      collections.values.first.first if collections.one?
+      contexts = editions.group_by { |edition| edition.data.dig("release-group", "id") }
+      pending ||= contexts.empty?
+      contexts.each_value do |matches|
+        signatures = matches.group_by { |edition| edition.slots.map { |slot| slot.dig(:recording, "id") } }
+        base = signatures.keys.min_by(&:length)
+        if signatures.keys.any? { |signature| signature.first(base.length) != base }
+          pending = true
+          next
+        end
+
+        base_editions = signatures.fetch(base)
+        ids = base_editions.map { |edition| edition.data.fetch("id") }
+        stored = Release.where(ingested_from_release_mbid: ids).order(:id).pick(:ingested_from_release_mbid)
+        edition = base_editions.find { |item| item.data["id"] == stored } || base_editions.first
+        checked = matches.map { |item| item.data.slice("id", "title", "date").merge("track_count" => item.slots.size) }
+        locked { @store.release(edition.data, edition.slots, strict_collection: true, checked_editions: checked) }
+      rescue Store::Unverified
+        pending = true
+      end
+      pending ? complete("incomplete", "Some release memberships remain pending verification.") : complete
     end
 
     def fetch_edition(id, recording_mbid: nil)
