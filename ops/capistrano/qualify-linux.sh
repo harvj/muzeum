@@ -255,11 +255,13 @@ for entry in "20261122000000:$candidate:$base" "20261121000000:$base:$candidate"
   test "$(cat "$app/current/REVISION")" = "$revision"
   sudo systemctl restart muzeum-web muzeum-worker
   health
-  sudo python3 -IB ops/provision/check-runtime.py status | jq -e --arg sha "$revision" '.revision == $sha'
+  sudo python3 -IB ops/provision/check-runtime.py status |
+    sed -n '/^{"observed_at":/p' |
+    jq -es --arg sha "$revision" 'length == 1 and .[0].revision == $sha'
   if [[ $revision != "$base" ]]; then
     rails_as muzeum "$app/current" runner - < ops/deploy/inspect.rb |
       sed -n 's/^MUZEUM_DEPLOY_INSPECTION://p' |
-      jq -e '(.databases | length) == 4 and .pending == []'
+      jq -es 'length == 1 and (.[0].databases | length) == 4 and .[0].pending == []'
   fi
   reload_route active
   curl -fsS -H 'Host: muzeum.fm' http://127.0.0.1:8099/up
