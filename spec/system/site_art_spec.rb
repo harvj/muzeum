@@ -12,7 +12,7 @@ RSpec.describe "Site Art appearance", type: :system do
   it "decodes the current theme, shares the bottom-anchored crop, and follows OS and explicit appearance" do
     light = "/environments/stone/limestone.jpg"
     dark = "/environments/stone/onyx.jpg"
-    allow(SiteArt).to receive(:snapshot).and_return(light: { url: light }, dark: { url: dark }, favicon: "/icon.svg")
+    allow(SiteArt).to receive(:snapshot).and_return(light: { url: light, foreground: "dark" }, dark: { url: dark, foreground: "light" }, favicon: "/icon.svg")
     browser = page.driver.browser
     browser.execute_cdp("Emulation.setEmulatedMedia", features: [
       { name: "prefers-color-scheme", value: "light" },
@@ -156,8 +156,8 @@ RSpec.describe "Site Art appearance", type: :system do
     snapshot = snapshot.merge(release: "c" * 64, dark: { url: light, presentation: { foreground: "#F0E8DF" } })
     browser.execute_script("window.refreshArtwork()")
     expect(page).to have_css("img.site-art-background[src='#{light}']", visible: :all)
-    expect(page).to have_css("header[style*='#F0E8DF']")
-    expect(overlay_property("color")).to eq("rgb(240, 232, 223)")
+    expect(page).to have_no_css(".shell-appearance summary")
+    expect(page).to have_css("header[style*='#222222']")
   end
 
   it "runs the upstream presentation and lifecycle fixtures in the rendered roles" do
@@ -190,7 +190,6 @@ RSpec.describe "Site Art appearance", type: :system do
       };
     JS
     visit root_path
-    select_appearance("Light")
 
     sequence = fixtures.fetch("sequence")
     extra_cases = %w[unknown invalid_optional legacy plain invalid_core].map do |name|
@@ -247,18 +246,16 @@ RSpec.describe "Site Art appearance", type: :system do
   it "keeps the local theme and branded icon when remote candidates cannot decode" do
     allow(SiteArt).to receive(:snapshot).and_return(light: { url: "/", presentation: { foreground: "#123456" } }, favicon: "/")
     visit root_path
-    select_appearance("Light")
+    expect(page).to have_no_css(".shell-appearance summary")
     expect(page).to have_link("Log In", href: login_path)
     expect(page).to have_css("link[rel=icon][href*='muzeum-favicon']", count: 1, visible: :all)
     expect(page).to have_no_css("img.site-art-background", visible: :all)
     expect(page).to have_no_css("[data-art-treatment]")
     expect(page.evaluate_script("getComputedStyle(document.querySelector('.stone-environment')).backgroundImage")).to include("limestone.jpg")
-    select_appearance("Dark")
-    expect(page.evaluate_script("getComputedStyle(document.querySelector('.stone-environment')).backgroundImage")).to include("onyx.jpg")
   end
 
   def select_appearance(mode)
-    find(".anonymous-appearance summary").click unless page.has_css?(".anonymous-appearance[open]", wait: 0)
+    find(".shell-appearance summary").click unless page.has_css?(".shell-appearance[open]", wait: 0)
     select mode, from: "Appearance"
   end
 end

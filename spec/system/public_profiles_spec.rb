@@ -1,10 +1,12 @@
 require "rails_helper"
+require_relative "../support/site_art_pair"
 require_relative "../support/public_profile_fixture"
 
 RSpec.describe "Public profile browsing", type: :system do
   include PublicProfileFixture
 
   before do
+    allow(SiteArt).to receive(:snapshot).and_return(SiteArtPair::SNAPSHOT)
     skip "Run with BROWSER_TESTS=1 for public profile browser verification" unless ENV["BROWSER_TESTS"] == "1"
 
     driven_by :selenium, using: :headless_chrome do |options|
@@ -16,8 +18,6 @@ RSpec.describe "Public profile browsing", type: :system do
     fixture = listening_profile_fixture
     authorize_fixture_publication(fixture)
     browser = page.driver.browser
-    allow(SiteArt).to receive(:snapshot).and_return(
-      light: { url: "/environments/stone/limestone.jpg" }, dark: { url: "/environments/stone/onyx.jpg" })
 
     [ [ 1440, 960 ], [ 390, 844 ] ].product(%w[light dark]).each do |(width, height), theme|
       browser.execute_cdp("Emulation.setDeviceMetricsOverride", width:, height:, deviceScaleFactor: 1, mobile: width < 700)
@@ -30,10 +30,10 @@ RSpec.describe "Public profile browsing", type: :system do
       expect(page).to have_no_css("main .intro")
       expect(page).to have_no_link("Open your archive")
       expect(page).to have_no_select("Appearance")
-      trigger = find(".anonymous-appearance summary", text: "Appearance settings")
+      trigger = find(".shell-appearance summary[aria-label='Appearance settings']")
       expect(page.evaluate_script(<<~JS)).to be(true)
         (() => {
-          const icon = document.querySelector(".anonymous-appearance summary").getBoundingClientRect()
+          const icon = document.querySelector(".shell-appearance summary").getBoundingClientRect()
           return icon.right > innerWidth - 24 && icon.bottom > innerHeight - 24
         })()
       JS

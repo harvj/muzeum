@@ -158,7 +158,7 @@ RSpec.describe "Application Shell navigation", type: :system do
     browser.execute_cdp("Input.dispatchTouchEvent", type: "touchStart", touchPoints: [ { x: trigger[0], y: trigger[1] } ])
     browser.execute_cdp("Input.dispatchTouchEvent", type: "touchEnd", touchPoints: [])
     expect(page).to have_css(".harvj-session[open]")
-    expect(page).to have_select("Appearance")
+    expect(page).to have_no_css(".harvj-session select#appearance")
     expect(page).to have_button("Log Out")
     page.execute_script("document.documentElement.style.fontSize = '200%'")
     expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
