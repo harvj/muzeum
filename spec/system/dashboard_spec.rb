@@ -54,6 +54,8 @@ RSpec.describe "Dashboard appearance", type: :system do
     within(".stat", text: "Imported scrobbles") { expect(page).to have_content("4") }
     expect(page).to have_content("Observed artists")
     click_link "Back to Archive"
+    expect(page).to have_current_path(archive_path)
+    expect(page).to have_link("New completion")
     find(".harvj-session > summary").send_keys(:enter) unless page.has_css?(".harvj-session[open]", wait: 0)
     expect(page).to have_css(".harvj-session[open]")
     expect(page).not_to have_link("Continuum Engine", href: "https://funding.harvj.com/")
