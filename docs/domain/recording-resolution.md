@@ -6,7 +6,7 @@ Status: **Authoritative principles; candidate algorithms and thresholds are not 
 
 **REC-001 — Resolve observations to canonical recordings.** Last.fm artist/title/album text is evidence, not canonical identity. Multiple distinct observed strings may resolve to one recording. All compatible plays contribute to that recording's listening history and count. Distinct performances (studio/live, alternate take, remix) must not be merged merely because titles match.
 
-**REC-002 — Keep recording and release decisions independent.** A play's canonical recording can stay fixed when its credited release changes. The recording can appear on multiple releases. Release credit does not determine which recording was heard.
+**REC-002 — Keep recording identity and release membership independent.** A recording can appear on multiple canonical releases. Revising a verified catalog membership changes derived release histories while preserving the effective recording and original observation.
 
 **REC-003 — Suggest candidates automatically.** Muzeum should find and rank plausible MusicBrainz recording candidates for observed artist/title combinations, with retained historical Discogs provenance and MusicBrainz as the active external provider. Provide a clear path to review alternatives and correct any play or compatible group. A high textual similarity is not proof of identity.
 
@@ -52,7 +52,7 @@ The surface `Radiohead / The Bends / Fake Plastic Trees` is explicitly assigned 
 
 ## Example
 
-Last.fm may deliver the same studio performance under multiple title spellings, with or without album text. If evidence supports the same canonical recording, aggregate the plays under that recording. If a similarly named live performance appears, treat it as a distinct candidate until established otherwise. Assigning one of those plays to a compilation for release-credit purposes must not change its recording.
+Last.fm may deliver the same studio performance under multiple title spellings, with or without album text. If evidence supports the same canonical recording, aggregate the plays under that recording. If a similarly named live performance appears, treat it as a distinct candidate until established otherwise. Verifying a new release membership preserves the recording identity and its observations.
 
 ## Open questions requiring evidence or user decision
 
