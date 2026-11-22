@@ -5,7 +5,12 @@
 <% references = Array(candidate["releases"]) %>
 <% references = [ { "id" => local_id }, *references ] if local_id %>
 <% shared_isrc = @candidates.any? { |other| other["id"] != mbid && (Array(other["isrcs"]) & Array(candidate["isrcs"])).any? } %>
-<% reference = appearance || edition || references.find { |item| @review_releases[item["id"]]&.fetch("state", nil) == "complete" } || references.first %>
+<% retained_appearance = @review_releases.values.find do |listing|
+  listing["state"] == "complete" && Array(listing["media"]).any? do |medium|
+    Array(medium["tracks"]).any? { |track| track["recording_mbid"] == mbid }
+  end
+end %>
+<% reference = appearance || edition || references.find { |item| @review_releases[item["id"]]&.fetch("state", nil) == "complete" } || retained_appearance || references.first %>
 <% release_id = reference&.fetch("id", nil) %>
 <% release = @review_releases[release_id] %>
 <% metadata = (reference || {}).merge(release || {}) %>
