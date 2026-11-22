@@ -249,6 +249,9 @@ RSpec.describe "Music table fidelity", type: :system do
   # Compare the rendered text inside the same fixed clip. With the original
   # upright-only family, requesting italic produced identical pixels.
   def archive_glyphs(element, upright: false)
+    # Capture the glyphs on a fixed background so drifting Site Art pixels
+    # cannot affect the upright-versus-italic image comparison.
+    page.execute_script("arguments[0].style.setProperty('background-color', 'var(--card)', 'important')", element)
     if upright
       page.execute_script(<<~JS, element)
         arguments[0].style.setProperty("font-family", "var(--harvj-font)", "important");
@@ -262,6 +265,7 @@ RSpec.describe "Music table fidelity", type: :system do
     JS
     page.driver.browser.execute_cdp("Page.captureScreenshot", format: "png", clip:).fetch("data")
   ensure
+    page.execute_script("arguments[0].style.removeProperty('background-color')", element)
     if upright
       page.execute_script("arguments[0].style.removeProperty('font-family'); arguments[0].style.removeProperty('font-style')", element)
     end
