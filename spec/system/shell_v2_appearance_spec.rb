@@ -91,7 +91,9 @@ RSpec.describe "Application Shell v2 appearance control", type: :system, if: ENV
       bounds = page.evaluate_script(<<~JS)
         (() => {
           const target = document.querySelector(".shell-appearance summary").getBoundingClientRect();
-          return [target.width, target.height, innerWidth - target.right, innerHeight - target.bottom];
+          // Fixed edges use the CSS viewport excluding any classic scrollbar.
+          const viewport = document.documentElement;
+          return [target.width, target.height, viewport.clientWidth - target.right, viewport.clientHeight - target.bottom];
         })()
       JS
       expect(bounds).to eq([ 44, 44, 12, 12 ])
