@@ -162,4 +162,42 @@ RSpec.describe "Application Shell navigation", type: :system do
     page.execute_script("document.documentElement.style.fontSize = '200%'")
     expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
   end
+  it "keeps the account disclosure in document flow and scrollable in short viewports" do
+    browser = page.driver.browser
+    visit root_path
+    user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "short-shell-viewport")
+    session = user.sessions.create!(expires_at: 7.days.from_now, last_seen_at: Time.current,
+      verified_at: Time.current, grant_token: "short-shell-grant")
+    jar = ActionDispatch::TestRequest.create.cookie_jar
+    jar.signed[:session_id] = session.id
+    browser.manage.add_cookie(name: "session_id", value: jar[:session_id], path: "/", http_only: true)
+    provider = instance_double(OidcClient)
+    allow(OidcClient).to receive(:new).and_return(provider)
+    allow(provider).to receive(:shell_evidence).and_return(username: "Jim-Harvey",
+      ids: %w[remote-gaming continuum-engine continuum], expires_at: 50.seconds.from_now.to_i)
+
+    [ 1440, 701, 700, 390, 320 ].each do |width|
+      browser.execute_cdp("Emulation.setDeviceMetricsOverride", width:, height: 240, deviceScaleFactor: 1, mobile: width <= 700)
+      visit archive_path
+      find(".harvj-session > summary").send_keys(:enter)
+      expect(page).to have_css(".harvj-session[open]")
+      expect(page).to have_link("Remote-Gaming")
+      expect(page.evaluate_script(<<~JS)).to eq([ "static", "auto", true, true ])
+        (() => {
+          const panel = document.querySelector(".harvj-session-panel");
+          const trigger = document.querySelector(".harvj-session > summary");
+          const rect = panel.getBoundingClientRect();
+          const style = getComputedStyle(panel);
+          return [style.position, style.overflowY, rect.top >= trigger.getBoundingClientRect().bottom,
+            rect.left >= 0 && rect.right <= innerWidth && rect.bottom <= innerHeight];
+        })()
+      JS
+      logout = find_button("Log Out")
+      logout.send_keys(:escape)
+      expect(page).to have_no_css(".harvj-session[open]")
+      expect(page.evaluate_script("document.activeElement === document.querySelector('.harvj-session summary')")).to be(true)
+    end
+  ensure
+    browser&.execute_cdp("Emulation.clearDeviceMetricsOverride")
+  end
 end

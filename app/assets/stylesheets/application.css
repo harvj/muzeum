@@ -411,3 +411,14 @@ main .review-candidate.recommended { border-color: #378c48; }
 .geographic-place { display: inline-flex; align-items: center; flex-wrap: wrap; gap: .28em; }
 .geographic-flag { line-height: 0; }
 .geographic-flag img { display: block; width: 1.5rem; height: 1rem; object-fit: contain; border: 1px solid var(--line); }
+
+@media (max-height: 360px) {
+  header:has(.harvj-session[open]),
+  .header-navigation:has(.harvj-session[open]) { align-items: start; }
+  .harvj-session[open] .harvj-session-panel {
+    position: static;
+    max-height: calc(100dvh - 84px);
+    overflow-y: auto;
+  }
+  .harvj-session[open] .appearance-submenu .controls { position: static; }
+}
