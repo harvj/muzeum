@@ -2,7 +2,8 @@
 # Run only on an ephemeral GitHub-hosted Ubuntu runner using fixture credentials.
 set -euo pipefail
 [[ ${RUNNER_OS:-} == Linux && ${GITHUB_ACTIONS:-} == true ]]
-work=$(mktemp -d "$RUNNER_TEMP/muzeum-cutover.XXXXXX")
+work=$(mktemp -d /tmp/muzeum-cutover.XXXXXX)
+chmod 0755 "$work"
 trap 'sudo journalctl -u muzeum-web -u muzeum-worker -u muzeum-qualification-caddy --no-pager -n 35' ERR
 base=c37a00dcf058e87fdc59644e9e444c001e29622f
 candidate=96597aa6f94e64b6bb9cfdb7399de1ed98124a11
@@ -22,8 +23,8 @@ for directory in storage log tmp/pids tmp/sockets; do
 done
 sudo install -d -o "$deploy" -m 0755 "$bundle_path"
 cp -a . "$work/controls"
-sudo chown -R "$deploy:$deploy" "$work"
-chmod 0755 "$work" || sudo chmod 0755 "$work"
+sudo chown -R "$deploy:$deploy" "$work/controls"
+sudo install -d -o "$deploy" -m 0755 "$work/control-bundle"
 sudo -u "$deploy" git clone --mirror --no-local "$work/controls" "$app/repo"
 for revision in "$base" "$candidate"; do
   sudo -u "$deploy" git --git-dir="$app/repo" cat-file -e "$revision^{commit}"
