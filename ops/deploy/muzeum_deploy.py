@@ -261,6 +261,54 @@ def reviewed_migrations(release, pending):
             raise RuntimeError('Pending migration needs a matching additive review manifest')
 
 
+EDITION_SLOT_MIGRATION = {
+    'database': 'primary',
+    'version': '20261122170100',
+    'path': 'db/migrate/20261122170100_add_edition_appearances_to_catalog_track_slots.rb',
+    'sha256': 'bcb291ff246e16c7cfbaa94900cf8a1ddf1de9adcd04e254df937cf086c4f847',
+}
+RETIRED_SLOT_INDEX = 'idx_on_release_id_medium_position_5d7e315be8'
+RETIRED_SLOT_DEFINITION = (
+    f'CREATE UNIQUE INDEX {RETIRED_SLOT_INDEX} ON public.catalog_track_slots '
+    'USING btree (release_id, medium, "position")'
+)
+REPLACEMENT_SLOT_INDEXES = {
+    'idx_catalog_track_slots_base_position':
+        '(release_id, medium, "position") WHERE (edition_mbid IS NULL)',
+    'idx_catalog_track_slots_edition_position':
+        '(release_id, edition_mbid, medium, "position") WHERE (edition_mbid IS NOT NULL)',
+}
+
+
+def verify_schema_preservation(release, before, after):
+    replacing_slots = EDITION_SLOT_MIGRATION in before['pending']
+    if replacing_slots:
+        reviewed_migrations(release, [EDITION_SLOT_MIGRATION])
+        if hashlib.sha256((release / EDITION_SLOT_MIGRATION['path']).read_bytes()).hexdigest() != EDITION_SLOT_MIGRATION['sha256']:
+            raise RuntimeError('Edition-slot migration bytes do not match the reviewed replacement')
+
+    for name, database in before['databases'].items():
+        current = after['databases'][name]
+        old_indexes = database['indexes']
+        if replacing_slots and name == 'primary':
+            retired = {'indexname': RETIRED_SLOT_INDEX, 'indexdef': RETIRED_SLOT_DEFINITION,
+                       'indisvalid': True, 'indisready': True}
+            indexes = {row['indexname']: row for row in current['indexes']}
+            if retired not in old_indexes or RETIRED_SLOT_INDEX in indexes:
+                raise RuntimeError('Unexpected retired catalog track-slot index')
+            for index, definition in REPLACEMENT_SLOT_INDEXES.items():
+                expected = f'CREATE UNIQUE INDEX {index} ON public.catalog_track_slots USING btree {definition}'
+                if indexes.get(index) != {'indexname': index, 'indexdef': expected, 'indisvalid': True, 'indisready': True}:
+                    raise RuntimeError(f'Missing, invalid or incorrect replacement catalog index: {index}')
+            old_indexes = [row for row in old_indexes if row != retired]
+
+        protected = {kind: database[kind] for kind in ('tables', 'columns', 'triggers', 'constraints')}
+        protected['indexes'] = old_indexes
+        for kind, original in protected.items():
+            if any(value not in current[kind] for value in original):
+                raise RuntimeError(f'Existing schema objects changed: {name}.{kind}')
+
+
 class Deployment:
     def __init__(self, host, root=STATE):
         self.host, self.root = host, root
@@ -354,10 +402,7 @@ class Deployment:
                             after = self.host.inspect(release)
                             if after['pending'] or self.host.fingerprint(record['evidence']) != record['evidence']:
                                 raise RuntimeError('Migration changed existing evidence or left pending migrations')
-                            for name, database in before['databases'].items():
-                                for kind in ('triggers', 'indexes', 'constraints'):
-                                    if any(value not in after['databases'][name].get(kind, []) for value in database.get(kind, [])):
-                                        raise RuntimeError('Existing source protections/indexes/constraints changed')
+                            verify_schema_preservation(release, before, after)
                             record['schema_verified_at'] = now()
                             record['schema_versions'] = {name: value['versions'] for name, value in after['databases'].items() if 'versions' in value}
                         record['phase'] = 'ready_to_publish'

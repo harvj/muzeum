@@ -60,7 +60,7 @@ class FixtureHost:
 
     def inspect(self, release):
         self.event('inspect')
-        return {'pending': self.pending, 'databases': {'primary': {'triggers': ['immutable_source']}}}
+        return {'pending': self.pending, 'databases': {'primary': {'tables': [], 'columns': [], 'indexes': [], 'constraints': [], 'triggers': ['immutable_source']}}}
 
     def fingerprint(self, specification=None):
         self.event('fingerprint')
@@ -314,7 +314,7 @@ class WorkflowTests(unittest.TestCase):
                     if altered == 'evidence':
                         host.fingerprint = lambda specification=None: {'source': 'corrupted'}
                     else:
-                        host.inspect = lambda release: {'pending': [], 'databases': {'primary': {'triggers': []}}}
+                        host.inspect = lambda release: {'pending': [], 'databases': {'primary': {'tables': [], 'columns': [], 'indexes': [], 'constraints': [], 'triggers': []}}}
                 host.migrate = changed
                 flow = FixtureDeployment(host, Path(root) / 'audit')
                 flow.run('begin', NEW, self.token)
