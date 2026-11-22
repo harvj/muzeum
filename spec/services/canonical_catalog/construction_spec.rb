@@ -35,5 +35,4 @@ RSpec.describe CanonicalCatalog::Construction do
     expect(candidates.first.dig("release_discovery", "position")).to eq(14)
     expect(discovery.construction_editions.keys).to contain_exactly(us["id"], jp["id"])
   end
-
 end

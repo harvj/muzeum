@@ -111,6 +111,9 @@ RSpec.describe RecordingResolution::EditionDiscovery do
     expect(session).to receive(:get).with(:musicbrainz, "/ws/2/release/#{release_id}", params: anything).ordered do |*_, &project|
       { "data" => project.call(edition) }
     end
+    expect(session).to receive(:get).with(:musicbrainz, "/ws/2/release",
+      params: hash_including("release-group" => edition.dig("release-group", "id"))).ordered
+      .and_raise(RecordingResolution::ProviderError, "Original sequence listing unavailable")
     evidence = RecordingResolution::Evaluator.new(session, discogs: nil, workspace: true, catalog_identity: identity).call(surface, claims)
     expect(evidence.dig("edition", "id")).to eq(release_id)
     expect(evidence.dig("discovery_appearances", candidate.fetch("id"))).to be_present
