@@ -532,7 +532,8 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     expect(page).to have_text("No resolved plays in this period.")
     find("#listening-history a", text: "All").click
     expect(page).to have_css("#artist-recordings tbody tr:first-child .listening-bar[data-listening-scale-percent-value='100.0']", text: "1")
-    within("#artist-recordings") { click_link "Title" }
+    find("#artist-recordings a", exact_text: "Title").send_keys(:enter)
+    expect(page).to have_css("#artist-recordings th[aria-sort='ascending']", text: "Title")
     expect(page).to have_css("#artist-recordings tbody tr:first-child", text: "Different Song")
     expect(page).to have_css("#artist-releases .listening-bar", text: "3m")
     expect(page).to have_css("#artist-releases", text: "1 play")
