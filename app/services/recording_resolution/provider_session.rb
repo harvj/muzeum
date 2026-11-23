@@ -27,26 +27,27 @@ module RecordingResolution
       if provider == :discogs && live?
         raise ProviderError.new("Discogs API has been retired", terminal: true)
       end
-      @current_request = { "provider" => provider.to_s, "endpoint" => path, "parameters" => params.stringify_keys }
+      query = canonical_query(params)
+      @current_request = { "provider" => provider.to_s, "endpoint" => path, "parameters" => query }
       # The public search projection is context-free. Catalog release lookups use a shared, versioned projection.
       scope = if @catalog && WIKIMEDIA.include?(provider)
         [ "catalog-wikimedia-v1", projection ]
       elsif @catalog && provider == :musicbrainz && path == "/ws/2/recording"
         "catalog-recording-search-v1"
-      elsif @catalog && provider == :musicbrainz && path.start_with?("/ws/2/release/") && params[:inc] == "recordings+artist-credits+release-groups+url-rels"
+      elsif @catalog && provider == :musicbrainz && path.start_with?("/ws/2/release/") && query["inc"] == "recordings+artist-credits+release-groups+url-rels"
         "catalog-release-tracklist-v1"
-      elsif @catalog && provider == :musicbrainz && (path == "/ws/2/release" && (params.key?(:recording) || params.key?("release-group")) ||
-          path.start_with?("/ws/2/recording/") || path.start_with?("/ws/2/release/") && params[:inc].to_s.include?("genres+tags"))
+      elsif @catalog && provider == :musicbrainz && (path == "/ws/2/release" && (query.key?("recording") || query.key?("release-group")) ||
+          path.start_with?("/ws/2/recording/") || path.start_with?("/ws/2/release/") && query["inc"].to_s.include?("genres+tags"))
         "catalog-publication-evidence-v1"
       else
         @catalog ? [ "catalog-v1", @work.id ] : [ "v1", @pilot.id ]
       end
-      key = Digest::SHA256.hexdigest([ scope, provider, path, params.sort ].to_json)
+      key = Digest::SHA256.hexdigest([ scope, provider, path, query.sort ].to_json)
       cached = RequestCache.find_by(request_key: key, expires_at: Time.current..)
-      return remember(provider, path, params, cached.document) if cached
+      return remember(provider, path, query, cached.document) if cached
 
       reserve!(provider)
-      status, response_headers, body = fetch(provider, path, params, headers)
+      status, response_headers, body = fetch(provider, path, live? ? query : params, headers)
       document = interpret(provider, status, response_headers, body, project)
       document["retrieved_at"] = Time.current.iso8601(6)
       document["cache_family"] = "wikimedia" if WIKIMEDIA.include?(provider)
@@ -63,7 +64,7 @@ module RecordingResolution
         capacity = WIKIMEDIA.include?(provider) ? MAX_WIKIMEDIA_CACHE_ROWS : MAX_CACHE_ROWS
         RequestCache.where(request_key: family.order(expires_at: :desc, request_key: :desc).offset(capacity).select(:request_key)).delete_all
       end
-      remember(provider, path, params, document)
+      remember(provider, path, query, document)
     rescue HTTP::Error, JSON::ParserError, URI::InvalidURIError
       raise ProviderError, "#{provider} response unavailable"
     rescue KeyError, TypeError, NoMethodError, ArgumentError
@@ -77,6 +78,17 @@ module RecordingResolution
     end
 
     private
+
+    def canonical_query(params)
+      params.each_with_object({}) do |(key, value), query|
+        name = key.to_s
+        if query.key?(name) && !query.fetch(name).eql?(value)
+          raise ProviderError.new("Conflicting query parameter: #{name}", terminal: true)
+        end
+
+        query[name] = value
+      end
+    end
 
     def remember(provider, path, params, document)
       @provenance << { "provider" => provider, "endpoint" => path, "parameters" => params,
