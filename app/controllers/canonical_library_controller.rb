@@ -8,17 +8,18 @@ class CanonicalLibraryController < ApplicationController
 
   def index
     @query = params[:q].to_s.strip.first(100)
-    records = catalog_scope.order(id: :desc)
-    records = records.where("id < ?", params[:before].to_i) if params[:before].to_i.positive?
+    records = catalog_scope
     field = @model == Artist ? "name" : "title"
     records = records.where("#{field} ILIKE ?", "%#{@model.sanitize_sql_like(@query)}%") if @query.present?
-    @entries = with_artist_credits(records).limit(PAGE + 1).to_a
+    cursor = params[:before].to_i
+    @entries = if @model == Recording
+      records = records.where("id < ?", cursor) if cursor.positive?
+      with_artist_credits(records.order(id: :desc)).limit(PAGE + 1).to_a
+    else
+      listening_index_page(records, field, cursor)
+    end
     @next_page = @entries.pop && @entries.last.id if @entries.size > PAGE
     @musical_identities, @inherited_musical_identities = MusicalIdentityDecision.presentation_for(@entries)
-    if @model == Artist
-      @geographies = CatalogRevision.where(entity_type: CanonicalCatalog::ArtistGeography::ENTITY_TYPE, entity_id: @entries.map(&:id))
-        .select("DISTINCT ON (entity_id) entity_id, evidence").order(:entity_id, id: :desc).index_by(&:entity_id)
-    end
   end
 
   def show
@@ -162,6 +163,29 @@ class CanonicalLibraryController < ApplicationController
   end
 
   private
+
+  def listening_index_page(records, field, cursor)
+    memberships, entity_key = if @model == Artist
+      [ RecordingArtist.where(artist_id: records.select(:id)), :artist_id ]
+    else
+      [ CatalogTrackSlot.where(release_id: records.select(:id)), :release_id ]
+    end
+    pairs = memberships.distinct.pluck(entity_key, :recording_id)
+    by_recording = CatalogListening.new(recording_plays(pairs.map(&:last).uniq)).by_recording
+    @index_listening = Hash.new(CatalogListening::EMPTY)
+    pairs.each do |entity_id, recording_id|
+      @index_listening[entity_id] += by_recording.fetch(recording_id, CatalogListening::EMPTY)
+    end
+
+    ordered = records.pluck(:id, field).sort_by do |id, name|
+      [ -@index_listening[id].milliseconds, name.downcase, id ]
+    end.map(&:first)
+    @index_time_max = @index_listening[ordered.first].milliseconds
+    offset = ordered.index(cursor)
+    ids = ordered.slice(offset ? offset + 1 : 0, PAGE + 1)
+    entries = with_artist_credits(records.where(id: ids)).index_by(&:id)
+    ids.filter_map { |id| entries[id] }
+  end
 
   def load_artist_listening
     recordings = Recording.where(id: @entry.recording_artists.select(:recording_id))

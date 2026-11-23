@@ -63,9 +63,13 @@ module CanonicalLibraryHelper
     end
   end
 
-  def catalog_artists(entry)
+  def catalog_artists(entry, badges: true)
     credits = entry.is_a?(Release) ? entry.release_artists : entry.recording_artists
-    safe_join(credits.sort_by { |credit| [ credit.position || Float::INFINITY, credit.id ] }.map { |credit| catalog_link(credit.artist) }, ", ")
+    links = credits.sort_by { |credit| [ credit.position || Float::INFINITY, credit.id ] }.map do |credit|
+      artist = credit.artist
+      badges ? catalog_link(artist) : entity_link(artist.name, catalog_entry_path(artist))
+    end
+    safe_join(links, ", ")
   end
 
   def catalog_release_date(release)

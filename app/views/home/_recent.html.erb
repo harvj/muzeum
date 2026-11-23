@@ -1,15 +1,24 @@
+<% archive = local_assigns.fetch(:archive, false) %>
 <section class="card library-card music-sheet" data-controller="play-titles"
     data-action="pointerover->play-titles#preview pointerout->play-titles#leave focusin->play-titles#preview focusout->play-titles#leave keydown.esc@window->play-titles#hide scroll@window->play-titles#hide">
+  <% if archive && (@account || @query.present?) %>
+    <%= form_with url: archive_path, method: :get, class: "catalog-filter archive-search" do |form| %>
+      <div><%= form.label :q, "Search archive" %><%= form.search_field :q, value: @query %></div>
+      <%= form.submit "Search", class: "catalog-submit" %>
+      <%= link_to "Clear search", archive_path, class: "clear-search" if @query.present? %>
+    <% end %>
+  <% end %>
   <% if @recent.any? %>
     <div class="plays-tools">
       <button type="button" aria-controls="recent-plays" aria-pressed="false" data-action="play-titles#toggle">Full names</button>
     </div>
     <div class="plays-tooltip" popover="manual" aria-hidden="true" data-play-titles-target="tooltip"></div>
-    <%= dense_table(@public_profile ? "Listening history" : "Recent plays", classes: "plays-table") do %>
-      <colgroup><col class="played-column"><col class="artist-column"><col class="length-column"><col class="recording-column"><col><col class="year-column"></colgroup>
+    <%= dense_table(@public_profile ? "Listening history" : "Recent plays", classes: archive ? "plays-table archive-plays" : "plays-table") do %>
+      <colgroup><col class="played-column"><col class="artist-column"><col class="length-column"><% if archive %><col class="badge-column"><% end %><col class="recording-column"><col><col class="year-column"></colgroup>
       <thead role="rowgroup">
         <tr role="row">
           <th scope="col" role="columnheader">Played at</th><th scope="col" role="columnheader">Artist</th><th scope="col" role="columnheader" class="table-number">Length</th>
+          <% if archive %><th scope="col" role="columnheader" class="play-badge"><span class="visually-hidden">Musical color</span></th><% end %>
           <th scope="col" role="columnheader">Recording</th><th scope="col" role="columnheader">Release</th><th scope="col" role="columnheader" class="table-number">Year</th>
         </tr>
       </thead>
@@ -25,10 +34,13 @@
           end %>
           <tr class="play-row<%= " source-claim" if status %><%= " partially-resolved" if recording && status %>" role="row">
             <td role="cell" class="table-time"><%= observation ? entity_link(browser_time(play.played_at, clock: true), observation) : browser_time(play.played_at, clock: true) %></td>
-            <td role="cell" class="play-artist"><span class="play-name" data-overflow-name><%= (catalog_artists(recording).presence if recording && !status) || observed_text(play.payload["artist_name"], "Artist") %></span></td>
+            <td role="cell" class="play-artist"><span class="play-name" data-overflow-name><%= (catalog_artists(recording, badges: !archive).presence if recording && !status) || observed_text(play.payload["artist_name"], "Artist") %></span></td>
             <td role="cell" class="play-length table-number"><%= recording_duration(recording.duration_ms) if recording&.duration_ms %></td>
+            <% if archive %>
+              <td role="cell" class="play-badge"><%= musical_identity_badge(recording) if recording %></td>
+            <% end %>
             <th scope="row" role="rowheader" class="play-recording"><span class="play-recording-layout"><span class="play-name" data-overflow-name><% if recording && !status %>
-              <%= catalog_link(recording) %>
+              <%= archive ? entity_link(recording.title, catalog_entry_path(recording)) : catalog_link(recording) %>
             <% elsif recording && !@public_profile %>
               <%= link_to observed_text(play.payload["track_name"], "Track"), recording_path(recording), class: "entity-link",
                 aria: { label: "#{observed_text(play.payload["track_name"], "Track")}, #{status}" } %>
@@ -45,6 +57,6 @@
       </tbody>
     <% end %>
   <% else %>
-    <p>No listening observations yet.</p>
+    <p><%= @query.present? ? "No listening observations match this search." : "No listening observations yet." %></p>
   <% end %>
 </section>

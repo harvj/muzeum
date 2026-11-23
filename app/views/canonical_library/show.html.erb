@@ -24,7 +24,7 @@
 <% if @entry.is_a?(Artist) %>
 <details class="card library-card artist-metadata-tools"><summary>Catalog tools</summary>
 <% else %>
-<section class="card library-card"><h2>Catalog import</h2>
+<section class="card library-card"><h2 class="section-heading">Catalog import</h2>
 <% end %>
   <p role="status"><%= import_status(@import_request, verified: @revision.present?) %></p>
   <% if @import_request&.active? && !CatalogImport.worker_enabled? %><p>Background imports are paused in this environment.</p><% end %>

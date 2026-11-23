@@ -96,6 +96,78 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     browser&.execute_cdp("Emulation.setEmulatedMedia", features: [])
   end
 
+  it "orders catalog listening totals and clears filters without losing Archive colors" do
+    user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "catalog-polish", lastfm_username: "catalog-polish")
+    artist = Artist.create!(name: "Tove Lo", country: "SE", mbid: SecureRandom.uuid)
+    Artist.create!(name: "A zero-play artist", mbid: SecureRandom.uuid)
+    recording = Recording.create!(title: "hey you got drugs?", mbid: SecureRandom.uuid, duration_ms: 258_000)
+    recording.artists << artist
+    MusicalIdentityDecision.create!(entity: artist, user:, colors: %w[pink gray])
+    release = Release.create!(title: "BLUE LIPS", release_year: 2017, catalog_verified_at: Time.current)
+    release.artists << artist
+    Release.create!(title: "A zero-play release")
+    2.times do |position|
+      release.catalog_track_slots.create!(recording:, title: recording.title, medium: 1, position: position + 1,
+        track_mbid: SecureRandom.uuid)
+    end
+    ReleaseRankingDecision.create!(user:, release:, included: false)
+    resolved = Scrobble.create!(user:, lastfm_account: user.source_account, played_at: 2.hours.ago,
+      payload: { artist_name: artist.name, album_name: release.title, track_name: recording.title })
+    pending = Scrobble.create!(user:, lastfm_account: user.source_account, played_at: 1.hour.ago,
+      payload: { artist_name: artist.name, album_name: release.title, track_name: "bad days" })
+    RecordingResolution::Ledger.record!(listener: user, scrobble: resolved, scope: :surface, mode: "resolved",
+      reason: "Review fixture", recording:)
+    sign_in(user)
+
+    browser = page.driver.browser
+    [ [ 1440, 960 ], [ 390, 844 ] ].product(%w[light dark]).each do |(width, height), theme|
+      browser.execute_cdp("Emulation.setDeviceMetricsOverride", width:, height:, deviceScaleFactor: 1, mobile: width < 700)
+      browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "prefers-color-scheme", value: theme } ])
+      %w[artists releases recordings].each do |section|
+        visit public_send("#{section}_path")
+        expect(page).to have_no_link("Clear search")
+        first, second = all(".catalog-table tbody tr")
+        if section != "recordings"
+          expect(first).to have_css(".listening-bar:not([data-identity-first])", text: "4m")
+          expect(second).to have_text("0s")
+          expect(page).to have_no_css(".intro h1")
+        end
+        capture_resolution("catalog-#{section}-#{width}-#{theme}") if section != "recordings"
+        fill_in "Search #{section}", with: "zero-play"
+        click_button "Search"
+        expect(page).to have_link("Clear search")
+        find_link("Clear search").send_keys(:enter)
+        expect(page).to have_no_link("Clear search")
+        expect(page).to have_css(".catalog-table tbody tr", count: section == "recordings" ? 1 : 2)
+      end
+
+      visit archive_path(q: "bad days")
+      expect(page).to have_css(".play-row", count: 1, text: pending.payload.fetch("track_name"))
+      capture_resolution("catalog-archive-search-#{width}-#{theme}")
+      find_link("Clear search").send_keys(:enter)
+      expect(page).to have_no_link("Clear search")
+      expect(page).to have_css(".play-row", count: 2)
+      expect(find(".play-row", text: "bad days")).to have_no_css(".play-badge .identity-swatch")
+      expect(find(".play-row", text: recording.title)).to have_css('.play-length + .play-badge [data-identity-first="pink"][data-identity-second="gray"]')
+      expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
+      capture_resolution("catalog-archive-#{width}-#{theme}")
+
+      visit artist_path(artist)
+      find("summary", text: "Listening history data").click
+      expect(page).to have_css('.listening-periods .listening-bar[data-identity-first="pink"][data-identity-second="gray"]')
+      capture_resolution("catalog-artist-listening-#{width}-#{theme}")
+
+      visit resolution_surface_path(resolved)
+      expect(page).to have_css(".review-state-resolved", exact_text: "Resolved")
+      capture_resolution("catalog-resolved-#{width}-#{theme}")
+      visit resolution_surface_path(pending)
+      expect(page).to have_css(".review-state:not(.review-state-resolved)", exact_text: "Unresolved")
+    end
+  ensure
+    browser&.execute_cdp("Emulation.clearDeviceMetricsOverride")
+    browser&.execute_cdp("Emulation.setEmulatedMedia", features: [])
+  end
+
   it "shows the approved overview and constructs Narrow Stairs from the original US CD" do
     user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "narrow-stairs-browser", lastfm_username: "narrow-stairs-browser")
     observation, assessment = narrow_stairs_assessment(user, album_name: "Narrow Stairs", publication: true)
@@ -118,7 +190,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     within(".review-overview") do
       expect(page).to have_css("h1", text: "No Sunlight")
       expect(page).to have_text("Narrow Stairs")
-      expect(page).to have_css(".review-catalog-context", text: "Canonical in Muzeum")
+      expect(page).to have_css(".review-catalog-context", text: /canonical in muzeum/i)
     end
     expect(page).to have_text("6 matching observations")
     expect(page).to have_css(".resolution-context", text: /Narrow Stairs.*May 13, 2008/m)
@@ -135,7 +207,8 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     expect(page).to have_css(".resolution-choice[aria-current]", count: 1)
     expect(page).to have_css(".resolution-primary", count: 1, text: "Resolve all 6")
     expect(page).to have_css('section[aria-label="Resolution preview"]', text: /Recording.*Release.*Narrow Stairs.*11 tracks.*1 new release.*6 existing observations/m)
-    expect(page.evaluate_script("getComputedStyle(document.querySelector('.resolution-primary')).backgroundColor")).to eq("rgb(41, 107, 52)")
+    expect(page.evaluate_script("getComputedStyle(document.querySelector('.resolution-primary')).backgroundColor")).to eq("rgb(41, 45, 44)")
+    expect(page).to have_css('.resolution-primary .resolution-confirmation-mark[aria-hidden="true"]')
     expect(page).to have_no_text("Provider calls")
     expect(page).to have_no_text("2015")
     expect(page).to have_css(".resolution-context .review-tracks li", count: 11)
@@ -153,6 +226,9 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
         expect(page.evaluate_script("document.documentElement.dataset.appearance")).to eq(mode)
         page.execute_script("window.scrollTo(0, 0)")
         capture_resolution("narrow-stairs-#{width}-#{mode}", full: true)
+        primary = find(".resolution-primary")
+        page.execute_script("arguments[0].scrollIntoView({ block: 'center' })", primary)
+        capture_resolution("resolve-action-#{width}-#{mode}")
         verify_recording_choice_states(width, mode)
       end
     end
@@ -257,7 +333,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     click_button "Resolve all 3"
     expect(page).to have_text("Recording decision saved.")
     within(".review-catalog-context") { click_link "Guilt Show" }
-    expect(page).to have_text("Additional edition appearances")
+    expect(page).to have_text(/additional edition appearances/i)
     expect(page).to have_text("Like a Man Possessed · 2004-08-21")
     expect(page).to have_text("3 distinct resolved observations")
   end
@@ -300,7 +376,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
 
     click_link "Releases"
     click_link "Night Drive"
-    expect(page).to have_text("Track listing")
+    expect(page).to have_text(/track listing/i)
     within("#listening-activity") do
       expect(page).to have_text("1 distinct resolved observation")
       expect(page).to have_link("Signals")

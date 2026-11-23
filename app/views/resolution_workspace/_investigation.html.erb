@@ -59,7 +59,7 @@
 <aside class="review-sidebar" aria-label="Resolution and investigation summary">
 <% if empty_failure %><details class="review-failure-summary"><summary>Resolution details</summary><% end %>
 <section class="review-sidebar-card" aria-labelledby="recording-status">
-  <h2 id="recording-status">Resolution</h2>
+  <h2 class="section-heading" id="recording-status">Resolution</h2>
   <% if @current_recording && Clients::Musicbrainz::MBID.match?(@current_recording.mbid.to_s) %>
     <p><strong>Resolved</strong> · <%= catalog_link(@current_recording) %></p>
     <p class="muted"><%= @current_decision&.user_id ? "Inherited from your exact-surface assignment" : "Derived from a recorded assessment" %>
@@ -90,7 +90,7 @@
   </dl>
 </section>
   <section class="review-sidebar-card">
-    <h2>Summary</h2>
+    <h2 class="section-heading">Summary</h2>
     <dl>
       <div><dt>Candidates</dt><dd><%= @assessment || @candidates.any? ? @candidates.size : "—" %></dd></div>
       <% if @ranking.any? %><div><dt>Best score</dt><dd><%= @ranking.first["score"] %></dd></div><% end %>
@@ -102,7 +102,7 @@
 
 </div>
 <section class="review-secondary">
-  <h2>Observation details</h2>
+  <h2 class="section-heading">Observation details</h2>
   <%= render "decision_controls" if @may_manage_observation %>
   <details>
     <summary>Original Last.fm claims</summary>

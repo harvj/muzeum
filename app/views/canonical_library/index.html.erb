@@ -1,13 +1,16 @@
-<section class="intro">
-  <h1><%= @section.capitalize %></h1>
-</section>
+<% if @section == "recordings" %>
+  <section class="intro"><h1>Recordings</h1></section>
+<% else %>
+  <h1 class="visually-hidden"><%= @section.capitalize %></h1>
+<% end %>
 <section class="card library-card">
   <%= form_with url: catalog_index_path(@section), method: :get, class: "catalog-filter" do |form| %>
     <div><%= form.label :q, "Search #{@section}" %><%= form.search_field :q, value: @query %></div>
     <%= form.submit "Search", class: "catalog-submit" %>
+    <%= link_to "Clear search", catalog_index_path(@section), class: "clear-search" if @query.present? %>
   <% end %>
   <% if @entries.any? %>
-    <%= render "entries", title: @section.capitalize, items: @entries %>
+    <%= render "entries", title: @section.capitalize, items: @entries, listening: @index_listening, maximum: @index_time_max %>
   <% elsif @query.present? %>
     <p>No <%= @section %> match this search.</p>
   <% elsif @public_profile %>

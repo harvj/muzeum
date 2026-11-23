@@ -10,7 +10,7 @@
     else
       @unresolved_count.zero? ? "Individually resolved" : (@candidates.many? ? "Ambiguous" : "Unresolved")
     end %>
-  <strong class="review-state"><%= review_state %></strong>
+  <strong class="review-state<%= " review-state-resolved" if review_state == "Resolved" %>"><%= review_state %></strong>
   <% source = @selected_scrobble || @observation %>
   <p class="review-back"><%= link_to "Recording resolution", resolution_surfaces_path %> / Observation <%= source.id %></p>
   <h1><%= observed_text(source.payload["track_name"], "Track") %></h1>
@@ -54,7 +54,7 @@
 
 <% if section == "observations" %>
 <section class="review-secondary" id="review-observations">
-  <h2>Matching observations</h2>
+  <h2 class="section-heading">Matching observations</h2>
   <%= dense_table("Matching observations") do %>
     <thead><tr><th scope="col">Played at</th><th scope="col">Effective recording</th><th scope="col">Scope</th></tr></thead>
     <tbody>
@@ -72,7 +72,7 @@
 </section>
 <% elsif section == "history" %>
 <section class="review-secondary" id="review-history">
-  <h2>Decision history</h2>
+  <h2 class="section-heading">Decision history</h2>
   <% if @history.any? %>
     <ul class="catalog-list">
       <% @history.each do |decision| %>

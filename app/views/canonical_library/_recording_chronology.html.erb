@@ -1,5 +1,5 @@
 <section class="card library-card" id="recording-chronology">
-  <h2>Chronology</h2>
+  <h2 class="section-heading">Chronology</h2>
   <% dates = @chronology&.evidence || {} %>
   <dl>
     <div><dt>Recording date</dt><dd><%= [dates["start_date"], dates["end_date"]].compact.join(" to ").presence || "Unknown" %></dd></div>

@@ -97,7 +97,7 @@ end %>
     </p>
     <div class="resolution-actions">
       <%= form.button class: "resolution-primary" do %>
-        <span aria-hidden="true">✓</span>
+        <span class="resolution-confirmation-mark" aria-hidden="true">✓</span>
         <%= if release_pending
           "Resolve recording only"
         elsif @affected_count.zero?

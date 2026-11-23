@@ -8,12 +8,12 @@
   <% if @next_appearance %><p><%= link_to "More release appearances", catalog_entry_path(@entry, after_appearance: @next_appearance, before: params[:before]) %></p><% end %>
 <% else %>
   <section class="card library-card">
-    <h2>Release appearances</h2>
+    <h2 class="section-heading">Release appearances</h2>
     <p>Release memberships pending verification.</p>
   </section>
 <% end %>
 <section class="card library-card" id="listening-activity">
-  <h2>Listening activity</h2>
+  <h2 class="section-heading">Listening activity</h2>
   <p>Recording duration <%= recording_duration(@entry.duration_ms) %></p>
   <% if @archive_available %>
     <p><strong><%= pluralize(@observation_count, "resolved listening observation") %></strong></p>

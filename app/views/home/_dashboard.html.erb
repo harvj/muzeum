@@ -1,9 +1,9 @@
-<div id="archive_dashboard" data-controller="dashboard-sync" data-dashboard-sync-url-value="<%= dashboard_updates_path %>" data-dashboard-sync-version-value="<%= @account&.updated_at&.iso8601(6) if @first_page %>">
-<h1 class="archive-heading">Listening archive</h1>
-<%= render "home/recent" %>
+<div id="archive_dashboard" data-controller="dashboard-sync" data-dashboard-sync-url-value="<%= dashboard_updates_path(q: @query.presence) %>" data-dashboard-sync-version-value="<%= @account&.updated_at&.iso8601(6) if @first_page %>">
+<h1 class="visually-hidden">Listening archive</h1>
+<%= render "home/recent", archive: true %>
 <nav aria-label="Archive pages" class="archive-pages">
-  <% unless @first_page %><%= entity_link "Latest plays", archive_path %><% end %>
-  <% if @next_page %><%= entity_link "Older plays", archive_path(before: @next_page) %><% end %>
+  <% unless @first_page %><%= entity_link "Latest plays", archive_path(q: @query.presence) %><% end %>
+  <% if @next_page %><%= entity_link "Older plays", archive_path(before: @next_page, q: @query.presence) %><% end %>
   <%= link_to "Archive summary", archive_summary_path, class: "entity-link", data: { turbo_prefetch: false } %>
 </nav>
 <div class="columns archive-settings">

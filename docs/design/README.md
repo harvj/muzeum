@@ -59,3 +59,5 @@ The [approval preview](site-art-v1.md) shows the corrected reader with current S
 Keep the final Chrome review screenshots for visual UI changes under `docs/design/` with relative links in the review README. Temporary captures can stay outside the repository during development.
 
 - [v0.6.7 entity headings and Recording Resolution](v0.6.7/)
+
+- [Catalog, Resolution, and Archive polish](catalog-resolution-archive/)

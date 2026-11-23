@@ -13,7 +13,7 @@
   <% elsif request_failed || provider_incomplete %>
     <div class="review-failure">
       <div role="status">
-        <h2><%= throttled ? "MusicBrainz search unavailable" : "Provider evidence unavailable or incomplete" %></h2>
+        <h2 class="section-heading"><%= throttled ? "MusicBrainz search unavailable" : "Provider evidence unavailable or incomplete" %></h2>
         <p><% if throttled %>
           <%= pluralize(@assessment_request.attempts, "recording-search attempt") %> failed (HTTP 503).
         <% end %>

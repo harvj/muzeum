@@ -1,7 +1,8 @@
 <% if value.positive? %>
-  <div class="listening-bar" data-controller="listening-scale" data-listening-scale-percent-value="<%= 100.0 * value / maximum %>">
+  <%= tag.div class: "listening-bar", data: { controller: "listening-scale",
+    listening_scale_percent_value: 100.0 * value / maximum, **local_assigns.fetch(:colors, {}) } do %>
     <span aria-label="<%= accessible_label %>"><%= label %></span>
-  </div>
+  <% end %>
 <% else %>
   <span aria-label="<%= accessible_label %>"><%= label %></span>
 <% end %>
