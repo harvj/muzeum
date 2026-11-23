@@ -104,10 +104,10 @@ end %>
           </ul>
         </details>
       <% end %>
-      <%= tag.details(open: !publication.present?, class: "review-checked-appearance") do %>
+      <%= tag.details(open: !publication.present?, class: "review-checked-appearance review-edition") do %>
         <summary>Checked appearance<% if reference %> · <%= metadata["title"] %> · <%= release_date || "Date unknown" %><% end %></summary>
         <% if reference %>
-          <p class="compact-meta review-edition">
+          <p class="compact-meta">
             <% if metadata["disambiguation"].present? %><%= metadata["disambiguation"] %> · <% end %>
             <% if countries.empty? %>Country unavailable<% end %>
             <% countries.each_with_index do |country, index| %><%= ", " if index.positive? %><%= render "shared/geographic_place", country: %><% end %>
