@@ -26,7 +26,9 @@
     <% if @next_track %><p><%= link_to "More tracks", catalog_entry_path(@entry, after_track: @next_track) %></p><% end %>
   <% elsif @legacy_slots.present? %>
     <p>Earlier catalog listing. Verify the full edition with Import.</p>
-    <ol class="catalog-list">
+    <% first = @legacy_slots.first %>
+    <% start = @entry.release_recordings.where("(position, id) < (?, ?)", first.position, first.id).count + 1 %>
+    <ol class="catalog-list" start="<%= start %>">
       <% @legacy_slots.each do |slot| %><li><%= catalog_link(slot.recording) %></li><% end %>
     </ol>
     <% if @next_legacy_track %><p><%= link_to "More earlier tracks", catalog_entry_path(@entry, after_legacy_track: @next_legacy_track) %></p><% end %>
@@ -41,8 +43,7 @@
     <ul class="catalog-list">
       <% @additional_appearances.each do |slot| %>
         <li><%= catalog_link(slot.recording, title: slot.title) %> · <%= slot.appearance_date %> ·
-          <%= link_to "MusicBrainz edition", "https://musicbrainz.org/release/#{slot.edition_mbid}" %>
-          · Disc <%= slot.medium %>, track <%= slot.number.presence || slot.position %></li>
+          <%= link_to "MusicBrainz edition", "https://musicbrainz.org/release/#{slot.edition_mbid}" %></li>
       <% end %>
     </ul>
   </section>

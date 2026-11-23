@@ -13,21 +13,19 @@ end %>
   <h2>Original release</h2>
   <% if groups.any? %>
     <% groups.each do |choices| %>
-      <% base = choices.first.construction.base %>
-      <% release = base.data %>
-      <div>
-        <strong><%= release["title"] %></strong>
-        <p><%= resolution_release_date(release.fetch("date")) %> · <%= release.dig("release-group", "primary-type") || "Release" %> · <%= pluralize(base.slots.size, "track") %></p>
-        <p class="muted"><%= choices.many? ? "Multiple original editions verified" : "Original release verified" %></p>
-        <% if choices.one? %>
-          <details class="review-original-tracklist"><summary>View original tracklist</summary>
-            <%= render "review_tracklist", release: RecordingResolution::ReviewRelease.project(release), release_id: release["id"], mbid: %>
-          </details>
-          <% choices.first.construction.additional_slots.each do |slot| %>
-            <p class="muted">Selected recording appears on a later edition · <%= resolution_release_date(slot.fetch(:appearance_date)) %></p>
-          <% end %>
-        <% end %>
-      </div>
+      <% choices.each do |choice| %>
+        <% base = choice.construction.base %>
+        <% release = base.data %>
+        <div>
+          <strong><%= release["title"] %></strong>
+          <p><%= resolution_release_date(release.fetch("date")) %><%= " · #{release['country']}" if choices.many? && release["country"].present? %></p>
+          <% tracks = base.slots.map do |slot|
+            { "title" => slot[:title], "recording_mbid" => slot.dig(:recording, "id"),
+              "length" => slot.dig(:recording, "length") }
+          end %>
+          <%= render "ordered_tracks", tracks:, mbid: %>
+        </div>
+      <% end %>
     <% end %>
     <% if earliest && groups.none? { |choices| choices.any? { |item| item.construction.base.data["date"] == earliest && item.construction.base.data.dig("release-group", "primary-type") == "Album" } } %>
       <p class="muted">Earliest verified recording publication · <%= resolution_release_date(earliest) %></p>
@@ -60,39 +58,40 @@ end %>
     <section aria-label="Resolution preview">
       <h2>Resolution preview</h2>
       <ul class="catalog-list">
-        <li><strong><%= catalog_recording ? "Reuse" : "Create" %></strong> · <%= selected.fetch("title") %></li>
+        <li><strong>Recording</strong> · <%= selected.fetch("title") %><%= " · Reuse existing" if catalog_recording %></li>
         <% if proposals.empty? %>
-          <li><strong>No change</strong> · 0 new releases<%= " · #{catalog_releases.map(&:title).to_sentence}" if catalog_releases.any? %></li>
+          <li><strong>Release</strong> · 0 new releases<%= " · #{catalog_releases.map(&:title).to_sentence}" if catalog_releases.any? %></li>
         <% else %>
           <% proposals.each do |proposal| %>
             <% base = proposal.construction.base %>
-            <li><strong><%= proposal.existing ? "Reuse" : "Create" %></strong> · <%= base.data.fetch("title") %> ·
-              <%= proposal.existing ? "0" : "1" %> new <%= proposal.existing ? "releases" : "release" %> ·
-              <%= pluralize(base.slots.size, "base track") %> to construct<% if proposal.construction.additional_slots.any? %> ·
-                <%= pluralize(proposal.construction.additional_slots.size, "additional appearance") %><% end %>
-              <details><summary>Artists and track memberships</summary>
+            <% additions = proposal.construction.additional_slots %>
+            <% artists = plan.artists(proposal) %>
+            <li><strong>Release</strong> · <%= base.data.fetch("title") %> · <%= pluralize(base.slots.size, "track") %> ·
+              <%= proposal.existing ? "Update existing" : "1 new release" %>
+              <% if artists.any? %>
+                <details><summary><%= pluralize(artists.size, "credited artist") %></summary>
+                  <ul>
+                    <% artists.each do |artist, existing| %>
+                      <li><strong>Artist</strong> · <%= artist.fetch("name") %><%= " · Reuse existing" if existing %></li>
+                    <% end %>
+                  </ul>
+                </details>
+              <% end %>
+              <% if additions.any? %>
                 <ul>
-                  <% plan.artists(proposal).each do |artist, existing| %>
-                    <li><strong><%= existing ? "Reuse" : "Create" %></strong> · <%= artist.fetch("name") %></li>
-                  <% end %>
-                  <% (base.slots + proposal.construction.additional_slots).each do |slot| %>
-                    <li><strong>Create</strong> · <%= slot.fetch(:medium) %>.<%= slot.fetch(:position) %> · <%= slot.fetch(:title) %><%= " · #{slot[:appearance_date]}" if slot[:appearance_date] %></li>
+                  <% additions.each.with_index(base.slots.size + 1) do |slot, number| %>
+                    <li><strong>Recording</strong> · <%= number %> · <%= slot.fetch(:title) %> · <%= resolution_release_date(slot.fetch(:appearance_date)) %></li>
                   <% end %>
                 </ul>
-              </details>
+              <% end %>
             </li>
           <% end %>
         <% end %>
-        <li><strong>Assign</strong> · <%= pluralize(@affected_count, "existing observation") %></li>
+        <li><strong>Listening history</strong> · <%= pluralize(@affected_count, "existing observation") %></li>
       </ul>
       <p class="muted">Recording metadata and credits may be enriched after confirmation.</p>
     </section>
     <p class="muted">
-      <% if release_pending %>Save the recording assignment while release verification continues.
-      <% elsif proposals.any?(&:existing) %>Confirm the recording and update <%= proposals.first.construction.base.data["title"] %>. Review the changes in Evidence.
-      <% elsif proposals.any? %>Confirm the recording and add <%= proposals.first.construction.base.data["title"] %> to your catalog.
-      <% else %>Use this recording for the matching observations.
-      <% end %>
       Future exact matches inherit this decision.
       <% if @override_count.positive? %><%= pluralize(@override_count, "individual override") %> preserved.<% end %>
     </p>

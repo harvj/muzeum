@@ -18,12 +18,12 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     end
   end
 
-  it "aligns transparent badges and presents release dates at verified precision" do
+  it "aligns neutral and inherited badges and presents release dates at verified precision" do
     user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "entity-headings")
     artist = Artist.create!(name: "Tove Lo", country: "SE", mbid: SecureRandom.uuid)
     collaborator = Artist.create!(name: "Collaborating Artist", mbid: SecureRandom.uuid)
     release = Release.create!(title: "ESTRUS", release_year: 2026, release_month: 9, release_day: 18)
-    recording = Recording.create!(title: "A long recording title that can wrap across several lines on a narrow screen", mbid: SecureRandom.uuid)
+    recording = Recording.create!(title: "source of life", mbid: SecureRandom.uuid)
     release.artists << [ artist, collaborator ]
     recording.artists << [ artist, collaborator ]
     sign_in(user)
@@ -47,15 +47,28 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
           (() => {
             const badge = document.querySelector(".catalog-heading .identity-swatch")
             const box = badge.getBoundingClientRect()
-            return [getComputedStyle(badge).backgroundColor, box.width, box.height,
+            return [getComputedStyle(badge).backgroundImage, box.width, box.height,
               document.documentElement.scrollWidth <= innerWidth]
           })()
         JS
-        expect(geometry[0]).to eq("rgba(0, 0, 0, 0)")
+        expect(geometry[0]).to include("linear-gradient(135deg")
         expect(geometry[1]).to be > 14
         expect(geometry[1]).to eq(geometry[2])
         expect(geometry[3]).to be(true)
         capture_resolution("heading-#{entity}-#{width}-#{theme}")
+        decision = MusicalIdentityDecision.create!(entity: artist, user:, colors: %w[pink gray])
+        visit path
+        expect(page).to have_css('.catalog-heading[data-identity-first="pink"][data-identity-second="gray"]')
+        expect(page.evaluate_script(<<~JS)).to all(include("linear-gradient(135deg", "50%"))
+          (() => {
+            const heading = document.querySelector(".catalog-heading")
+            return [getComputedStyle(heading).backgroundImage,
+              getComputedStyle(heading, "::after").backgroundImage,
+              getComputedStyle(heading.querySelector(".identity-swatch")).backgroundImage]
+          })()
+        JS
+        capture_resolution("colored-heading-#{entity}-#{width}-#{theme}")
+        decision.destroy!
       end
       page.execute_script("document.querySelector('main').style.minHeight = '200vh'; scrollTo(0, 250)")
       expect(page).to have_css("main[data-shell-fading]")
@@ -103,7 +116,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
       expect(page).to have_css(".review-catalog-context", text: "Canonical in Muzeum")
     end
     expect(page).to have_text("6 matching observations")
-    expect(page).to have_css(".resolution-context", text: /Narrow Stairs.*May 13, 2008.*Album.*11 tracks/m)
+    expect(page).to have_css(".resolution-context", text: /Narrow Stairs.*May 13, 2008/m)
     expect(page).to have_css(".resolution-choice", count: 3)
     expect(page).to have_link("5dffd281", href: "https://musicbrainz.org/recording/5dffd281-d913-4256-8816-7035d077183f")
     expect(page).to have_link("e77221ef", href: "https://musicbrainz.org/recording/#{NarrowStairsFixture::RECORDING}")
@@ -116,11 +129,11 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     find("summary", text: "More recording choices").click
     expect(page).to have_css(".resolution-choice[aria-current]", count: 1)
     expect(page).to have_css(".resolution-primary", count: 1, text: "Resolve all 6")
-    expect(page).to have_css('section[aria-label="Resolution preview"]', text: /Create.*Narrow Stairs.*1 new release.*11 base tracks.*Assign.*6 existing observations/m)
+    expect(page).to have_css('section[aria-label="Resolution preview"]', text: /Recording.*Release.*Narrow Stairs.*11 tracks.*1 new release.*6 existing observations/m)
     expect(page.evaluate_script("getComputedStyle(document.querySelector('.resolution-primary')).backgroundColor")).to eq("rgb(41, 107, 52)")
     expect(page).to have_no_text("Provider calls")
     expect(page).to have_no_text("2015")
-    expect(page).to have_no_css(".review-tracks li")
+    expect(page).to have_css(".resolution-context .review-tracks li", count: 11)
 
     [ [ 1440, 960 ], [ 390, 844 ] ].each do |width, height|
       page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width:, height:, deviceScaleFactor: 1, mobile: width == 390)
@@ -139,9 +152,8 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
       end
     end
 
-    find("summary", text: "View original tracklist").send_keys(:enter)
-    expect(page).to have_css(".review-original-tracklist[open] .review-tracks li", count: 11)
-    expect(page).to have_css(".review-original-tracklist[open] .review-track-match", text: "No Sunlight")
+    expect(page).to have_css(".resolution-context .review-track-match", text: "No Sunlight")
+    expect(page).to have_no_css(".resolution-context details")
     click_link "Review evidence"
     expect(page).to have_css(".review-score")
     expect(page).to have_css("details:not([open]) > summary", text: "Checked appearance · Narrow Stairs", visible: :all)
@@ -155,6 +167,67 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     expect(plays.size).to eq(6)
     expect(plays.map(&:effective_recording_id).uniq).to eq([ Recording.find_by!(mbid: NarrowStairsFixture::RECORDING).id ])
     expect(plays.map(&:payload).uniq).to eq([ observation.payload ])
+  end
+
+  it "shows the complete Charli sequence above a compact entity preview" do
+    user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "charli-heading-browser", lastfm_username: "charli-heading-browser")
+    observation = Scrobble.create!(user:, lastfm_account: user.source_account, played_at: Time.current,
+      payload: { artist_name: "Charli XCX", album_name: "Charli", track_name: "Next Level Charli" })
+    surface = RecordingResolution::Ledger.attach!(observation)
+    group = RecordingResolution::Group.create!(surface_id: surface.id, version: RecordingResolution::Ledger::VERSION, claims: {})
+    charli = { "artist" => { "id" => SecureRandom.uuid, "name" => "Charli xcx" }, "name" => "Charli XCX" }
+    guest = { "artist" => { "id" => SecureRandom.uuid, "name" => "Troye Sivan" }, "name" => "Troye Sivan" }
+    titles = [ "Next Level Charli", "Gone", "Cross You Out", "1999", "Click", "Warm", "Thoughts", "Blame It on Your Love",
+      "White Mercedes", "Silver Cross", "I Don't Wanna Know", "Official", "Shake It", "February 2017", "2099" ]
+    durations = [ 158, 246, 208, 189, 233, 225, 191, 191, 203, 208, 183, 184, 275, 152, 205 ]
+    source_numbers = %w[A1 A2 A3 A4 B1 B2 B3 C1 C2 C3 C4 D1 D2 D3 D4]
+    indexed_titles = titles.each_with_index.to_a
+    media = [ indexed_titles.take(7), indexed_titles.drop(7) ].each.with_index(1).map do |entries, medium|
+      tracks = entries.each.with_index(1).map do |(title, index), position|
+        credits = index == 3 ? [ charli.merge("joinphrase" => " & "), guest ] : [ charli ]
+        recording = { "id" => SecureRandom.uuid, "title" => title, "length" => durations.fetch(index) * 1000, "artist-credit" => credits }
+        { "id" => SecureRandom.uuid, "title" => title, "position" => position, "number" => source_numbers.fetch(index),
+          "recording" => recording }
+      end
+      { "position" => medium, "format" => '12" Vinyl', "track-count" => tracks.size, "tracks" => tracks }
+    end
+    edition = { "id" => SecureRandom.uuid, "title" => "Charli", "date" => "2019-09-13", "status" => "Official", "country" => "US",
+      "release-group" => { "id" => SecureRandom.uuid, "title" => "Charli", "primary-type" => "Album", "first-release-date" => "2019-09-13" },
+      "artist-credit" => [ charli ], "media" => media }
+    first_recording = media.first.dig("tracks", 0, "recording")
+    later_recording = media.last.dig("tracks", 0, "recording")
+    alternative = first_recording.merge("id" => SecureRandom.uuid, "length" => 162_000)
+    assessment = RecordingResolution::Assessment.create!(group_id: group.id, version: "charli-ui", actor: "fixture", digest: SecureRandom.hex(32),
+      evidence: { "candidates" => [ first_recording, alternative ], "construction_editions" => [ edition ] })
+    contexts = CanonicalCatalog::ReviewedConstruction.for(assessment, later_recording.fetch("id"))
+    expect(ApplicationController.helpers.resolution_candidate_association(later_recording, contexts)).to eq("Charli · 2019 · Track 8")
+    sign_in(user)
+
+    browser = page.driver.browser
+    [ [ 1440, 960 ], [ 390, 844 ] ].product(%w[light dark]).each do |(width, height), theme|
+      browser.execute_cdp("Emulation.setDeviceMetricsOverride", width:, height:, deviceScaleFactor: 1, mobile: width < 700)
+      browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "prefers-color-scheme", value: theme } ])
+      visit resolution_surface_path(observation, candidate: first_recording["id"])
+      expect(page).to have_css(".resolution-choice[aria-current]", text: "Charli · 2019 · Track 1")
+      within(".resolution-context") do
+        expect(page).to have_text("September 13, 2019")
+        expect(page).to have_no_text(/Disc|Vinyl|Complete tracklist|MusicBrainz release/)
+        expect(page).to have_no_css("details")
+        expect(all(".review-tracks li > span:first-child").map(&:text)).to eq((1..15).map(&:to_s))
+        expect(all(".review-tracks li > span:nth-child(2)").map { |element| element.text.sub(/\s+\(candidate recording\)\z/, "") }).to eq(titles)
+      end
+      within('[aria-label="Resolution preview"]') do
+        expect(page).to have_text("Release · Charli · 15 tracks")
+        find("summary", text: "2 credited artists").click
+        expect(page).to have_text("Artist · Troye Sivan")
+        expect(page).to have_no_text(/Create|2099/)
+      end
+      page.execute_script("scrollTo(0, 0)")
+      capture_resolution("charli-#{width}-#{theme}", full: true)
+    end
+  ensure
+    browser&.execute_cdp("Emulation.clearDeviceMetricsOverride")
+    browser&.execute_cdp("Emulation.setEmulatedMedia", features: [])
   end
 
   it "constructs Guilt Show and keeps the later appearance outside the original sequence" do

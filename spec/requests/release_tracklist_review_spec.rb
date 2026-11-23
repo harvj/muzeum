@@ -66,7 +66,7 @@ RSpec.describe "Release tracklist review", type: :request do
     legends = doc.css("legend").map(&:text)
     expect(legends).to include("Candidate · 2 observations", "Alternate · 1 observation")
     expect(legends.grep(/Anchor/)).to be_empty
-    expect(doc.text).to include("independently confirmed in your archive", "Disc 1, track 2")
+    expect(doc.text).to include("independently confirmed in your archive", "Track 2")
     token = doc.at_css('[name="batch_token"]')["value"]
     choices = legends.each_with_index.to_h { |label, i| [ i.to_s, label.start_with?("Candidate") ? "accept" : "reject" ] }
     expect { submit(token, choices) }.to change(RecordingResolution::Decision, :count).by(3)
@@ -105,7 +105,7 @@ RSpec.describe "Release tracklist review", type: :request do
       payload: without_id.payload.merge("album_mbid" => other_edition.ingested_from_release_mbid))
     doc = open_batch
     ambiguous = doc.css("fieldset").find { |field| field.text.include?("competing version") }
-    expect(ambiguous.text).to include("Disc 1, track 2", "Disc 2, track 1")
+    expect(ambiguous.text).to include("Track 2", "Track 4")
     expect(ambiguous.css('option[value="accept"]')).to be_empty
     expect(doc.css("legend").map(&:text).grep(/Candidate/)).to all(include("1 observation"))
   end

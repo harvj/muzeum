@@ -71,8 +71,8 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
 
     get resolution_surface_path(observation)
     doc = Nokogiri::HTML(response.body)
-    expect(doc.at_css(".resolution-context").text).to include("May 13, 2008 · Album · 11 tracks",
-      "April 15, 2008 · Single · 1 track", "Earliest verified recording publication · April 15, 2008")
+    expect(doc.at_css(".resolution-context").text).to include("May 13, 2008",
+      "April 15, 2008", "Earliest verified recording publication · April 15, 2008")
     expect(doc.css(".resolution-primary").size).to eq(1)
     expect(doc.at_css('input[name="construct_release"]')["value"]).to eq(NarrowStairsFixture::ORIGINAL)
     params = doc.css(".resolution-confirmation input[type=hidden]").to_h { |input| [ input["name"], input["value"] ] }
@@ -130,7 +130,7 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
       frozen_evidence = previous.evidence
 
       get resolution_surface_path(play)
-      expect(response.body).to include("Original release verified", "update Narrow Stairs", "Resolve this observation")
+      expect(response.body).to include("May 13, 2008", "Update existing", "Resolve this observation")
       expect(release.reload.ingested_from_release_mbid).to eq(NarrowStairsFixture::LATER)
       expect(RecordingResolution::Decision.count).to eq(0)
 
@@ -176,7 +176,7 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
       CanonicalCatalog::Processor.new(request, session_factory: ->(*) { session }).call
       expect(request.reload.state).to eq("imported")
       get resolution_surface_path(play)
-      expect(response.body).to include("Original release verified", NarrowStairsFixture::ORIGINAL, "11 tracks")
+      expect(response.body).to include("May 13, 2008", NarrowStairsFixture::ORIGINAL, "11 tracks")
       expect(RecordingResolution::Assessment.where(group_id: historical.group_id).count).to eq(2)
       expect(historical.reload.evidence).to eq(saved_evidence)
       expect(play.reload.attributes).to eq(saved_payload)

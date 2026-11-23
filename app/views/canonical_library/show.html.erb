@@ -1,4 +1,4 @@
-<section class="intro catalog-heading <%= "release-heading" if @entry.is_a?(Release) %>">
+<%= tag.section class: "intro catalog-heading", data: musical_identity_attributes(@entry) do %>
   <h1><%= musical_identity_badge(@entry, detailed: true) %><%= catalog_title(@entry) %>
     <%= catalog_release_date(@entry) if @entry.is_a?(Release) %></h1>
   <% case @entry
@@ -7,7 +7,7 @@
   <% when Artist %>
     <% if @entry.country.present? %><p><span class="catalog-credit"><%= render "shared/geographic_place", country: @entry.country %></span></p><% end %>
   <% end %>
-</section>
+<% end %>
 <% if @entry.is_a?(Release) %>
   <%= render "release" %>
   <% unless @public_profile %>

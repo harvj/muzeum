@@ -2,6 +2,7 @@
   <p><%= link_to "Back to recording review", resolution_surface_path(@observation, play: params[:play]) %></p>
   <h1>Review tracks from <%= @batch.tracklist.release.title %></h1>
   <p>Review up to 50 recent matching observations. Confirmations apply only to the listed plays. Release attribution is separate.</p>
+  <% track_numbers = @batch.tracklist.slots.each.with_index(1).to_h { |slot, number| [[slot.medium, slot.position], number] } %>
   <% if @proposals.empty? %>
     <p>No eligible observations were found in this batch.</p>
   <% else %>
@@ -17,7 +18,8 @@
             <p><%= rank.dig("catalog", "title") %> · <%= mbid %> · Score <%= rank.fetch("score") %></p>
             <ul>
               <% proposal.fetch("positions").select { |slot| slot["recording_mbid"] == mbid }.each do |slot| %>
-                <li>Disc <%= slot.fetch("medium") %>, track <%= slot.fetch("position") %></li>
+                <% number = track_numbers[slot.values_at("medium", "position")] %>
+                <li>Track <%= number %></li>
               <% end %>
               <% rank.fetch("inputs").each_value do |factor| %>
                 <% if factor["explanation"] %><li><%= "%+d" % factor.fetch("weight") %> · <%= factor.fetch("explanation") %></li><% end %>

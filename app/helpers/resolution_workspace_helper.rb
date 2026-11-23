@@ -22,7 +22,7 @@ module ResolutionWorkspaceHelper
       data = base.data
       slot = base.slots[difference] if difference
       label = [ data["title"], data["country"], pluralize(base.slots.size, "track") ].compact
-      label << "Track #{slot[:position]}: #{slot[:title]}" if slot
+      label << "Track #{difference + 1}: #{slot[:title]}" if slot
       [ label.join(" · "), data.fetch("id") ]
     end
   end
@@ -43,7 +43,7 @@ module ResolutionWorkspaceHelper
       [ base.data.dig("release-group", "primary-type") == "Album" ? 0 : 1, base.data.fetch("date") ]
     end
     slots = bases.to_h do |base|
-      [ base, base.slots.find { |slot| slot.dig(:recording, "id") == candidate.fetch("id") } ]
+      [ base, base.slots.index { |slot| slot.dig(:recording, "id") == candidate.fetch("id") } ]
     end
     base, slot = slots.find { |_, match| match }
     unless base
@@ -56,12 +56,9 @@ module ResolutionWorkspaceHelper
     label = [ base.data.fetch("title"), base.data.fetch("date").first(4) ]
     group = base.data.dig("release-group", "id")
     positions = slots.filter_map do |edition, match|
-      match&.values_at(:medium, :position, :number) if edition.data.dig("release-group", "id") == group
+      match if edition.data.dig("release-group", "id") == group
     end
-    if positions.uniq.size == 1
-      label << "Disc #{slot.fetch(:medium)}" if base.data.fetch("media").many?
-      label << "Track #{slot[:number].presence || slot.fetch(:position)}"
-    end
+    label << "Track #{slot + 1}" if positions.uniq.size == 1
     label.join(" · ")
   end
 
