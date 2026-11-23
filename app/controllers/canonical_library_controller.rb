@@ -38,7 +38,8 @@ class CanonicalLibraryController < ApplicationController
       load_artist_listening
     when Release
       @ranked_release = ReleaseRanking.new(current_user, [ @entry ]).include?(@entry) unless @public_profile
-      slots = @entry.catalog_track_slots.base_sequence.order(:medium, :position)
+      base_slots = @entry.catalog_track_slots.base_sequence
+      slots = base_slots.order(:medium, :position)
       cursor = slots.find_by(id: params[:after_track]) if params[:after_track].present?
       if cursor
         @track_offset = slots.where("(medium, position) <= (?, ?)", cursor.medium, cursor.position).count
@@ -57,8 +58,7 @@ class CanonicalLibraryController < ApplicationController
         @legacy_slots = legacy_slots.includes(recording: { recording_artists: :artist }).limit(101).to_a
         @next_legacy_track = @legacy_slots.pop && @legacy_slots.last.id if @legacy_slots.size > 100
       end
-      recording_ids = @slots.map(&:recording_id)
-      @track_counts = recording_plays(recording_ids)
+      @track_counts = recording_plays(base_slots.distinct.pluck(:recording_id))
         .group("effective_resolution.recording_id").count(:id)
       other_ids = Array(params[:with_release]).first(PAGE).map { |id| Integer(id, exception: false) }.compact
       @activity_releases = catalog_scope.where(id: [ @entry.id, *other_ids ]).order(:id).to_a
@@ -121,14 +121,15 @@ class CanonicalLibraryController < ApplicationController
     verified = entry.is_a?(Release) ? entry.catalog_verified_at.present? : Clients::Musicbrainz::MBID.match?(entry.mbid.to_s)
     return head :forbidden unless verified && current_user.managed_archive_grants.exists?
 
-    input = params.expect(musical_identity: [ :head, :rationale, colors: [] ])
+    input = params.expect(musical_identity: [ :head, :rationale, :inherit, colors: [] ])
     entry.with_lock do
       previous = MusicalIdentityDecision.latest_for([ entry ])[[ entry.class.name, entry.id ]]
       if previous&.id.to_s != input[:head].to_s
         flash[:alert] = "Musical identity changed. Review the latest assignment before editing."
       else
+        inherit = input[:inherit] == "1"
         decision = MusicalIdentityDecision.new(entity: entry, user: current_user,
-          colors: Array(input[:colors]).reject(&:blank?), rationale: input[:rationale])
+          colors: inherit ? [] : Array(input[:colors]).reject(&:blank?), rationale: inherit ? nil : input[:rationale])
         if decision.save
           flash[:notice] = "Musical identity saved."
         else

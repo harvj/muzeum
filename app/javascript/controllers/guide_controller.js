@@ -32,9 +32,19 @@ export default class extends Controller {
     this.openFromLocation()
   }
 
+  dismissOutside(event) {
+    if (event.target !== this.drawerTarget) return
+
+    const { left, right, top, bottom } = this.drawerTarget.getBoundingClientRect()
+    if (event.clientX < left || event.clientX >= right || event.clientY < top || event.clientY >= bottom) {
+      this.close()
+    }
+  }
+
   close() { this.drawerTarget.close() }
 
   closed() {
+    this.drawerTarget.querySelectorAll("form").forEach(form => form.reset())
     if (location.hash.startsWith("#guide-")) {
       history.replaceState(history.state, "", this.previousHash || location.pathname + location.search)
     }

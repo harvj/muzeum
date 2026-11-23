@@ -5,19 +5,23 @@
   <p><%= [@entry.release_year, @entry.release_month&.to_s&.rjust(2, "0"), @entry.release_day&.to_s&.rjust(2, "0")].compact.join("-").presence || "Date unknown" %>
     · <%= render "shared/geographic_place", country: @entry.catalog_country %></p>
   <% if @slots.any? %>
+    <% colors = musical_identity_attributes(@entry) %>
+    <% maximum = @track_counts.values.max.to_i %>
     <%= dense_table("Track listing", classes: "release-tracks") do %>
-      <thead><tr><th scope="col" class="track-number" aria-label="Track number">#</th><th scope="col">Recording</th><th scope="col" class="table-number">Length</th><th scope="col" class="table-number">Resolved plays</th></tr></thead>
+      <thead><tr><th scope="col" class="track-number" aria-label="Track number">#</th><th scope="col">Recording</th><th scope="col" class="table-number">Length</th><th scope="col" class="track-play-count">Resolved plays</th></tr></thead>
       <tbody>
         <% @slots.each.with_index(@track_offset.to_i + 1) do |slot, number| %>
           <tr><td class="track-number"><%= number %></td>
             <th scope="row"><span class="play-name" data-overflow-name><%= catalog_link(slot.recording, title: slot.title) %></span></th>
             <td class="table-number"><%= recording_duration(slot.recording.duration_ms) if slot.recording.duration_ms %></td>
-            <td class="table-number">
-              <% count = @track_counts.fetch(slot.recording_id, 0) %>
-              <% if @archive_available && count.positive? %>
-                <%= entity_link number_with_delimiter(count), catalog_entry_path(slot.recording, anchor: "listening-activity") %>
+            <td class="track-play-count">
+              <% if @archive_available %>
+                <% count = @track_counts.fetch(slot.recording_id, 0) %>
+                <%= render "listening_bar", value: count, maximum:, label: number_with_delimiter(count),
+                  accessible_label: pluralize(count, "resolved play"), colors:,
+                  path: catalog_entry_path(slot.recording, anchor: "listening-activity") %>
               <% else %>
-                <%= @archive_available ? 0 : "Unavailable" %>
+                Unavailable
               <% end %>
             </td></tr>
         <% end %>

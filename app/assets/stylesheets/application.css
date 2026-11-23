@@ -561,7 +561,7 @@ main .review-candidate.recommended { border-color: #378c48; }
 .artist-releases :is(td, th):first-child { width: 46%; }
 .artist-releases :is(td, th):nth-child(2) { width: 12%; }
 .listening-bar { display: block; width: var(--listening-scale, 0%); min-width: max-content; max-width: 100%; }
-.listening-bar span {
+.listening-bar > :is(span, a.entity-link) {
   display: block;
   padding-inline: 3px;
   border-radius: 0 5px 5px 0;
@@ -570,6 +570,7 @@ main .review-candidate.recommended { border-color: #378c48; }
   color: var(--card);
   font-variant-numeric: tabular-nums;
 }
+.release-tracks .track-play-count { width: 24%; }
 .catalog-listening-time { width: 32%; }
 .catalog-listening-index small { display: block; margin-block-start: .15rem; }
 @media (max-width: 480px) {
@@ -593,7 +594,7 @@ main .review-candidate.recommended { border-color: #378c48; }
   background: var(--identity-fill);
   border-radius: 0 5px 5px 0;
 }
-.listening-bar[data-identity-first] span {
+.listening-bar[data-identity-first] > :is(span, a.entity-link) {
   display: inline-block;
   margin-inline: 2px;
   border: none;
@@ -648,7 +649,7 @@ main .plays-tools button[aria-pressed="true"] { background-color: var(--surface-
 .muzeum-guide {
   inset: 0 0 0 auto;
   margin: 0;
-  inline-size: min(30rem, 100%);
+  inline-size: min(30rem, calc(100% - 1rem));
   max-inline-size: 100%;
   block-size: 100%;
   max-block-size: 100%;
@@ -656,13 +657,81 @@ main .plays-tools button[aria-pressed="true"] { background-color: var(--surface-
   border-inline-start: 1px solid var(--line);
   padding: 1rem;
   color: var(--ink);
-  background: var(--surface-raised);
+  background: var(--card);
 }
 .muzeum-guide[open] { animation: guide-slide-in .2s ease-out; }
 @keyframes guide-slide-in { from { transform: translateX(100%); } }
 @media (prefers-reduced-motion: reduce) { .muzeum-guide[open] { animation: none; } }
 .muzeum-guide::backdrop { background: transparent; }
-.muzeum-guide-heading { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+.muzeum-guide-heading {
+  position: sticky;
+  inset-block-start: -1rem;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding-block: .5rem;
+  background: var(--card);
+}
+.muzeum-guide section { scroll-margin-block-start: 3.5rem; }
+.identity-assignment-summary { display: flex; align-items: center; gap: .4rem; }
+.identity-assignment-summary p { margin: 0; }
+.identity-color-picker { margin: .65rem 0; padding: 0; border: 0; }
+.identity-choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, 44px);
+  gap: 4px;
+  margin-block: .4rem;
+}
+.identity-choice {
+  position: relative;
+  display: grid;
+  place-items: center;
+  inline-size: 44px;
+  block-size: 44px;
+  margin: 0;
+  cursor: pointer;
+}
+.identity-choice .identity-swatch {
+  inline-size: 32px;
+  block-size: 32px;
+  border-color: var(--muted);
+}
+.identity-choice :checked + .identity-swatch {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+.identity-choice:has(:focus-visible) {
+  outline: 2px dashed var(--ink);
+  outline-offset: 1px;
+}
+.identity-choice-order {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 4px;
+  pointer-events: none;
+  font-weight: 700;
+}
+.identity-choice-order:not(:empty) {
+  background: var(--card);
+  color: var(--ink);
+  inset: 13px;
+  line-height: 1;
+}
+.identity-color-picker [role="status"]:empty { margin: 0; }
+#guide-assignment textarea {
+  display: block;
+  inline-size: 100%;
+  min-block-size: 4rem;
+  padding: .45rem;
+  background: var(--card);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+}
 .guide-palette { padding: 0; list-style: none; }
 .guide-palette li { display: flex; gap: .55rem; align-items: center; }
 .identity-swatch {

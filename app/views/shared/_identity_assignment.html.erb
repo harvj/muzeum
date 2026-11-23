@@ -2,28 +2,55 @@
   <h3 id="guide-assignment-heading"><%= catalog_title(entry) %></h3>
   <% if flash[:alert].present? %><p role="alert"><%= flash[:alert] %></p><% end %>
   <% if flash[:notice].present? %><p role="status"><%= flash[:notice] %></p><% end %>
-  <% colors = decision&.colors || [] %>
-  <p><%= effective_musical_colors(entry).map { |color| MusicalIdentity::Palette::COLORS.fetch(color) }.to_sentence.presence || "No colors assigned" %></p>
-  <% if (inherited = inherited_musical_identity(entry)) %>
-    <p>Inherited from <%= inherited.fetch(:artists).map(&:name).to_sentence %>. Saving colors here overrides the artist colors.</p>
-  <% end %>
+  <% colors = effective_musical_colors(entry) %>
+  <div class="identity-assignment-summary">
+    <% if colors.any? %>
+      <% description = colors.map { |color| MusicalIdentity::Palette::COLORS.fetch(color) }.to_sentence %>
+      <%= tag.span class: "identity-badge", data: musical_identity_attributes(entry), title: description do %>
+        <span class="identity-swatch" role="img" aria-label="<%= description %>"></span>
+      <% end %>
+    <% end %>
+    <% if (inherited = inherited_musical_identity(entry)) %>
+      <p>Inherited from <%= inherited.fetch(:artists).map(&:name).to_sentence %></p>
+    <% elsif decision&.colors.present? %>
+      <p>Direct assignment</p>
+    <% else %>
+      <p>Neutral</p>
+    <% end %>
+  </div>
   <% if decision && !@public_profile %>
     <p>Manually revised <%= browser_time(decision.created_at, date_only: true) %>.</p>
     <% if decision.rationale.present? %><p><%= decision.rationale %></p><% end %>
   <% end %>
   <% if @may_edit_identity %>
     <%= form_with scope: :musical_identity, url: polymorphic_path([:musical_identity, entry]), method: :patch,
-      data: { turbo: false } do |form| %>
+      data: { turbo: false, controller: "identity-palette", identity_palette_colors_value: colors.to_json,
+        action: "reset->identity-palette#restore formdata->identity-palette#serialize" } do |form| %>
       <%= form.hidden_field :head, value: decision&.id %>
-      <% options = MusicalIdentity::Palette::COLORS.map { |key, description| [description, key] } %>
-      <% ["First color", "Second color", "Exceptional third color"].each_with_index do |label, index| %>
-        <%= label_tag "identity-color-#{index}", label %>
-        <%= select_tag "musical_identity[colors][]", options_for_select(options, colors[index]),
-          include_blank: "None", id: "identity-color-#{index}" %>
-      <% end %>
+      <fieldset class="identity-color-picker">
+        <legend>Musical colors</legend>
+        <div class="identity-choices">
+          <% MusicalIdentity::Palette::COLORS.each do |color, description| %>
+            <label class="identity-choice" title="<%= description %>">
+              <%= check_box_tag "musical_identity[colors][]", color, colors.include?(color), id: "identity-color-#{color}",
+                class: "visually-hidden", aria: { label: description },
+                data: { identity_palette_target: "color", action: "change->identity-palette#choose" } %>
+              <span class="identity-swatch identity-<%= color %>" aria-hidden="true"></span>
+              <span class="identity-choice-order" aria-hidden="true"><%= colors.index(color) + 1 if colors.include?(color) %></span>
+            </label>
+          <% end %>
+        </div>
+        <p role="status" class="muted" data-identity-palette-target="status"></p>
+      </fieldset>
       <%= form.label :rationale, "Musical rationale (required for three colors)" %>
-      <%= form.text_area :rationale, value: decision&.rationale, maxlength: 1000 %>
-      <%= form.submit "Save colors" %>
+      <%= form.text_area :rationale, value: decision&.rationale, maxlength: 1000, data: { identity_palette_target: "rationale" } %>
+      <div class="catalog-actions">
+        <%= form.submit "Save colors" %>
+        <% if decision&.colors.present? %>
+          <%= form.button(entry.is_a?(Artist) ? "Clear direct colors" : "Use inherited colors",
+            name: "musical_identity[inherit]", value: "1", formnovalidate: true) %>
+        <% end %>
+      </div>
     <% end %>
   <% end %>
   <% evidence = @revision&.evidence&.fetch("musicbrainz", {}) || {} %>

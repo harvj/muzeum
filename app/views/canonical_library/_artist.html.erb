@@ -1,3 +1,4 @@
+<% colors = musical_identity_attributes(@entry) %>
 <section class="card library-card artist-history" id="listening-history">
   <div class="artist-history-heading">
     <div>
@@ -39,7 +40,7 @@
             <td><%= catalog_link(recording) %></td>
             <td><%= recording_duration(recording.duration_ms) %></td>
             <td><%= browser_time(totals.last_played, date_only: true) if totals.last_played %></td>
-            <td><%= render "listening_bar", value: totals.plays, maximum: @play_bar_max, label: totals.plays, accessible_label: pluralize(totals.plays, "play") %></td>
+            <td><%= render "listening_bar", value: totals.plays, maximum: @play_bar_max, label: totals.plays, accessible_label: pluralize(totals.plays, "play"), colors: %></td>
           </tr>
         <% end %>
       </tbody>
@@ -65,7 +66,7 @@
             <td>
               <% duration = estimated_listening_time(totals) %>
               <%= render "listening_bar", value: totals.milliseconds, maximum: @time_bar_max, label: duration,
-                accessible_label: "#{duration}, #{pluralize(totals.plays, 'play')}" %>
+                accessible_label: "#{duration}, #{pluralize(totals.plays, 'play')}", colors: %>
               <small><%= pluralize(totals.plays, "play") %></small>
               <% if totals.known_durations < totals.plays %><small><%= duration_coverage(totals) %></small><% end %>
             </td></tr>

@@ -314,6 +314,80 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
       page.execute_script("scrollTo(0, 0)")
       capture_resolution("charli-#{width}-#{theme}", full: true)
     end
+
+    click_button "Resolve this observation"
+    expect(page).to have_text("Recording decision saved.")
+    24.times do |index|
+      Scrobble.create!(user:, lastfm_account: user.source_account, played_at: observation.played_at - (index + 1).minutes,
+        payload: observation.payload)
+    end
+    artist = Artist.find_by!(name: "Charli xcx")
+    release = Release.find_by!(title: "Charli")
+    MusicalIdentityDecision.create!(entity: artist, user:, colors: %w[pink gray])
+    colors = '[data-identity-first="pink"][data-identity-second="gray"]'
+
+    [ [ 1440, 960 ], [ 390, 844 ] ].product(%w[light dark]).each do |(width, height), theme|
+      browser.execute_cdp("Emulation.setDeviceMetricsOverride", width:, height:, deviceScaleFactor: 1, mobile: width < 700)
+      browser.execute_cdp("Emulation.setEmulatedMedia", features: [
+        { name: "prefers-color-scheme", value: theme }, { name: "prefers-reduced-motion", value: "reduce" }
+      ])
+      visit artist_path(artist)
+      expect(page).to have_css("#artist-recordings .listening-bar#{colors}", text: "25")
+      expect(page).to have_css("#artist-releases .listening-bar#{colors}")
+      capture_resolution("charli-artist-bars-#{width}-#{theme}", full: true)
+
+      visit release_path(release)
+      expect(page).to have_css(".release-tracks tbody tr", count: 15)
+      expect(all(".release-tracks .track-number", minimum: 16).drop(1).map(&:text)).to eq((1..15).map(&:to_s))
+      expect(page).to have_css(".release-tracks .listening-bar#{colors}[data-listening-scale-percent-value='100.0']", text: "25", count: 1)
+      expect(page).to have_css(".release-tracks td.track-play-count", exact_text: "0", count: 14)
+      expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
+      capture_resolution("charli-release-bars-#{width}-#{theme}")
+
+      find(".catalog-heading .identity-badge").click
+      expect(page).to have_css("dialog[open]", text: "Inherited from Charli xcx")
+      expect(page).to have_css("#identity-color-pink:checked", visible: :all)
+      expect(page).to have_css("#identity-color-gray:checked", visible: :all)
+      expect(MusicalIdentityDecision.where(entity: release)).to be_empty
+      capture_resolution("charli-guide-inherited-#{width}-#{theme}")
+      find("label:has(#identity-color-pink)").click
+      expect(page).to have_css("dialog[open]")
+      expect(page).to have_no_css("#identity-color-pink:checked", visible: :all)
+      page.driver.browser.action.send_keys(:escape).perform
+      expect(page).to have_no_css("dialog[open]")
+      expect(page).to have_css(".catalog-heading .identity-badge:focus")
+    end
+
+    find(".catalog-heading .identity-badge").click
+    expect(page).to have_css("#identity-color-pink:checked", visible: :all)
+    page.execute_script("document.getElementById('identity-color-blue').focus()")
+    page.driver.browser.action.send_keys(:space).perform
+    expect(page).to have_css("#identity-color-blue:checked:focus-visible", visible: :all)
+    expect(page).to have_css("#guide-assignment textarea:required")
+    fill_in "Musical rationale (required for three colors)", with: "Pop, electronic production, and soulful vocals"
+    capture_resolution("charli-guide-three-colors")
+    browser.execute_cdp("Input.dispatchMouseEvent", type: "mousePressed", x: 4, y: 200, button: "left", clickCount: 1)
+    browser.execute_cdp("Input.dispatchMouseEvent", type: "mouseReleased", x: 4, y: 200, button: "left", clickCount: 1)
+    expect(page).to have_no_css("dialog[open]")
+    expect(page).to have_css(".catalog-heading .identity-badge:focus")
+    expect(MusicalIdentityDecision.where(entity: release)).to be_empty
+
+    find(".catalog-heading .identity-badge").click
+    expect(page).to have_no_css("#identity-color-blue:checked", visible: :all)
+    expect(find("#guide-assignment textarea").value).to eq("")
+    find("label:has(#identity-color-blue)").click
+    fill_in "Musical rationale (required for three colors)", with: "Pop, electronic production, and soulful vocals"
+    click_button "Save colors"
+    expect(page).to have_css("dialog[open]", text: "Direct assignment")
+    expect(MusicalIdentityDecision.where(entity: release).last.colors).to eq(%w[pink gray blue])
+    click_button "Use inherited colors"
+    expect(page).to have_css("dialog[open]", text: "Inherited from Charli xcx")
+    expect(MusicalIdentityDecision.where(entity: release).order(:id).pluck(:colors)).to eq([ %w[pink gray blue], [] ])
+
+    click_button "Close"
+    visit releases_path
+    expect(page).to have_css(".listening-bar")
+    expect(page).to have_no_css(".listening-bar[data-identity-first]")
   ensure
     browser&.execute_cdp("Emulation.clearDeviceMetricsOverride")
     browser&.execute_cdp("Emulation.setEmulatedMedia", features: [])
@@ -419,8 +493,8 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     visit artist_path(artist)
     find(".intro .identity-badge").click
     within("#guide-assignment") do
-      select "Jazz", from: "First color"
-      select "Soul, R&B, and funk", from: "Second color"
+      find("label:has(#identity-color-light-green)").click
+      find("label:has(#identity-color-blue)").click
       fill_in "Musical rationale (required for three colors)", with: "Harmonic vocabulary and funk groove"
       capture_resolution("identity-correction")
       click_button "Save colors"
@@ -429,7 +503,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     click_button "Close"
     expect(page).to have_css('.identity-chart[data-identity-first="light-green"][data-identity-second="blue"]')
     expect(page).to have_css('#artist-recordings .identity-badge[data-identity-first="pink"]')
-    expect(page).to have_no_css('#artist-recordings .listening-bar[data-identity-first]')
+    expect(page).to have_css('#artist-recordings .listening-bar[data-identity-first="light-green"]')
     verify_appearances("artist-colors")
 
     visit resolution_surface_path(observation, play: observation.id, section: "evidence")
@@ -804,17 +878,12 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
             paint = page.evaluate_script(<<~JS)
               (() => {
                 const fill = document.querySelector(".identity-chart .artist-timeline-fill")
-                const bar = document.querySelector("#artist-recordings .listening-bar span")
-                const ink = document.createElement("span")
-                ink.style.color = "var(--ink)"
-                bar.append(ink)
-                const result = [getComputedStyle(fill).backgroundImage, getComputedStyle(bar).backgroundColor === getComputedStyle(ink).color]
-                ink.remove()
-                return result
+                const bar = document.querySelector("#artist-recordings .listening-bar")
+                return [getComputedStyle(fill).backgroundImage, getComputedStyle(bar).backgroundImage]
               })()
             JS
             expect(paint.first).to include("linear-gradient", "rgb(162, 217, 206) 50%", "rgb(46, 134, 193) 50%")
-            expect(paint.last).to be(true)
+            expect(paint.last).to eq(paint.first)
             find(".intro .identity-badge").click
             expect(page).to have_css("dialog[open] #guide-assignment")
             page.evaluate_async_script(<<~JS)
