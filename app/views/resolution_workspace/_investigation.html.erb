@@ -1,0 +1,115 @@
+<div class="review-grid">
+<section class="review-candidates" aria-label="Candidate evidence">
+  <% provider_incomplete = @assessment&.evidence&.fetch("partial", false) %>
+  <% request_failed = @assessment_request&.state == "failed" %>
+  <% throttled = request_failed && @assessment_request.failure == "musicbrainz throttled (503)" %>
+  <% empty_failure = request_failed && @candidates.empty? %>
+  <% can_retry = @may_manage_observation && CatalogImport.worker_enabled? && !@assessment_request&.active? %>
+  <% if @candidates.any? %>
+    <p>Scores rank relative evidence strength for this shortlist.</p>
+    <% visible = @candidates.first(3) | [selected] %>
+    <% ranks = @ranking.index_by { |rank| rank["recording_mbid"] } %>
+    <% visible.each do |candidate| %>
+      <% rank = ranks.fetch(candidate.fetch("id")) %>
+      <%= render "candidate", candidate:, rank:, expanded: candidate == selected,
+        recommended: rank == @ranking.first && rank["version"] == RecordingResolution::Ranking::SOURCE_HINTS_VERSION && RecordingResolution::Ranking.recommended?(@ranking) %>
+    <% end %>
+    <% if (remaining = @candidates - visible).any? %>
+      <details><summary>Additional candidates</summary>
+        <% remaining.each do |candidate| %>
+          <%= render "candidate", candidate:, rank: ranks.fetch(candidate.fetch("id")), expanded: false, recommended: false %>
+        <% end %>
+      </details>
+    <% end %>
+  <% elsif @assessment && !@assessment_request&.active? && !request_failed && !provider_incomplete && @assessment_request&.state != "incomplete" %>
+    <p>No credible candidates in the retained evidence.</p>
+  <% end %>
+  <% if @assessment %>
+    <details><summary>Assessment evidence and provenance</summary><%= render "evidence", assessment: @assessment %></details>
+  <% end %>
+  <% if can_retry %>
+    <% if request_failed && !throttled && @assessment_request.failure == "Investigation expired before completion." %>
+      <%= button_to "Retry search", investigate_resolution_surface_path(@observation) %>
+    <% end %>
+    <details>
+      <summary><%= request_failed ? "Look up a recording identifier" : "Retry or look up a recording identifier" %></summary>
+      <% unless request_failed %>
+        <%= button_to "Refresh candidate evidence", investigate_resolution_surface_path(@observation) %>
+      <% end %>
+      <%= form_with url: investigate_resolution_surface_path(@observation) do |form| %>
+        <%= form.label :manual_mbid, "MusicBrainz recording identifier" %>
+        <%= form.text_field :manual_mbid, maxlength: 36, required: true %>
+        <%= form.submit "Look up recording", class: "catalog-submit" %>
+      <% end %>
+    </details>
+  <% end %>
+  <details>
+    <summary>Recent assessments</summary>
+    <% if @assessment_history.any? %>
+      <ul class="catalog-list">
+        <% @assessment_history.each do |assessment| %>
+          <li><%= link_to "Assessment #{assessment.id}", resolution_surface_path(@observation, assessment: assessment.id, section: "evidence") %> · <%= browser_time(assessment.created_at) %></li>
+        <% end %>
+      </ul>
+      <% if @next_assessment %><p><%= link_to "Earlier assessments", resolution_surface_path(@observation, assessment_before: @next_assessment, section: "evidence") %></p><% end %>
+    <% else %><p>No assessments on this page.</p><% end %>
+  </details>
+</section>
+
+<aside class="review-sidebar" aria-label="Resolution and investigation summary">
+<% if empty_failure %><details class="review-failure-summary"><summary>Resolution details</summary><% end %>
+<section class="review-sidebar-card" aria-labelledby="recording-status">
+  <h2 id="recording-status">Resolution</h2>
+  <% if @current_recording && Clients::Musicbrainz::MBID.match?(@current_recording.mbid.to_s) %>
+    <p><strong>Resolved</strong> · <%= catalog_link(@current_recording) %></p>
+    <p class="muted"><%= @current_decision&.user_id ? "Inherited from your exact-surface assignment" : "Derived from a recorded assessment" %>
+      <% if @current_decision %> · <%= @current_decision.reason %><% end %></p>
+  <% elsif @current_recording %>
+    <p><strong>Partially resolved</strong> · A local recording is assigned. Its provider identity is unverified.</p>
+  <% else %>
+    <p><strong><%= review_state %></strong>
+      <% if @current_decision&.mode == "unresolved" %> · Explicitly left unresolved<% end %></p>
+    <% if @candidates.many? %>
+      <p><%= pluralize(@candidates.size, "plausible recording") %> found. The available source evidence does not establish which recording was played.</p>
+    <% end %>
+    <% if @assessment&.evidence&.fetch("reasons", [])&.include?("unverified_recording") && @assessment.evidence.dig("source_claims", "track_mbid").present? %>
+      <p>The Last.fm recording identifier could not be verified.</p>
+    <% end %>
+  <% end %>
+  <% if @batch_releases.present? %>
+    <h3>Review other tracks</h3>
+    <ul><% @batch_releases.each do |release| %>
+      <li><%= link_to release.title, release_batch_resolution_surface_path(@observation, release_id: release.id), data: { turbo_prefetch: false } %></li>
+    <% end %></ul>
+  <% end %>
+  <dl>
+    <div><dt>Matching observations</dt><dd><%= @observations_count %></dd></div>
+    <div><dt>Inheriting group resolution</dt><dd><%= @inheriting_count %></dd></div>
+    <div><dt>Individual overrides</dt><dd><%= @override_count %></dd></div>
+    <div><dt>Still unresolved</dt><dd><%= @unresolved_count %></dd></div>
+  </dl>
+</section>
+  <section class="review-sidebar-card">
+    <h2>Summary</h2>
+    <dl>
+      <div><dt>Candidates</dt><dd><%= @assessment || @candidates.any? ? @candidates.size : "—" %></dd></div>
+      <% if @ranking.any? %><div><dt>Best score</dt><dd><%= @ranking.first["score"] %></dd></div><% end %>
+      <% if @assessment_request && (!@assessment_request.active? || @assessment_request.request_count.positive?) %><div><dt>Provider calls</dt><dd><%= @assessment_request.request_count %></dd></div><% end %>
+    </dl>
+  </section>
+<% if empty_failure %></details><% end %>
+</aside>
+
+</div>
+<section class="review-secondary">
+  <h2>Observation details</h2>
+  <%= render "decision_controls" if @may_manage_observation %>
+  <details>
+    <summary>Original Last.fm claims</summary>
+    <% claims = (@selected_scrobble || @observation).payload.slice(*RecordingResolution::PilotRunner::CLAIM_FIELDS) %>
+    <% if claims.values.any?(&:present?) %>
+      <ul class="catalog-list"><% claims.each do |field, value| %><% if value.present? %><li><%= field.humanize %> <code><%= value %></code></li><% end %><% end %></ul>
+    <% else %><p>No MusicBrainz IDs were supplied.</p><% end %>
+  </details>
+</section>
+

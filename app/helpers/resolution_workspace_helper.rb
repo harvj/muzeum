@@ -1,0 +1,37 @@
+module ResolutionWorkspaceHelper
+  def resolution_release_contexts(assessment, candidates)
+    candidates.index_with do |candidate|
+      CanonicalCatalog::ReviewedConstruction.for(assessment, candidate.fetch("id"))
+    end
+  end
+
+  def resolution_selected_candidate(candidates, ranking, contexts, requested, current)
+    selected = candidates.find { |candidate| candidate["id"] == requested }
+    selected ||= candidates.find { |candidate| candidate["id"] == current }
+    return selected if selected
+
+    scores = ranking.to_h { |entry| [ entry["recording_mbid"], entry["score"] ] }
+    candidates.find { |candidate| scores[candidate["id"]] == ranking.first["score"] && contexts.fetch(candidate).any? } || candidates.first
+  end
+
+  def resolution_edition_options(proposals)
+    bases = proposals.map { |item| item.construction.base }
+    sequences = bases.map { |base| CanonicalCatalog::Construction.sequence(base) }
+    difference = (0...sequences.map(&:size).max).find { |index| sequences.map { |sequence| sequence[index] }.uniq.many? }
+    bases.map do |base|
+      data = base.data
+      slot = base.slots[difference] if difference
+      label = [ data["title"], data["country"], pluralize(base.slots.size, "track") ].compact
+      label << "Track #{slot[:position]}: #{slot[:title]}" if slot
+      [ label.join(" · "), data.fetch("id") ]
+    end
+  end
+
+  def resolution_release_date(date)
+    date.match?(/\A\d{4}-\d{2}-\d{2}\z/) ? Date.iso8601(date).strftime("%B %-d, %Y") : date
+  end
+
+  def resolution_candidate_credit(candidate)
+    Array(candidate["artist-credit"]).map { |credit| "#{credit['name']}#{credit['joinphrase']}" }.join.presence || "Artist credit unavailable"
+  end
+end

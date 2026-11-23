@@ -28,7 +28,7 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
 
     get resolution_surface_path(observation)
     doc = Nokogiri::HTML(response.body)
-    expect(doc.css('button[name="construct_release"]').map { |button| button["value"] }).to contain_exactly(original["id"], other["id"])
+    expect(doc.css('select[name="construct_release"] option').filter_map { |option| option["value"].presence }).to contain_exactly(original["id"], other["id"])
     params = { scope: "surface", recording_mbid: NarrowStairsFixture::RECORDING, assessment_id: assessment.id }
     post decide_resolution_surface_path(observation), params: params.merge(construct_release: NarrowStairsFixture::GROUP)
     expect(RecordingResolution::Decision.count).to eq(0)
@@ -50,6 +50,33 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     expect(RecordingResolution::ReleaseTracklist.new(release.reload).evidence["edition_mbid"]).to eq(other["id"])
   end
 
+  it "shows a prior single separately from the album and confirms one original collection" do
+    finish_oidc
+    user = User.find_by!(oidc_subject: @subject)
+    LastfmAccount.associate!(user, "earlier-single-context")
+    observation, assessment = narrow_stairs_assessment(user, publication: true)
+    original = narrow_stairs_editions.find { |edition| edition["id"] == NarrowStairsFixture::ORIGINAL }
+    track = original.dig("media", 0, "tracks", 2).merge("position" => 1, "number" => "1")
+    group = SecureRandom.uuid
+    single = original.merge("id" => SecureRandom.uuid, "title" => "No Sunlight", "date" => "2008-04-15",
+      "release-group" => { "id" => group, "primary-type" => "Single", "title" => "No Sunlight", "first-release-date" => "2008-04-15" },
+      "media" => [ { "position" => 1, "track-count" => 1, "tracks" => [ track ] } ])
+    evidence = assessment.evidence.deep_dup
+    publication = evidence.dig("recording_publications", NarrowStairsFixture::RECORDING)
+    publication["earliest_publication"] = single.slice("id", "title", "date")
+    publication["original_groups"] << group
+    evidence["construction_editions"] << single
+    RecordingResolution::Assessment.create!(group_id: assessment.group_id, version: assessment.version, actor: assessment.actor,
+      digest: SecureRandom.hex(32), evidence:)
+
+    get resolution_surface_path(observation)
+    doc = Nokogiri::HTML(response.body)
+    expect(doc.at_css(".resolution-context").text).to include("May 13, 2008 · Album · 11 tracks",
+      "April 15, 2008 · Single · 1 track", "Earliest verified recording publication · April 15, 2008")
+    expect(doc.css(".resolution-primary").size).to eq(1)
+    expect(doc.at_css('input[name="construct_release"]')["value"]).to eq(NarrowStairsFixture::ORIGINAL)
+  end
+
   [ "2008-05-13", "2015-02-24" ].each do |stored_date|
     it "corrects a previously admitted Narrow Stairs source with stored date #{stored_date} only after confirmation" do
       finish_oidc
@@ -67,7 +94,7 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
       frozen_evidence = previous.evidence
 
       get resolution_surface_path(play)
-      expect(response.body).to include("Proposed original release", "Correct release &amp; resolve 1 observation")
+      expect(response.body).to include("Original release verified", "update Narrow Stairs", "Resolve this observation")
       expect(release.reload.ingested_from_release_mbid).to eq(NarrowStairsFixture::LATER)
       expect(RecordingResolution::Decision.count).to eq(0)
 
@@ -113,7 +140,7 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
       CanonicalCatalog::Processor.new(request, session_factory: ->(*) { session }).call
       expect(request.reload.state).to eq("imported")
       get resolution_surface_path(play)
-      expect(response.body).to include("Proposed original release", NarrowStairsFixture::ORIGINAL, "11 tracks")
+      expect(response.body).to include("Original release verified", NarrowStairsFixture::ORIGINAL, "11 tracks")
       expect(RecordingResolution::Assessment.where(group_id: historical.group_id).count).to eq(2)
       expect(historical.reload.evidence).to eq(saved_evidence)
       expect(play.reload.attributes).to eq(saved_payload)
@@ -207,7 +234,7 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     assessment = RecordingResolution::Assessment.create!(group_id: group.id, version: "release-context", actor: "fixture",
       digest: SecureRandom.hex(32), evidence: { "candidates" => [ recording_data ], "review_tracklists" =>
         editions.transform_values { |edition| RecordingResolution::ReviewRelease.project(edition) } })
-    get resolution_surface_path(plays.first)
+    get resolution_surface_path(plays.first, section: "evidence")
     expect(response.body).to include("Resolve 8 observations", "Release tracklist", "candidate recording")
     expect(response.body).not_to include("Verify selected release")
 
@@ -312,7 +339,7 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     assessment = RecordingResolution::Assessment.create!(group_id: group.id, version: "fixture", actor: "fixture",
       digest: SecureRandom.hex(32), evidence:)
 
-    get resolution_surface_path(observation, play: observation.id, assessment: assessment.id)
+    get resolution_surface_path(observation, play: observation.id, assessment: assessment.id, section: "evidence")
     expect(response).to have_http_status(:ok)
     doc = Nokogiri::HTML(response.body)
     expect(doc.at_css(".review-heading h1").text).to eq(source.fetch("track"))
@@ -325,7 +352,7 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     expect(doc.text).to include("historical scoring", "3 plausible recordings found", "Resolve observation #{observation.id} only", "2:03")
 
     get resolution_surface_path(observation, assessment: assessment.id)
-    expect(response.body).to include("Resolve 5 observations", "Future exact matches")
+    expect(response.body).to include("Resolve recording only", "Future exact matches")
     expect(RecordingResolution::Decision.count).to eq(0)
   end
 
@@ -380,7 +407,8 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     get resolution_surfaces_path(filter: "suggested")
     expect(response.body).to include("Signals", "Night Lines", "Night Drive")
     get resolution_surface_path(example)
-    expect(response.body).to include("Resolve 2 observations", "A checked MusicBrainz edition contains this track slot")
+    expect(response.body).to include("Resolve recording only")
+    expect(response.body).not_to include("A checked MusicBrainz edition contains this track slot")
     expect(response.body).not_to include("Release edition to verify")
     get resolution_surface_path(example, before: second.id)
     expect(response.body).to include("2 matching observations")
@@ -405,7 +433,7 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     get resolution_surfaces_path(filter: "exceptions")
     expect(response.body).to include("Signals")
     expect(RecordingResolution::Ledger.effective(user).find(second.id).effective_recording_id).to be_nil
-    get resolution_surface_path(example, play: second.id)
+    get resolution_surface_path(example, play: second.id, section: "evidence")
     expect(response.body).to include("Resolve only this observation", "Return this observation to inheritance")
     post decide_resolution_surface_path(example), params: { scope: "scrobble", play_id: second.id, mode: "inherit", head: head.id }
     expect(RecordingResolution::Decision.last.evidence.fetch("reason_code")).to eq("restore_inheritance")
@@ -440,7 +468,7 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     request = CatalogImport.where(kind: RecordingResolution::Investigation::KIND).sole
     CanonicalCatalog::Processor.new(request, session_factory: ->(*) { CatalogFixtures::Session.new }).call
     expect(request.reload.state).to eq("imported")
-    get resolution_surface_path(second)
+    get resolution_surface_path(second, section: "evidence")
     expect(response.body).to include("Muzeum’s recommendation", "A checked MusicBrainz edition contains this track slot", "2 matching observations")
 
     assessment = RecordingResolution::Ledger.assessments(user).sole
@@ -451,8 +479,8 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     expect(decision).to have_attributes(reason: "Confirmed candidate", assessment_id: assessment.id, actor: "listener", user_id: user.id)
     expect(decision.evidence).to include("reason_code" => "confirmed_candidate", "comment" => "Checked the studio version",
       "scoring_version" => RecordingResolution::Ranking::SOURCE_HINTS_VERSION, "affected_scope" => "surface")
-    get resolution_surface_path(second)
-    expect(response.body).to include("Inherited from your exact-surface assignment", "Checked the studio version")
+    get resolution_surface_path(second, section: "history")
+    expect(response.body).to include("Confirmed candidate", "Checked the studio version")
     expect(decision.evidence.fetch("candidate_scores").first.fetch("recording_mbid")).to eq(CatalogFixtures::IDS[:studio])
     snapshot = decision.evidence.fetch("review_snapshot")
     expect(snapshot).to include("feedback" => "selected", "candidate_mbid" => CatalogFixtures::IDS[:studio],
@@ -480,7 +508,7 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     request = CatalogImport.where(kind: RecordingResolution::Investigation::KIND).sole
     CanonicalCatalog::Processor.new(request, session_factory: ->(*) { CatalogFixtures::Session.new }).call
     get resolution_surface_path(observation)
-    expect(response.body).to include("No credible candidates", "Investigation completed")
+    expect(response.body).to include("No recording choices are available")
     expect(response.body).not_to include("Provider evidence unavailable")
     post investigate_resolution_surface_path(observation)
     refreshed = CatalogImport.latest(RecordingResolution::Investigation::KIND, request.entity_id)
@@ -505,7 +533,7 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     recording = Recording.create!(title: "Legacy recording", mbid: "legacy-reference")
     RecordingResolution::Ledger.record!(listener: user, scrobble: observation, scope: :surface, mode: "resolved",
       reason: "Historical free text", recording:)
-    get resolution_surface_path(observation)
+    get resolution_surface_path(observation, section: "history")
     expect(response.body).to include("Partially resolved", "Historical free text")
     expect(CatalogImport.count).to eq(0)
     get archive_path

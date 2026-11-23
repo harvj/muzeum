@@ -1,0 +1,34 @@
+  <% provider_incomplete = @assessment&.evidence&.fetch("partial", false) %>
+  <% request_failed = @assessment_request&.state == "failed" %>
+  <% throttled = request_failed && @assessment_request.failure == "musicbrainz throttled (503)" %>
+  <% can_retry = @may_manage_observation && CatalogImport.worker_enabled? && !@assessment_request&.active? %>
+  <% if @assessment_request&.active? %>
+    <p role="status"><% if @assessment_request.state == "refreshing" %>Investigation in progress.
+      <% elsif @assessment_request.attempts.positive? %>Investigation pending · Waiting to retry the provider.
+      <% else %>Investigation pending · Queued for background review.
+      <% end %>
+      <%= link_to "Refresh status", resolution_surface_path(@observation), data: { turbo: false } %></p>
+  <% elsif @assessment_request&.failure == "Investigation expired before completion." %>
+    <p role="status">Investigation expired. You can request another check.</p>
+  <% elsif request_failed || provider_incomplete %>
+    <div class="review-failure">
+      <div role="status">
+        <h2><%= throttled ? "MusicBrainz search unavailable" : "Provider evidence unavailable or incomplete" %></h2>
+        <p><% if throttled %>
+          <%= pluralize(@assessment_request.attempts, "recording-search attempt") %> failed (HTTP 503).
+        <% end %>
+        <% if @candidates.any? %>Retained candidates are shown below.<% else %>No verified candidates are available yet.<% end %></p>
+        <% if request_failed && can_retry %><p>Retrying the search preserves the original observation and its evidence.</p><% end %>
+      </div>
+      <% if request_failed && can_retry %>
+        <%= button_to "Retry search", investigate_resolution_surface_path(@observation) %>
+      <% end %>
+    </div>
+  <% elsif @assessment_request&.state == "incomplete" %>
+    <p role="status">Investigation incomplete. <%= @assessment_request.failure %></p>
+  <% elsif @assessment %>
+    <% unless compact %><p>Investigation completed <%= browser_time(@assessment.created_at) %>.</p><% end %>
+  <% else %>
+    <p>This observation has not been investigated.<%= " Background investigation is paused." unless RecordingResolution::Investigation.enabled? %></p>
+  <% end %>
+  <% if @assessment && !@assessment_matches_claims %><p>This historical assessment used different source ID claims.</p><% end %>

@@ -124,7 +124,7 @@ RSpec.describe "Release tracklist review", type: :request do
     expect(assessment.evidence.fetch("ranking").first.fetch("inputs")).not_to have_key("local_release_history")
     expect(assessment.evidence.dig("edition", "complete_tracklist")).to be(true)
 
-    get resolution_surface_path(target, play: target.id)
+    get resolution_surface_path(target, play: target.id, section: "evidence")
     doc = Nokogiri::HTML(response.body)
     expect(doc.text).to include("another recording independently confirmed in your archive")
     token = doc.at_css('[name="listener_ranking_token"]')["value"]

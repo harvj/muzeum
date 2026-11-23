@@ -20,22 +20,33 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
 
   it "shows the approved overview and constructs Narrow Stairs from the original US CD" do
     user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "narrow-stairs-browser", lastfm_username: "narrow-stairs-browser")
-    observation, = narrow_stairs_assessment(user, album_name: "Time Warner 2", publication: true)
+    observation, assessment = narrow_stairs_assessment(user, album_name: "Narrow Stairs", publication: true)
+    5.times do |index|
+      Scrobble.create!(user:, lastfm_account: user.source_account, played_at: observation.played_at - (index + 1).hours,
+        payload: observation.payload)
+    end
+    album_recording = assessment.evidence.fetch("candidates").sole
+    compilation_recording = album_recording.except("releases").merge("id" => "5dffd281-d913-4256-8816-7035d077183f",
+      "releases" => [ { "id" => "1cefec58-1706-4d52-bd93-bebaaa682e2d", "title" => "Time Warner 2", "date" => "2009" } ])
+    RecordingResolution::Assessment.create!(group_id: assessment.group_id, version: assessment.version, actor: assessment.actor,
+      digest: SecureRandom.hex(32), evidence: assessment.evidence.merge("candidates" => [ compilation_recording, album_recording ]))
     sign_in(user)
     visit resolution_surface_path(observation)
 
     within(".review-overview") do
       expect(page).to have_css("h1", text: "No Sunlight")
-      expect(page).to have_text("Time Warner 2")
+      expect(page).to have_text("Narrow Stairs")
       expect(page).to have_css(".review-catalog-context", text: "Canonical in Muzeum")
     end
-    within(".review-candidate-summary") { expect(page).to have_no_text("2015") }
-    expect(page).to have_css(".compact-meta", text: /Proposed original release.*2008-05-13.*US.*CD.*11 tracks/m)
-    find("summary", text: "Review release construction").click
-    expect(page).to have_css(".review-original-tracklist[open] .review-tracks li", count: 11)
-    expect(page).to have_css(".review-original-tracklist[open] .review-track-match", text: "No Sunlight")
-    expect(page).to have_css("details:not([open]) > summary", text: "Checked appearance · Narrow Stairs")
-
+    expect(page).to have_text("6 matching observations")
+    expect(page).to have_css(".resolution-context", text: /Narrow Stairs.*May 13, 2008.*Album.*11 tracks/m)
+    expect(page).to have_css(".resolution-choice", count: 2)
+    expect(page).to have_css(".resolution-choice[aria-current]", count: 1)
+    expect(page).to have_css(".resolution-primary", count: 1, text: "Resolve all 6")
+    expect(page.evaluate_script("getComputedStyle(document.querySelector('.resolution-primary')).backgroundColor")).to eq("rgb(41, 107, 52)")
+    expect(page).to have_no_text("Provider calls")
+    expect(page).to have_no_text("2015")
+    expect(page).to have_no_css(".review-tracks li")
 
     [ [ 1440, 960 ], [ 390, 844 ] ].each do |width, height|
       page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width:, height:, deviceScaleFactor: 1, mobile: width == 390)
@@ -53,11 +64,22 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
       end
     end
 
-    click_button "Construct release & resolve 1 observation"
+    find("summary", text: "View original tracklist").send_keys(:enter)
+    expect(page).to have_css(".review-original-tracklist[open] .review-tracks li", count: 11)
+    expect(page).to have_css(".review-original-tracklist[open] .review-track-match", text: "No Sunlight")
+    click_link "Review evidence"
+    expect(page).to have_css(".review-score")
+    expect(page).to have_css("details:not([open]) > summary", text: "Checked appearance · Narrow Stairs", visible: :all)
+    click_link "Candidates"
+    find_button("Resolve all 6").send_keys(:enter)
     expect(page).to have_text("Recording decision saved.")
     release = Release.find_by!(release_group_mbid: NarrowStairsFixture::GROUP)
     expect(release.ingested_from_release_mbid).to eq(NarrowStairsFixture::ORIGINAL)
     expect(release.catalog_track_slots.base_sequence.count).to eq(11)
+    plays = RecordingResolution::Ledger.effective(user).where(lastfm_account_id: user.source_account.id).to_a
+    expect(plays.size).to eq(6)
+    expect(plays.map(&:effective_recording_id).uniq).to eq([ Recording.find_by!(mbid: NarrowStairsFixture::RECORDING).id ])
+    expect(plays.map(&:payload).uniq).to eq([ observation.payload ])
   end
 
   it "constructs Guilt Show and keeps the later appearance outside the original sequence" do
@@ -65,11 +87,13 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     plays, = guilt_show_assessment(user)
     sign_in(user)
     visit resolution_surface_path(plays.first)
-    expect(page).to have_button("Construct release & resolve 3 observations")
+    expect(page).to have_button("Resolve all 3")
+    click_link "Review evidence"
     find("summary", text: "Review release construction").click
     expect(page).to have_text("Like a Man Possessed · 2004-08-21")
     verify_appearances("resolution-guilt-show")
-    click_button "Construct release & resolve 3 observations"
+    click_link "Candidates"
+    click_button "Resolve all 3"
     expect(page).to have_text("Recording decision saved.")
     within(".review-catalog-context") { click_link "Guilt Show" }
     expect(page).to have_text("Additional edition appearances")
@@ -86,12 +110,8 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     expect(page).to have_text("No canonical releases yet")
     click_link "Resolution"
     click_link "Signals"
-    expect(page).to have_text("A checked MusicBrainz edition contains this track slot")
-    within(".candidate", text: "Signals") do
-      find_button("Resolve 1 observation").send_keys(:enter)
-    end
+    find_button("Resolve recording only").send_keys(:enter)
     expect(page).to have_text("Recording decision saved.")
-    expect(page).to have_text("Confirmed candidate")
 
     request = CatalogImport.find_by!(kind: "recording")
     expect(request.state).to eq("pending")
@@ -103,9 +123,8 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     expect(request.reload.state).to eq("imported")
     expect(page).to have_css(".review-catalog-context dl > div:last-child .review-catalog-mark.present")
     expect(page).to have_link("Night Drive", href: release_path(Release.find_by!(title: "Night Drive")))
-    expect(page).to have_css(".review-candidate[open]")
     release = Release.find_by!(title: "Night Drive")
-    within(".candidate", text: "Signals") { click_button "Resolve 1 observation" }
+    click_button "Resolve recording only"
     expect(page).to have_text("Recording decision saved.")
     second_import = CatalogImport.latest("recording", request.entity_id)
     expect(second_import.id).not_to eq(request.id)
@@ -172,7 +191,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     expect(page).to have_no_css('#artist-recordings .listening-bar[data-identity-first]')
     verify_appearances("artist-colors")
 
-    visit resolution_surface_path(observation, play: observation.id)
+    visit resolution_surface_path(observation, play: observation.id, section: "evidence")
     expect(page).to have_button("Resolve 1 observation")
     expect(page).to have_text("Resolve only this observation")
     expect(page).to have_text("Inherited from your exact-surface assignment")
@@ -185,7 +204,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     catalog_assessment(observation)
     sign_in(user)
     visit resolution_surface_path(observation)
-    click_button "Resolve 1 observation"
+    click_button "Resolve recording only"
     expect(page).to have_text("Recording decision saved.")
     expect(page).to have_css("turbo-cable-stream-source[connected]", visible: :all)
     expect(page).to have_css(".review-catalog-context", text: "Checking supported release memberships")
@@ -217,6 +236,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     request = CatalogImport.where(kind: RecordingResolution::Investigation::KIND).sole
     CanonicalCatalog::Processor.new(request, session_factory: ->(*) { CatalogFixtures::Session.new }).call
     click_link "Refresh status"
+    click_link "Review evidence"
     expect(page).to have_css(".review-candidate.recommended")
     expect(page).to have_text("2 matching observations")
     find(".review-candidate[open] .review-checked-appearance summary").click
@@ -246,20 +266,17 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     ])
     visit resolution_surface_path(observation, assessment: ambiguous.id)
     expect(page).to have_text("Ambiguous")
-    expect(page).to have_no_css(".review-candidate.recommended")
-    expect(page).to have_css(".review-candidate[open]", count: 1)
-    all(".review-candidate-summary").last.send_keys(:enter)
-    expect(page).to have_css(".review-candidate:nth-of-type(2)[open]")
-    expect(page).to have_css(".review-candidate[open]", count: 1)
-    expect(page).to have_text("The edition played is unverified.")
+    expect(page).to have_css(".resolution-choice", count: 2)
+    all(".resolution-choice").last.send_keys(:enter)
+    expect(page).to have_css(".resolution-choice[aria-current]", count: 1)
+    expect(page).to have_current_path(/candidate=#{alternate["id"]}/)
+    expect(page).to have_no_css(".review-score")
     expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
     capture_resolution("ambiguous-mobile")
 
     visit resolution_surface_path(observation, assessment: assessment.id)
-    within(".candidate", text: "Signals") do
-      find_button("Resolve 2 observations").send_keys(:enter)
-    end
-    expect(page).to have_text("Inherited from your exact-surface assignment")
+    find_button("Resolve recording only").send_keys(:enter)
+    expect(page).to have_css(".review-state", text: "Resolved")
     expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
     capture_resolution("resolved-mobile")
   ensure
@@ -324,9 +341,9 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     sign_in(user)
     plays.each do |play|
       visit resolution_surface_path(play)
-      expect(page).to have_button("Resolve 3 observations")
+      expect(page).to have_button("Resolve recording only")
       expect(page).to have_text("Future exact matches inherit this decision")
-      expect(page).to have_css(".review-tracks li", count: 14)
+      expect(page).to have_no_css(".review-tracks li")
     end
     browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 1440, height: 960, deviceScaleFactor: 1, mobile: false)
     capture_resolution("light-beams-desktop")
@@ -338,11 +355,11 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     RecordingResolution::Ledger.record!(listener: user, scrobble: plays.second, scope: :scrobble, mode: "resolved",
       reason: "Existing exception", recording: alternate)
     visit resolution_surface_path(plays.second)
-    expect(page).to have_css(".review-sidebar-card", text: /Individual overrides\s+1/)
-    expect(page).to have_button("Resolve 2 observations")
-    click_button "Resolve 2 observations"
+    expect(page).to have_text("1 individual override preserved")
+    click_button "Resolve recording only"
     expect(page).to have_text("Recording decision saved.")
     expect(page).to have_css(".review-state", exact_text: "Resolved")
+    click_link "Review evidence"
     expect(page).to have_css(".review-sidebar-card", text: /Inheriting group resolution\s+2/)
     expect(page).to have_css(".review-sidebar-card", text: /Still unresolved\s+0/)
 
@@ -387,8 +404,8 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
         expect(page).to have_link(release.title, href: release_path(release))
         expect(page).to have_text("The original Last.fm release text is preserved. The edition played stays unverified.")
       end
-      expect(page).to have_css(".review-track-match", text: "bad days")
-      expect(page).to have_button("Resolve 1 observation")
+      expect(page).to have_no_css(".review-track-match")
+      expect(page).to have_button("Resolve this observation")
       expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
       capture_resolution(mobile ? "bad-days-mobile" : "bad-days-desktop")
     end

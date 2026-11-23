@@ -1,0 +1,22 @@
+<% if selected %>
+  <h2>Choose a recording</h2>
+  <% visible = (@candidates.first(3) | [selected]) %>
+  <ul class="resolution-choices">
+    <% visible.each do |candidate| %>
+      <%= render "recording_choice", candidate:, contexts: contexts.fetch(candidate), selected:, navigation: %>
+    <% end %>
+  </ul>
+  <% if (remaining = @candidates - visible).any? %>
+    <details><summary>More recording choices</summary>
+      <ul class="resolution-choices">
+        <% remaining.each do |candidate| %>
+          <%= render "recording_choice", candidate:, contexts: contexts.fetch(candidate), selected:, navigation: %>
+        <% end %>
+      </ul>
+    </details>
+  <% end %>
+  <%= render "recording_confirmation", selected:, contexts: contexts.fetch(selected), navigation:, catalog_rows: %>
+<% elsif @assessment && !@assessment_request&.active? %>
+  <p>No recording choices are available.</p>
+  <%= link_to "Review evidence", resolution_surface_path(@observation, **navigation.merge(section: "evidence")) %>
+<% end %>

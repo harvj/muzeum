@@ -59,6 +59,7 @@ The authoritative, living domain rules are [principles](domain/principles.md), [
      - **P1 follow-up — Original release prioritization.** Separate recording appearance evidence from original-album selection. Verify the Narrow Stairs launch sequence and retain distinct later appearances.
      - **v0.6.2 — Recording-first publication history.** Separate recording identity, earliest verified publication, original collections and other appearances. Verify Narrow Stairs independently of the reported album and admit only selected edition additions.
      - **v0.6.3 — MusicBrainz request cache repair.** Normalize query keys before hashing and sending release-group requests. Verify the transport, cache and retry behavior against the retained Narrow Stairs evidence.
+     - **v0.6.4 — Recording Resolution.** Keep original strings and canonical matches visible while choosing a recording and confirming its original context. Move investigation details to Evidence.
 
 9. **P1.6 — Profile onboarding (tentative).**
    - **P1.6a — Last.fm authentication and verified username.** Use Last.fm web authorization and bind only the returned username.

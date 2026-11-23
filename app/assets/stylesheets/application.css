@@ -631,3 +631,23 @@ main .plays-tools button[aria-pressed="true"] { background-color: var(--surface-
 @media (min-width: 701px) {
   .review-overview:has(> .review-catalog-context) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+.resolution-decision { max-width: 56rem; padding-block: .85rem; }
+.resolution-decision h2 { margin-block: 0 .4rem; font-size: 1.25rem; }
+.resolution-choices { list-style: none; margin: 0; padding: 0; }
+.resolution-choice { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: .65rem; align-items: center; min-height: 44px; padding: .4rem .65rem; border-radius: .35rem; text-decoration: none; overflow-wrap: anywhere; }
+.resolution-choice > span:first-child > span { display: block; font-size: .875rem; }
+.resolution-choice[aria-current], .resolution-choice:hover { background: var(--surface-accent); }
+.resolution-selected { font-size: .8rem; font-weight: 700; }
+.resolution-context { border-block-start: 1px solid var(--line); margin-block: .85rem .65rem; padding-block-start: .65rem; }
+.resolution-context > div + div { margin-block-start: .65rem; }
+.resolution-context p, .resolution-confirmation p { margin: .2rem 0; }
+.resolution-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .65rem 1rem; margin-block-start: .55rem; }
+.resolution-actions .resolution-primary { min-height: 44px; background: #296b34; color: white; font-weight: 700; border-color: #296b34; }
+.resolution-actions .resolution-primary:hover { background: #20572a; }
+.resolution-choice:focus-visible, .resolution-primary:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+@media (max-width: 700px) {
+  .resolution-choice { grid-template-columns: minmax(0, 1fr) auto; gap: .2rem .5rem; }
+  .resolution-choice > .muted { grid-row: 2; }
+  .resolution-selected { grid-column: 2; grid-row: 1; }
+}
