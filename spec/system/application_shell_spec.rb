@@ -9,6 +9,69 @@ RSpec.describe "Application Shell navigation", type: :system do
     end
   end
 
+  it "uses route-based, theme-aware navigation with distinct hover and keyboard focus" do
+    user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "navigation-states")
+    session = user.sessions.create!(expires_at: 1.day.from_now, last_seen_at: Time.current,
+      verified_at: Time.current, grant_token: "browser-nav-fixture")
+    visit root_path
+    jar = ActionDispatch::TestRequest.create.cookie_jar
+    jar.signed[:session_id] = session.id
+    browser = page.driver.browser
+    browser.manage.add_cookie(name: "session_id", value: jar[:session_id], path: "/", http_only: true)
+    record = Recording.create!(title: "Navigation fixture", mbid: SecureRandom.uuid)
+
+    [ [ 1440, 960 ], [ 390, 844 ] ].product(%w[light dark]).each do |(width, height), theme|
+      browser.execute_cdp("Emulation.setDeviceMetricsOverride", width:, height:, deviceScaleFactor: 1, mobile: width < 700)
+      browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "prefers-color-scheme", value: theme } ])
+      visit recording_path(record)
+      expect(page).to have_css('nav.library-nav span[aria-current="page"]', exact_text: "Recordings")
+      expect(page).to have_no_css('nav.library-nav a[aria-current]')
+      expect(page.evaluate_script(<<~JS)).to eq([ true, true, true, true ])
+        (() => {
+          const current = document.querySelector(".library-nav [aria-current]")
+          const nav = current.parentElement
+          const palette = document.documentElement
+          const ink = getComputedStyle(palette).getPropertyValue("--ink")
+          const card = getComputedStyle(palette).getPropertyValue("--card")
+          const probe = document.createElement("span")
+          probe.style.color = ink
+          probe.style.backgroundColor = card
+          document.body.append(probe)
+          const style = getComputedStyle(current)
+          const result = [style.backgroundColor === getComputedStyle(probe).color,
+            style.color === getComputedStyle(probe).backgroundColor, current.tabIndex === -1,
+            [...nav.children].every(item => getComputedStyle(item).textDecorationLine === "none")]
+          probe.remove()
+          return result
+        })()
+      JS
+      within(".library-nav") do
+        expect(page).to have_link("Archive")
+        expect(page).to have_no_link("Recordings")
+        find_link("Releases").hover
+      end
+      expect(page).to have_css(".library-nav a:hover", text: "Releases")
+      expect(page.evaluate_script("getComputedStyle(document.querySelector('.library-nav a:hover')).backgroundColor")).to include("/ 0.12")
+      if width > 700 && ENV["SHELL_NAV_PREVIEW_DIR"]
+        page.save_screenshot(File.join(ENV.fetch("SHELL_NAV_PREVIEW_DIR"), "desktop-#{theme}-hover.png"))
+      end
+      within(".library-nav") { find_link("Releases").send_keys(:tab) }
+      expect(page).to have_css(".library-nav a:focus-visible", text: "Artists")
+      expect(page.evaluate_script(<<~JS)).to eq([ "none", "solid" ])
+        (() => {
+          const style = getComputedStyle(document.querySelector(".library-nav a:focus-visible"))
+          return [style.textDecorationLine, style.outlineStyle]
+        })()
+      JS
+      if ENV["SHELL_NAV_PREVIEW_DIR"]
+        viewport = width > 700 ? "desktop" : "mobile"
+        page.save_screenshot(File.join(ENV.fetch("SHELL_NAV_PREVIEW_DIR"), "#{viewport}-#{theme}-focus.png"))
+      end
+      visit archive_path
+      expect(page).to have_css('nav.library-nav span[aria-current="page"]', exact_text: "Archive")
+    end
+  end
+
   it "retains local login, renders ordered links from verified evidence, and clears them on revocation" do
     visit root_path
     expect(page).to have_link("Log In", href: login_path)

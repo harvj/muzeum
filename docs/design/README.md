@@ -61,3 +61,5 @@ Keep the final Chrome review screenshots for visual UI changes under `docs/desig
 - [v0.6.7 entity headings and Recording Resolution](v0.6.7/)
 
 - [Catalog, Resolution, and Archive polish](catalog-resolution-archive/)
+
+- [Global header navigation states](header-navigation/)

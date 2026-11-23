@@ -41,7 +41,7 @@ RSpec.describe "Music table fidelity", type: :system do
     expect(page).to have_css(".plays-tooltip:popover-open", text: LONG_TITLE)
     capture("archive-desktop-hover")
     expect(page.evaluate_script("getComputedStyle(document.querySelector('.play-recording a:hover')).backgroundColor")).not_to eq("rgba(0, 0, 0, 0)")
-    find(".library-nav a", text: "Archive").hover
+    find(".library-nav [aria-current=page]", text: "Archive").hover
     find(".play-row .table-time a", match: :first).send_keys(:tab, :tab)
     expect(page).to have_css(".play-recording a:focus-visible", text: LONG_TITLE)
     expect(page).to have_css(".plays-tooltip:popover-open", text: LONG_TITLE)
@@ -52,7 +52,7 @@ RSpec.describe "Music table fidelity", type: :system do
       find_link(name, match: :first).hover
       expect(page).to have_css(".plays-tooltip:popover-open", text: name)
     end
-    find(".library-nav a", text: "Archive").hover
+    find(".library-nav [aria-current=page]", text: "Archive").hover
 
     capture("archive-desktop-dark", appearance: "dark")
     viewport(390, 844)

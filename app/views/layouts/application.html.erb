@@ -23,17 +23,16 @@
       <div class="header-navigation">
         <% if @public_profile %>
           <nav class="library-nav" aria-label="Public profile">
-            <%= link_to "Archive", public_profile_path(@public_profile), class: "entity-link" %>
+            <%= shell_navigation_item "Archive", public_profile_path(@public_profile), descendants: false %>
             <% %w[artists releases recordings].each do |section| %>
-              <%= link_to section.capitalize, catalog_index_path(section), class: "entity-link" %>
+              <%= shell_navigation_item section.capitalize, catalog_index_path(section) %>
             <% end %>
           </nav>
         <% elsif current_user %>
           <nav class="library-nav" aria-label="Music library">
             <% { "Recordings" => recordings_path, "Releases" => releases_path, "Artists" => artists_path,
                  "Archive" => archive_path, "Resolution" => resolution_surfaces_path }.each do |label, path| %>
-              <% active = request.path.start_with?(path) %>
-              <%= link_to label, path, class: "entity-link", aria: { current: active ? "page" : nil } %>
+              <%= shell_navigation_item label, path %>
             <% end %>
           </nav>
         <% end %>
