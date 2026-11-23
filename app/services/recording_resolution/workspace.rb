@@ -1,6 +1,7 @@
 module RecordingResolution
   class Workspace
     PAGE = 30
+    REVIEW_CANDIDATES = 3
     FILTERS = %w[unresolved suggested ambiguous resolved exceptions].freeze
 
     attr_reader :listener

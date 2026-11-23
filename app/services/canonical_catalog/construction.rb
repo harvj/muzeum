@@ -34,7 +34,7 @@ module CanonicalCatalog
       edition.slots.map { |slot| slot.dig(:recording, "id") }
     end
 
-    def initialize(editions, base: nil)
+    def initialize(editions, base: nil, recording_mbid: nil)
       editions = editions.select { |edition| Edition.collection_context?(edition.data) }
       originals = self.class.originals(editions)
       raise Store::Unverified, "The original tracklist remains unverified" if originals.empty?
@@ -55,10 +55,13 @@ module CanonicalCatalog
         additions = if competing_sequences.include?(self.class.sequence(edition))
           []
         else
-          edition.slots.reject { |slot| base_recordings.include?(slot.dig(:recording, "id")) }
+          edition.slots.select do |slot|
+            id = slot.dig(:recording, "id")
+            !base_recordings.include?(id) && (recording_mbid.nil? || id == recording_mbid)
+          end
         end
         @additional_slots.concat(additions.map { |slot| slot.merge(edition_mbid: edition.data.fetch("id"), appearance_date: date) })
-        edition.data.slice("id", "title", "date", "genres", "tags").merge(
+        edition.data.slice("id", "title", "date", "country", "status", "packaging", "disambiguation", "edition_relationships", "genres", "tags").merge(
           "track_count" => edition.slots.size,
           "additional_tracks" => additions.map do |slot|
             { "recording_mbid" => slot.dig(:recording, "id"), "title" => slot.fetch(:title),

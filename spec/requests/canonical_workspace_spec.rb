@@ -90,29 +90,36 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     end
   end
 
-  it "refreshes the retained 2015 evidence shape for observation 293082 without resolving the observation" do
-    finish_oidc
-    user = User.find_by!(oidc_subject: @subject)
-    LastfmAccount.associate!(user, "original-evidence-refresh")
-    play, historical = narrow_stairs_assessment(user, historical: true)
-    saved_payload = play.attributes
-    saved_evidence = historical.evidence
+  [ "Narrow Stairs", "Time Warner 2", "Incorrect title", nil ].each do |caption|
+    it "refreshes original recording evidence independently of album string #{caption.inspect}" do
+      finish_oidc
+      user = User.find_by!(oidc_subject: @subject)
+      LastfmAccount.associate!(user, "original-evidence-refresh")
+      play, historical = narrow_stairs_assessment(user, historical: true, album_name: caption)
+      saved_payload = play.attributes
+      saved_evidence = historical.evidence
 
-    post investigate_resolution_surface_path(play)
-    request = CatalogImport.where(kind: RecordingResolution::Investigation::KIND).sole
-    expect(request.context).to include("refresh" => true, "observation_id" => play.id)
-    editions = narrow_stairs_editions.index_by { |edition| edition.fetch("id") }
-    fixture = { "releases" => editions, "searches" => {}, "collections" => { NarrowStairsFixture::GROUP => editions.values } }
-    session = DiscoveryReplay::Session.new(fixture, { "candidates" => saved_evidence["candidates"], "release_search" => "unused" })
-    CanonicalCatalog::Processor.new(request, session_factory: ->(*) { session }).call
-    expect(request.reload.state).to eq("imported")
-    get resolution_surface_path(play)
-    expect(response.body).to include("Proposed original release", NarrowStairsFixture::ORIGINAL, "11 tracks")
-    expect(RecordingResolution::Assessment.where(group_id: historical.group_id).count).to eq(2)
-    expect(historical.reload.evidence).to eq(saved_evidence)
-    expect(play.reload.attributes).to eq(saved_payload)
-    expect(RecordingResolution::Decision.count).to eq(0)
-    expect(Release.count).to eq(0)
+      post investigate_resolution_surface_path(play)
+      request = CatalogImport.where(kind: RecordingResolution::Investigation::KIND).sole
+      expect(request.context).to include("refresh" => true, "observation_id" => play.id)
+      editions = narrow_stairs_editions.index_by { |edition| edition.fetch("id") }
+      recording = saved_evidence["candidates"].first
+      browse = narrow_stairs_publications.dig("recording_publications", recording["id"], "appearances")
+        .select { |release| release.dig("release-group", "id") == NarrowStairsFixture::GROUP }
+      fixture = { "releases" => editions, "searches" => {}, "collections" => { NarrowStairsFixture::GROUP => editions.values },
+        "recording_releases" => { recording["id"] => browse } }
+      session = DiscoveryReplay::Session.new(fixture,
+        { "candidates" => [ recording ], "release_search" => "unused", "verified_recording" => recording })
+      CanonicalCatalog::Processor.new(request, session_factory: ->(*) { session }).call
+      expect(request.reload.state).to eq("imported")
+      get resolution_surface_path(play)
+      expect(response.body).to include("Proposed original release", NarrowStairsFixture::ORIGINAL, "11 tracks")
+      expect(RecordingResolution::Assessment.where(group_id: historical.group_id).count).to eq(2)
+      expect(historical.reload.evidence).to eq(saved_evidence)
+      expect(play.reload.attributes).to eq(saved_payload)
+      expect(RecordingResolution::Decision.count).to eq(0)
+      expect(Release.count).to eq(0)
+    end
   end
 
   it "constructs and corrects the Guilt Show fixture while assigning the same group" do

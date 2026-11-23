@@ -12,7 +12,7 @@ module RecordingResolution
       @artist_mbid = artist_mbid
     end
 
-    def call(surface, candidates, checked:, attempted:, search:, review_alternative: false, preferred: nil)
+    def call(surface, candidates, checked:, attempted:, search:, review_alternative: false, preferred: nil, origins: true)
       @pending_original_group = nil
       @tracklists = {}
       @construction_editions = {}
@@ -25,7 +25,7 @@ module RecordingResolution
       found = results.flat_map { |edition| appearances(surface, edition) }
       # Preserve a fixed fallback budget even when search supplies many releases.
       unless preferred || review_alternative || results.empty?
-        retain_original_editions
+        retain_original_editions if origins
         return found
       end
 
@@ -46,7 +46,7 @@ module RecordingResolution
           found.concat(appearances(surface, edition)) if edition
         end
       end
-      retain_original_editions
+      retain_original_editions if origins
       found
     end
 

@@ -3,7 +3,11 @@
   <% dates = @chronology&.evidence || {} %>
   <dl>
     <div><dt>Recording date</dt><dd><%= [dates["start_date"], dates["end_date"]].compact.join(" to ").presence || "Unknown" %></dd></div>
+    <% if @verified_first_release %>
+      <div><dt>Earliest verified publication</dt><dd><%= @verified_first_release %></dd></div>
+    <% else %>
     <div><dt>First release date reported by MusicBrainz</dt><dd><%= @first_release_claim.presence || "Unknown" %></dd></div>
+    <% end %>
   </dl>
   <% if dates["source"].present? && !@public_profile %><p>Recording date source: <%= dates["source"] %></p><% end %>
   <% if @may_edit_identity %>

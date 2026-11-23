@@ -1,4 +1,6 @@
 <% mbid = candidate.fetch("id") %>
+<% publications = @assessment.evidence["recording_publications"] %>
+<% publication = publications&.fetch(mbid, { "pending" => true }) || {} %>
 <% appearance = rank.dig("inputs", "catalog_release_appearance", "provenance") %>
 <% edition = @assessment.evidence["edition"] if Array(@assessment.evidence["slots"]).any? { |slot| slot["recording_mbid"] == mbid } %>
 <% local_id = candidate.dig("local_release_context", "edition_mbid") %>
@@ -35,8 +37,8 @@ end %>
   <% catalog_recording = catalog_rows[1][1].first %>
   <%= render("catalog_panel", catalog_rows:) unless expanded %>
   <% if @may_manage_observation && @assessment_matches_claims %>
-  <% proposals = CanonicalCatalog::ReviewedConstruction.for(@assessment, mbid).group_by { |item| item.construction.base.data.dig("release-group", "id") }.values.first || [] %>
-  <% proposals = [] if proposals.any? { |item| !CanonicalCatalog::ReviewedConstruction.needs_review?(item, catalog_recording) } %>
+  <% original_groups = CanonicalCatalog::ReviewedConstruction.for(@assessment, mbid).group_by { |item| item.construction.base.data.dig("release-group", "id") } %>
+  <% proposals = original_groups.values.reject { |choices| choices.any? { |item| !CanonicalCatalog::ReviewedConstruction.needs_review?(item, catalog_recording) } }.flatten %>
   <%= form_with url: decide_resolution_surface_path(@observation) do |form| %>
     <%= form.hidden_field :recording_mbid, value: mbid, id: nil %>
     <%= form.hidden_field :assessment_id, value: @assessment.id, id: nil %>
@@ -48,15 +50,18 @@ end %>
       <%= form.text_field :comment, id: "comment-#{mbid}", maxlength: 500 %>
     </details>
     <p class="muted">Future exact matches inherit this decision. Individual overrides are preserved.</p>
-    <% if proposals.empty? && @assessment.evidence["pending_original_group"].present? %>
+    <% if (earliest = publication["earliest_publication"]) %>
+      <p class="compact-meta">Earliest verified publication · <%= earliest["date"] %> · <%= link_to earliest["title"], "https://musicbrainz.org/release/#{earliest['id']}" %></p>
+    <% end %>
+    <% if publication["pending"] || Array(publication["pending_groups"]).any? || proposals.empty? && @assessment.evidence["pending_original_group"].present? %>
       <p class="muted">Original release verification is pending. You can refresh the candidate evidence.</p>
     <% end %>
     <% if proposals.any? %>
-      <%= form.hidden_field :construction_head, value: CanonicalCatalog::ReviewedConstruction.head(proposals.first.existing), id: nil %>
-      <% if proposals.many? %><p>Original editions differ. Choose the complete tracklist to use.</p><% end %>
+      <% if original_groups.values.any?(&:many?) %><p>Original editions differ. Choose the complete tracklist to use.</p><% end %>
       <% proposals.each do |proposal| %>
         <% base = proposal.construction.base %>
         <% data = base.data %>
+        <%= hidden_field_tag "construction_heads[#{data['id']}]", CanonicalCatalog::ReviewedConstruction.head(proposal.existing), id: nil %>
         <p class="compact-meta">
           <strong><%= proposals.one? ? "Proposed original release" : "Original release option" %></strong>
           · <%= data["title"] %> · <%= data["date"] %> · <%= data["country"].presence || "Country unavailable" %>
@@ -89,6 +94,16 @@ end %>
     <div>
       <p class="compact-meta review-recording-id"><%= rank["provenance"] == "local_catalog" ? "Local catalog" : "MusicBrainz" %> ·
         <%= link_to "Recording #{mbid}", "https://musicbrainz.org/recording/#{mbid}", title: mbid %></p>
+      <% if publication["appearances"].present? %>
+        <details>
+          <summary>Other publication appearances (<%= publication["appearances"].size %>)</summary>
+          <ul>
+            <% publication["appearances"].each do |item| %>
+              <li><%= link_to item["title"], "https://musicbrainz.org/release/#{item['id']}" %> · <%= item["date"].presence || "Date unknown" %> · <%= item["status"] %></li>
+            <% end %>
+          </ul>
+        </details>
+      <% end %>
       <% if reference %>
         <p class="compact-meta review-edition">Recording appearance · <%= metadata["title"] %><% if metadata["disambiguation"].present? %> · <%= metadata["disambiguation"] %><% end %>
           · <%= release_date || "Release date unavailable" %> ·

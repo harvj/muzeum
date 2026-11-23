@@ -57,6 +57,7 @@ The authoritative, living domain rules are [principles](domain/principles.md), [
 
    - **v0.6.0 — Musical Identity & Release Construction.** P1 constructs musical collections from edition evidence. P2 stores manual Artist, Release, and Recording color decisions and displays them in catalog badges and entity charts. P3 explains both through a contextual Guide. [Implementation and open work](v0.6.0/implementation.md).
      - **P1 follow-up — Original release prioritization.** Separate recording appearance evidence from original-album selection. Verify the Narrow Stairs launch sequence and retain distinct later appearances.
+     - **v0.6.2 — Recording-first publication history.** Separate recording identity, earliest verified publication, original collections and other appearances. Verify Narrow Stairs independently of the reported album and admit only selected edition additions.
 
 9. **P1.6 — Profile onboarding (tentative).**
    - **P1.6a — Last.fm authentication and verified username.** Use Last.fm web authorization and bind only the returned username.

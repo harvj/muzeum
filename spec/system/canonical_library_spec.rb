@@ -20,12 +20,13 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
 
   it "shows the approved overview and constructs Narrow Stairs from the original US CD" do
     user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "narrow-stairs-browser", lastfm_username: "narrow-stairs-browser")
-    observation, = narrow_stairs_assessment(user)
+    observation, = narrow_stairs_assessment(user, album_name: "Time Warner 2", publication: true)
     sign_in(user)
     visit resolution_surface_path(observation)
 
     within(".review-overview") do
       expect(page).to have_css("h1", text: "No Sunlight")
+      expect(page).to have_text("Time Warner 2")
       expect(page).to have_css(".review-catalog-context", text: "Canonical in Muzeum")
     end
     within(".review-candidate-summary") { expect(page).to have_no_text("2015") }
@@ -40,7 +41,14 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
       expect(columns.size).to eq(width == 1440 ? 2 : 1)
       expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
       page.execute_script("window.scrollTo(0, 0)")
-      capture_resolution("narrow-stairs-#{width}", full: true)
+      %w[light dark].each do |mode|
+        find(".harvj-session > summary").send_keys(:enter) unless page.has_css?(".harvj-session[open]", wait: 0)
+        select mode.capitalize, from: "Appearance"
+        find(".harvj-session[open] > summary").send_keys(:enter) if page.has_css?(".harvj-session[open]", wait: 0)
+        expect(page.evaluate_script("document.documentElement.dataset.appearance")).to eq(mode)
+        page.execute_script("window.scrollTo(0, 0)")
+        capture_resolution("narrow-stairs-#{width}-#{mode}", full: true)
+      end
     end
 
     click_button "Construct release & resolve 1 observation"

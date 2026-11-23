@@ -121,7 +121,9 @@ module CanonicalCatalog
       data = @musicbrainz.verify_recording(@session, mbid, catalog: true)["data"]
       raise Store::Unverified, "Selected recording identity could not be verified" unless data && data["id"] == mbid
 
-      locked { @store.recording(data, expected: mbid) }
+      assessment = RecordingResolution::Assessment.find_by(id: @request.context["assessment_id"])
+      publication = assessment&.evidence&.dig("recording_publications", mbid, "earliest_publication")
+      locked { @store.recording(data, expected: mbid, publication:) }
       ids = Array(data["releases"]).filter_map do |appearance|
         group = appearance["release-group"]
         classified = appearance["status"].present? && group&.fetch("primary-type", nil).present? &&
@@ -160,7 +162,7 @@ module CanonicalCatalog
             edition.data.dig("release-group", "id") == group && Edition.original_context?(edition.data)
           end
         end
-        construction = Construction.new(matches)
+        construction = Construction.new(matches, recording_mbid: mbid)
         edition = construction.base
         pending ||= (edition.slots + construction.additional_slots).none? { |slot| slot.dig(:recording, "id") == mbid }
         locked do
@@ -207,14 +209,16 @@ module CanonicalCatalog
       end
       @evaluator = RecordingResolution::Evaluator.new(@session, discogs: nil, workspace: true,
         review_alternative: @request.context["refresh"] == true, review_release: @request.context["release_mbid"],
-        catalog_identity: identity)
-      evidence = @evaluator.call(surface, @claims)
-      if (manual = @request.context["manual_mbid"]).present?
-        result = @musicbrainz.verify_recording(@session, manual, catalog: true)
-        if (recording = result["data"])
-          evidence["candidates"] = [ *evidence["candidates"], recording ]
-          evidence["manually_verified_mbid"] = recording.fetch("id")
+        catalog_identity: identity, origins: false)
+      evidence = @evaluator.call(surface, @claims) do |recording_evidence|
+        if (manual = @request.context["manual_mbid"]).present?
+          result = @musicbrainz.verify_recording(@session, manual, catalog: true)
+          if (recording = result["data"])
+            recording_evidence["candidates"] = [ *recording_evidence["candidates"], recording ]
+            recording_evidence["manually_verified_mbid"] = recording.fetch("id")
+          end
         end
+        investigate_publication(surface, recording_evidence)
       end
       edition_slots = Array(evidence["slots"])
       candidates = RecordingResolution::Workspace.candidate_evidence(evidence)
@@ -225,6 +229,33 @@ module CanonicalCatalog
       end
       evidence["review_mbid"] = supported.first["id"] if supported.one? && evidence.dig("edition", "title") == surface.album
       complete { write_assessment(evidence) }
+    end
+
+    def investigate_publication(surface, evidence)
+      # Appearance evidence belongs to the investigation, but it cannot decide
+      # which otherwise plausible identities get a publication lookup.
+      independent = evidence.except("edition", "slots", "review_tracklists").merge(
+        "candidates" => Array(evidence["candidates"]).map { |candidate| candidate.except("release_discovery", "local_release_context", "releases") })
+      ids = RecordingResolution::Ranking.call(surface, independent, source_hints: true).filter_map do |rank|
+        inputs = rank.fetch("inputs")
+        rank["recording_mbid"] if inputs.dig("title", "state") == "positive" && inputs.dig("artist_name", "state") == "positive"
+      end.first(RecordingResolution::Workspace::REVIEW_CANDIDATES)
+      ids |= Array(evidence["manually_verified_mbid"])
+
+      previous = RecordingResolution::Assessment.where(group_id: @group&.id, created_at: 1.day.ago..)
+        .where("evidence ? 'recording_publications'").order(id: :desc).pick(:evidence) || {}
+      saved = previous.fetch("recording_publications", {}).slice(*ids).reject do |_, history|
+        history["checked_at"].to_s < 1.day.ago.utc.iso8601 || history["pending"] || Array(history["pending_groups"]).any?
+      end
+      # Only reuse completed, recent histories and their checked source editions.
+      groups = saved.values.flat_map { |history| Array(history["original_groups"]) }
+      previous_editions = Array(previous["construction_editions"]).select { |edition| groups.include?(edition.dig("release-group", "id")) }
+      retained = (previous_editions + Array(evidence["construction_editions"])).uniq { |edition| edition["id"] }
+      evidence["recording_publications"] = saved
+      evidence["construction_editions"] = retained
+      evidence["reused_publication_requests"] = (Array(previous["reused_publication_requests"]) + Array(previous["requests"])).uniq if saved.any?
+      result = RecordingResolution::RecordingOrigins.new(@musicbrainz, @session).call(ids - saved.keys, retained:)
+      evidence.merge!(result.merge("recording_publications" => saved.merge(result.fetch("recording_publications"))))
     end
 
     def persist_assessment_failure(error, stopped)

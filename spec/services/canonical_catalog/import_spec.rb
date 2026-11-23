@@ -136,6 +136,17 @@ RSpec.describe CanonicalCatalog::Processor do
     request = process(CatalogImport.request!("recording", recording.id))
     expect(request.state).to eq("imported")
     expect(Release.sole.catalog_track_slots.base_sequence.size).to eq(3)
+    expect(Release.sole.catalog_track_slots.additional_appearances).to be_empty
+    expect(Recording.exists?(mbid: bonus.dig("recording", "id"))).to be(false)
+
+    bonus_recording = Recording.create!(mbid: bonus.dig("recording", "id"), title: "Bonus track")
+    documents[bonus_recording.mbid] = bonus["recording"].merge("releases" => [ later.except("media") ])
+    allow(session).to receive(:get).with(:musicbrainz, "/ws/2/release", params: anything) do |*_, &projection|
+      { "data" => projection.call("release-count" => 2, "releases" => [ original, later ]) }
+    end
+    original_request = request
+    request = process(CatalogImport.request!("recording", bonus_recording.id))
+    expect(request.state).to eq("imported")
     addition = Release.sole.catalog_track_slots.additional_appearances.sole
     expect(addition.recording.mbid).to eq(bonus.dig("recording", "id"))
     expect(addition.appearance_date).to eq("2020-08-21")
@@ -144,7 +155,7 @@ RSpec.describe CanonicalCatalog::Processor do
     expect(evidence.fetch("checked_recording_appearances").last.fetch("additional_tracks")).to contain_exactly(
       include("recording_mbid" => bonus.dig("recording", "id"), "edition_appearance_date" => "2020-08-21")
     )
-    recording_evidence = CatalogRevision.find_by!(catalog_import: request, entity_type: "Recording", entity_id: recording.id).evidence
+    recording_evidence = CatalogRevision.find_by!(catalog_import: original_request, entity_type: "Recording", entity_id: recording.id).evidence
     expect(recording_evidence.dig("musicbrainz", "tags")).to eq([ { "name" => "indie rock", "count" => 1 } ])
   end
 

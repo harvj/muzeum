@@ -289,7 +289,8 @@ class ResolutionWorkspaceController < ApplicationController
     existing = proposal.existing
     if existing
       existing.lock!
-      unless CanonicalCatalog::ReviewedConstruction.head(existing) == params[:construction_head]
+      expected_head = params[:construction_heads]&.[](proposal.construction.base.data["id"]) || params[:construction_head]
+      unless CanonicalCatalog::ReviewedConstruction.head(existing) == expected_head
         raise ActiveRecord::StaleObjectError.new(existing, "correct release")
       end
     end

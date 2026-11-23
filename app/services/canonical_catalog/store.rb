@@ -27,12 +27,13 @@ module CanonicalCatalog
       @session = session
     end
 
-    def recording(data, expected: self.class.mbid!(data["id"]))
+    def recording(data, expected: self.class.mbid!(data["id"]), publication: nil)
       raise Unverified, "Recording identity changed" unless data["id"] == expected
 
       record = self.class.recording!(data)
-      refresh(record, { "title" => data["title"], "duration_ms" => positive(data["length"]) },
-        metadata_evidence(data).merge("artist_credit" => credit_evidence(data["artist-credit"])))
+      evidence = metadata_evidence(data).merge("artist_credit" => credit_evidence(data["artist-credit"]))
+      evidence["verified_publication"] = publication if publication
+      refresh(record, { "title" => data["title"], "duration_ms" => positive(data["length"]) }, evidence)
       attach_credits(record, data["artist-credit"], RecordingArtist, :recording)
       record
     end

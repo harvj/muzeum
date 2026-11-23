@@ -11,15 +11,20 @@ module CanonicalCatalog
         nil
       end
 
+      history = assessment&.evidence&.fetch("recording_publications", nil)
       editions.group_by { |edition| edition.data.dig("release-group", "id") }.flat_map do |group, evidence|
-        next [] if group == assessment.evidence["pending_original_group"]
+        if history
+          next [] unless Array(history.dig(recording_mbid, "original_groups")).include?(group)
+        elsif group == assessment.evidence["pending_original_group"]
+          next []
+        end
         next [] unless evidence.any? { |edition| edition.slots.any? { |slot| slot.dig(:recording, "id") == recording_mbid } }
 
         existing = Release.where(release_group_mbid: group).limit(2).to_a
         next [] if existing.many?
 
         Construction.originals(evidence).map do |base|
-          Proposal.new(Construction.new(evidence, base:), existing.first)
+          Proposal.new(Construction.new(evidence, base:, recording_mbid:), existing.first)
         end
       rescue Store::Unverified
         []
@@ -64,7 +69,8 @@ module CanonicalCatalog
 
     def self.apply!(proposal, request, assessment, corrected_release: nil)
       construction = proposal.construction
-      provenance = Struct.new(:provenance).new(Array(assessment.evidence["requests"]))
+      requests = Array(assessment.evidence["requests"]) + Array(assessment.evidence["reused_publication_requests"])
+      provenance = Struct.new(:provenance).new(requests.uniq)
       Store.new(request, provenance).release(construction.base.data, construction.base.slots,
         strict_collection: true, checked_editions: construction.appearances,
         additional_slots: construction.additional_slots, corrected_release:)

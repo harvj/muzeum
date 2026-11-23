@@ -35,6 +35,9 @@ module RecordingResolution
         "catalog-recording-search-v1"
       elsif @catalog && provider == :musicbrainz && path.start_with?("/ws/2/release/") && params[:inc] == "recordings+artist-credits+release-groups+url-rels"
         "catalog-release-tracklist-v1"
+      elsif @catalog && provider == :musicbrainz && (path == "/ws/2/release" && (params.key?(:recording) || params.key?("release-group")) ||
+          path.start_with?("/ws/2/recording/") || path.start_with?("/ws/2/release/") && params[:inc].to_s.include?("genres+tags"))
+        "catalog-publication-evidence-v1"
       else
         @catalog ? [ "catalog-v1", @work.id ] : [ "v1", @pilot.id ]
       end

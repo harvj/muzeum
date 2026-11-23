@@ -70,8 +70,11 @@ class CanonicalLibraryController < ApplicationController
       @activity_recordings = Recording.where(id: @plays.map(&:effective_recording_id)).index_by(&:id)
     when Recording
       @chronology = CanonicalCatalog::RecordingChronology.latest(@entry)
-      @first_release_claim = CatalogRevision.where(entity_type: "Recording", entity_id: @entry.id)
-        .where("evidence->'musicbrainz' ? 'first-release-date'").order(id: :desc)
+      chronology_revisions = CatalogRevision.where(entity_type: "Recording", entity_id: @entry.id).order(id: :desc)
+      @verified_first_release = chronology_revisions.where("evidence ? 'verified_publication'")
+        .pick(Arel.sql("evidence->'verified_publication'->>'date'"))
+      @first_release_claim = chronology_revisions
+        .where("evidence->'musicbrainz' ? 'first-release-date'")
         .pick(Arel.sql("evidence->'musicbrainz'->>'first-release-date'"))
       @releases = @entry.admitted_releases.order(:title, :id).includes(release_artists: :artist)
       @releases = @releases.merge(@profile_catalog.releases) if @public_profile

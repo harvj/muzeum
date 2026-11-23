@@ -5,7 +5,7 @@ module RecordingResolution
 
     attr_reader :evidence
 
-    def initialize(session, discogs:, workspace: false, discover: workspace, review_alternative: false, review_release: nil, catalog_identity: {})
+    def initialize(session, discogs:, workspace: false, discover: workspace, review_alternative: false, review_release: nil, catalog_identity: {}, origins: true)
       @session = session
       @discogs = DiscogsEvidence.new(discogs, expanded: workspace) if discogs
       @workspace = workspace
@@ -13,6 +13,7 @@ module RecordingResolution
       @review_alternative = review_alternative
       @review_release = review_release
       @catalog_identity = catalog_identity
+      @origins = origins
       @musicbrainz = Clients::Musicbrainz.new
     end
 
@@ -28,6 +29,7 @@ module RecordingResolution
       candidates = page.fetch("recordings")
       evidence["search"] = page.slice("count", "offset").merge("returned" => candidates.size)
       evidence["candidates"] = candidates.map { |candidate| recording_evidence(candidate) }
+      yield evidence if block_given?
       reason("incomplete_search", evidence["search"].merge("provider" => "musicbrainz")) if page["count"] != candidates.size
       reason("missing_album", "field" => "album") if surface.album.blank?
       reason("missing_source_mbid", "field" => "track_mbid") if claims["track_mbid"].blank?
@@ -71,9 +73,12 @@ module RecordingResolution
           DiscoveryTitle.album_base(surface.album) != surface.album || surface.album.to_s.match?(VERSION_MARKER)
         search = related
         discovery = EditionDiscovery.new(@musicbrainz, @session, **@catalog_identity.slice(:artist_mbid))
-        merge_discovered(discovery.call(surface, candidates, checked: edition, attempted: edition_id, search:, review_alternative: @review_alternative, preferred: @review_release))
+        merge_discovered(discovery.call(surface, candidates, checked: edition, attempted: edition_id, search:, review_alternative: @review_alternative, preferred: @review_release, origins: @origins))
         evidence["review_tracklists"] = discovery.tracklists if discovery.tracklists.any?
-        evidence["construction_editions"] = discovery.construction_editions.values if discovery.construction_editions.any?
+        if discovery.construction_editions.any?
+          evidence["construction_editions"] = (Array(evidence["construction_editions"]) + discovery.construction_editions.values)
+            .uniq { |edition| edition["id"] }
+        end
         evidence["pending_original_group"] = discovery.pending_original_group if discovery.pending_original_group
       end
       if verified

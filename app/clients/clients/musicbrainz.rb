@@ -140,19 +140,16 @@ module Clients
 
       projection = method(:project_edition) if catalog
       session.get(:musicbrainz, "/ws/2/release/#{mbid}", params: {
-        fmt: "json", inc: catalog ? "recordings+artist-credits+release-groups+url-rels+genres+tags" : "recordings+artist-credits+release-groups"
+        fmt: "json", inc: catalog ? "recordings+artist-credits+release-groups+url-rels+release-rels+genres+tags" : "recordings+artist-credits+release-groups"
       }, &projection)["data"]
     end
 
     def collection_editions(session, group_mbid, limit:)
-      response = session.get(:musicbrainz, "/ws/2/release", params: { fmt: "json", "release-group" => group_mbid, limit: }) do |data|
-        data.slice("release-count").merge("releases" => Array(data["releases"]).map { |row| row.slice("id", "title", "date", "status") })
-      end["data"]
-      unless response && response["release-count"].is_a?(Integer) && response["release-count"] == response["releases"].size
-        raise CanonicalCatalog::Store::Unverified, "Release collection exceeds the evidence budget or could not be verified"
-      end
+      browse_releases(session, { "release-group" => group_mbid }, limit:)
+    end
 
-      response.fetch("releases")
+    def recording_releases(session, mbid, limit:)
+      browse_releases(session, { recording: mbid, inc: "release-groups+media" }, limit:)
     end
 
     def catalog_artist(session, mbid)
@@ -169,6 +166,39 @@ module Clients
     # --- Private ----------------------------------------------------
 
     private
+
+    def browse_releases(session, relationship, limit:)
+      releases = []
+      count = nil
+      loop do
+        params = { fmt: "json" }.merge(relationship).merge(limit:)
+        params[:offset] = releases.length if releases.any?
+        response = session.get(:musicbrainz, "/ws/2/release", params:) do |data|
+          rows = data["releases"]
+          data.slice("release-count", "release-offset").merge("releases" => rows.map { |row| release_reference(row) }) if rows.is_a?(Array)
+        end["data"]
+        rows = response&.fetch("releases", nil)
+        total = response&.fetch("release-count", nil)
+        unless rows.is_a?(Array) && total.is_a?(Integer) && total.between?(0, 100) &&
+            (count.nil? || count == total) && response.fetch("release-offset", releases.length) == releases.length &&
+            releases.length + rows.length <= total && rows.all? { |row| MBID.match?(row["id"].to_s) } &&
+            (rows.any? || releases.length == total)
+          raise CanonicalCatalog::Store::Unverified, "Release browse is incomplete or exceeds the evidence budget"
+        end
+        count = total
+        releases.concat(rows)
+        if releases.pluck("id").uniq.size != releases.size
+          raise CanonicalCatalog::Store::Unverified, "Release browse repeated an edition"
+        end
+        return releases if releases.length == count
+      end
+    end
+
+    def release_reference(data)
+      data.slice("id", "title", "date", "country", "status", "disambiguation", "packaging", "barcode").merge(
+        "release-group" => data["release-group"]&.slice("id", "title", "primary-type", "secondary-types", "first-release-date"),
+        "media" => Array(data["media"]).map { |medium| medium.slice("position", "format", "track-count") })
+    end
 
     def project_recording(data)
       data.slice("id", "title", "length", "video", "disambiguation", "first-release-date", "isrcs", "genres", "tags").merge(
@@ -189,6 +219,12 @@ module Clients
       result["artist-credit"] = project_credits(data["artist-credit"])
       result["relations"] = Array(data["relations"]).select { |relation| relation["type"] == "discogs" }.map do |relation|
         { "url" => relation.fetch("url").slice("resource") }
+      end
+      result["edition_relationships"] = Array(data["relations"]).filter_map do |relation|
+        next unless relation["target-type"] == "release" && MBID.match?(relation.dig("release", "id").to_s)
+
+        relation.slice("type", "direction", "attributes", "begin", "end").merge(
+          "release" => relation["release"].slice("id", "title"))
       end
       result["media"] = Array(data["media"]).map do |medium|
         medium.slice("position", "track-count", "format").merge("extra-track-layout" => medium["pregap"].present? || medium["data-tracks"].present?,
