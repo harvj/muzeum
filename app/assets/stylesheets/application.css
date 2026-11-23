@@ -635,19 +635,60 @@ main .plays-tools button[aria-pressed="true"] { background-color: var(--surface-
 .resolution-decision { max-width: 56rem; padding-block: .85rem; }
 .resolution-decision h2 { margin-block: 0 .4rem; font-size: 1.25rem; }
 .resolution-choices { list-style: none; margin: 0; padding: 0; }
-.resolution-choice { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: .65rem; align-items: center; min-height: 44px; padding: .4rem .65rem; border-radius: .35rem; text-decoration: none; overflow-wrap: anywhere; }
+.resolution-option {
+  --selection-ink: light-dark(#215a2c, #8cda9a);
+  --choice-muted: light-dark(#444c49, #c7d0c8);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  border-inline-start: 3px solid transparent;
+  border-radius: .35rem;
+}
+.resolution-option:hover {
+  --lift: light-dark(#ffffff38, #00000038);
+  background-image: linear-gradient(var(--lift), var(--lift));
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.resolution-option:has(.resolution-choice[aria-current]) {
+  border-inline-start-color: var(--selection-ink);
+  background-color: color-mix(in srgb, var(--selection-ink) 8%, transparent);
+}
+main .resolution-option :is(.resolution-choice, .resolution-recording-mbid) {
+  min-height: 44px;
+  align-items: center;
+  border-radius: .25rem;
+  background: transparent;
+}
+main .resolution-option .resolution-choice {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 5rem;
+  gap: .65rem;
+  padding: .4rem .65rem;
+  color: var(--ink);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+main .resolution-option .resolution-recording-mbid {
+  display: inline-flex;
+  padding-inline: .5rem;
+  color: var(--choice-muted);
+  font: .8rem ui-monospace, monospace;
+  text-decoration: underline;
+}
+.resolution-choice .muted { color: var(--choice-muted); }
 .resolution-choice > span:first-child > span { display: block; font-size: .875rem; }
-.resolution-choice[aria-current], .resolution-choice:hover { background: var(--surface-accent); }
-.resolution-selected { font-size: .8rem; font-weight: 700; }
+.resolution-association { grid-column: 2; font-size: .875rem; }
+.resolution-selected { grid-column: 3; color: var(--selection-ink); font-size: .8rem; font-weight: 700; }
 .resolution-context { border-block-start: 1px solid var(--line); margin-block: .85rem .65rem; padding-block-start: .65rem; }
 .resolution-context > div + div { margin-block-start: .65rem; }
 .resolution-context p, .resolution-confirmation p { margin: .2rem 0; }
 .resolution-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .65rem 1rem; margin-block-start: .55rem; }
 .resolution-actions .resolution-primary { min-height: 44px; background: #296b34; color: white; font-weight: 700; border-color: #296b34; }
 .resolution-actions .resolution-primary:hover { background: #20572a; }
-.resolution-choice:focus-visible, .resolution-primary:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+main .resolution-option a:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
+.resolution-primary:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 @media (max-width: 700px) {
-  .resolution-choice { grid-template-columns: minmax(0, 1fr) auto; gap: .2rem .5rem; }
-  .resolution-choice > .muted { grid-row: 2; }
+  main .resolution-option .resolution-choice { grid-template-columns: minmax(0, 1fr) 5rem; gap: .2rem .5rem; }
+  .resolution-association { grid-area: 2 / 1 / auto / -1; }
   .resolution-selected { grid-column: 2; grid-row: 1; }
 }

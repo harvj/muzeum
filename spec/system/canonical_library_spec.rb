@@ -29,7 +29,11 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     compilation_recording = album_recording.except("releases").merge("id" => "5dffd281-d913-4256-8816-7035d077183f",
       "releases" => [ { "id" => "1cefec58-1706-4d52-bd93-bebaaa682e2d", "title" => "Time Warner 2", "date" => "2009" } ])
     RecordingResolution::Assessment.create!(group_id: assessment.group_id, version: assessment.version, actor: assessment.actor,
-      digest: SecureRandom.hex(32), evidence: assessment.evidence.merge("candidates" => [ compilation_recording, album_recording ]))
+      digest: SecureRandom.hex(32), evidence: assessment.evidence.merge("candidates" => [
+        compilation_recording.merge("length" => 160000), album_recording,
+        compilation_recording.except("releases").merge("id" => "76c95b67-fcfd-4ba9-a579-56e65a9e1b4f", "length" => 168333),
+        compilation_recording.except("releases").merge("id" => "ee10460e-f37b-4079-9aee-740477cfcc6e", "length" => 196284)
+      ]))
     sign_in(user)
     visit resolution_surface_path(observation)
 
@@ -40,7 +44,16 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     end
     expect(page).to have_text("6 matching observations")
     expect(page).to have_css(".resolution-context", text: /Narrow Stairs.*May 13, 2008.*Album.*11 tracks/m)
-    expect(page).to have_css(".resolution-choice", count: 2)
+    expect(page).to have_css(".resolution-choice", count: 3)
+    expect(page).to have_link("5dffd281", href: "https://musicbrainz.org/recording/5dffd281-d913-4256-8816-7035d077183f")
+    expect(page).to have_link("e77221ef", href: "https://musicbrainz.org/recording/#{NarrowStairsFixture::RECORDING}")
+    expect(page).to have_no_text("Original release pending")
+    expect(find(".resolution-option", text: "2:48")).to have_no_css(".resolution-recording-mbid")
+    expect(find(".resolution-choice[aria-current]")).to have_text("Narrow Stairs · 2008 · Track 3")
+    find("summary", text: "More recording choices").click
+    expect(page).to have_css(".resolution-choice", count: 4)
+    expect(find(".resolution-option", text: "3:16")).to have_no_css(".resolution-recording-mbid")
+    find("summary", text: "More recording choices").click
     expect(page).to have_css(".resolution-choice[aria-current]", count: 1)
     expect(page).to have_css(".resolution-primary", count: 1, text: "Resolve all 6")
     expect(page.evaluate_script("getComputedStyle(document.querySelector('.resolution-primary')).backgroundColor")).to eq("rgb(41, 107, 52)")
@@ -61,6 +74,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
         expect(page.evaluate_script("document.documentElement.dataset.appearance")).to eq(mode)
         page.execute_script("window.scrollTo(0, 0)")
         capture_resolution("narrow-stairs-#{width}-#{mode}", full: true)
+        verify_recording_choice_states(width, mode)
       end
     end
 
@@ -413,6 +427,80 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
   ensure
     browser&.execute_cdp("Emulation.clearDeviceMetricsOverride")
     browser&.execute_cdp("Emulation.setEmulatedMedia", features: [])
+  end
+
+  def verify_recording_choice_states(width, mode)
+    selected = find(".resolution-choice[aria-current]")
+    other = find(".resolution-choice:not([aria-current])", match: :first)
+    initial = [ selected, other ].map { |link| recording_choice_paint(link) }
+    expect(initial.map { |paint| paint.fetch("border") }.uniq.size).to eq(2)
+    expect(initial.all? { |paint| paint.fetch("contrast") >= 4.5 }).to be(true)
+
+    if width == 1440
+      [ [ other, "hover" ], [ selected, "selected-hover" ] ].each do |link, name|
+        before = recording_choice_paint(link)
+        link.hover
+        after = recording_choice_paint(link)
+        expect(after.fetch("wash")).not_to eq("none")
+        expect(after.except("wash")).to eq(before.except("wash"))
+        expect(selected["aria-current"]).to eq("true")
+        capture_resolution("choices-#{width}-#{mode}-#{name}", full: true)
+      end
+    end
+
+    [ [ selected, "selected-focus" ], [ other, "unselected-focus" ] ].each do |link, name|
+      find(".review-sections a", text: "History").send_keys(:tab)
+      7.times do
+        break if page.evaluate_script("document.activeElement === arguments[0]", link)
+
+        page.driver.browser.action.send_keys(:tab).perform
+      end
+      expect(page.evaluate_script("document.activeElement === arguments[0] && arguments[0].matches(':focus-visible')", link)).to be(true)
+      expect(page.evaluate_script("getComputedStyle(arguments[0]).outlineWidth", link)).to eq("2px")
+      expect(selected["aria-current"]).to eq("true")
+      capture_resolution("choices-#{width}-#{mode}-#{name}", full: true)
+    end
+    page.driver.browser.action.send_keys(:tab).perform
+    provider_link = find(".resolution-recording-mbid:focus-visible")
+    expect(provider_link["aria-label"]).to match(/MusicBrainz recording [0-9a-f-]{36}/)
+  end
+
+  def recording_choice_paint(link)
+    page.evaluate_script(<<~JS, link)
+      ((link) => {
+        const row = getComputedStyle(link.closest("li"));
+        const card = getComputedStyle(link.closest(".library-card"));
+        const title = getComputedStyle(link);
+        const muted = getComputedStyle(link.querySelector(".muted"));
+        const source = getComputedStyle(link.parentElement.querySelector(".resolution-recording-mbid") || link.querySelector(".muted"));
+        const canvas = document.createElement("canvas");
+        canvas.width = canvas.height = 1;
+        const pixel = canvas.getContext("2d", {willReadFrequently: true});
+        const paint = color => { pixel.fillStyle = color; pixel.fillRect(0, 0, 1, 1); };
+        const luminance = () => [...pixel.getImageData(0, 0, 1, 1).data].slice(0, 3).map(v => {
+          v /= 255;
+          return v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4;
+        }).reduce((sum, v, i) => sum + v * [.2126, .7152, .0722][i], 0);
+        // Bound contrast over Site Art by using its worst possible underlying pixel.
+        paint(card.colorScheme === "dark" ? "#fff" : "#000");
+        paint(card.backgroundColor);
+        paint(row.backgroundColor);
+        const background = luminance();
+        const selected = link.querySelector(".resolution-selected");
+        const colors = [title.color, muted.color, source.color];
+        if (selected) colors.push(getComputedStyle(selected).color);
+        const contrast = colors.map(color => {
+          paint(color);
+          const foreground = luminance();
+          return (Math.max(foreground, background) + .05) / (Math.min(foreground, background) + .05);
+        });
+        return {
+          border: row.borderInlineStartColor, wash: row.backgroundImage, contrast: Math.min(...contrast),
+          title: title.color, muted: muted.color, source: source.color, linkBackground: title.backgroundColor,
+          sourceBackground: source.backgroundColor, height: link.closest("li").offsetHeight
+        };
+      })(arguments[0])
+    JS
   end
 
   def capture_resolution(name, full: false)

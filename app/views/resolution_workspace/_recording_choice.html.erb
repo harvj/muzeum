@@ -1,12 +1,17 @@
-<li>
+<li class="resolution-option">
   <% current = candidate == selected %>
-  <%= link_to resolution_surface_path(@observation, **navigation.merge(candidate: candidate.fetch("id"), anchor: "review-candidates")),
+  <% mbid = candidate.fetch("id") %>
+  <%= link_to resolution_surface_path(@observation, **navigation.merge(candidate: mbid, anchor: "review-candidates")),
       class: "resolution-choice", aria: { current: ("true" if current) } do %>
     <span>
       <strong><%= candidate.fetch("title") %></strong>
       <span class="muted"><%= resolution_candidate_credit(candidate) %><% if candidate["length"] %> · <%= recording_duration(candidate["length"]) %><% end %></span>
     </span>
-    <span class="muted"><%= contexts.map { |item| item.construction.base.data["title"] }.uniq.to_sentence.presence || "Original release pending" %></span>
-    <% if current %><span class="resolution-selected">Selected</span><% end %>
+    <% if association %><span class="resolution-association muted"><%= association %></span><% end %>
+    <% if current %><span class="resolution-selected"><span aria-hidden="true">✓</span> Selected</span><% end %>
+  <% end %>
+  <% if show_mbid && Clients::Musicbrainz::MBID.match?(mbid) %>
+    <%= link_to mbid.first(8), "https://musicbrainz.org/recording/#{mbid}", class: "resolution-recording-mbid",
+      aria: { label: "MusicBrainz recording #{mbid}" } %>
   <% end %>
 </li>
