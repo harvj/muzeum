@@ -3,13 +3,108 @@ require_relative "../support/oidc_flow"
 require_relative "../support/catalog_fixtures"
 require_relative "../support/discovery_replay"
 require_relative "../support/guilt_show_fixture"
+require_relative "../support/narrow_stairs_fixture"
 
 RSpec.describe "Canonical library and resolution workspace", type: :request do
   include OidcFlow
   include CatalogFixtures
   include GuiltShowFixture
+  include NarrowStairsFixture
   before { prepare_oidc }
   after { restore_oidc }
+
+  it "requires a specific retained edition when two complete original sequences conflict" do
+    finish_oidc
+    user = User.find_by!(oidc_subject: @subject)
+    LastfmAccount.associate!(user, "original-tracklist-conflict")
+    observation, assessment = narrow_stairs_assessment(user)
+    original = narrow_stairs_editions.find { |edition| edition["id"] == NarrowStairsFixture::ORIGINAL }
+    other = original.deep_dup.merge("id" => SecureRandom.uuid)
+    tracks = other.dig("media", 0, "tracks")
+    tracks[0], tracks[1] = tracks[1], tracks[0]
+    tracks.first(2).each_with_index { |track, index| track.merge!("position" => index + 1, "number" => (index + 1).to_s) }
+    assessment = RecordingResolution::Assessment.create!(group_id: assessment.group_id, version: assessment.version, actor: assessment.actor,
+      digest: SecureRandom.hex(32), evidence: assessment.evidence.merge("construction_editions" => [ original, other ]))
+
+    get resolution_surface_path(observation)
+    doc = Nokogiri::HTML(response.body)
+    expect(doc.css('button[name="construct_release"]').map { |button| button["value"] }).to contain_exactly(original["id"], other["id"])
+    params = { scope: "surface", recording_mbid: NarrowStairsFixture::RECORDING, assessment_id: assessment.id }
+    post decide_resolution_surface_path(observation), params: params.merge(construct_release: NarrowStairsFixture::GROUP)
+    expect(RecordingResolution::Decision.count).to eq(0)
+
+    post decide_resolution_surface_path(observation), params: params.merge(construct_release: other["id"])
+    expect(flash[:notice]).to eq("Recording decision saved.")
+    release = Release.sole
+    expect(release.ingested_from_release_mbid).to eq(other["id"])
+    expect(release.catalog_track_slots.base_sequence.order(:medium, :position).pluck(:title)).to eq(tracks.pluck("title"))
+    expect(release.catalog_track_slots.additional_appearances).to be_empty
+  end
+
+  [ "2008-05-13", "2015-02-24" ].each do |stored_date|
+    it "corrects a previously admitted Narrow Stairs source with stored date #{stored_date} only after confirmation" do
+      finish_oidc
+      user = User.find_by!(oidc_subject: @subject)
+      LastfmAccount.associate!(user, "narrow-stairs-correction")
+      play, assessment = narrow_stairs_assessment(user)
+      editions = narrow_stairs_editions.map { |data| CanonicalCatalog::Edition.new(data, data.fetch("id")) }
+      original = CanonicalCatalog::Construction.new(editions)
+      later = editions.find { |edition| edition.data["id"] == NarrowStairsFixture::LATER }
+      imported = CatalogImport.create!(kind: "release", entity_id: 1, due_at: Time.current, state: "imported")
+      source = Struct.new(:provenance).new([])
+      release = CanonicalCatalog::Store.new(imported, source).release(later.data.merge("date" => stored_date),
+        original.base.slots, checked_editions: original.appearances, additional_slots: original.additional_slots)
+      previous = CatalogRevision.find_by!(entity_type: "Release", entity_id: release.id)
+      frozen_evidence = previous.evidence
+
+      get resolution_surface_path(play)
+      expect(response.body).to include("Proposed original release", "Correct release &amp; resolve 1 observation")
+      expect(release.reload.ingested_from_release_mbid).to eq(NarrowStairsFixture::LATER)
+      expect(RecordingResolution::Decision.count).to eq(0)
+
+      post decide_resolution_surface_path(play), params: { scope: "surface", recording_mbid: NarrowStairsFixture::RECORDING,
+        assessment_id: assessment.id, construct_release: NarrowStairsFixture::ORIGINAL,
+        construction_head: CanonicalCatalog::ReviewedConstruction.head(release) }
+      expect(flash[:notice]).to eq("Recording decision saved.")
+      expect(Release.sole.id).to eq(release.id)
+      expect(release.reload.attributes.values_at("release_year", "release_month", "release_day")).to eq([ 2008, 5, 13 ])
+      expect(previous.reload.evidence).to eq(frozen_evidence)
+      expect(RecordingResolution::ReleaseTracklist.new(release).evidence).to include("edition_mbid" => NarrowStairsFixture::ORIGINAL)
+      decision = RecordingResolution::Decision.sole
+      expect(Recording.find(decision.recording_id).mbid).to eq(NarrowStairsFixture::RECORDING)
+      background = CatalogImport.create!(kind: "release", entity_id: release.id, due_at: Time.current, state: "imported")
+      expect do
+        CanonicalCatalog::Store.new(background, source).release(later.data, original.base.slots)
+      end.to raise_error(CanonicalCatalog::Store::Unverified, /reviewed original release/)
+      expect(RecordingResolution::Decision.sole.id).to eq(decision.id)
+      expect(RecordingResolution::ReleaseTracklist.new(release.reload).evidence["edition_mbid"]).to eq(NarrowStairsFixture::ORIGINAL)
+    end
+  end
+
+  it "refreshes the retained 2015 evidence shape for observation 293082 without resolving the observation" do
+    finish_oidc
+    user = User.find_by!(oidc_subject: @subject)
+    LastfmAccount.associate!(user, "original-evidence-refresh")
+    play, historical = narrow_stairs_assessment(user, historical: true)
+    saved_payload = play.attributes
+    saved_evidence = historical.evidence
+
+    post investigate_resolution_surface_path(play)
+    request = CatalogImport.where(kind: RecordingResolution::Investigation::KIND).sole
+    expect(request.context).to include("refresh" => true, "observation_id" => play.id)
+    editions = narrow_stairs_editions.index_by { |edition| edition.fetch("id") }
+    fixture = { "releases" => editions, "searches" => {}, "collections" => { NarrowStairsFixture::GROUP => editions.values } }
+    session = DiscoveryReplay::Session.new(fixture, { "candidates" => saved_evidence["candidates"], "release_search" => "unused" })
+    CanonicalCatalog::Processor.new(request, session_factory: ->(*) { session }).call
+    expect(request.reload.state).to eq("imported")
+    get resolution_surface_path(play)
+    expect(response.body).to include("Proposed original release", NarrowStairsFixture::ORIGINAL, "11 tracks")
+    expect(RecordingResolution::Assessment.where(group_id: historical.group_id).count).to eq(2)
+    expect(historical.reload.evidence).to eq(saved_evidence)
+    expect(play.reload.attributes).to eq(saved_payload)
+    expect(RecordingResolution::Decision.count).to eq(0)
+    expect(Release.count).to eq(0)
+  end
 
   it "constructs and corrects the Guilt Show fixture while assigning the same group" do
     finish_oidc
@@ -208,8 +303,8 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     expect(doc.css(".review-source-claims dt").map(&:text)).to eq([ "Artist string", "Album string" ])
     expect(doc.css(".review-source-claims dd").map(&:text)).to eq(source.values_at("artist", "album"))
     expect(doc.css(".review-edition").map(&:text).join(" ")).to include("deluxe edition", "2011", "Daytrotter Session")
-    expect(doc.css(".review-candidate").map { |card| card.css(".review-tracks li").size }).to eq([ 18, 14, 4 ])
-    expect(doc.css(".review-track-match").size).to eq(3)
+    expect(doc.css(".review-candidate").map { |card| card.css(".review-candidate-detail .review-tracks li").size }).to eq([ 18, 14, 4 ])
+    expect(doc.css(".review-candidate-detail .review-track-match").size).to eq(3)
     expect(doc.css(".review-score strong").map(&:text)).to eq(%w[9 8 7])
     expect(doc.text).to include("historical scoring", "3 plausible recordings found", "Resolve observation #{observation.id} only", "2:03")
 

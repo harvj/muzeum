@@ -53,6 +53,7 @@ module CanonicalCatalog
       signature = slots.map { |slot| [ slot.fetch(:medium), slot.fetch(:position), slot.fetch(:recording).fetch("id") ] }
       evidence = { "edition_mbid" => edition, "release_group_mbid" => group, "track_count" => slots.size,
         "tracklist_digest" => Digest::SHA256.hexdigest(signature.to_json), "discogs" => comparison }
+      evidence["reviewed_selection"] = true if @request.kind == "release_construction"
       evidence.merge!(metadata_evidence(data))
       evidence["checked_recording_appearances"] = checked_editions if checked_editions.present?
       release = corrected_release || Release.find_by(ingested_from_release_mbid: edition)
@@ -76,8 +77,22 @@ module CanonicalCatalog
       end
       release.lock!
       existing = release_signature(release)
+      unless corrected_release
+        reviewed = CatalogRevision.where(entity_type: "Release", entity_id: release.id)
+          .where("evidence @> :selection OR evidence @> :correction",
+            selection: { reviewed_selection: true }.to_json, correction: { reviewed_correction: true }.to_json)
+          .order(id: :desc).pick(:evidence)
+        if reviewed
+          reviewed_date = reviewed.fetch("verified_fields").values_at("release_year", "release_month", "release_day").compact
+            .map { |part| format("%02d", part) }.join("-")
+          unless reviewed["edition_mbid"] == edition && reviewed_date == data["date"]
+            raise Unverified, "Provider evidence differs from the reviewed original release"
+          end
+        end
+      end
       if corrected_release
         evidence["reviewed_correction"] = true
+        evidence["previous_edition_mbid"] = ReviewedConstruction.current_edition(release)
         evidence["previous_base_sequence"] = existing
         evidence["previous_additions"] = release.catalog_track_slots.additional_appearances.pluck(:edition_mbid, :appearance_date, :medium, :position, :recording_id)
         evidence["previous_publication_date"] = release.attributes.values_at("release_year", "release_month", "release_day")

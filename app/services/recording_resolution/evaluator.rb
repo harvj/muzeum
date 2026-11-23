@@ -74,6 +74,7 @@ module RecordingResolution
         merge_discovered(discovery.call(surface, candidates, checked: edition, attempted: edition_id, search:, review_alternative: @review_alternative, preferred: @review_release))
         evidence["review_tracklists"] = discovery.tracklists if discovery.tracklists.any?
         evidence["construction_editions"] = discovery.construction_editions.values if discovery.construction_editions.any?
+        evidence["pending_original_group"] = discovery.pending_original_group if discovery.pending_original_group
       end
       if verified
         slot_check = {

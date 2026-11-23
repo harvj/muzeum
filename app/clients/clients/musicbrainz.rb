@@ -180,7 +180,7 @@ module Clients
     end
 
     def project_edition(data)
-      result = data.slice("id", "title", "status", "country", "date", "disambiguation", "genres", "tags")
+      result = data.slice("id", "title", "status", "country", "date", "disambiguation", "packaging", "genres", "tags")
       result["release-events"] = Array(data["release-events"]).filter_map do |event|
         codes = Array(event.dig("area", "iso-3166-1-codes"))
         { "country_codes" => codes } if codes.any?

@@ -625,3 +625,9 @@ main .plays-tools button[aria-pressed="true"] { background-color: var(--surface-
 [data-identity-first="blue"] { --identity-first: var(--identity-blue); }
 [data-identity-second="blue"] { --identity-second: var(--identity-blue); }
 [data-identity-third="blue"] { --identity-third: var(--identity-blue); }
+
+
+.review-overview { display: grid; gap: 1rem; align-items: start; }
+@media (min-width: 701px) {
+  .review-overview:has(> .review-catalog-context) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

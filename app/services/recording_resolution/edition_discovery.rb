@@ -2,8 +2,9 @@ module RecordingResolution
   class EditionDiscovery
     MAX_LOOKUPS = 2
     MAX_SLOTS = 100
+    MAX_ORIGINAL_LOOKUPS = 25
 
-    attr_reader :tracklists, :construction_editions
+    attr_reader :tracklists, :construction_editions, :pending_original_group
 
     def initialize(musicbrainz, session, artist_mbid: nil)
       @musicbrainz = musicbrainz
@@ -12,6 +13,7 @@ module RecordingResolution
     end
 
     def call(surface, candidates, checked:, attempted:, search:, review_alternative: false, preferred: nil)
+      @pending_original_group = nil
       @tracklists = {}
       @construction_editions = {}
       results = [ checked ].compact
@@ -19,11 +21,13 @@ module RecordingResolution
         results.concat(related_editions(surface, candidates, attempted || checked&.fetch("id", nil)))
       end
       results.each { |edition| retain(edition.fetch("id"), edition) }
-      retain_original_for_later_edition
       retain(attempted, nil) if attempted && checked.nil? && release_request(attempted)
       found = results.flat_map { |edition| appearances(surface, edition) }
       # Preserve a fixed fallback budget even when search supplies many releases.
-      return found unless preferred || review_alternative || results.empty?
+      unless preferred || review_alternative || results.empty?
+        retain_original_editions
+        return found
+      end
 
       references = candidates.filter_map do |candidate|
         next if found.any? { |row| row["id"] == candidate["id"] }
@@ -42,34 +46,39 @@ module RecordingResolution
           found.concat(appearances(surface, edition)) if edition
         end
       end
+      retain_original_editions
       found
     end
 
     private
 
-    def retain_original_for_later_edition
-      later = @construction_editions.values.first
-      return unless later && @construction_editions.values.none? { |edition| CanonicalCatalog::Edition.original_context?(edition) }
+    def retain_original_editions
+      context = @construction_editions.values.first
+      return unless context
 
-      group = later.fetch("release-group")
-      references = @musicbrainz.collection_editions(@session, group.fetch("id"), limit: 25).select do |row|
+      group = context.fetch("release-group")
+      title = group["title"].presence || DiscoveryTitle.album_base(context["title"])
+      references = @musicbrainz.collection_editions(@session, group.fetch("id"), limit: MAX_ORIGINAL_LOOKUPS).select do |row|
         row["status"] == "Official" && row["date"] == group["first-release-date"] &&
-          DiscoveryTitle.match?(DiscoveryTitle.album_base(row["title"]), group["title"])
+          DiscoveryTitle.match?(DiscoveryTitle.album_base(row["title"]), title)
       end
-      return unless references.size.between?(1, MAX_LOOKUPS)
-
+      references = references.reject { |row| @construction_editions.key?(row["id"]) }
       originals = references.map do |row|
-        @musicbrainz.edition(@session, row.fetch("id"), catalog: true)
+        id = row.fetch("id")
+        edition = @musicbrainz.edition(@session, id, catalog: true)
+        unless edition && edition.dig("release-group", "id") == group["id"] &&
+            CanonicalCatalog::Edition.original_context?(edition)
+          raise CanonicalCatalog::Store::Unverified, "Original edition could not be verified"
+        end
+        CanonicalCatalog::Edition.new(edition, id)
       end
-      return unless originals.zip(references).all? do |edition, row|
-        edition && edition["id"] == row["id"] && edition.dig("release-group", "id") == group["id"] &&
-          CanonicalCatalog::Edition.original_context?(edition)
-      end
+      originals.each { |edition| retain(edition.data.fetch("id"), edition.data) }
+    rescue ProviderError => error
+      raise if error.deferred
 
-      originals.each { |edition| retain(edition.fetch("id"), edition) }
-    rescue CanonicalCatalog::Store::Unverified, ProviderError
-      # The verified recording remains usable if the original sequence is unavailable.
-      nil
+      @pending_original_group = group["id"]
+    rescue CanonicalCatalog::Store::Unverified
+      @pending_original_group = group["id"]
     end
 
     def retain(id, edition)

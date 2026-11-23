@@ -1,10 +1,12 @@
 require "rails_helper"
 require_relative "../support/catalog_fixtures"
 require_relative "../support/guilt_show_fixture"
+require_relative "../support/narrow_stairs_fixture"
 
 RSpec.describe "Canonical library resolution workflow", type: :system do
   include CatalogFixtures
   include GuiltShowFixture
+  include NarrowStairsFixture
 
   before do
     skip "Run with BROWSER_TESTS=1 for canonical workspace browser verification" unless ENV["BROWSER_TESTS"] == "1"
@@ -14,6 +16,38 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     driven_by :selenium, using: :headless_chrome do |options|
       options.binary = ENV["CHROME_BINARY"] if ENV["CHROME_BINARY"]
     end
+  end
+
+  it "shows the approved overview and constructs Narrow Stairs from the original US CD" do
+    user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "narrow-stairs-browser", lastfm_username: "narrow-stairs-browser")
+    observation, = narrow_stairs_assessment(user)
+    sign_in(user)
+    visit resolution_surface_path(observation)
+
+    within(".review-overview") do
+      expect(page).to have_css("h1", text: "No Sunlight")
+      expect(page).to have_css(".review-catalog-context", text: "Canonical in Muzeum")
+    end
+    within(".review-candidate-summary") { expect(page).to have_no_text("2015") }
+    expect(page).to have_css(".compact-meta", text: /Proposed original release.*2008-05-13.*US.*CD.*11 tracks/m)
+    find("summary", text: "Review release construction").click
+    expect(page).to have_css(".review-original-tracklist[open] .review-tracks li", count: 11)
+    expect(page).to have_css(".review-original-tracklist[open] .review-track-match", text: "No Sunlight")
+
+    [ [ 1440, 960 ], [ 390, 844 ] ].each do |width, height|
+      page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width:, height:, deviceScaleFactor: 1, mobile: width == 390)
+      columns = page.evaluate_script("getComputedStyle(document.querySelector('.review-overview')).gridTemplateColumns").split
+      expect(columns.size).to eq(width == 1440 ? 2 : 1)
+      expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
+      page.execute_script("window.scrollTo(0, 0)")
+      capture_resolution("narrow-stairs-#{width}", full: true)
+    end
+
+    click_button "Construct release & resolve 1 observation"
+    expect(page).to have_text("Recording decision saved.")
+    release = Release.find_by!(release_group_mbid: NarrowStairsFixture::GROUP)
+    expect(release.ingested_from_release_mbid).to eq(NarrowStairsFixture::ORIGINAL)
+    expect(release.catalog_track_slots.base_sequence.count).to eq(11)
   end
 
   it "constructs Guilt Show and keeps the later appearance outside the original sequence" do

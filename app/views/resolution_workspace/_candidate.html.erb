@@ -26,19 +26,17 @@ end %>
       <strong class="review-candidate-title"><%= candidate["title"] %></strong>
       <span class="review-credit"><%= Array(candidate["artist-credit"]).map { |credit| "#{credit["name"]}#{credit["joinphrase"]}" }.join.presence || "Artist credit unavailable" %>
         <% if candidate["disambiguation"].present? %> · <%= candidate["disambiguation"] %><% end %></span>
-      <span class="review-edition"><%= metadata["title"].presence || "MusicBrainz supplied no release title" %><% if metadata["disambiguation"].present? %> · <%= metadata["disambiguation"] %><% end %> · <%= release_date&.first(4) || "Release year unavailable" %></span>
+
       <span class="compact-meta"><%= recording_duration(candidate["length"]) if candidate["length"] %><%= " · " if candidate["length"] %>MusicBrainz ID <%= mbid.first(8) %></span>
     </span>
     <span class="review-score">Score <strong><%= rank["score"] %></strong></span>
   </summary>
   <% catalog_rows = @catalog_context.rows(candidate) %>
   <% catalog_recording = catalog_rows[1][1].first %>
-  <%= turbo_stream_from RecordingResolution::CatalogContext.stream(catalog_recording), channel: ResolutionCatalogChannel, hidden: true if catalog_recording && CatalogImport.latest("recording", catalog_recording.id) %>
-  <section class="review-catalog-context" aria-label="Canonical in Muzeum"<%= tag.attributes(id: RecordingResolution::CatalogContext.target(catalog_recording)) if catalog_recording %>>
-    <%= render "catalog_context", rows: catalog_rows %>
-  </section>
+  <%= render("catalog_panel", catalog_rows:) unless expanded %>
   <% if @may_manage_observation && @assessment_matches_claims %>
-  <% proposal = CanonicalCatalog::ReviewedConstruction.for(@assessment, mbid).find { |item| CanonicalCatalog::ReviewedConstruction.needs_review?(item, catalog_recording) } %>
+  <% proposals = CanonicalCatalog::ReviewedConstruction.for(@assessment, mbid).group_by { |item| item.construction.base.data.dig("release-group", "id") }.values.first || [] %>
+  <% proposals = [] if proposals.any? { |item| !CanonicalCatalog::ReviewedConstruction.needs_review?(item, catalog_recording) } %>
   <%= form_with url: decide_resolution_surface_path(@observation) do |form| %>
     <%= form.hidden_field :recording_mbid, value: mbid, id: nil %>
     <%= form.hidden_field :assessment_id, value: @assessment.id, id: nil %>
@@ -50,27 +48,38 @@ end %>
       <%= form.text_field :comment, id: "comment-#{mbid}", maxlength: 500 %>
     </details>
     <p class="muted">Future exact matches inherit this decision. Individual overrides are preserved.</p>
-    <% if proposal %>
-      <% base = proposal.construction.base %>
-      <details>
-        <summary><%= proposal.existing ? "Review release correction" : "Review release construction" %></summary>
-        <p><%= base.data.dig("release-group", "title").presence || base.data["title"] %> · <%= base.data["date"] %></p>
-        <ol>
-          <% base.slots.each do |slot| %><li><%= slot[:title] %></li><% end %>
-        </ol>
-        <% if proposal.construction.additional_slots.any? %>
-          <p>Additional edition appearances</p>
-          <ul><% proposal.construction.additional_slots.each do |slot| %><li><%= slot[:title] %> · <%= slot[:appearance_date] %></li><% end %></ul>
-        <% end %>
-      </details>
-      <%= form.hidden_field :construction_head, value: CanonicalCatalog::ReviewedConstruction.head(proposal.existing), id: nil %>
+    <% if proposals.empty? && @assessment.evidence["pending_original_group"].present? %>
+      <p class="muted">Original release verification is pending. You can refresh the candidate evidence.</p>
+    <% end %>
+    <% if proposals.any? %>
+      <%= form.hidden_field :construction_head, value: CanonicalCatalog::ReviewedConstruction.head(proposals.first.existing), id: nil %>
+      <% if proposals.many? %><p>Original editions differ. Choose the complete tracklist to use.</p><% end %>
+      <% proposals.each do |proposal| %>
+        <% base = proposal.construction.base %>
+        <% data = base.data %>
+        <p class="compact-meta">
+          <strong><%= proposals.one? ? "Proposed original release" : "Original release option" %></strong>
+          · <%= data["title"] %> · <%= data["date"] %> · <%= data["country"].presence || "Country unavailable" %>
+          · <%= Array(data["media"]).filter_map { |medium| medium["format"].presence }.uniq.join(" / ").presence || "Format unavailable" %>
+          · <%= pluralize(base.slots.size, "track") %>
+          <% if data["packaging"].present? && data["packaging"] != "None" %> · <%= data["packaging"] %><% end %>
+          <% if data["disambiguation"].present? %> · <%= data["disambiguation"] %><% end %>
+          · <%= link_to data["id"], "https://musicbrainz.org/release/#{data['id']}", aria: { label: "MusicBrainz release #{data['id']}" } %>
+        </p>
+        <details class="review-original-tracklist">
+          <summary><%= proposal.existing ? "Review release correction" : "Review release construction" %> · Complete tracklist</summary>
+          <%= render "review_tracklist", release: RecordingResolution::ReviewRelease.project(data), release_id: data["id"], mbid: %>
+          <% if proposal.construction.additional_slots.any? %>
+            <p>Additional edition appearances</p>
+            <ul><% proposal.construction.additional_slots.each do |slot| %><li><%= slot[:title] %> · <%= slot[:appearance_date] %></li><% end %></ul>
+          <% end %>
+        </details>
+        <%= form.button "#{proposal.existing ? 'Correct' : 'Construct'} release & resolve #{pluralize(@affected_count, 'observation')}#{(" · #{data['country']} / #{base.slots.size} tracks (#{data['id'].first(8)})" if proposals.many?)}",
+          name: "construct_release", value: data["id"] %>
+      <% end %>
     <% end %>
     <div class="catalog-actions">
-      <% if proposal %>
-        <%= form.button "#{proposal.existing ? 'Correct' : 'Construct'} release & resolve #{pluralize(@affected_count, 'observation')}",
-          name: "construct_release", value: proposal.construction.base.data.dig("release-group", "id") %>
-      <% end %>
-      <%= form.button(@affected_count.positive? ? "Resolve #{pluralize(@affected_count, "observation")}" : "Resolve future exact matches", name: "mode", value: "resolved") %>
+      <%= form.button(proposals.any? ? "Resolve recording only" : (@affected_count.positive? ? "Resolve #{pluralize(@affected_count, 'observation')}" : "Resolve future exact matches"), name: "mode", value: "resolved") %>
       <%= form.button "Defer", name: "feedback", value: "deferred", formaction: defer_resolution_surface_path(@observation) %>
       <%= form.button "Reject candidate", name: "feedback", value: "rejected", formaction: defer_resolution_surface_path(@observation) %>
     </div>
@@ -81,7 +90,8 @@ end %>
       <p class="compact-meta review-recording-id"><%= rank["provenance"] == "local_catalog" ? "Local catalog" : "MusicBrainz" %> ·
         <%= link_to "Recording #{mbid}", "https://musicbrainz.org/recording/#{mbid}", title: mbid %></p>
       <% if reference %>
-        <p class="compact-meta"><%= release_date || "Release date unavailable" %> ·
+        <p class="compact-meta review-edition">Recording appearance · <%= metadata["title"] %><% if metadata["disambiguation"].present? %> · <%= metadata["disambiguation"] %><% end %>
+          · <%= release_date || "Release date unavailable" %> ·
           <% if countries.empty? %>Country unavailable<% end %>
           <% countries.each_with_index do |country, index| %><%= ", " if index.positive? %><%= render "shared/geographic_place", country: %><% end %>
         </p>

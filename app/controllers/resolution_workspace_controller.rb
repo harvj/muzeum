@@ -277,8 +277,12 @@ class ResolutionWorkspaceController < ApplicationController
   end
 
   def construct_reviewed_release!(assessment, recording)
-    proposal = CanonicalCatalog::ReviewedConstruction.for(assessment, recording.mbid).find do |item|
-      item.construction.base.data.dig("release-group", "id") == params[:construct_release]
+    choices = CanonicalCatalog::ReviewedConstruction.for(assessment, recording.mbid)
+    proposal = choices.find { |item| item.construction.base.data["id"] == params[:construct_release] }
+    if proposal.nil?
+      # A previously rendered form may still submit the release group.
+      compatible = choices.select { |item| item.construction.base.data.dig("release-group", "id") == params[:construct_release] }
+      proposal = compatible.first if compatible.one?
     end
     raise ArgumentError unless proposal
 

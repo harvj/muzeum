@@ -1,4 +1,5 @@
 <div class="card library-card resolution-review">
+<div class="review-overview">
 <section class="review-heading">
   <% review_state = if @current_recording
       Clients::Musicbrainz::MBID.match?(@current_recording.mbid.to_s) ? "Resolved" : "Partially resolved"
@@ -17,6 +18,10 @@
   </dl>
   <p class="review-observation-meta"><%= pluralize(@observations_count, "matching observation") %></p>
 </section>
+<% if @candidates.any? %>
+  <%= render "catalog_panel", catalog_rows: @catalog_context.rows(@candidates.first) %>
+<% end %>
+</div>
 <nav class="review-sections" aria-label="Review sections">
   <a href="#review-candidates" class="review-primary-section">Candidates</a>
   <a href="#review-evidence">Evidence</a>

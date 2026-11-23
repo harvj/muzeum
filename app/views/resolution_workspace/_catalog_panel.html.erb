@@ -1,0 +1,5 @@
+<% catalog_recording = catalog_rows[1][1].first %>
+  <%= turbo_stream_from RecordingResolution::CatalogContext.stream(catalog_recording), channel: ResolutionCatalogChannel, hidden: true if catalog_recording && CatalogImport.latest("recording", catalog_recording.id) %>
+  <section class="review-catalog-context" aria-label="Canonical in Muzeum"<%= tag.attributes(id: RecordingResolution::CatalogContext.target(catalog_recording)) if catalog_recording %>>
+    <%= render "catalog_context", rows: catalog_rows %>
+  </section>

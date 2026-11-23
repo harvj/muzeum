@@ -33,13 +33,13 @@ RSpec.describe RecordingResolution::EditionDiscovery do
     expect(result.fetch("recommendation")).to eq("withheld")
   end
 
-  it "retains the three real Regent's Court tracklists during explicit review with one additional lookup" do
+  it "retains the three real Regent's Court tracklists during explicit review and checks the original release group separately" do
     daytrotter = JSON.parse(Rails.root.join("spec/fixtures/recording_resolution/discovery/daytrotter.json").read)
     fixture.fetch("releases")[daytrotter.fetch("id")] = daytrotter
 
     result = DiscoveryReplay.run(fixture, examples.fetch("regents-court-292999"), discover: true, review_alternative: true)
     lists = result.fetch("tracklists")
-    expect(result.fetch("calls")).to eq(5)
+    expect(result.fetch("calls")).to eq(6)
     expect(lists.values.pluck("state")).to all(eq("complete"))
     expect(lists.values.map { |list| list.fetch("media").first.fetch("tracks").size }).to eq([ 18, 14, 4 ])
     expect(lists.fetch(daytrotter.fetch("id")).fetch("media").first.fetch("tracks").second)

@@ -56,6 +56,7 @@ The authoritative, living domain rules are [principles](domain/principles.md), [
    - **v0.5.1 — Site Art and live catalog refresh.** Remove the shell bands, use shared translucent content surfaces, and update persisted canonical memberships in Resolution Review as verification finishes. [Visual review](design/verification/v0.5.1/README.md).
 
    - **v0.6.0 — Musical Identity & Release Construction.** P1 constructs musical collections from edition evidence. P2 stores manual Artist, Release, and Recording color decisions and displays them in catalog badges and entity charts. P3 explains both through a contextual Guide. [Implementation and open work](v0.6.0/implementation.md).
+     - **P1 follow-up — Original release prioritization.** Separate recording appearance evidence from original-album selection. Verify the Narrow Stairs launch sequence and retain distinct later appearances.
 
 9. **P1.6 — Profile onboarding (tentative).**
    - **P1.6a — Last.fm authentication and verified username.** Use Last.fm web authorization and bind only the returned username.

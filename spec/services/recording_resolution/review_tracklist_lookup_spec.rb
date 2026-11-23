@@ -17,8 +17,13 @@ RSpec.describe RecordingResolution::EditionDiscovery do
     ])
   end
   let(:client) { Clients::Musicbrainz.new }
+  let(:collection_response) { { "release-count" => 1, "releases" => [ edition ] } }
+  let(:collection_params) { hash_including("release-group" => edition.dig("release-group", "id")) }
 
   it "checks the candidate edition after an unavailable source claim and retains the real slot and provenance" do
+    allow(session).to receive(:get).with(:musicbrainz, "/ws/2/release", params: collection_params) do |*_, &project|
+      { "data" => project.call(collection_response) }
+    end
     expect(session).to receive(:get).with(:musicbrainz, "/ws/2/release/#{release_id}", params: anything) do |*_, &project|
       { "data" => project.call(edition) }
     end
@@ -33,6 +38,9 @@ RSpec.describe RecordingResolution::EditionDiscovery do
   end
 
   it "retains a retryable failure and fetches that exact release on retry" do
+    allow(session).to receive(:get).with(:musicbrainz, "/ws/2/release", params: collection_params) do |*_, &project|
+      { "data" => project.call(collection_response) }
+    end
     discovery = described_class.new(client, session)
     allow(client).to receive(:edition).with(session, release_id, catalog: true)
       .and_raise(RecordingResolution::ProviderError.new("provider unavailable", http_status: 503))
@@ -75,10 +83,10 @@ RSpec.describe RecordingResolution::EditionDiscovery do
       replay = double(provenance: session.provenance)
       allow(replay).to receive(:get) do |_provider, path, params:, &project|
         paths << path
-        expect(params.fetch(:query)).to include("arid:#{artist_id}") if %w[/ws/2/recording /ws/2/release].include?(path)
+        expect(params.fetch(:query)).to include("arid:#{artist_id}") if params.key?(:query)
         response = case path
         when "/ws/2/recording" then { "recordings" => [ row ], "count" => 1, "offset" => params.fetch(:offset) }
-        when "/ws/2/release" then { "releases" => [] }
+        when "/ws/2/release" then params.key?("release-group") ? collection_response : { "releases" => [] }
         when "/ws/2/release/#{release_id}" then edition
         else raise "Unexpected provider lookup #{path}"
         end
@@ -95,7 +103,7 @@ RSpec.describe RecordingResolution::EditionDiscovery do
     evidence, ranking, paths = results.first
     expect(evidence.dig("discovery_appearances", candidate["id"])).to include(include("id" => release_id, "position" => be_positive))
     expect(ranking.first.dig("inputs", "catalog_release_appearance", "provenance", "id")).to eq(release_id)
-    expect(paths).to eq([ "/ws/2/recording", "/ws/2/release", "/ws/2/release/#{release_id}" ])
+    expect(paths).to eq([ "/ws/2/recording", "/ws/2/release", "/ws/2/release/#{release_id}", "/ws/2/release" ])
   end
 
   it "looks up the stored release edition when its local tracklist cannot be reused" do
@@ -115,6 +123,7 @@ RSpec.describe RecordingResolution::EditionDiscovery do
       params: hash_including("release-group" => edition.dig("release-group", "id"))).ordered
       .and_raise(RecordingResolution::ProviderError, "Original sequence listing unavailable")
     evidence = RecordingResolution::Evaluator.new(session, discogs: nil, workspace: true, catalog_identity: identity).call(surface, claims)
+    expect(evidence["pending_original_group"]).to eq(edition.dig("release-group", "id"))
     expect(evidence.dig("edition", "id")).to eq(release_id)
     expect(evidence.dig("discovery_appearances", candidate.fetch("id"))).to be_present
   end

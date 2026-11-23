@@ -11,16 +11,18 @@ module CanonicalCatalog
         nil
       end
 
-      editions.group_by { |edition| edition.data.dig("release-group", "id") }.filter_map do |group, evidence|
-        construction = Construction.new(evidence)
-        next unless (construction.base.slots + construction.additional_slots).any? { |slot| slot.dig(:recording, "id") == recording_mbid }
+      editions.group_by { |edition| edition.data.dig("release-group", "id") }.flat_map do |group, evidence|
+        next [] if group == assessment.evidence["pending_original_group"]
+        next [] unless evidence.any? { |edition| edition.slots.any? { |slot| slot.dig(:recording, "id") == recording_mbid } }
 
         existing = Release.where(release_group_mbid: group).limit(2).to_a
-        next if existing.many?
+        next [] if existing.many?
 
-        Proposal.new(construction, existing.first)
+        Construction.originals(evidence).map do |base|
+          Proposal.new(Construction.new(evidence, base:), existing.first)
+        end
       rescue Store::Unverified
-        nil
+        []
       end
     end
 
@@ -30,7 +32,7 @@ module CanonicalCatalog
 
       base = proposal.construction.base
       date = [ release.release_year, release.release_month, release.release_day ].compact.map { |part| part.to_s.rjust(2, "0") }.join("-")
-      return true if date != base.data["date"]
+      return true if date != base.data["date"] || current_edition(release) != base.data["id"]
 
       expected = base.slots.map { |slot| [ slot[:medium], slot[:position], slot.dig(:recording, "id") ] }
       actual = release.catalog_track_slots.base_sequence.order(:medium, :position).joins(:recording).pluck(:medium, :position, "recordings.mbid")
@@ -45,10 +47,17 @@ module CanonicalCatalog
       actual_additions.sort != expected_additions.sort || recording.nil? || !release.catalog_track_slots.exists?(recording_id: recording.id)
     end
 
+    def self.current_edition(release)
+      RecordingResolution::ReleaseTracklist.new(release).evidence.fetch("edition_mbid")
+    rescue ArgumentError
+      release.ingested_from_release_mbid
+    end
+
     def self.head(release)
       return unless release
 
-      fields = release.attributes.values_at("id", "release_year", "release_month", "release_day", "catalog_verified_at")
+      fields = release.attributes.values_at("id", "release_year", "release_month", "release_day", "catalog_verified_at", "ingested_from_release_mbid")
+      fields << current_edition(release)
       slots = release.catalog_track_slots.order(:id).pluck(:id, :recording_id, :title, :edition_mbid, :appearance_date, :medium, :position)
       Digest::SHA256.hexdigest([ fields, slots ].to_json)
     end
