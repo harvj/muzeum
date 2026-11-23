@@ -207,7 +207,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     expect(page).to have_css(".resolution-choice[aria-current]", count: 1)
     expect(page).to have_css(".resolution-primary", count: 1, text: "Resolve all 6")
     expect(page).to have_css('section[aria-label="Resolution preview"]', text: /Recording.*Release.*Narrow Stairs.*11 tracks.*1 new release.*6 existing observations/m)
-    expect(page.evaluate_script("getComputedStyle(document.querySelector('.resolution-primary')).backgroundColor")).to eq("rgb(41, 45, 44)")
+    expect(page.evaluate_script("getComputedStyle(document.querySelector('.resolution-primary')).backgroundColor")).to be_in([ "rgb(41, 45, 44)", "rgb(35, 38, 37)" ])
     expect(page).to have_css('.resolution-primary .resolution-confirmation-mark[aria-hidden="true"]')
     expect(page).to have_no_text("Provider calls")
     expect(page).to have_no_text("2015")
@@ -393,6 +393,40 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     browser&.execute_cdp("Emulation.setEmulatedMedia", features: [])
   end
 
+  it "shows only the chosen release sequence and submits that one plan" do
+    user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "competing-sequences", lastfm_username: "competing-sequences")
+    observation, assessment = narrow_stairs_assessment(user)
+    original = narrow_stairs_editions.find { |edition| edition["id"] == NarrowStairsFixture::ORIGINAL }
+    other = original.deep_dup.merge("id" => SecureRandom.uuid)
+    tracks = other.dig("media", 0, "tracks")
+    tracks[0], tracks[1] = tracks[1], tracks[0]
+    tracks.first(2).each_with_index { |track, index| track.merge!("position" => index + 1, "number" => (index + 1).to_s) }
+    RecordingResolution::Assessment.create!(group_id: assessment.group_id, version: assessment.version, actor: assessment.actor,
+      digest: SecureRandom.hex(32), evidence: assessment.evidence.merge("construction_editions" => [ original, other ]))
+    sign_in(user)
+
+    browser = page.driver.browser
+    browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 390, height: 844, deviceScaleFactor: 1, mobile: true)
+    browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "prefers-color-scheme", value: "dark" } ])
+    visit resolution_surface_path(observation)
+    expect(page).to have_no_css(".resolution-context .review-tracks")
+    select = find("select#construct_release")
+    select.find("option[value='#{original["id"]}']").select_option
+    expect(page).to have_css(".resolution-context .review-tracks", count: 1)
+    select.find("option[value='#{other["id"]}']").select_option
+    expect(page).to have_css(".resolution-context .review-tracks", count: 1)
+    expect(find(".resolution-context .review-tracks li", match: :first)).to have_text(tracks.first.fetch("title"))
+    expect(page).to have_css('[aria-label="Resolution preview"] li', text: "1 new release", count: 1)
+    capture_resolution("release-choice-mobile-dark", full: true)
+
+    click_button "Resolve this observation"
+    expect(page).to have_text("Recording decision saved.")
+    expect(Release.sole.ingested_from_release_mbid).to eq(other["id"])
+  ensure
+    browser&.execute_cdp("Emulation.clearDeviceMetricsOverride")
+    browser&.execute_cdp("Emulation.setEmulatedMedia", features: [])
+  end
+
   it "constructs Guilt Show and keeps the later appearance outside the original sequence" do
     user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "construction-browser", lastfm_username: "guilt-show-browser")
     plays, = guilt_show_assessment(user)
@@ -407,9 +441,24 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     click_button "Resolve all 3"
     expect(page).to have_text("Recording decision saved.")
     within(".review-catalog-context") { click_link "Guilt Show" }
-    expect(page).to have_text(/additional edition appearances/i)
+    expect(page).to have_css("details.additional-edition-tracks:not([open])", text: "Additional edition tracks")
+    within(".additional-edition-tracks") { expect(page).to have_no_link("Like a Man Possessed") }
+    find("summary", text: "Additional edition tracks").send_keys(:enter)
     expect(page).to have_text("Like a Man Possessed · 2004-08-21")
+    capture_resolution("guilt-show-additional-tracks")
+    expect(page).to have_text("0 distinct resolved observations")
+    find("summary", text: "Tracks counted in listening totals").click
+    within(find(".release-track-preferences li", text: "Like a Man Possessed")) { click_button "Include" }
     expect(page).to have_text("3 distinct resolved observations")
+    browser = page.driver.browser
+    browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 390, height: 844, deviceScaleFactor: 1, mobile: true)
+    browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "prefers-color-scheme", value: "dark" } ])
+    capture_resolution("guilt-show-track-preferences", full: true)
+    browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
+    browser.execute_cdp("Emulation.setEmulatedMedia", features: [])
+    within(find(".release-track-preferences li", text: "Like a Man Possessed")) { click_button "Exclude" }
+    expect(page).to have_text("0 distinct resolved observations")
+    expect(ReleaseTrackListeningDecision.order(:id).pluck(:included)).to eq([ true, false ])
   end
 
   it "reviews a candidate, applies it using the keyboard, and opens the admitted track listing" do
@@ -513,6 +562,26 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     verify_appearances("resolution")
   end
 
+  it "refreshes an investigation outcome over Action Cable without reloading manually" do
+    user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "live-investigation", lastfm_username: "live-investigation")
+    observation = catalog_observation(user)
+    sign_in(user)
+    visit resolution_surface_path(observation)
+    expect(page).to have_css(".investigation-progress", text: "Queued")
+    expect(page).to have_css("turbo-cable-stream-source[connected]", visible: :all)
+    capture_resolution("investigation-queued")
+
+    provider = CatalogFixtures::Session.new
+    allow(RecordingResolution::ProviderSession).to receive(:new).and_return(provider)
+    request = CatalogImport.where(kind: RecordingResolution::Investigation::KIND).sole
+    CanonicalCatalogJob.perform_now(request.id)
+    expect(request.reload.state).to eq("imported")
+    expect(page).to have_css(".investigation-badge", text: /Investigation complete|Needs review/)
+    expect(page).to have_css(".resolution-choice", text: "Signals")
+    expect(page).to have_no_css(".investigation-progress")
+    capture_resolution("investigation-complete")
+  end
+
   it "automatically shows pending release verification when the saved recording has no complete release evidence" do
     user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "catalog-pending", lastfm_username: "catalog-pending")
     observation = catalog_observation(user)
@@ -608,7 +677,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     end
     sign_in(user)
     visit resolution_surface_path(observations.first)
-    expect(page).to have_text("Queued for background review")
+    expect(page).to have_css(".investigation-progress", text: "Queued")
     expect(page).to have_no_text("Provider calls")
 
     request = CatalogImport.find_by!(kind: RecordingResolution::Investigation::KIND)

@@ -56,11 +56,11 @@ module CanonicalCatalog
           []
         else
           edition.slots.select do |slot|
-            id = slot.dig(:recording, "id")
-            !base_recordings.include?(id) && (recording_mbid.nil? || id == recording_mbid)
+            !base_recordings.include?(slot.dig(:recording, "id"))
           end
         end
-        @additional_slots.concat(additions.map { |slot| slot.merge(edition_mbid: edition.data.fetch("id"), appearance_date: date) })
+        admitted = recording_mbid ? additions.select { |slot| slot.dig(:recording, "id") == recording_mbid } : additions
+        @additional_slots.concat(admitted.map { |slot| slot.merge(edition_mbid: edition.data.fetch("id"), appearance_date: date) })
         edition.data.slice("id", "title", "date", "country", "status", "packaging", "disambiguation", "edition_relationships", "genres", "tags").merge(
           "track_count" => edition.slots.size,
           "additional_tracks" => additions.map do |slot|

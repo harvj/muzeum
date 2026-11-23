@@ -13,6 +13,8 @@ module CanonicalCatalog
       @token = claim
       return unless @token
 
+      yield if block_given?
+
       @session = @session_factory.call(@request, @token)
       @store = Store.new(@request, @session)
       case @request.kind
@@ -247,7 +249,8 @@ module CanonicalCatalog
       previous = RecordingResolution::Assessment.where(group_id: @group&.id, created_at: 1.day.ago..)
         .where("evidence ? 'recording_publications'").order(id: :desc).pick(:evidence) || {}
       saved = previous.fetch("recording_publications", {}).slice(*ids).reject do |_, history|
-        history["checked_at"].to_s < 1.day.ago.utc.iso8601 || history["pending"] || Array(history["pending_groups"]).any?
+        history["checked_at"].to_s < 1.day.ago.utc.iso8601 || history["pending"] || Array(history["pending_groups"]).any? ||
+          (Array(history["original_groups"]).any? && !history.key?("edition_coverage"))
       end
       # Only reuse completed, recent histories and their checked source editions.
       groups = saved.values.flat_map { |history| Array(history["original_groups"]) }

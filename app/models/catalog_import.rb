@@ -17,9 +17,28 @@ class CatalogImport < ApplicationRecord
   end
 
   def dispatch
-    CanonicalCatalogJob.set(wait_until: due_at).perform_later(id) if self.class.worker_enabled? && active?
+    return unless self.class.worker_enabled? && active?
+
+    job = CanonicalCatalogJob.set(wait_until: due_at).perform_later(id)
+    if due_at.future? && job && job.provider_job_id &&
+        kind.in?([ "assessment", RecordingResolution::Investigation::KIND ])
+      scheduled_id = self.class.connection.quote(job.job_id)
+      self.class.where(id:, state: "pending", due_at:).update_all(
+        "context = jsonb_set(context, '{scheduled_active_job_id}', to_jsonb(#{scheduled_id}::text))")
+    end
+    job
   rescue ActiveJob::EnqueueError, SolidQueue::Job::EnqueueError
     # A due request can be dispatched again from the page or the bounded recovery task.
+    false
+  end
+
+  def automatic_retry_scheduled?
+    return false unless state == "pending" && due_at.future? && context["scheduled_active_job_id"].present?
+    return false unless CanonicalCatalogJob.queue_adapter.is_a?(ActiveJob::QueueAdapters::SolidQueueAdapter)
+
+    SolidQueue::ScheduledExecution.joins(:job)
+      .exists?(solid_queue_jobs: { active_job_id: context["scheduled_active_job_id"] })
+  rescue ActiveRecord::ActiveRecordError
     false
   end
 

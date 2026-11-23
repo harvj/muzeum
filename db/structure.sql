@@ -1063,6 +1063,40 @@ ALTER SEQUENCE public.release_recordings_id_seq OWNED BY public.release_recordin
 
 
 --
+-- Name: release_track_listening_decisions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.release_track_listening_decisions (
+    id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    release_id bigint NOT NULL,
+    recording_id bigint NOT NULL,
+    included boolean NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: release_track_listening_decisions_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.release_track_listening_decisions_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: release_track_listening_decisions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.release_track_listening_decisions_id_seq OWNED BY public.release_track_listening_decisions.id;
+
+
+--
 -- Name: releases; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1754,6 +1788,13 @@ ALTER TABLE ONLY public.release_recordings ALTER COLUMN id SET DEFAULT nextval('
 
 
 --
+-- Name: release_track_listening_decisions id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.release_track_listening_decisions ALTER COLUMN id SET DEFAULT nextval('public.release_track_listening_decisions_id_seq'::regclass);
+
+
+--
 -- Name: releases id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -1991,6 +2032,14 @@ ALTER TABLE ONLY public.release_ranking_decisions
 
 ALTER TABLE ONLY public.release_recordings
     ADD CONSTRAINT release_recordings_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: release_track_listening_decisions release_track_listening_decisions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.release_track_listening_decisions
+    ADD CONSTRAINT release_track_listening_decisions_pkey PRIMARY KEY (id);
 
 
 --
@@ -2582,6 +2631,13 @@ CREATE UNIQUE INDEX index_release_recordings_on_release_id_and_recording_id ON p
 
 
 --
+-- Name: index_release_track_listening_on_listener_release_recording; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_release_track_listening_on_listener_release_recording ON public.release_track_listening_decisions USING btree (user_id, release_id, recording_id, id);
+
+
+--
 -- Name: index_releases_on_ingested_from_release_mbid; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -3149,6 +3205,14 @@ ALTER TABLE ONLY public.daily_listens
 
 
 --
+-- Name: release_track_listening_decisions fk_rails_34a42965e1; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.release_track_listening_decisions
+    ADD CONSTRAINT fk_rails_34a42965e1 FOREIGN KEY (recording_id) REFERENCES public.recordings(id);
+
+
+--
 -- Name: scrobbles fk_rails_34b49bed2b; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3162,6 +3226,14 @@ ALTER TABLE ONLY public.scrobbles
 
 ALTER TABLE ONLY public.source_deliveries
     ADD CONSTRAINT fk_rails_35b08045ae FOREIGN KEY (scrobble_id) REFERENCES public.scrobbles(id);
+
+
+--
+-- Name: release_track_listening_decisions fk_rails_3be875762b; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.release_track_listening_decisions
+    ADD CONSTRAINT fk_rails_3be875762b FOREIGN KEY (release_id) REFERENCES public.releases(id);
 
 
 --
@@ -3258,6 +3330,14 @@ ALTER TABLE ONLY public.release_recordings
 
 ALTER TABLE ONLY public.scrobbles
     ADD CONSTRAINT fk_rails_7184308464 FOREIGN KEY (recording_id) REFERENCES public.recordings(id);
+
+
+--
+-- Name: release_track_listening_decisions fk_rails_718c4192d7; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.release_track_listening_decisions
+    ADD CONSTRAINT fk_rails_718c4192d7 FOREIGN KEY (user_id) REFERENCES public.users(id);
 
 
 --
@@ -3555,6 +3635,7 @@ ALTER TABLE ONLY public.resolution_work
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261123230000'),
 ('20261122223000'),
 ('20261122170100'),
 ('20261122170000'),

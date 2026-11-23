@@ -38,7 +38,8 @@ module RecordingResolution
         .group_by { |row| row.dig("release-group", "id") }
       groups.sort_by { |group, refs| [ refs.first.dig("release-group", "primary-type") == "Album" ? 0 : 1, group ] }.each do |group, refs|
         metadata = refs.first.fetch("release-group")
-        checked = original_editions(metadata, editions)
+        references = @musicbrainz.collection_editions(@session, group, limit: BROWSE_PAGE)
+        checked = original_editions(metadata, references, editions)
         original = checked.map { |edition| CanonicalCatalog::Edition.new(edition, edition.fetch("id")) }
         raise CanonicalCatalog::Store::Unverified if CanonicalCatalog::Construction.originals(original).empty?
         # The original program can omit a recording known only from an additional edition.
@@ -52,6 +53,8 @@ module RecordingResolution
           raise CanonicalCatalog::Store::Unverified unless includes?(appearance, id)
         end
         history["original_groups"] << group
+        history["edition_coverage"] ||= {}
+        history["edition_coverage"][group] = compare_editions(group, references, checked, editions)
       rescue CanonicalCatalog::Store::Unverified
         history["pending_groups"] << group
       end
@@ -60,8 +63,8 @@ module RecordingResolution
       { "pending" => true }
     end
 
-    def original_editions(group, editions)
-      refs = @musicbrainz.collection_editions(@session, group.fetch("id"), limit: BROWSE_PAGE).select do |row|
+    def original_editions(group, references, editions)
+      refs = references.select do |row|
         row["status"] == "Official" && row["date"] == group["first-release-date"] &&
           (group["title"].blank? || DiscoveryTitle.match?(DiscoveryTitle.album_base(row["title"]), group["title"]))
       end
@@ -73,6 +76,20 @@ module RecordingResolution
 
         checked
       end
+    end
+
+    def compare_editions(group, references, originals, editions)
+      original_ids = originals.pluck("id")
+      official = references.select { |row| row["status"] == "Official" && publication_date?(row["date"]) }
+      remaining = official.reject { |row| original_ids.include?(row["id"]) }.sort_by { |row| row.values_at("date", "id") }
+      budget = [ EditionDiscovery::MAX_ORIGINAL_LOOKUPS - original_ids.size, 0 ].max
+      remaining.first(budget).each do |row|
+        verified_edition(row.fetch("id"), group, editions)
+      rescue CanonicalCatalog::Store::Unverified
+        next
+      end
+      verified, unchecked = official.pluck("id").partition { |id| editions.key?(id) }
+      { "verified" => verified.sort, "unchecked" => unchecked.sort }
     end
 
     def verified_edition(id, group, editions)

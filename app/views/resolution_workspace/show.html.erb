@@ -2,6 +2,7 @@
 <% contexts = resolution_release_contexts(@assessment, @candidates) %>
 <% selected = resolution_selected_candidate(@candidates, @ranking, contexts, params[:candidate], @current_recording&.mbid) %>
 <% navigation = { assessment: params[:assessment].presence, candidate: params[:candidate].presence }.compact %>
+<%= turbo_stream_from @assessment_request if @assessment_request&.active? && params[:assessment].blank? %>
 <div class="card library-card resolution-review">
 <div class="review-overview">
 <section class="review-heading">
@@ -35,7 +36,7 @@
 </nav>
 <% if section == "candidates" %>
 <section id="review-candidates" class="resolution-decision" tabindex="-1">
-  <%= render "investigation_status", compact: section == "candidates" %>
+  <%= render "investigation_status", contexts:, compact: section == "candidates" %>
   <%= render "recording_choices", selected:, contexts:, navigation:, catalog_rows: %>
   <% if @batch_releases.present? %>
     <details><summary>Review other tracks</summary>
@@ -47,7 +48,7 @@
 </section>
 <% elsif section == "evidence" %>
 <section id="review-evidence">
-  <%= render "investigation_status", compact: section == "candidates" %>
+  <%= render "investigation_status", contexts:, compact: section == "candidates" %>
   <%= render "investigation", selected:, review_state: %>
 </section>
 <% end %>

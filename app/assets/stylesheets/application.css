@@ -932,3 +932,12 @@ h3.resolution-release-title {
   line-height: 1.2;
   overflow-wrap: anywhere;
 }
+
+.library-card .additional-edition-tracks { margin-block-start: 0; }
+.additional-edition-tracks summary .muted { margin-inline-start: .4rem; }
+.investigation-progress { padding: .55rem .8rem; border: 1px solid var(--line); border-radius: .5rem; }
+.investigation-badge { display: inline-block; padding: .15rem .55rem; border-radius: 1rem; background: var(--control); font-weight: 700; }
+
+.release-track-preferences { padding-inline-start: 0; list-style: none; }
+.release-track-preferences li { display: flex; align-items: center; justify-content: space-between; gap: .6rem; padding-block: .25rem; }
+.library-card .release-track-preference { margin: 0; }

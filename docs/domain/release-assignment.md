@@ -14,7 +14,7 @@ For original-album construction, independent recording identity and verified edi
 
 **REL-015 — Keep source and interpretation separate.** Importing release tracks does not create observations. Preserve the immutable Last.fm input and effective recording override precedence. Each release retains its title, date and ordered tracks. Muzeum does not designate a primary release for listening attribution.
 
-**REL-016 — Construct the musical collection from evidence.** Treat MusicBrainz editions as provenance for title, credits, dates, track order, and recording appearances. Construct the original published sequence when sufficiently supported. Retain additional edition tracks and their dates separately, without backdating additional recordings or inferring the edition played. Resolve independent recording identity even while construction is pending.
+**REL-016 — Construct the musical collection from evidence.** Treat MusicBrainz editions as provenance for title, credits, dates, track order, and recording appearances. Construct the original published sequence when sufficiently supported. Retain additional edition tracks and their dates separately, without backdating additional recordings or inferring the edition played. Apply [STAT-003](listening-statistics.md#definitions) to release totals and retain the admitted membership regardless of the listener’s accounting preference. Resolve independent recording identity even while construction is pending.
 
 **REL-017 — Independent chronology.** Preserve recording date, canonical publication date, recording first publication, and specific edition appearances as distinct facts. Retain unknown dates and source precision, including ranges. A publication date cannot establish when a performance was captured.
 

@@ -22,6 +22,17 @@ RSpec.describe CanonicalCatalog::Construction do
         "provider_first_release_date" => "2004-06-22")
     )
   end
+  it "retains checked edition additions as evidence when resolution admits only the selected base recording" do
+    us, jp, = guilt_show_editions
+    editions = [ us, jp ].map { |edition| CanonicalCatalog::Edition.new(edition, edition.fetch("id")) }
+    selected = editions.first.slots.first.dig(:recording, "id")
+    bonus = editions.last.slots.last.dig(:recording, "id")
+    construction = described_class.new(editions, recording_mbid: selected)
+
+    expect(construction.additional_slots).to be_empty
+    expect(construction.appearances.last.fetch("additional_tracks")).to contain_exactly(include("recording_mbid" => bonus))
+  end
+
   it "recovers the original sequence when investigation first finds only the Japanese edition" do
     us, jp, web = guilt_show_editions
     musicbrainz = instance_double(Clients::Musicbrainz)

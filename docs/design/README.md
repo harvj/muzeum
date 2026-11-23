@@ -65,3 +65,5 @@ Keep the final Chrome review screenshots for visual UI changes under `docs/desig
 - [Global header navigation states](header-navigation/)
 
 - [Entity listening bars and Guide swatches](v0.6.9/)
+
+- [Musical collections and investigation](v0.7.0/)

@@ -8,7 +8,7 @@ Status: **Authoritative accounting semantics.** See [principles](principles.md) 
 
 **STAT-002 — Recording totals.** A recording's play count is the number of accepted, currently resolved plays of that recording in the listener's authorized archive. Recording listening time derives from those plays under a consistent documented duration policy. Release credit never changes these totals.
 
-**STAT-003 — Membership views show all recording activity.** A release page shows the distinct effective observations of its member recordings, regardless of the original source album. The same observation may contribute to multiple release contexts.
+**STAT-003 — Release listening uses counted memberships.** A release counts the distinct effective observations of its included recordings, regardless of the source album string. Base-track recordings count by default. Additional edition recordings count only after the listener explicitly includes them for that release. The listener can include or exclude any canonical member, and the latest release-and-recording decision takes precedence over the default. Retain each revision. If a recording appears both in the base sequence and on an additional edition, it counts once by default.
 
 **STAT-004 — Union for combined contexts.** Use the union of distinct observations across selected releases for combined counts and estimated listening time.
 
@@ -49,7 +49,8 @@ The album and single each show 150 contributed observations. Their combined hist
 
 - 2026-11-17: Initial distinct membership-versus-credit and ranking semantics.
 
+- 2026-11-23: Approved base-track defaults and revisable per-release track inclusion and exclusion.
 
 ## Default release rankings (v0.6.6)
 
-Rank eligible canonical releases by estimated listening time, breaking ties by title and canonical ID. Eligibility requires a verified original publication context or a verified first-publication appearance of a member recording; it does not follow from catalog membership alone. A listener’s latest explicit inclusion or exclusion supersedes the default. Keep preference history without changing catalog membership or observations. Release detail and combined histories continue to use all applicable memberships. Count distinct effective observations within each result, and use the union of observations for combined totals.
+Rank eligible canonical releases by estimated listening time, breaking ties by title and canonical ID. Eligibility requires a verified original publication context or a verified first-publication appearance of a member recording; it does not follow from catalog membership alone. A listener’s latest explicit inclusion or exclusion supersedes the default. Keep preference history without changing catalog membership or observations. Release detail, catalog totals, artist release rankings, and combined histories use the applicable included memberships for the listener. Release-ranking eligibility stays independent of the track-level calculation. Count distinct effective observations within each result, and use the union of observations for combined totals.

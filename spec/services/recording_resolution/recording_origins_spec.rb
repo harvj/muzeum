@@ -33,6 +33,8 @@ RSpec.describe RecordingResolution::RecordingOrigins do
       expect(history.dig(compilation_recording, "original_groups")).to be_empty
       expect(history.dig(compilation_recording, "earliest_publication", "date")).to eq("2009")
       expect(history.dig(album_recording, "original_groups")).to eq([ NarrowStairsFixture::GROUP ])
+      expect(history.dig(album_recording, "edition_coverage", NarrowStairsFixture::GROUP, "verified"))
+        .to include(NarrowStairsFixture::LATER, NarrowStairsFixture::ORIGINAL)
       expect(history.dig(album_recording, "earliest_publication", "date")).to eq("2008-05-13")
       expect(history.dig(album_recording, "appearances").pluck("title")).to include("Indie/Rock Playlist: November 2008")
       expect(history.dig(album_recording, "appearances").pluck("id")).to include(NarrowStairsFixture::LATER, NarrowStairsFixture::ORIGINAL)

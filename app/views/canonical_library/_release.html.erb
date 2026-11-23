@@ -15,7 +15,9 @@
             <th scope="row"><span class="play-name" data-overflow-name><%= catalog_link(slot.recording, title: slot.title) %></span></th>
             <td class="table-number"><%= recording_duration(slot.recording.duration_ms) if slot.recording.duration_ms %></td>
             <td class="track-play-count">
-              <% if @archive_available %>
+              <% if @archive_available && !@counted_tracks.include?(slot.recording_id) %>
+                Excluded
+              <% elsif @archive_available %>
                 <% count = @track_counts.fetch(slot.recording_id, 0) %>
                 <%= render "listening_bar", value: count, maximum:, label: number_with_delimiter(count),
                   accessible_label: pluralize(count, "resolved play"), colors:,
@@ -41,20 +43,51 @@
   <% end %>
 </section>
 
-<% if @additional_appearances.any? %>
+<% admitted = @additional_appearances.group_by { |slot| slot.recording.mbid } %>
+<% evidence = @additional_edition_evidence.group_by(&:first) %>
+<% additional_mbids = admitted.keys | evidence.keys %>
+<% if additional_mbids.any? %>
   <section class="card library-card">
-    <h2 class="section-heading">Additional edition appearances</h2>
-    <ul class="catalog-list">
-      <% @additional_appearances.each do |slot| %>
-        <li><%= catalog_link(slot.recording, title: slot.title) %> · <%= slot.appearance_date %> ·
-          <%= link_to "MusicBrainz edition", "https://musicbrainz.org/release/#{slot.edition_mbid}" %></li>
-      <% end %>
-    </ul>
+    <details class="additional-edition-tracks">
+      <summary><strong>Additional edition tracks</strong> <span class="muted"><%= pluralize(additional_mbids.size, "track") %></span></summary>
+      <ul class="catalog-list">
+        <% additional_mbids.each do |mbid| %>
+          <% slots = admitted.fetch(mbid, []) %>
+          <% sources = (slots.map { |slot| [slot.edition_mbid, slot.appearance_date] } + evidence.fetch(mbid, []).map { |row| row.last(2) }).uniq(&:first) %>
+          <% title = slots.first&.title || evidence.fetch(mbid).first[1] %>
+          <li><%= slots.any? ? catalog_link(slots.first.recording, title:) : title %>
+            <% if sources.first.last.present? %> · <%= sources.first.last %><% end %>
+            <ul>
+              <% sources.each do |edition_mbid, date| %>
+                <li><%= link_to ["MusicBrainz edition", date].compact.join(" · "), "https://musicbrainz.org/release/#{edition_mbid}" %></li>
+              <% end %>
+            </ul>
+          </li>
+        <% end %>
+      </ul>
+    </details>
   </section>
 <% end %>
 
 <section class="card library-card" id="listening-activity">
   <h2 class="section-heading"><%= @activity_releases.many? ? "Combined listening history" : "Release listening history" %></h2>
+  <% if @archive_available && !@public_profile && (@slots.any? || @additional_appearances.any?) %>
+    <details id="release-track-listening"<%= " open" if params[:track_preferences].present? %>>
+      <summary>Tracks counted in listening totals</summary>
+      <ul class="release-track-preferences">
+        <% (@slots + @additional_appearances).uniq(&:recording_id).each do |track| %>
+          <% counted = @counted_tracks.include?(track.recording_id) %>
+          <% action = counted ? "Exclude" : "Include" %>
+          <% destination = counted ? "from" : "in" %>
+          <li><span><%= track.title %><%= " · Additional edition track" if track.edition_mbid %></span>
+            <%= button_to action, track_listening_release_path(@entry), method: :patch,
+              params: { recording_id: track.recording_id, decision: action.downcase },
+              form: { class: "release-track-preference" }, aria: { label: "#{action} #{track.title} #{destination} release listening totals" } %>
+          </li>
+        <% end %>
+      </ul>
+    </details>
+  <% end %>
   <% if @activity_releases.many? %>
     <p><%= safe_join(@activity_releases.map { |release| catalog_link(release) }, ", ") %></p>
   <% end %>
@@ -62,7 +95,7 @@
     <p><strong><%= estimated_listening_time(@listening_total) %></strong> estimated listening time</p>
     <%= render "duration_coverage", totals: @listening_total %>
     <%= render "artist_timeline", metric: :milliseconds if @timeline&.any? { |_, totals| totals.plays.positive? } %>
-    <p><%= pluralize(@observation_count, "distinct resolved observation") %> across the member recordings.</p>
+    <p><%= pluralize(@observation_count, "distinct resolved observation") %> across the counted recordings.</p>
     <% if @plays.any? %>
       <ol class="catalog-list">
         <% @plays.each do |play| %>

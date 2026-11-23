@@ -20,7 +20,10 @@ Rails.application.routes.draw do
     resources section, only: %i[index show], controller: "canonical_library", defaults: { section: } do
       post :import, on: :member
       patch :musical_identity, on: :member
-      patch :ranking, on: :member if section == :releases
+      if section == :releases
+        patch :ranking, on: :member
+        patch :track_listening, on: :member
+      end
       patch :chronology, on: :member if section == :recordings
     end
   end
