@@ -39,6 +39,15 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     expect(release.ingested_from_release_mbid).to eq(other["id"])
     expect(release.catalog_track_slots.base_sequence.order(:medium, :position).pluck(:title)).to eq(tracks.pluck("title"))
     expect(release.catalog_track_slots.additional_appearances).to be_empty
+
+    # Existing v0.6.0 selections are identified by their reviewed import, without a new flag.
+    source = Struct.new(:provenance).new([])
+    chosen_slots = CanonicalCatalog::Edition.new(other, other.fetch("id")).slots
+    background = CatalogImport.create!(kind: "release", entity_id: release.id, due_at: Time.current, state: "imported")
+    expect do
+      CanonicalCatalog::Store.new(background, source).release(original, chosen_slots, strict_collection: true)
+    end.to raise_error(CanonicalCatalog::Store::Unverified, /reviewed original release/)
+    expect(RecordingResolution::ReleaseTracklist.new(release.reload).evidence["edition_mbid"]).to eq(other["id"])
   end
 
   [ "2008-05-13", "2015-02-24" ].each do |stored_date|
