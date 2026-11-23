@@ -1,16 +1,19 @@
-<section class="intro <%= "release-heading" if @entry.is_a?(Release) %>">
-  <p><%= link_to @section.capitalize, catalog_index_path(@section) %></p>
-  <% if @entry.is_a?(Release) %>
-    <p><%= catalog_artists(@entry).presence || "Artist credits pending" %></p>
-    <h1><%= musical_identity_badge(@entry, detailed: true) %><%= catalog_title(@entry) %><% if @entry.release_year %> <span><%= @entry.release_year %></span><% end %></h1>
-  <% else %>
-    <h1><%= musical_identity_badge(@entry, detailed: true) %><%= catalog_title(@entry) %></h1>
-    <% if @entry.is_a?(Recording) %><p><%= verified_recording_credit(@entry).presence || "Artist credits pending" %></p><% end %>
+<section class="intro catalog-heading <%= "release-heading" if @entry.is_a?(Release) %>">
+  <h1><%= musical_identity_badge(@entry, detailed: true) %><%= catalog_title(@entry) %>
+    <%= catalog_release_date(@entry) if @entry.is_a?(Release) %></h1>
+  <% case @entry
+     when Release, Recording %>
+    <p><span class="catalog-credit"><%= verified_catalog_credit(@entry).presence || "Artist credits pending" %></span></p>
+  <% when Artist %>
+    <% if @entry.country.present? %><p><span class="catalog-credit"><%= render "shared/geographic_place", country: @entry.country %></span></p><% end %>
   <% end %>
-  <%= render "artist_metadata" if @entry.is_a?(Artist) %>
 </section>
 <%= render "release" if @entry.is_a?(Release) %>
-<% if @entry.is_a?(Artist) %><%= render "artist" %><% end %>
+<% if @entry.is_a?(Artist) %><%= render "artist" %>
+<details class="card library-card"><summary>Geographic evidence</summary>
+  <%= render "artist_metadata" %>
+</details>
+<% end %>
 <% unless @public_profile %>
 <% if @entry.is_a?(Artist) %>
 <details class="card library-card artist-metadata-tools"><summary>Catalog tools</summary>

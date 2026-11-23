@@ -17,7 +17,8 @@
     <%= tag.div class: "stone-environment", aria: { hidden: true },
                 data: { controller: "site-art", site_art_urls_value: SiteArt.snapshot } %>
     <a class="shell-skip-link" href="#main-content">Skip to content</a>
-    <header>
+    <header data-controller="shell-header"
+            data-action="scroll@window->shell-header#schedule resize@window->shell-header#schedule focusin@document->shell-header#clearFocus">
       <a class="harvj-wordmark" href="https://muzeum.fm/">muzeum</a>
       <div class="header-navigation">
         <% if @public_profile %>

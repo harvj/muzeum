@@ -18,6 +18,66 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     end
   end
 
+  it "aligns transparent badges and presents release dates at verified precision" do
+    user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "entity-headings")
+    artist = Artist.create!(name: "Tove Lo", country: "SE", mbid: SecureRandom.uuid)
+    collaborator = Artist.create!(name: "Collaborating Artist", mbid: SecureRandom.uuid)
+    release = Release.create!(title: "ESTRUS", release_year: 2026, release_month: 9, release_day: 18)
+    recording = Recording.create!(title: "A long recording title that can wrap across several lines on a narrow screen", mbid: SecureRandom.uuid)
+    release.artists << [ artist, collaborator ]
+    recording.artists << [ artist, collaborator ]
+    sign_in(user)
+
+    browser = page.driver.browser
+    [ [ 1440, 960 ], [ 390, 844 ] ].product(%w[light dark]).each do |(width, height), theme|
+      browser.execute_cdp("Emulation.setDeviceMetricsOverride", width:, height:, deviceScaleFactor: 1, mobile: width < 700)
+      browser.execute_cdp("Emulation.setEmulatedMedia", features: [
+        { name: "prefers-color-scheme", value: theme }, { name: "prefers-reduced-motion", value: "reduce" }
+      ])
+      { artist: artist_path(artist), recording: recording_path(recording), release: release_path(release) }.each do |entity, path|
+        visit path
+        within(".catalog-heading") do
+          expect(page).to have_no_link(entity.to_s.pluralize.capitalize)
+          expect(page).to have_no_link("MusicBrainz artist")
+          expect(page).to have_text("Sweden") if entity == :artist
+          expect(page).to have_css('h1 time[datetime="2026-09-18"]', text: "September 18, 2026") if entity == :release
+          expect(page).to have_link("Collaborating Artist") if entity != :artist
+        end
+        geometry = page.evaluate_script(<<~JS)
+          (() => {
+            const badge = document.querySelector(".catalog-heading .identity-swatch")
+            const box = badge.getBoundingClientRect()
+            return [getComputedStyle(badge).backgroundColor, box.width, box.height,
+              document.documentElement.scrollWidth <= innerWidth]
+          })()
+        JS
+        expect(geometry[0]).to eq("rgba(0, 0, 0, 0)")
+        expect(geometry[1]).to be > 14
+        expect(geometry[1]).to eq(geometry[2])
+        expect(geometry[3]).to be(true)
+        capture_resolution("heading-#{entity}-#{width}-#{theme}")
+      end
+      page.execute_script("document.querySelector('main').style.minHeight = '200vh'; scrollTo(0, 250)")
+      expect(page).to have_css("main[data-shell-fading]")
+      expect(page.evaluate_script("document.querySelector('header').getBoundingClientRect().top")).to eq(0)
+      expect(page.evaluate_script("getComputedStyle(document.querySelector('main')).maskImage")).to include("linear-gradient")
+      capture_resolution("sticky-header-#{width}-#{theme}")
+    end
+
+    [ [ 2026, 9, "September 2026" ], [ 2026, nil, "2026" ], [ nil, nil, nil ] ].each do |year, month, label|
+      release.update!(release_year: year, release_month: month, release_day: nil)
+      visit release_path(release)
+      if label
+        expect(page).to have_css(".catalog-heading time", exact_text: label)
+      else
+        expect(page).to have_no_css(".catalog-heading time")
+      end
+    end
+  ensure
+    browser&.execute_cdp("Emulation.clearDeviceMetricsOverride")
+    browser&.execute_cdp("Emulation.setEmulatedMedia", features: [])
+  end
+
   it "shows the approved overview and constructs Narrow Stairs from the original US CD" do
     user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "narrow-stairs-browser", lastfm_username: "narrow-stairs-browser")
     observation, assessment = narrow_stairs_assessment(user, album_name: "Narrow Stairs", publication: true)

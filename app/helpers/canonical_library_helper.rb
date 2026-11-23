@@ -57,13 +57,30 @@ module CanonicalLibraryHelper
     safe_join(credits.sort_by { |credit| [ credit.position || Float::INFINITY, credit.id ] }.map { |credit| catalog_link(credit.artist) }, ", ")
   end
 
-  def verified_recording_credit(recording)
-    credits = CatalogRevision.where(entity_type: "Recording", entity_id: recording.id)
-      .where("evidence ? 'artist_credit'").order(id: :desc).pick(:evidence)&.fetch("artist_credit", nil)
-    return catalog_artists(recording) if credits.blank?
+  def catalog_release_date(release)
+    return unless release.release_year
 
-    artists = recording.artists.index_by(&:mbid)
-    return catalog_artists(recording) unless credits.all? { |credit| artists.key?(credit["artist_mbid"]) }
+    year, month, day = release.release_year, release.release_month, release.release_day
+    timestamp = format("%04d", year)
+    label = year.to_s
+    if month.in?(1..12)
+      timestamp += format("-%02d", month)
+      label = "#{Date::MONTHNAMES.fetch(month)} #{year}"
+      if day && Date.valid_date?(year, month, day)
+        timestamp += format("-%02d", day)
+        label = "#{Date::MONTHNAMES.fetch(month)} #{day}, #{year}"
+      end
+    end
+    tag.time(label, datetime: timestamp, class: "catalog-release-date")
+  end
+
+  def verified_catalog_credit(entry)
+    credits = CatalogRevision.where(entity_type: entry.class.name, entity_id: entry.id)
+      .where("evidence ? 'artist_credit'").order(id: :desc).pick(:evidence)&.fetch("artist_credit", nil)
+    return catalog_artists(entry) if credits.blank?
+
+    artists = entry.artists.index_by(&:mbid)
+    return catalog_artists(entry) unless credits.pluck("artist_mbid").to_set == artists.keys.to_set
 
     safe_join(credits.flat_map do |credit|
       artist = artists.fetch(credit.fetch("artist_mbid"))
