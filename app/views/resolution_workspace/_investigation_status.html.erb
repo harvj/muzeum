@@ -1,8 +1,13 @@
   <% provider_incomplete = @assessment&.evidence&.fetch("partial", false) %>
   <% request_failed = @assessment_request&.state == "failed" %>
   <% throttled = request_failed && @assessment_request.failure == "musicbrainz throttled (503)" %>
-  <% can_retry = @may_manage_observation && CatalogImport.worker_enabled? && !@assessment_request&.active? %>
-  <% if @assessment_request&.active? %>
+  <% expired = @assessment_request&.expired_investigation? || @assessment_request&.failure == "Investigation expired before completion." %>
+  <% can_retry = @may_manage_observation && CatalogImport.worker_enabled? && (expired || !@assessment_request&.active?) %>
+  <% if expired %>
+    <p role="status" class="investigation-badge"><%= can_retry ? "Failed — Retry" : "Needs attention" %></p>
+    <p class="muted">The investigation expired.</p>
+    <%= button_to "Retry search", investigate_resolution_surface_path(@observation) if can_retry %>
+  <% elsif @assessment_request&.active? %>
     <div class="investigation-progress">
       <% if @assessment_request.state == "refreshing" && @assessment_request.lease_until.future? %>
         <p role="status"><strong>Investigating</strong></p>
@@ -10,8 +15,11 @@
       <% elsif @assessment_request.state == "refreshing" %>
         <p role="status"><strong>Needs attention</strong></p>
         <p class="muted">The worker’s investigation lease expired.</p>
+      <% elsif @assessment_request.automatic_retry_scheduled? %>
+        <p role="status"><strong>Waiting to retry</strong></p>
+        <p class="muted">Next attempt <%= browser_time(@assessment_request.due_at) %>.</p>
       <% elsif @assessment_request.due_at.future? %>
-        <p role="status"><strong><%= @assessment_request.automatic_retry_scheduled? ? "Waiting to retry" : "Investigation pending" %></strong></p>
+        <p role="status"><strong>Investigation pending</strong></p>
         <p class="muted">Eligible for another attempt <%= browser_time(@assessment_request.due_at) %>.</p>
       <% else %>
         <p role="status"><strong>Queued</strong></p>
@@ -19,10 +27,6 @@
       <% end %>
       <%= link_to "Refresh status", request.fullpath, data: { turbo: false } %>
     </div>
-  <% elsif @assessment_request&.failure == "Investigation expired before completion." %>
-    <p role="status" class="investigation-badge"><%= can_retry ? "Failed — Retry" : "Needs attention" %></p>
-    <p class="muted">The investigation expired.</p>
-    <%= button_to "Retry search", investigate_resolution_surface_path(@observation) if can_retry %>
   <% elsif request_failed || provider_incomplete %>
     <div class="review-failure">
       <div role="status">

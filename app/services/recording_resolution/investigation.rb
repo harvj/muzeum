@@ -28,7 +28,17 @@ module RecordingResolution
         surface = Ledger.attach!(@observation)
         group = Group.create_or_find_by!(surface_id: surface.id, version: VERSION, claims: @claims)
         previous = CatalogImport.latest(KIND, group.id)
-        next previous if previous && (!refresh || previous.active?)
+        if previous
+          next previous unless refresh
+
+          previous.with_lock do
+            if previous.expired_investigation?
+              previous.update!(state: "failed", failure: "Investigation expired before completion.",
+                lease_token: nil, lease_until: nil)
+            end
+          end
+          next previous if previous.active?
+        end
 
         created = CatalogImport.request!(KIND, group.id, "observation_id" => @observation.id,
           "requester_id" => @listener.id, "refresh" => refresh, "manual_mbid" => manual_mbid, "release_mbid" => release_mbid)

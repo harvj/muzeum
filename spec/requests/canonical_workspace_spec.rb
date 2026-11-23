@@ -537,6 +537,23 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     expect(Scrobble.find(observation.id).payload).to eq(observation.payload)
   end
 
+  it "reports an expired investigation and replaces it only on explicit retry" do
+    finish_oidc
+    user = User.find_by!(oidc_subject: @subject)
+    LastfmAccount.associate!(user, "catalog-expired-request")
+    observation = catalog_observation(user)
+    get resolution_surface_path(observation)
+    request = CatalogImport.where(kind: RecordingResolution::Investigation::KIND).sole
+    request.update!(created_at: 2.days.ago)
+
+    expect { get resolution_surface_path(observation) }.not_to change(CatalogImport, :count)
+    expect(response.body).to include("Failed — Retry")
+    expect(request.reload.state).to eq("pending")
+    expect { post investigate_resolution_surface_path(observation) }.to change(CatalogImport, :count).by(1)
+    expect(request.reload.state).to eq("failed")
+    expect(CatalogImport.latest(RecordingResolution::Investigation::KIND, request.entity_id).state).to eq("pending")
+  end
+
   it "distinguishes an empty investigation from a provider failure and records a no-change deferral" do
     finish_oidc
     user = User.find_by!(oidc_subject: @subject)

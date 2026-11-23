@@ -42,6 +42,11 @@ class CatalogImport < ApplicationRecord
     false
   end
 
+  def expired_investigation?
+    kind == RecordingResolution::Investigation::KIND && created_at <= 1.day.ago &&
+      (state == "pending" || (state == "refreshing" && !lease_until.future?))
+  end
+
   def active?
     state.in?(ACTIVE)
   end
