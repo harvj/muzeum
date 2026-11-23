@@ -34,6 +34,8 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     find("summary", text: "Review release construction").click
     expect(page).to have_css(".review-original-tracklist[open] .review-tracks li", count: 11)
     expect(page).to have_css(".review-original-tracklist[open] .review-track-match", text: "No Sunlight")
+    expect(page).to have_css("details:not([open]) > summary", text: "Checked appearance · Narrow Stairs")
+
 
     [ [ 1440, 960 ], [ 390, 844 ] ].each do |width, height|
       page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width:, height:, deviceScaleFactor: 1, mobile: width == 390)
