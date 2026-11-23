@@ -10,7 +10,7 @@ class CanonicalCatalogJob < ApplicationJob
     return unless processed
 
     request.dispatch if request.reload.state == "pending"
-    if request.kind == "recording" && (recording = Recording.find_by(id: request.entity_id))
+    if request.kind.in?([ "recording", CatalogImport::RECORDING_METADATA ]) && (recording = Recording.find_by(id: request.entity_id))
       Turbo::StreamsChannel.broadcast_update_to(RecordingResolution::CatalogContext.stream(recording),
         target: RecordingResolution::CatalogContext.target(recording),
         partial: "resolution_workspace/catalog_context", locals: { rows: RecordingResolution::CatalogContext.rows(recording) })

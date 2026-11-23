@@ -167,8 +167,7 @@ class ResolutionWorkspaceController < ApplicationController
       RecordingResolution::Ledger.record!(listener: current_user, scrobble: target, scope:, mode:, reason:, recording:,
         assessment:, metadata:, expected_head: params[:head].presence&.then { |value| Integer(value) })
       if recording
-        enrichment = CatalogImport.request!("recording", recording.id, context)
-        request = enrichment if enrichment.context.key?("assessment_id")
+        request = CatalogImport.request!(CatalogImport::RECORDING_METADATA, recording.id, context)
         if scope == :surface && params[:construct_release].present?
           construct_reviewed_release!(assessment, recording)
         end

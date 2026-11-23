@@ -15,7 +15,7 @@ class ResolutionCatalogChannel < Turbo::StreamsChannel
   def transmit_subscription_confirmation
     super
     recording = Recording.find_by(id: @recording_id)
-    return unless recording && !CatalogImport.latest("recording", recording.id)&.active?
+    return unless recording && !CatalogImport.latest_recording_work(recording.id)&.active?
 
     context = RecordingResolution::CatalogContext
     html = ApplicationController.render(partial: "resolution_workspace/catalog_context", locals: { rows: context.rows(recording) })

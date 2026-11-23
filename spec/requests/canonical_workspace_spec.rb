@@ -100,7 +100,7 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     expect(RecordingResolution::Ledger.for_recordings(user, [ Recording.find_by!(mbid: NarrowStairsFixture::RECORDING).id ]).count(:id)).to eq(6)
     expect(Scrobble.pluck(:payload).uniq).to eq([ payload ])
 
-    request = CatalogImport.where(kind: "recording").sole
+    request = CatalogImport.where(kind: CatalogImport::RECORDING_METADATA).sole
     selected = original.dig("media", 0, "tracks", 2, "recording")
     data = selected.merge("releases" => [ single, *narrow_stairs_editions ].map { |edition| edition.slice("id", "title") })
     session = double(provenance: [])
@@ -277,7 +277,7 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     post decide_resolution_surface_path(plays.first), params: { mode: "resolved", scope: "surface",
       recording_mbid: mbid, assessment_id: assessment.id }
     expect(response).to have_http_status(:see_other)
-    request = CatalogImport.where(kind: "recording").sole
+    request = CatalogImport.where(kind: CatalogImport::RECORDING_METADATA).sole
     session = double(provenance: [])
     allow(session).to receive(:get) do |_provider, path, params:, &projection|
       id = path.split("/").last
@@ -457,7 +457,7 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     expect(response.body).to include("Signals")
     get resolution_surfaces_path(filter: "unresolved")
     expect(response.body).not_to include("Signals")
-    import = CatalogImport.where(kind: "recording").sole
+    import = CatalogImport.where(kind: CatalogImport::RECORDING_METADATA).sole
     expect(import.context).not_to have_key("edition_mbid")
     get resolution_surface_path(example)
     expect(response.body).to include("Uncertain release memberships stay pending.")

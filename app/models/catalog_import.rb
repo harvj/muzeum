@@ -1,4 +1,5 @@
 class CatalogImport < ApplicationRecord
+  RECORDING_METADATA = "recording_metadata".freeze
   ACTIVE = %w[pending refreshing].freeze
   scope :active, -> { where(state: ACTIVE) }
   scope :due, -> { where(state: "pending", due_at: ..Time.current).or(where(state: "refreshing", lease_until: ..Time.current)) }
@@ -24,6 +25,10 @@ class CatalogImport < ApplicationRecord
 
   def active?
     state.in?(ACTIVE)
+  end
+
+  def self.latest_recording_work(entity_id)
+    latest([ "recording", RECORDING_METADATA ], entity_id)
   end
 
   def self.latest(kind, entity_id)

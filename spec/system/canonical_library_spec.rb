@@ -188,7 +188,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     find_button("Resolve recording only").send_keys(:enter)
     expect(page).to have_text("Recording decision saved.")
 
-    request = CatalogImport.find_by!(kind: "recording")
+    request = CatalogImport.find_by!(kind: CatalogImport::RECORDING_METADATA)
     expect(request.state).to eq("pending")
     expect(page).to have_css("turbo-cable-stream-source[connected]", visible: :all)
     expect(page).to have_css(".review-catalog-context", text: "Checking recording metadata")
@@ -205,7 +205,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     visit resolution_surface_path(observation)
     click_button "Resolve this observation"
     expect(page).to have_text("Recording decision saved.")
-    second_import = CatalogImport.latest("recording", request.entity_id)
+    second_import = CatalogImport.latest(CatalogImport::RECORDING_METADATA, request.entity_id)
     expect(second_import.id).not_to eq(request.id)
     CanonicalCatalogJob.perform_now(second_import.id)
     expect(second_import.reload.state).to eq("imported")
@@ -291,7 +291,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     provider = CatalogFixtures::Session.new
     allow(provider).to receive(:edition).and_return(provider.edition.merge("media" => []))
     allow(RecordingResolution::ProviderSession).to receive(:new).and_return(provider)
-    request = CatalogImport.find_by!(kind: "recording")
+    request = CatalogImport.find_by!(kind: CatalogImport::RECORDING_METADATA)
     CanonicalCatalogJob.perform_now(request.id)
     expect(request.reload.state).to eq("imported")
     expect(Release.count).to eq(0)

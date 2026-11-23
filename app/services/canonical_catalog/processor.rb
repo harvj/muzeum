@@ -16,7 +16,7 @@ module CanonicalCatalog
       @session = @session_factory.call(@request, @token)
       @store = Store.new(@request, @session)
       case @request.kind
-      when "recording" then import_recording
+      when "recording", CatalogImport::RECORDING_METADATA then import_recording
       when "release" then import_release
       when "artist" then import_artist
       when "artist_geography" then import_artist_geography
@@ -124,7 +124,7 @@ module CanonicalCatalog
       assessment = RecordingResolution::Assessment.find_by(id: @request.context["assessment_id"])
       publication = assessment&.evidence&.dig("recording_publications", mbid, "earliest_publication")
       locked { @store.recording(data, expected: mbid, publication:) }
-      return complete if @request.context.key?("assessment_id")
+      return complete if @request.kind == CatalogImport::RECORDING_METADATA || @request.context.key?("assessment_id")
 
       ids = Array(data["releases"]).filter_map do |appearance|
         group = appearance["release-group"]

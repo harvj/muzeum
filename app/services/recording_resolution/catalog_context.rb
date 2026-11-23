@@ -19,7 +19,7 @@ module RecordingResolution
 
     def self.rows(recording, artists: recording&.recording_artists&.map(&:artist)&.uniq || [], worker_enabled: CatalogImport.worker_enabled?)
       releases = recording&.admitted_releases&.select(&:catalog_verified_at)&.sort_by { |release| [ release.title, release.id ] } || []
-      state = CatalogImport.latest("recording", recording.id)&.state if recording
+      state = CatalogImport.latest_recording_work(recording.id)&.state if recording
       pending = worker_enabled && state.in?(CatalogImport::ACTIVE)
       release_status = if pending
         "Checking recording metadata…"
