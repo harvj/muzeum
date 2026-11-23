@@ -219,6 +219,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     click_link "Refresh status"
     expect(page).to have_css(".review-candidate.recommended")
     expect(page).to have_text("2 matching observations")
+    find(".review-candidate[open] .review-checked-appearance summary").click
     expect(page).to have_css(".review-candidate[open] .review-tracks li", count: 3)
     expect(page).to have_css(".review-candidate[open] .review-track-match", count: 2)
     expect(page).to have_text("🇺🇸 United States", normalize_ws: true)

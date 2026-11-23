@@ -104,15 +104,11 @@ end %>
           </ul>
         </details>
       <% end %>
-      <% if publication.present? && reference %>
-        <details>
-          <summary>Checked appearance · <%= metadata["title"] %> · <%= release_date || "Date unknown" %></summary>
-          <%= render "review_tracklist", release:, release_id:, mbid: %>
-        </details>
-      <% else %>
+      <%= tag.details(open: !publication.present?, class: "review-checked-appearance") do %>
+        <summary>Checked appearance<% if reference %> · <%= metadata["title"] %> · <%= release_date || "Date unknown" %><% end %></summary>
         <% if reference %>
-          <p class="compact-meta review-edition">Recording appearance · <%= metadata["title"] %><% if metadata["disambiguation"].present? %> · <%= metadata["disambiguation"] %><% end %>
-            · <%= release_date || "Release date unavailable" %> ·
+          <p class="compact-meta review-edition">
+            <% if metadata["disambiguation"].present? %><%= metadata["disambiguation"] %> · <% end %>
             <% if countries.empty? %>Country unavailable<% end %>
             <% countries.each_with_index do |country, index| %><%= ", " if index.positive? %><%= render "shared/geographic_place", country: %><% end %>
           </p>
