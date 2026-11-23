@@ -1,7 +1,7 @@
 <section class="card library-card artist-history" id="listening-history">
   <div class="artist-history-heading">
     <div>
-      <h2>Listening history</h2>
+      <h2 class="section-heading">Listening history</h2>
       <% if @archive_available %>
         <p><strong><%= estimated_listening_time(@listening_total) %></strong> estimated listening time · <%= pluralize(@listening_total.plays, "resolved play") %></p>
         <%= render "duration_coverage", totals: @listening_total %>
@@ -23,7 +23,7 @@
   <% end %>
 </section>
 <section class="card library-card" id="artist-recordings">
-  <h2>Recordings (<%= @recording_count %>)</h2>
+  <h2 class="section-heading">Recordings (<%= @recording_count %>)</h2>
   <% if @recording_rows.any? %>
     <table class="artist-listening-table artist-recordings">
       <thead><tr>
@@ -55,7 +55,7 @@
   <% end %>
 </section>
 <section class="card library-card" id="artist-releases">
-  <h2>Ranked releases (<%= @release_rows.size %>)</h2>
+  <h2 class="section-heading">Ranked releases (<%= @release_rows.size %>)</h2>
   <% if @release_rows.any? %>
     <table class="artist-listening-table artist-releases">
       <thead><tr><th scope="col">Release</th><th scope="col">Year</th><th scope="col" aria-sort="descending">Estimated listening time</th></tr></thead>

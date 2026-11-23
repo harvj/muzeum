@@ -51,7 +51,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
               document.documentElement.scrollWidth <= innerWidth]
           })()
         JS
-        expect(geometry[0]).to include("linear-gradient(135deg")
+        expect(geometry[0]).to match(/linear-gradient\(to (?:right bottom|bottom right)/)
         expect(geometry[1]).to be > 14
         expect(geometry[1]).to eq(geometry[2])
         expect(geometry[3]).to be(true)
@@ -59,14 +59,19 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
         decision = MusicalIdentityDecision.create!(entity: artist, user:, colors: %w[pink gray])
         visit path
         expect(page).to have_css('.catalog-heading[data-identity-first="pink"][data-identity-second="gray"]')
-        expect(page.evaluate_script(<<~JS)).to all(include("linear-gradient(135deg", "50%"))
+        gradients, offset, width_px, radius = page.evaluate_script(<<~JS)
           (() => {
             const heading = document.querySelector(".catalog-heading")
-            return [getComputedStyle(heading).backgroundImage,
-              getComputedStyle(heading, "::after").backgroundImage,
-              getComputedStyle(heading.querySelector(".identity-swatch")).backgroundImage]
+            const accent = getComputedStyle(heading, "::after")
+            return [[getComputedStyle(heading).backgroundImage, accent.backgroundImage,
+              getComputedStyle(heading.querySelector(".identity-swatch")).backgroundImage],
+              accent.left, parseFloat(accent.width), accent.borderTopLeftRadius]
           })()
         JS
+        expect(gradients).to all(match(/linear-gradient\(to (?:right bottom|bottom right).*50%.*50%/))
+        expect(offset).to eq("0px")
+        expect(width_px).to be_within(0.1).of(9.6)
+        expect(radius).to eq("8px")
         capture_resolution("colored-heading-#{entity}-#{width}-#{theme}")
         decision.destroy!
       end
@@ -211,6 +216,14 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
       expect(page).to have_css(".resolution-choice[aria-current]", text: "Charli · 2019 · Track 1")
       within(".resolution-context") do
         expect(page).to have_text("September 13, 2019")
+        expect(page.evaluate_script(<<~JS)).to be(true)
+          (() => {
+            const section = document.querySelector(".resolution-context")
+            const heading = getComputedStyle(section.querySelector("h2"))
+            const title = getComputedStyle(section.querySelector("h3"))
+            return heading.textTransform === "uppercase" && parseFloat(title.fontSize) > parseFloat(heading.fontSize)
+          })()
+        JS
         expect(page).to have_no_text(/Disc|Vinyl|Complete tracklist|MusicBrainz release/)
         expect(page).to have_no_css("details")
         expect(all(".review-tracks li > span:first-child").map(&:text)).to eq((1..15).map(&:to_s))

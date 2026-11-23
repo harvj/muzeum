@@ -1,5 +1,5 @@
 <% if selected %>
-  <h2>Choose a recording</h2>
+  <h2 class="section-heading">Choose a recording</h2>
   <% visible = (@candidates.first(3) | [selected]) %>
   <% shared_labels = resolution_shared_candidate_labels(@candidates) %>
   <% associations = contexts.to_h { |candidate, proposals| [candidate, resolution_candidate_association(candidate, proposals)] } %>

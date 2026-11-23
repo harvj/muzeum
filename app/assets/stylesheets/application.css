@@ -233,6 +233,7 @@ body:has(.library-nav) main { margin-top: 14px; }
   background-color: var(--reading-surface, var(--surface));
   background-image: var(--heading-tint, none);
   padding: .6rem .9rem;
+  padding-inline-start: 1.45rem;
   font-size: clamp(1.75rem, 4vw, 2.25rem);
 }
 .catalog-heading[data-identity-first] {
@@ -242,22 +243,22 @@ body:has(.library-nav) main { margin-top: 14px; }
 }
 .catalog-heading[data-identity-second] {
   --heading-second: color-mix(in srgb, var(--identity-second) 18%, transparent);
-  --heading-paint: linear-gradient(135deg, var(--identity-first) 50%, var(--identity-second) 50%);
-  --heading-tint: linear-gradient(135deg, var(--heading-first) 50%, var(--heading-second) 50%);
+  --heading-paint: linear-gradient(to bottom right, var(--identity-first) 50%, var(--identity-second) 50%);
+  --heading-tint: linear-gradient(to bottom right, var(--heading-first) 50%, var(--heading-second) 50%);
 }
 .catalog-heading[data-identity-third] {
   --heading-third: color-mix(in srgb, var(--identity-third) 18%, transparent);
-  --heading-paint: linear-gradient(135deg, var(--identity-first) 33%, var(--identity-second) 33% 67%, var(--identity-third) 67%);
-  --heading-tint: linear-gradient(135deg, var(--heading-first) 33%, var(--heading-second) 33% 67%, var(--heading-third) 67%);
+  --heading-paint: linear-gradient(to bottom right, var(--identity-first) 33%, var(--identity-second) 33% 67%, var(--identity-third) 67%);
+  --heading-tint: linear-gradient(to bottom right, var(--heading-first) 33%, var(--heading-second) 33% 67%, var(--heading-third) 67%);
 }
 .catalog-heading::after {
   content: "";
   position: absolute;
   inset-block: 0;
-  inset-inline-end: 0;
-  inline-size: .3rem;
-  border-start-end-radius: inherit;
-  border-end-end-radius: inherit;
+  inset-inline-start: 0;
+  inline-size: .6rem;
+  border-start-start-radius: inherit;
+  border-end-start-radius: inherit;
   background: var(--heading-paint, var(--surface-accent));
   pointer-events: none;
 }
@@ -268,7 +269,7 @@ body:has(.library-nav) main { margin-top: 14px; }
   block-size: 1cap;
   border-color: currentColor;
   background: var(--heading-paint,
-    linear-gradient(135deg, transparent calc(50% - .5px), var(--muted) 50%, transparent calc(50% + .5px))) var(--surface-accent);
+    linear-gradient(to bottom right, transparent calc(50% - .5px), var(--muted) 50%, transparent calc(50% + .5px))) var(--surface-accent);
 }
 .catalog-heading > p { padding-inline-start: calc(1cap + .35em); line-height: 1.45rem; }
 .catalog-heading p > .catalog-credit { font-size: 1rem; }
@@ -753,4 +754,23 @@ html { scroll-padding-block-start: calc(var(--shell-header-height, 84px) + env(s
 }
 @supports not (mask-image: linear-gradient(transparent, black)) {
   body > header { background: var(--card); }
+}
+
+
+h2.section-heading {
+  margin-block: 0 .4rem;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: .8rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+h3.resolution-release-title {
+  margin: 0;
+  font-family: inherit;
+  font-size: clamp(1.5rem, 3vw, 1.9rem);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
 }

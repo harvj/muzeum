@@ -1,8 +1,8 @@
 # Muzeum v0.6.7 design review
 
-Artist, Recording, and Release headings use compact cards with a tint and right-edge accent drawn from the effective musical colors. Two-color palettes split on a sharp diagonal. Neutral badges use a subtle slash, and supporting dates, credits, and country labels sit closer to the title.
+Artist, Recording, and Release headings use compact cards with a tint and a wider left-edge accent drawn from the effective musical colors. Two-color cards, accents, and badges split sharply from bottom left to top right. Neutral badges use a subtle slash, and supporting dates, credits, and country labels sit closer to the title.
 
-Recording Resolution shows the full original tracklist inline. Numbers run from 1 through 15 for *Charli*, across both media. The preview groups planned changes by entity type, with source details available in Evidence.
+Muted uppercase labels distinguish sections from content titles. In Recording Resolution, the original release title takes precedence, with the date and full tracklist directly below. Numbers run from 1 through 15 for *Charli*, across both media. The preview groups planned changes by entity type, with source details available in Evidence.
 
 Chrome captures use local fixtures with 1440 × 960 desktop and 390 × 844 mobile viewports. Resolution captures cover the full page. The comparison is against the staged v0.6.6 design. The assigned Artist and Release examples show the color treatment, while the Recording examples compare the neutral badges.
 
