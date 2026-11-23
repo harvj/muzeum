@@ -997,6 +997,39 @@ ALTER SEQUENCE public.release_artists_id_seq OWNED BY public.release_artists.id;
 
 
 --
+-- Name: release_ranking_decisions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.release_ranking_decisions (
+    id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    release_id bigint NOT NULL,
+    included boolean NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: release_ranking_decisions_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.release_ranking_decisions_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: release_ranking_decisions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.release_ranking_decisions_id_seq OWNED BY public.release_ranking_decisions.id;
+
+
+--
 -- Name: release_recordings; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1707,6 +1740,13 @@ ALTER TABLE ONLY public.release_artists ALTER COLUMN id SET DEFAULT nextval('pub
 
 
 --
+-- Name: release_ranking_decisions id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.release_ranking_decisions ALTER COLUMN id SET DEFAULT nextval('public.release_ranking_decisions_id_seq'::regclass);
+
+
+--
 -- Name: release_recordings id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -1938,6 +1978,14 @@ ALTER TABLE ONLY public.release_artists
 
 
 --
+-- Name: release_ranking_decisions release_ranking_decisions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.release_ranking_decisions
+    ADD CONSTRAINT release_ranking_decisions_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: release_recordings release_recordings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2153,6 +2201,13 @@ CREATE INDEX idx_on_entity_type_entity_id_id_c7b7191f51 ON public.musical_identi
 --
 
 CREATE INDEX idx_on_listening_profile_id_24b6f2d861 ON public.listening_profile_publication_events USING btree (listening_profile_id);
+
+
+--
+-- Name: idx_on_user_id_release_id_id_8bad624ede; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_on_user_id_release_id_id_8bad624ede ON public.release_ranking_decisions USING btree (user_id, release_id, id);
 
 
 --
@@ -3062,6 +3117,14 @@ ALTER TABLE ONLY public.page_commits
 
 
 --
+-- Name: release_ranking_decisions fk_rails_1218ae2788; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.release_ranking_decisions
+    ADD CONSTRAINT fk_rails_1218ae2788 FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
 -- Name: recording_artists fk_rails_1465a00657; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3310,6 +3373,14 @@ ALTER TABLE ONLY public.scrobbles
 
 
 --
+-- Name: release_ranking_decisions fk_rails_bb0b040719; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.release_ranking_decisions
+    ADD CONSTRAINT fk_rails_bb0b040719 FOREIGN KEY (release_id) REFERENCES public.releases(id);
+
+
+--
 -- Name: listening_profiles fk_rails_bca1665695; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3484,6 +3555,7 @@ ALTER TABLE ONLY public.resolution_work
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261122223000'),
 ('20261122170100'),
 ('20261122170000'),
 ('20261121160000'),

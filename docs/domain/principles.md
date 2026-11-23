@@ -72,7 +72,7 @@ These documents supersede contradictory *proposals* in dated P1.0 design notes. 
 - Whether user-level release preferences are needed in addition to individual-play overrides.
 - How to handle cases where a single song has multiple distinct recordings with ambiguous source metadata.
 
-**DOM-020 — Musical identity is revisable.** Separate assertions about a recording's musical characteristics, provider metadata, listener color decisions, and predictions. Preserve provenance and uncertainty. A listener's current manual choice takes precedence over automatic predictions. Artist and release presentation derives from recordings without multiplying the underlying listening observations.
+**DOM-020 — Musical identity is revisable.** Separate assertions about a recording's musical characteristics, provider metadata, listener color decisions, and predictions. Preserve provenance and uncertainty. A listener's current manual choice takes precedence over automatic predictions. Each entity can have a direct color decision. Releases and recordings without a direct palette inherit the ordered palette of their credited artists when the assigned palettes agree. A conflicting palette leaves the entity neutral. This affects presentation only. It creates no new color decision or listening observation.
 
 ## Revision history
 

@@ -62,8 +62,9 @@ The authoritative, living domain rules are [principles](domain/principles.md), [
      - **v0.6.4 — Recording Resolution.** Keep original strings and canonical matches visible while choosing a recording and confirming its original context. Move investigation details to Evidence.
      - **v0.6.5 — Recording choice clarity.** Identify look-alike candidates with linked recording identifiers and distinguish selected, hover, and keyboard focus states.
 
+     - **Musical Identity follow-up.** Use credited artist colors as the fallback for releases and recordings without a direct palette.
      - **Catalog presentation follow-up.** Refine entity headings and adopt the signed Shell 1.3.0 sticky header.
-     - **Open — Resolution change preview.** Resolve currently journals recording decisions and may construct a reviewed release in its transaction. A separate enrichment job can add credits and memberships later. An exact preview needs a shared plan applied and revalidated during confirmation, with later enrichment explicitly outside that operation. The ledger has individual recording overrides but no per-observation release credit. Decide whether to preview existing membership-derived contexts or separately approve a revisable release-credit ledger under REL-015 before promising per-observation release assignments.
+     - **v0.6.6 follow-up — Resolution and release rankings.** Preview the recording decision and admission of zero or one release. Later recording enrichment does not admit releases. Rank verified original contexts by default and retain explicit inclusion or exclusion decisions. Overlapping listening histories derive from recording membership without adding per-observation release credit.
 
 9. **P1.6 — Profile onboarding (tentative).**
    - **P1.6a — Last.fm authentication and verified username.** Use Last.fm web authorization and bind only the returned username.

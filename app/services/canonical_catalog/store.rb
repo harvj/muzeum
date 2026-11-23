@@ -54,6 +54,7 @@ module CanonicalCatalog
       signature = slots.map { |slot| [ slot.fetch(:medium), slot.fetch(:position), slot.fetch(:recording).fetch("id") ] }
       evidence = { "edition_mbid" => edition, "release_group_mbid" => group, "track_count" => slots.size,
         "tracklist_digest" => Digest::SHA256.hexdigest(signature.to_json), "discogs" => comparison }
+      evidence["original_context"] = Edition.original_context?(data) if strict_collection
       evidence.merge!(metadata_evidence(data))
       evidence["checked_recording_appearances"] = checked_editions if checked_editions.present?
       release = corrected_release || Release.find_by(ingested_from_release_mbid: edition)

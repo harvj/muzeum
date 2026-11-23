@@ -3,7 +3,10 @@
   <% if flash[:alert].present? %><p role="alert"><%= flash[:alert] %></p><% end %>
   <% if flash[:notice].present? %><p role="status"><%= flash[:notice] %></p><% end %>
   <% colors = decision&.colors || [] %>
-  <p><%= colors.map { |color| MusicalIdentity::Palette::COLORS.fetch(color) }.to_sentence.presence || "No colors assigned" %></p>
+  <p><%= effective_musical_colors(entry).map { |color| MusicalIdentity::Palette::COLORS.fetch(color) }.to_sentence.presence || "No colors assigned" %></p>
+  <% if (inherited = inherited_musical_identity(entry)) %>
+    <p>Inherited from <%= inherited.fetch(:artists).map(&:name).to_sentence %>. Saving colors here overrides the artist colors.</p>
+  <% end %>
   <% if decision && !@public_profile %>
     <p>Manually revised <%= browser_time(decision.created_at, date_only: true) %>.</p>
     <% if decision.rationale.present? %><p><%= decision.rationale %></p><% end %>

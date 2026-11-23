@@ -75,6 +75,42 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
       "April 15, 2008 · Single · 1 track", "Earliest verified recording publication · April 15, 2008")
     expect(doc.css(".resolution-primary").size).to eq(1)
     expect(doc.at_css('input[name="construct_release"]')["value"]).to eq(NarrowStairsFixture::ORIGINAL)
+    params = doc.css(".resolution-confirmation input[type=hidden]").to_h { |input| [ input["name"], input["value"] ] }
+    params = Rack::Utils.parse_nested_query(Rack::Utils.build_query(params))
+    payload = observation.payload
+    5.times do |index|
+      Scrobble.create!(user:, lastfm_account: observation.lastfm_account, played_at: observation.played_at - (index + 1).hours, payload:)
+    end
+    expect { post decide_resolution_surface_path(observation), params: }.not_to change(RecordingResolution::Decision, :count)
+    expect(flash[:alert]).to include("changed")
+    expect(Release.count).to eq(0)
+
+    get resolution_surface_path(observation)
+    params = Nokogiri::HTML(response.body).css(".resolution-confirmation input[type=hidden]").to_h { |input| [ input["name"], input["value"] ] }
+    params = Rack::Utils.parse_nested_query(Rack::Utils.build_query(params))
+    expect(params["construct_release"]).to eq(NarrowStairsFixture::ORIGINAL)
+    expect(params["resolution_plan"]).to eq(CanonicalCatalog::ResolutionPlan.new(
+      RecordingResolution::Assessment.find(params.fetch("assessment_id")), NarrowStairsFixture::RECORDING, 6).fingerprint)
+    post decide_resolution_surface_path(observation), params: params
+    expect(flash[:notice]).to(eq("Recording decision saved."), flash[:alert])
+    release = Release.sole
+    expect(release.ingested_from_release_mbid).to eq(NarrowStairsFixture::ORIGINAL)
+    expect(release.catalog_track_slots.base_sequence.count).to eq(11)
+    expect(release.catalog_track_slots.additional_appearances).to be_empty
+    expect(RecordingResolution::Ledger.for_recordings(user, [ Recording.find_by!(mbid: NarrowStairsFixture::RECORDING).id ]).count(:id)).to eq(6)
+    expect(Scrobble.pluck(:payload).uniq).to eq([ payload ])
+
+    request = CatalogImport.where(kind: "recording").sole
+    selected = original.dig("media", 0, "tracks", 2, "recording")
+    data = selected.merge("releases" => [ single, *narrow_stairs_editions ].map { |edition| edition.slice("id", "title") })
+    session = double(provenance: [])
+    allow(session).to receive(:get).with(:musicbrainz, "/ws/2/recording/#{selected.fetch('id')}", params: anything) do |*_, &projection|
+      { "data" => projection.call(data) }
+    end
+    expect { CanonicalCatalog::Processor.new(request, session_factory: ->(*) { session }).call }.not_to change(Release, :count)
+    expect(request.reload.state).to eq("imported")
+    get resolution_surface_path(observation)
+    expect(Nokogiri::HTML(response.body).at_css('[aria-label="Resolution preview"]').text).to include("0 new releases")
   end
 
   [ "2008-05-13", "2015-02-24" ].each do |stored_date|
@@ -213,7 +249,7 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     expect(first.reload.colors).to eq(%w[light-green blue])
   end
 
-  it "admits the real ESTRUS album and single, counting overlapping listening observations once" do
+  it "counts overlapping listening observations for independently admitted ESTRUS album and single" do
     finish_oidc
     user = User.find_by!(oidc_subject: @subject)
     LastfmAccount.associate!(user, "estrus-release-context")
@@ -250,6 +286,9 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     end
     CanonicalCatalog::Processor.new(request, session_factory: ->(*) { session }).call
     expect(request.reload.state).to eq("imported")
+    expect(Release.count).to eq(0)
+    explicit = CatalogImport.request!("recording", request.entity_id)
+    CanonicalCatalog::Processor.new(explicit, session_factory: ->(*) { session }).call
     album = Release.find_by!(title: "ESTRUS")
     single = Release.find_by!(title: "I’m your girl right?")
     recording = Recording.find_by!(mbid:)
@@ -421,7 +460,7 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     import = CatalogImport.where(kind: "recording").sole
     expect(import.context).not_to have_key("edition_mbid")
     get resolution_surface_path(example)
-    expect(response.body).to include("Muzeum checks supported release memberships automatically.")
+    expect(response.body).to include("Uncertain release memberships stay pending.")
     expect(response.body).not_to include("Verify selected release", 'name="edition_mbid"')
     expect { post decide_resolution_surface_path(example), params: choice }.not_to change(RecordingResolution::Decision, :count)
     expect(flash[:alert]).to include("changed")

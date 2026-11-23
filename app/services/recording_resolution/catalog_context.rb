@@ -22,7 +22,7 @@ module RecordingResolution
       state = CatalogImport.latest("recording", recording.id)&.state if recording
       pending = worker_enabled && state.in?(CatalogImport::ACTIVE)
       release_status = if pending
-        "Checking supported release memberships…"
+        "Checking recording metadata…"
       elsif recording
         "Release verification pending"
       else

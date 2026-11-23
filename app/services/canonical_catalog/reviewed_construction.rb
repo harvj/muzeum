@@ -23,12 +23,25 @@ module CanonicalCatalog
         existing = Release.where(release_group_mbid: group).limit(2).to_a
         next [] if existing.many?
 
-        Construction.originals(evidence).map do |base|
-          Proposal.new(Construction.new(evidence, base:, recording_mbid:), existing.first)
+        Construction.originals(evidence).filter_map do |base|
+          construction = Construction.new(evidence, base:, recording_mbid:)
+          if (base.slots + construction.additional_slots).any? { |slot| slot.dig(:recording, "id") == recording_mbid }
+            Proposal.new(construction, existing.first)
+          end
         end
       rescue Store::Unverified
         []
       end
+    end
+
+    def self.resolution_choices(assessment, recording_mbid, recording)
+      admitted = recording.admitted_releases.where.not(catalog_verified_at: nil) if recording
+      choices = self.for(assessment, recording_mbid)
+      if admitted&.exists?
+        choices.select! { |proposal| proposal.existing && admitted.exists?(id: proposal.existing.id) }
+      end
+      choices.group_by { |proposal| proposal.construction.base.data.dig("release-group", "id") }.values
+        .reject { |group| group.any? { |proposal| !needs_review?(proposal, recording) } }
     end
 
     def self.needs_review?(proposal, recording)

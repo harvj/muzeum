@@ -138,7 +138,16 @@ class ResolutionWorkspaceController < ApplicationController
     ActiveRecord::Base.transaction do
       current_user.lock!
       current_user.managed_archive_grants.lock.find_by!(lastfm_account_id: target.lastfm_account_id)
-      recording, context = selection(assessment, target) if mode == "resolved"
+      if mode == "resolved"
+        if params[:resolution_plan].present?
+          plan = CanonicalCatalog::ResolutionPlan.new(assessment, params[:recording_mbid], affected_count(target, surface, scope))
+          unless ActiveSupport::SecurityUtils.secure_compare(plan.fingerprint, params[:resolution_plan].to_s) &&
+              (plan.proposals.empty? ? params[:construct_release].blank? : plan.proposals.any? { |proposal| plan.edition_id(proposal) == params[:construct_release] })
+            raise ActiveRecord::StaleObjectError.new(target, "confirm resolution preview")
+          end
+        end
+        recording, context = selection(assessment, target)
+      end
       previous = RecordingResolution::Ledger.effective(current_user).find(target.id)
       ranking = decision_ranking(assessment, surface, target)
       selected_rank = ranking&.find { |entry| entry["recording_mbid"] == recording&.mbid }
@@ -158,7 +167,8 @@ class ResolutionWorkspaceController < ApplicationController
       RecordingResolution::Ledger.record!(listener: current_user, scrobble: target, scope:, mode:, reason:, recording:,
         assessment:, metadata:, expected_head: params[:head].presence&.then { |value| Integer(value) })
       if recording
-        request = CatalogImport.request!("recording", recording.id, context)
+        enrichment = CatalogImport.request!("recording", recording.id, context)
+        request = enrichment if enrichment.context.key?("assessment_id")
         if scope == :surface && params[:construct_release].present?
           construct_reviewed_release!(assessment, recording)
         end
@@ -277,14 +287,15 @@ class ResolutionWorkspaceController < ApplicationController
   end
 
   def construct_reviewed_release!(assessment, recording)
-    choices = CanonicalCatalog::ReviewedConstruction.for(assessment, recording.mbid)
+    recording.lock!
+    choices = CanonicalCatalog::ReviewedConstruction.resolution_choices(assessment, recording.mbid, recording).flatten
     proposal = choices.find { |item| item.construction.base.data["id"] == params[:construct_release] }
     if proposal.nil?
       # A previously rendered form may still submit the release group.
       compatible = choices.select { |item| item.construction.base.data.dig("release-group", "id") == params[:construct_release] }
       proposal = compatible.first if compatible.one?
     end
-    raise ArgumentError unless proposal
+    raise ActiveRecord::StaleObjectError.new(recording, "construct release") unless proposal
 
     existing = proposal.existing
     if existing

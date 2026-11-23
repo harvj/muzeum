@@ -14,7 +14,7 @@ class CanonicalLibraryController < ApplicationController
     records = records.where("#{field} ILIKE ?", "%#{@model.sanitize_sql_like(@query)}%") if @query.present?
     @entries = with_artist_credits(records).limit(PAGE + 1).to_a
     @next_page = @entries.pop && @entries.last.id if @entries.size > PAGE
-    @musical_identities = MusicalIdentityDecision.latest_for(@entries)
+    @musical_identities, @inherited_musical_identities = MusicalIdentityDecision.presentation_for(@entries)
     if @model == Artist
       @geographies = CatalogRevision.where(entity_type: CanonicalCatalog::ArtistGeography::ENTITY_TYPE, entity_id: @entries.map(&:id))
         .select("DISTINCT ON (entity_id) entity_id, evidence").order(:entity_id, id: :desc).index_by(&:entity_id)
@@ -36,6 +36,7 @@ class CanonicalLibraryController < ApplicationController
         .order(id: :desc).first
       load_artist_listening
     when Release
+      @ranked_release = ReleaseRanking.new(current_user, [ @entry ]).include?(@entry) unless @public_profile
       slots = @entry.catalog_track_slots.base_sequence.order(:medium, :position)
       cursor = slots.find_by(id: params[:after_track]) if params[:after_track].present?
       if cursor
@@ -99,8 +100,19 @@ class CanonicalLibraryController < ApplicationController
       @next_page = @plays.pop && @plays.last.id if @plays.size > PAGE
     end
     related = [ *@recording_rows&.map(&:first), *@release_rows&.map(&:first), *@slots&.map(&:recording), *@additional_appearances&.map(&:recording), *@releases ]
-    @musical_identities = MusicalIdentityDecision.latest_for([ @entry, *related ])
+    @musical_identities, @inherited_musical_identities = MusicalIdentityDecision.presentation_for([ @entry, *related ])
     @may_edit_identity = @may_import && (@entry.is_a?(Release) ? @entry.catalog_verified_at.present? : Clients::Musicbrainz::MBID.match?(@entry.mbid.to_s))
+  end
+
+  def ranking
+    release = catalog_scope.find(params[:id])
+    included = { "include" => true, "exclude" => false }.fetch(params[:decision]) { return head :unprocessable_entity }
+
+    current_user.with_lock do
+      latest = ReleaseRankingDecision.latest_for(current_user, [ release.id ])[release.id]
+      ReleaseRankingDecision.create!(user: current_user, release:, included:) unless latest&.included == included
+    end
+    redirect_to release_path(release), status: :see_other
   end
 
   def musical_identity
@@ -157,7 +169,10 @@ class CanonicalLibraryController < ApplicationController
     releases = Release.where(id: @entry.release_artists.select(:release_id)).or(
       Release.where(id: CatalogTrackSlot.where(recording_id: recordings.select(:id)).select(:release_id)))
     releases = releases.merge(@profile_catalog.releases) if @public_profile
-    memberships = CatalogTrackSlot.where(release_id: releases.select(:id)).distinct.pluck(:release_id, :recording_id)
+    releases = releases.to_a
+    ranking = ReleaseRanking.new(@public_profile&.owner || current_user, releases)
+    releases.select! { |release| ranking.include?(release) }
+    memberships = CatalogTrackSlot.where(release_id: releases.map(&:id)).distinct.pluck(:release_id, :recording_id)
       .group_by(&:first)
     records = recordings.to_a
     artist_listening = CatalogListening.new(recording_plays(records.map(&:id)))

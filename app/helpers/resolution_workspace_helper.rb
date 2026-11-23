@@ -46,7 +46,12 @@ module ResolutionWorkspaceHelper
       [ base, base.slots.find { |slot| slot.dig(:recording, "id") == candidate.fetch("id") } ]
     end
     base, slot = slots.find { |_, match| match }
-    return unless base
+    unless base
+      appearances = Array(candidate["releases"]).select { |release| release["title"].present? && release["date"].present? }
+      appearance = appearances.min_by { |release| release.values_at("date", "title").push(release["id"].to_s) }
+      return [ appearance["title"], appearance["date"], "Appearance" ].join(" · ") if appearance
+      return
+    end
 
     label = [ base.data.fetch("title"), base.data.fetch("date").first(4) ]
     group = base.data.dig("release-group", "id")

@@ -54,6 +54,12 @@
       "risk": "additive",
       "quiesce": true,
       "review": "Adds nullable edition and appearance-date columns with no backfill. Before dropping the old global position index, creates two unique partial indexes in the same transaction. Existing rows have NULL edition identity and retain unique base positions; additional positions are unique per release and edition. Quiesce Muzeum for the table lock and index build. Retain the upgraded schema during application rollback. The schema-preservation verifier requires the exact retired and replacement index definitions, with the replacement bound to this migration hash."
+    },
+    "db/migrate/20261122223000_create_release_ranking_decisions.rb": {
+      "sha256": "cbecc4eb0efe229d46eb559bdb4270bc385135bb62ad692367167469bd68d754",
+      "risk": "additive",
+      "quiesce": true,
+      "review": "Adds an empty user-scoped release ranking decision history with foreign keys and a lookup index. No observation or catalog backfill. Retain this table and its decisions during application rollback."
     }
   }
 }

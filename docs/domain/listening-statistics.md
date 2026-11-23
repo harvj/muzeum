@@ -48,3 +48,8 @@ The album and single each show 150 contributed observations. Their combined hist
 - 2026-11-17: Clarified Last.fm's observation authority, non-guaranteed playback, and future shelf-selection/temporal annotation query semantics.
 
 - 2026-11-17: Initial distinct membership-versus-credit and ranking semantics.
+
+
+## Default release rankings (v0.6.6)
+
+Rank eligible canonical releases by estimated listening time, breaking ties by title and canonical ID. Eligibility requires a verified original publication context or a verified first-publication appearance of a member recording; it does not follow from catalog membership alone. A listener’s latest explicit inclusion or exclusion supersedes the default. Keep preference history without changing catalog membership or observations. Release detail and combined histories continue to use all applicable memberships. Count distinct effective observations within each result, and use the union of observations for combined totals.

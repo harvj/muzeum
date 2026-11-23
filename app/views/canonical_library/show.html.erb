@@ -8,7 +8,13 @@
     <% if @entry.country.present? %><p><span class="catalog-credit"><%= render "shared/geographic_place", country: @entry.country %></span></p><% end %>
   <% end %>
 </section>
-<%= render "release" if @entry.is_a?(Release) %>
+<% if @entry.is_a?(Release) %>
+  <%= render "release" %>
+  <% unless @public_profile %>
+    <%= button_to (@ranked_release ? "Exclude from my release rankings" : "Include in my release rankings"),
+      ranking_release_path(@entry), method: :patch, params: { decision: @ranked_release ? "exclude" : "include" } %>
+  <% end %>
+<% end %>
 <% if @entry.is_a?(Artist) %><%= render "artist" %>
 <details class="card library-card"><summary>Geographic evidence</summary>
   <%= render "artist_metadata" %>

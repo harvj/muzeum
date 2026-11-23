@@ -116,6 +116,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     find("summary", text: "More recording choices").click
     expect(page).to have_css(".resolution-choice[aria-current]", count: 1)
     expect(page).to have_css(".resolution-primary", count: 1, text: "Resolve all 6")
+    expect(page).to have_css('section[aria-label="Resolution preview"]', text: /Create.*Narrow Stairs.*1 new release.*11 base tracks.*Assign.*6 existing observations/m)
     expect(page.evaluate_script("getComputedStyle(document.querySelector('.resolution-primary')).backgroundColor")).to eq("rgb(41, 107, 52)")
     expect(page).to have_no_text("Provider calls")
     expect(page).to have_no_text("2015")
@@ -190,15 +191,19 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     request = CatalogImport.find_by!(kind: "recording")
     expect(request.state).to eq("pending")
     expect(page).to have_css("turbo-cable-stream-source[connected]", visible: :all)
-    expect(page).to have_css(".review-catalog-context", text: "Checking supported release memberships")
+    expect(page).to have_css(".review-catalog-context", text: "Checking recording metadata")
     session = CatalogFixtures::Session.new
     allow(RecordingResolution::ProviderSession).to receive(:new).and_return(session)
     CanonicalCatalogJob.perform_now(request.id)
     expect(request.reload.state).to eq("imported")
+    expect(Release.count).to eq(0)
+    explicit = CatalogImport.request!("recording", request.entity_id)
+    CanonicalCatalogJob.perform_now(explicit.id)
     expect(page).to have_css(".review-catalog-context dl > div:last-child .review-catalog-mark.present")
     expect(page).to have_link("Night Drive", href: release_path(Release.find_by!(title: "Night Drive")))
     release = Release.find_by!(title: "Night Drive")
-    click_button "Resolve recording only"
+    visit resolution_surface_path(observation)
+    click_button "Resolve this observation"
     expect(page).to have_text("Recording decision saved.")
     second_import = CatalogImport.latest("recording", request.entity_id)
     expect(second_import.id).not_to eq(request.id)
@@ -281,14 +286,15 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     click_button "Resolve recording only"
     expect(page).to have_text("Recording decision saved.")
     expect(page).to have_css("turbo-cable-stream-source[connected]", visible: :all)
-    expect(page).to have_css(".review-catalog-context", text: "Checking supported release memberships")
+    expect(page).to have_css(".review-catalog-context", text: "Checking recording metadata")
 
     provider = CatalogFixtures::Session.new
     allow(provider).to receive(:edition).and_return(provider.edition.merge("media" => []))
     allow(RecordingResolution::ProviderSession).to receive(:new).and_return(provider)
     request = CatalogImport.find_by!(kind: "recording")
     CanonicalCatalogJob.perform_now(request.id)
-    expect(request.reload.state).to eq("incomplete")
+    expect(request.reload.state).to eq("imported")
+    expect(Release.count).to eq(0)
     expect(page).to have_css(".review-catalog-context", text: "Release verification pending")
     expect(page).to have_no_css(".review-catalog-context dl > div:last-child .review-catalog-mark.present")
   end

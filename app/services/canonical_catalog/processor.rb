@@ -124,6 +124,8 @@ module CanonicalCatalog
       assessment = RecordingResolution::Assessment.find_by(id: @request.context["assessment_id"])
       publication = assessment&.evidence&.dig("recording_publications", mbid, "earliest_publication")
       locked { @store.recording(data, expected: mbid, publication:) }
+      return complete if @request.context.key?("assessment_id")
+
       ids = Array(data["releases"]).filter_map do |appearance|
         group = appearance["release-group"]
         classified = appearance["status"].present? && group&.fetch("primary-type", nil).present? &&

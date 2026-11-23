@@ -55,7 +55,7 @@
   <% end %>
 </section>
 <section class="card library-card" id="artist-releases">
-  <h2>Releases (<%= @release_rows.size %>)</h2>
+  <h2>Ranked releases (<%= @release_rows.size %>)</h2>
   <% if @release_rows.any? %>
     <table class="artist-listening-table artist-releases">
       <thead><tr><th scope="col">Release</th><th scope="col">Year</th><th scope="col" aria-sort="descending">Estimated listening time</th></tr></thead>
@@ -73,6 +73,6 @@
       </tbody>
     </table>
   <% else %>
-    <p>No canonical releases are available.</p>
+    <p>No releases qualify for these rankings.</p>
   <% end %>
 </section>

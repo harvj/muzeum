@@ -6,7 +6,8 @@
   release = choices.first.construction.base.data
   [release.dig("release-group", "primary-type") == "Album" ? 0 : 1, release.fetch("date"), release.fetch("id")]
 end %>
-<% proposals = groups.find { |choices| choices.none? { |item| !CanonicalCatalog::ReviewedConstruction.needs_review?(item, catalog_recording) } } || [] %>
+<% plan = CanonicalCatalog::ResolutionPlan.new(@assessment, mbid, @affected_count) %>
+<% proposals = plan.proposals %>
 <% earliest = @assessment.evidence.dig("recording_publications", mbid, "earliest_publication", "date") %>
 <section class="resolution-context" aria-label="Original release">
   <h2>Original release</h2>
@@ -41,6 +42,7 @@ end %>
   <%= form_with url: decide_resolution_surface_path(@observation), class: "resolution-confirmation" do |form| %>
     <%= form.hidden_field :recording_mbid, value: mbid %>
     <%= form.hidden_field :assessment_id, value: @assessment.id %>
+    <%= form.hidden_field :resolution_plan, value: plan.fingerprint %>
     <%= form.hidden_field :scope, value: "surface" %>
     <%= form.hidden_field :mode, value: "resolved" %>
     <%= form.hidden_field :head, value: @surface_head&.id %>
@@ -55,6 +57,36 @@ end %>
     <% elsif proposals.one? %>
       <%= hidden_field_tag :construct_release, proposals.first.construction.base.data["id"] %>
     <% end %>
+    <section aria-label="Resolution preview">
+      <h2>Resolution preview</h2>
+      <ul class="catalog-list">
+        <li><strong><%= catalog_recording ? "Reuse" : "Create" %></strong> · <%= selected.fetch("title") %></li>
+        <% if proposals.empty? %>
+          <li><strong>No change</strong> · 0 new releases<%= " · #{catalog_releases.map(&:title).to_sentence}" if catalog_releases.any? %></li>
+        <% else %>
+          <% proposals.each do |proposal| %>
+            <% base = proposal.construction.base %>
+            <li><strong><%= proposal.existing ? "Reuse" : "Create" %></strong> · <%= base.data.fetch("title") %> ·
+              <%= proposal.existing ? "0" : "1" %> new <%= proposal.existing ? "releases" : "release" %> ·
+              <%= pluralize(base.slots.size, "base track") %> to construct<% if proposal.construction.additional_slots.any? %> ·
+                <%= pluralize(proposal.construction.additional_slots.size, "additional appearance") %><% end %>
+              <details><summary>Artists and track memberships</summary>
+                <ul>
+                  <% plan.artists(proposal).each do |artist, existing| %>
+                    <li><strong><%= existing ? "Reuse" : "Create" %></strong> · <%= artist.fetch("name") %></li>
+                  <% end %>
+                  <% (base.slots + proposal.construction.additional_slots).each do |slot| %>
+                    <li><strong>Create</strong> · <%= slot.fetch(:medium) %>.<%= slot.fetch(:position) %> · <%= slot.fetch(:title) %><%= " · #{slot[:appearance_date]}" if slot[:appearance_date] %></li>
+                  <% end %>
+                </ul>
+              </details>
+            </li>
+          <% end %>
+        <% end %>
+        <li><strong>Assign</strong> · <%= pluralize(@affected_count, "existing observation") %></li>
+      </ul>
+      <p class="muted">Recording metadata and credits may be enriched after confirmation.</p>
+    </section>
     <p class="muted">
       <% if release_pending %>Save the recording assignment while release verification continues.
       <% elsif proposals.any?(&:existing) %>Confirm the recording and update <%= proposals.first.construction.base.data["title"] %>. Review the changes in Evidence.
