@@ -419,7 +419,8 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     expect(page).to have_css('[aria-label="Resolution preview"] li', text: "1 new release", count: 1)
     capture_resolution("release-choice-mobile-dark", full: true)
 
-    click_button "Resolve this observation"
+    expect(page.evaluate_script("new FormData(document.querySelector('.resolution-confirmation')).get('construct_release')")).to eq(other["id"])
+    find_button("Resolve this observation").send_keys(:enter)
     expect(page).to have_text("Recording decision saved.")
     expect(Release.sole.ingested_from_release_mbid).to eq(other["id"])
   ensure
