@@ -8,6 +8,8 @@ RSpec.describe "Music table fidelity", type: :system do
   before do
     skip "Run with BROWSER_TESTS=1 for music table browser verification" unless ENV["BROWSER_TESTS"] == "1"
 
+    stub_request(:get, "#{OidcClient::ISSUER}/.well-known/oauth-authorization-server").to_return(status: 503)
+
     driven_by :selenium, using: :headless_chrome do |options|
       options.binary = ENV["CHROME_BINARY"] if ENV["CHROME_BINARY"]
     end
