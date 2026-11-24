@@ -53,7 +53,7 @@ end %>
       <p class="compact-meta">Earliest verified publication · <%= earliest["date"] %> · <%= link_to earliest["title"], "https://musicbrainz.org/release/#{earliest['id']}" %></p>
     <% end %>
     <% if publication["pending"] || Array(publication["pending_groups"]).any? || proposals.empty? && @assessment.evidence["pending_original_group"].present? %>
-      <p class="muted">Original release verification is pending. You can refresh the candidate evidence.</p>
+      <p class="muted">The available evidence does not verify the original release. You can refresh the candidate evidence.</p>
     <% end %>
     <% if proposals.any? %>
       <% if original_groups.values.any?(&:many?) %><p>Original editions differ. Choose the complete tracklist to use.</p><% end %>

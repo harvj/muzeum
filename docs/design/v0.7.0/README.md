@@ -4,7 +4,7 @@ Chrome captures use disposable data and retained MusicBrainz fixtures. The inves
 
 | View | Capture |
 | --- | --- |
-| Semantic investigation states and queue details | [Desktop light · Queued](investigation-queued.webp) · [Mobile dark · Waiting to retry](investigation-retry-mobile-dark.webp) · [Desktop dark · Complete](investigation-complete.webp) |
+| Semantic investigation states and queue details | [Desktop light · Queued](investigation-queued.webp) · [Mobile dark · Waiting to retry](investigation-retry-mobile-dark.webp) · [Desktop dark · Recording ready, release unverified](investigation-complete.webp) |
 | Guilt Show centered additional-track checkbox | [Desktop · Provenance and independent play count](guilt-show-additional-tracks.webp) · [Mobile dark · Checked](guilt-show-track-preferences.webp) |
 | Queen of the Clouds edition comparison | [Desktop light · Canadian 16-track base](queen-release-comparison-desktop.webp) · [Mobile dark · Worldwide 20-track base](queen-release-comparison-mobile-dark.webp) |
 | Clear search utility link | [Desktop light · Default](clear-search-1440-light.webp) · [Mobile dark · Keyboard focus](clear-search-390-dark.webp) |

@@ -456,6 +456,26 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "prefers-color-scheme", value: "light" } ])
     visit resolution_surface_path(observation)
 
+    expect(page).to have_css(".resolution-option:has([aria-current]) .resolution-option-status .investigation-badge", exact_text: "Needs review")
+    [ [ 1280, 800 ], [ 390, 844 ] ].each do |width, height|
+      browser.execute_cdp("Emulation.setDeviceMetricsOverride", width:, height:, deviceScaleFactor: 1, mobile: width < 700)
+      position = page.evaluate_script(<<~JS)
+        (() => {
+          const row = document.querySelector(".resolution-option:has([aria-current])")
+          const label = row.querySelector(".resolution-selected").getBoundingClientRect()
+          const badge = row.querySelector(".investigation-badge").getBoundingClientRect()
+          const heading = document.querySelector("#review-candidates h2").getBoundingClientRect()
+          return [Math.abs(label.top + label.height / 2 - badge.top - badge.height / 2),
+            badge.left >= label.right || badge.top >= label.bottom,
+            heading.bottom <= row.getBoundingClientRect().top,
+            badge.right <= row.getBoundingClientRect().right]
+        })()
+      JS
+      expect(position.drop(1)).to eq([ true, true, true ])
+      expect(position.first).to be < 1 if width >= 700
+    end
+    browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 1280, height: 800, deviceScaleFactor: 1, mobile: false)
+
     within(".release-comparison") do
       expect(page).to have_css(".release-edition-group", count: 2)
       [ canadian, overseas, worldwide ].each do |id|
@@ -825,29 +845,12 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     expect(request.reload.state).to eq("imported")
     expect(page).to have_css(state, exact_text: "Investigating")
     page.execute_script("window.investigationConsumer.connect()")
-    expect(page).to have_css(".investigation-badge", exact_text: "Investigation complete")
     expect(page).to have_css(".resolution-choice", text: "Signals")
+    expect(page).to have_no_css(".investigation-badge", exact_text: "Investigation complete")
+    expect(page).to have_css('[aria-label="Original release"]', text: "You can resolve the recording without adding a release.")
+    expect(page).to have_button("Resolve recording only")
     expect(page).to have_no_css(".investigation-progress")
     expect(page).to have_no_link("Refresh status")
-    browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 1280, height: 800, deviceScaleFactor: 1, mobile: false)
-    expect(page).to have_css(".resolution-option:has([aria-current]) .resolution-option-status .investigation-badge")
-    [ [ 1280, 800 ], [ 390, 844 ] ].each do |width, height|
-      browser.execute_cdp("Emulation.setDeviceMetricsOverride", width:, height:, deviceScaleFactor: 1, mobile: width < 700)
-      position = page.evaluate_script(<<~JS)
-        (() => {
-          const row = document.querySelector(".resolution-option:has([aria-current])")
-          const label = row.querySelector(".resolution-selected").getBoundingClientRect()
-          const badge = row.querySelector(".investigation-badge").getBoundingClientRect()
-          const heading = document.querySelector("#review-candidates h2").getBoundingClientRect()
-          return [Math.abs(label.top + label.height / 2 - badge.top - badge.height / 2),
-            badge.left >= label.right || badge.top >= label.bottom,
-            heading.bottom <= row.getBoundingClientRect().top,
-            badge.right <= row.getBoundingClientRect().right]
-        })()
-      JS
-      expect(position.drop(1)).to eq([ true, true, true ])
-      expect(position.first).to be < 1 if width >= 700
-    end
     browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 1280, height: 800, deviceScaleFactor: 1, mobile: false)
     capture_resolution("investigation-complete", full: true)
   ensure

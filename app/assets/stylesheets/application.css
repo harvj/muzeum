@@ -966,7 +966,7 @@ h3.resolution-release-title {
 :is(.investigation-progress, .investigation-badge) [data-state="queued"] { --status-ink: #674a00; --status-fill: #ffebad; }
 :is(.investigation-progress, .investigation-badge) [data-state="investigating"] { --status-ink: #123d72; --status-fill: #d8eaff; }
 :is(.investigation-progress, .investigation-badge) [data-state="retrying"] { --status-ink: #793800; --status-fill: #ffdec4; }
-.investigation-progress [data-state="complete"], .investigation-badge[data-state="complete"] { --status-ink: #155333; --status-fill: #d1f4dc; }
+.investigation-progress [data-state="complete"] { --status-ink: #155333; --status-fill: #d1f4dc; }
 .investigation-progress [data-state="review"], .investigation-badge[data-state="review"] { --status-ink: #552985; --status-fill: #eddefe; }
 .investigation-badge[data-state] { color: var(--status-ink); background: var(--status-fill); }
 .investigation-queue-details { font-size: .85rem; }

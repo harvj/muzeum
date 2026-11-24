@@ -48,7 +48,9 @@ end %>
   <% elsif catalog_releases.any? %>
     <p class="muted">Verified catalog appearances are listed above. Original release evidence is unavailable here.</p>
   <% else %>
-    <p>Original release verification is pending.</p>
+    <p>The available evidence does not verify an original release and its tracklist.
+      <% if can_confirm && !invalid_edition %>You can resolve the recording without adding a release.<% end %>
+    </p>
   <% end %>
 </section>
 <% if can_confirm && (!invalid_edition || proposals.any?) %>
