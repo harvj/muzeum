@@ -8,7 +8,7 @@ Status: **Authoritative accounting semantics.** See [principles](principles.md) 
 
 **STAT-002 — Recording totals.** A recording's play count is the number of accepted, currently resolved plays of that recording in the listener's authorized archive. Recording listening time derives from those plays under a consistent documented duration policy. Release credit never changes these totals.
 
-**STAT-003 — Release listening uses counted memberships.** A release counts the distinct effective observations of its included recordings, regardless of the source album string. Base-track recordings count by default. Additional edition recordings count only after the listener explicitly includes them for that release. The listener can include or exclude any canonical member, and the latest release-and-recording decision takes precedence over the default. Retain each revision. If a recording appears both in the base sequence and on an additional edition, it counts once by default.
+**STAT-003 — Release listening uses counted memberships.** A release counts the distinct effective observations of its included recordings, regardless of the source album string. Base-track recordings always count. Additional-only recordings count when the latest listener preference includes them for that release; without a preference they are excluded. Retain all decision revisions, including decisions recorded before a track became part of the base sequence. If a recording appears in both, it is counted once as a base recording.
 
 **STAT-004 — Union for combined contexts.** Use the union of distinct observations across selected releases for combined counts and estimated listening time.
 
@@ -50,6 +50,7 @@ The album and single each show 150 contributed observations. Their combined hist
 - 2026-11-17: Initial distinct membership-versus-credit and ranking semantics.
 
 - 2026-11-23: Approved base-track defaults and revisable per-release track inclusion and exclusion.
+- 2026-11-23: Made base tracks mandatory in release listening totals. Only additional tracks have listener-scoped controls.
 
 ## Default release rankings (v0.6.6)
 

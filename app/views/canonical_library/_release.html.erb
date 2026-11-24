@@ -49,23 +49,35 @@
 <% additional_mbids = admitted.keys | evidence.keys %>
 <% if additional_mbids.any? %>
   <section class="card library-card">
-    <details class="additional-edition-tracks">
+    <details class="additional-edition-tracks"<%= " open" if params[:edition_tracks] == "1" %>>
       <summary><strong>Additional edition tracks</strong> <span class="muted"><%= pluralize(additional_mbids.size, "track") %></span></summary>
+      <% if @archive_available && !@public_profile %><p class="muted">Checked tracks count toward your release totals.</p><% end %>
       <ul class="catalog-list">
         <% additional_mbids.each do |mbid| %>
           <% slots = admitted.fetch(mbid, []) %>
           <% sources = (slots.map { |slot| [slot.edition_mbid, slot.appearance_date] } + evidence.fetch(mbid, []).map { |track| track.values_at("edition_mbid", "edition_appearance_date") }).uniq(&:first) %>
           <% title = slots.first&.title || evidence.fetch(mbid).first.fetch("title") %>
-          <li><%= slots.any? ? catalog_link(slots.first.recording, title:) : title %>
+          <li id="<%= "edition-track-#{slots.first.recording_id}" if slots.any? %>">
+            <% source = evidence.fetch(mbid, []).find { |track| track["source_track"].present? } %>
+            <% if (slots.any? || source) && @archive_available && !@public_profile %>
+              <% checked = slots.any? && @counted_tracks.include?(slots.first.recording_id) %>
+              <%= form_with url: track_listening_release_path(@entry), method: :patch, class: "edition-track-choice",
+                data: { controller: "edition-track" } do %>
+                <% if slots.any? %>
+                  <%= hidden_field_tag :recording_id, slots.first.recording_id, id: nil %>
+                <% else %>
+                  <%= hidden_field_tag :source_recording_mbid, source.fetch("recording_mbid"), id: nil %>
+                <% end %>
+                <%= hidden_field_tag :decision, "exclude", id: nil %>
+                <%= check_box_tag :decision, "include", checked, id: "edition-track-choice-#{mbid}",
+                  aria: { label: "Count #{title} in release listening totals" }, data: { action: "change->edition-track#save" } %>
+                <noscript><%= submit_tag "Save", name: nil %></noscript>
+              <% end %>
+            <% end %>
+            <%= slots.any? ? catalog_link(slots.first.recording, title:) : title %>
             <% if sources.first.last.present? %> · <%= sources.first.last %><% end %>
             <% version = evidence.fetch(mbid, []).find { |track| track["version"].present? }&.fetch("version") %>
             <% if version.present? %> · <%= version %><% end %>
-            <% source = evidence.fetch(mbid, []).find { |track| track["source_track"].present? } %>
-            <% if slots.empty? && source && @archive_available && !@public_profile %>
-              <%= button_to "Include", track_listening_release_path(@entry), method: :patch,
-                params: { source_recording_mbid: source.fetch("recording_mbid"), decision: "include" },
-                form: { class: "release-track-preference" }, aria: { label: "Include #{title} in release listening totals" } %>
-            <% end %>
             <ul>
               <% sources.each do |edition_mbid, date| %>
                 <li><%= link_to ["MusicBrainz edition", date].compact.join(" · "), "https://musicbrainz.org/release/#{edition_mbid}" %></li>
@@ -80,23 +92,6 @@
 
 <section class="card library-card" id="listening-activity">
   <h2 class="section-heading"><%= @activity_releases.many? ? "Combined listening history" : "Release listening history" %></h2>
-  <% if @archive_available && !@public_profile && (@slots.any? || @additional_appearances.any?) %>
-    <details id="release-track-listening"<%= " open" if params[:track_preferences].present? %>>
-      <summary>Tracks counted in listening totals</summary>
-      <ul class="release-track-preferences">
-        <% (@slots + @additional_appearances).uniq(&:recording_id).each do |track| %>
-          <% counted = @counted_tracks.include?(track.recording_id) %>
-          <% action = counted ? "Exclude" : "Include" %>
-          <% destination = counted ? "from" : "in" %>
-          <li><span><%= track.title %><%= " · Additional edition track" if track.edition_mbid %></span>
-            <%= button_to action, track_listening_release_path(@entry), method: :patch,
-              params: { recording_id: track.recording_id, decision: action.downcase },
-              form: { class: "release-track-preference" }, aria: { label: "#{action} #{track.title} #{destination} release listening totals" } %>
-          </li>
-        <% end %>
-      </ul>
-    </details>
-  <% end %>
   <% if @activity_releases.many? %>
     <p><%= safe_join(@activity_releases.map { |release| catalog_link(release) }, ", ") %></p>
   <% end %>

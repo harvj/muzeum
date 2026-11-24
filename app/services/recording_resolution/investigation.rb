@@ -37,7 +37,10 @@ module RecordingResolution
                 lease_token: nil, lease_until: nil)
             end
           end
-          next previous if previous.active?
+          if previous.active?
+            created = previous unless previous.investigation_queue_state
+            next previous
+          end
         end
 
         created = CatalogImport.request!(KIND, group.id, "observation_id" => @observation.id,

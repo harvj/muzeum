@@ -23,7 +23,7 @@ The existing client follows MusicBrainz pagination within its result bound and r
 
 Verified additional tracks are computed against the selected base regardless of positions or edition dates. Release pages show each distinct recording once in a collapsed section with its source-edition links. Including an evidence-only track admits that individual membership from retained source evidence and records the listener’s preference. Other listeners keep the default exclusion. This does not import the source release or other tracks.
 
-The worker sends a Turbo refresh when it claims or finishes investigation work. Status is read from the persisted request and lease. A retry badge requires a matching Solid Queue scheduled execution. The manual refresh link and subsequent page loads read durable state after a missed broadcast. The UI does not report a more detailed processing phase than the worker currently persists.
+The worker sends a Turbo refresh when it claims or finishes investigation work. The process indicator uses the persisted request and lease, and pending work requires a matching Solid Queue execution. Reconnecting the existing Cable subscription refreshes the durable state without a manual refresh. The UI does not report a more detailed processing phase than the worker currently persists.
 
 ### Representative sequence and source identity
 
@@ -35,7 +35,7 @@ The Queen of the Clouds regression replays three retained editions. The Septembe
 
 ## Listening policy and migration
 
-The approved STAT-003 revision defaults to base memberships and leaves additional tracks outside release totals until the listener includes them. The latest user, release, and recording decision takes precedence. The release detail, combined histories, catalog index totals, and artist release ranking totals use the same counted-membership query. Membership visibility, per-recording counts, and release-ranking eligibility are independent of the decision.
+The approved STAT-003 revision always counts base recordings and leaves additional tracks outside release totals until the listener includes them. Only additional-only recordings use the latest user, release, and recording decision. Historical decisions are retained when a recording becomes a base track. The release detail, combined histories, catalog index totals, and artist release ranking totals use the same counted-membership query. Membership visibility, per-recording counts, and release-ranking eligibility are independent of the decision.
 
 Migration `20261123230000` adds an empty append-only decision table with three foreign keys and a lookup index. It has no backfill. Existing rows retain their values. Application rollback can keep the table and the preferences, although v0.6.10 displays its previous all-membership totals until a compatible release is restored. A disposable database replayed all migrations and applied, reversed, and reapplied the new migration. The v0.6.10 app booted and read the upgraded schema. Production migration still requires the existing hash-matched review and backup/recovery qualification.
 
@@ -45,4 +45,4 @@ Migration `20261123231500` adds nullable source recording MBID, duration, and cr
 
 - **Provider recording equivalence.** Muzeum currently identifies a canonical recording by one MusicBrainz MBID. Distinct provider IDs remain distinct candidates, with the source's clean or explicit description visible. A revisable mapping needs to bind source MBIDs to a canonical recording while preserving each slot's source recording identity. The new per-slot source identity preserves verified fingerprints independently from the canonical pointer. A future mapping still needs an append-only source-identity decision with transactional lookup and confirmation-plan revalidation. Existing confirmed canonicals and decisions should remain intact.
 - Full original-edition adjudication for *Queen of the Clouds* and new bounded replays for the *Lady Wood* observations still require verification. The retained production assessments establish the prior evidence gap, while they do not establish a fresh provider result.
-- A connected browser receives worker refresh broadcasts. Reopening or manually refreshing reconstructs missed outcomes. Automatic reconnect catch-up and explicit engineering-failure classification have no qualification evidence yet.
+- A worker exception that can persist its failure is shown as Failed — Needs Codex. Abrupt process loss can only be inferred from the persisted lease and the available queue records.

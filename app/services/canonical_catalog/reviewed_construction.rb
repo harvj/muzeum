@@ -90,9 +90,22 @@ module CanonicalCatalog
       construction = proposal.construction
       requests = Array(assessment.evidence["requests"]) + Array(assessment.evidence["reused_publication_requests"])
       provenance = Struct.new(:provenance).new(requests.uniq)
+      additional = construction.additional_slots
+      if corrected_release
+        preferred = ReleaseTrackListeningDecision.where(release: corrected_release).select(:recording_id)
+        mbids = Recording.where(id: preferred).pluck(:mbid).to_set
+        present = additional.map { |slot| slot.fetch(:source_recording_mbid) }.to_set
+        additional += construction.additional_tracks.flatten.filter_map do |track|
+          mbid = track.fetch("recording_mbid")
+          next unless mbids.include?(mbid) && present.add?(mbid)
+
+          track.fetch("source_track").symbolize_keys.merge(
+            edition_mbid: track.fetch("edition_mbid"), appearance_date: track.fetch("edition_appearance_date"))
+        end
+      end
       Store.new(request, provenance).release(construction.base.data, construction.base.slots,
         strict_collection: true, checked_editions: construction.appearances,
-        additional_slots: construction.additional_slots, corrected_release:)
+        additional_slots: additional, corrected_release:)
     end
   end
 end

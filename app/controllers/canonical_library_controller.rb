@@ -46,7 +46,7 @@ class CanonicalLibraryController < ApplicationController
         slots = slots.where("(medium, position) > (?, ?)", cursor.medium, cursor.position)
       end
       @slots = slots.includes(:recording).limit(101).to_a
-      @additional_appearances = @entry.catalog_track_slots.additional_appearances
+      @additional_appearances = @entry.catalog_track_slots.additional_appearances.where.not(recording_id: base_slots.select(:recording_id))
         .order(:appearance_date, :edition_mbid, :medium, :position).includes(:recording).limit(200)
       @additional_edition_evidence = additional_edition_evidence
       @next_track = @slots.pop && @slots.last.id if @slots.size > 100
@@ -61,7 +61,7 @@ class CanonicalLibraryController < ApplicationController
       end
       @counted_tracks = ReleaseTrackListeningDecision.included_memberships(listening_user, [ @entry.id ])
         .pluck(:recording_id).to_set
-      @track_counts = recording_plays((base_slots.distinct.pluck(:recording_id).to_set & @counted_tracks).to_a)
+      @track_counts = recording_plays(base_slots.distinct.pluck(:recording_id))
         .group("effective_resolution.recording_id").count(:id)
       other_ids = Array(params[:with_release]).first(PAGE).map { |id| Integer(id, exception: false) }.compact
       @activity_releases = catalog_scope.where(id: [ @entry.id, *other_ids ]).order(:id).to_a
@@ -123,20 +123,23 @@ class CanonicalLibraryController < ApplicationController
     release = Release.find(params[:id])
     included = { "include" => true, "exclude" => false }.fetch(params[:decision]) { return head :unprocessable_entity }
 
-    current_user.with_lock do
+    updated_recording = current_user.with_lock do
       release.lock!
       recording = if params[:recording_id].present?
-        release.catalog_track_slots.find_by!(recording_id: params[:recording_id]).recording
+        release.catalog_track_slots.additional_appearances.find_by!(recording_id: params[:recording_id]).recording
       elsif included
         include_edition_recording!(release, params[:source_recording_mbid])
       else
         raise ActiveRecord::RecordNotFound
       end
 
+      raise ActiveRecord::RecordNotFound if release.catalog_track_slots.base_sequence.exists?(recording:)
+
       decisions = ReleaseTrackListeningDecision.where(user: current_user, release:, recording:)
       decisions.create!(included:) unless decisions.order(id: :desc).first&.included == included
+      recording
     end
-    redirect_to release_path(release, track_preferences: "1", anchor: "release-track-listening"), status: :see_other
+    redirect_to release_path(release, edition_tracks: "1", anchor: "edition-track-#{updated_recording.id}"), status: :see_other
   rescue CanonicalCatalog::Store::Unverified
     redirect_to release_path(release), alert: "Edition evidence changed. Review the release before including the track.", status: :see_other
   end

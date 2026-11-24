@@ -445,7 +445,6 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
         digest: SecureRandom.hex(32), evidence: { "candidates" => [ recording ], "construction_editions" => sources })
     end
     save_evidence.call(editions)
-    request = CatalogImport.request!(RecordingResolution::Investigation::KIND, group.id)
     sign_in(user)
     browser = page.driver.browser
     browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "prefers-color-scheme", value: "light" } ])
@@ -478,6 +477,8 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     expect(page).to have_css("#{preview} li", text: /20 tracks.*1 new release/)
     page.execute_script("window.scrollTo(0, 0)")
     capture_resolution("queen-release-comparison-mobile-dark", full: true)
+    request = CatalogImport.request!(RecordingResolution::Investigation::KIND, group.id)
+    visit page.current_url
     expect(page).to have_css("turbo-cable-stream-source[connected]", visible: :all)
     refreshed = save_evidence.call(editions)
     Turbo::StreamsChannel.broadcast_refresh_to(request, method: :morph, scroll: :preserve)
@@ -507,11 +508,27 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     find("summary", text: /Additional edition tracks.*4 tracks/).click
     expect(page).to have_css(".additional-edition-tracks > ul > li", count: 4)
     expect(release.catalog_track_slots.additional_appearances).to be_empty
-    find('button[aria-label="Include Love Ballad in release listening totals"]').click
-    expect(page).to have_css('button[aria-label="Exclude Love Ballad from release listening totals"]')
+    find('input[aria-label="Count Love Ballad in release listening totals"]').send_keys(:space)
+    expect(page).to have_css('input[aria-label="Count Love Ballad in release listening totals"]:checked')
     expect(ReleaseTrackListeningDecision.sole).to have_attributes(user:, release:, included: true)
     expect(release.catalog_track_slots.additional_appearances.count).to eq(1)
     expect(Release.count).to eq(1)
+    preference = ReleaseTrackListeningDecision.sole
+    love_ballad = preference.recording
+    choices = CanonicalCatalog::ReviewedConstruction.for(restored, recording.fetch("id"))
+    [ [ worldwide, 20, false ], [ canadian, 16, true ] ].each do |edition, size, has_checkbox|
+      proposal = choices.find { |item| item.construction.base.data.fetch("id") == edition }
+      release.with_lock do
+        review = CatalogImport.create!(kind: "release_construction", state: "imported", entity_id: release.id, due_at: Time.current)
+        CanonicalCatalog::ReviewedConstruction.apply!(proposal, review, restored, corrected_release: release)
+      end
+      expect(release.catalog_track_slots.base_sequence.count).to eq(size)
+      expect(ReleaseTrackListeningDecision.included_memberships(user, [ release.id ]).where(recording: love_ballad)).to exist
+      visit release_path(release, edition_tracks: "1")
+      checkbox = 'input[aria-label="Count Love Ballad in release listening totals"]:checked'
+      expect(page).to(has_checkbox ? have_css(checkbox) : have_no_css(checkbox))
+    end
+    expect(ReleaseTrackListeningDecision.sole).to eq(preference)
   ensure
     browser&.execute_cdp("Emulation.clearDeviceMetricsOverride")
     browser&.execute_cdp("Emulation.setEmulatedMedia", features: [])
@@ -535,20 +552,41 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     within(".additional-edition-tracks") { expect(page).to have_no_link("Like a Man Possessed") }
     find("summary", text: "Additional edition tracks").send_keys(:enter)
     expect(page).to have_text("Like a Man Possessed · 2004-08-21")
-    capture_resolution("guilt-show-additional-tracks")
-    expect(page).to have_text("0 distinct resolved observations")
-    find("summary", text: "Tracks counted in listening totals").click
-    within(find(".release-track-preferences li", text: "Like a Man Possessed")) { click_button "Include" }
-    expect(page).to have_text("3 distinct resolved observations")
     browser = page.driver.browser
+    browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 1280, height: 800, deviceScaleFactor: 1, mobile: false)
+    browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "prefers-color-scheme", value: "light" } ])
+    page.execute_script("window.scrollTo(0, 0)")
+    capture_resolution("guilt-show-additional-tracks", full: true)
+    expect(page).to have_text("0 distinct resolved observations")
+    checkbox = 'input[aria-label="Count Like a Man Possessed in release listening totals"]'
+    expect(page).to have_css(".additional-edition-tracks input[type=checkbox]", count: 1)
+    expect(page).to have_css("#{checkbox}:not(:checked)")
+    find(checkbox).send_keys(:space)
+    expect(page).to have_text("3 distinct resolved observations")
+    expect(page).to have_text("12m estimated listening time")
+    release_url = page.current_url
+    artist = Release.sole.artists.find_by!(name: "The Get Up Kids")
+    visit artist_path(artist)
+    within("#artist-releases") do
+      expect(page).to have_link("Guilt Show")
+      expect(page).to have_text("3 plays")
+      expect(page).to have_text("12m")
+    end
+    visit release_url
     browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 390, height: 844, deviceScaleFactor: 1, mobile: true)
     browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "prefers-color-scheme", value: "dark" } ])
+    visit page.current_url
+    expect(page).to have_css("#{checkbox}:checked")
+    page.execute_script("window.scrollTo(0, 0)")
     capture_resolution("guilt-show-track-preferences", full: true)
     browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
     browser.execute_cdp("Emulation.setEmulatedMedia", features: [])
-    within(find(".release-track-preferences li", text: "Like a Man Possessed")) { click_button "Exclude" }
+    find(checkbox).send_keys(:space)
     expect(page).to have_text("0 distinct resolved observations")
     expect(ReleaseTrackListeningDecision.order(:id).pluck(:included)).to eq([ true, false ])
+    expect(Release.sole.catalog_track_slots.base_sequence.count).to eq(13)
+    visit artist_path(artist)
+    within("#artist-releases") { expect(page).to have_text("0 plays") }
   end
 
   it "reviews a candidate, applies it using the keyboard, and opens the admitted track listing" do
@@ -653,24 +691,59 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     verify_appearances("resolution")
   end
 
-  it "refreshes an investigation outcome over Action Cable without reloading manually" do
+  it "shows real Solid Queue transitions and catches up after a missed worker outcome" do
+    ActiveRecord::Migration.suppress_messages { load Rails.root.join("db/queue_schema.rb") }
+    prior_adapter = CanonicalCatalogJob.queue_adapter
+    CanonicalCatalogJob.queue_adapter = :solid_queue
     user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "live-investigation", lastfm_username: "live-investigation")
     observation = catalog_observation(user)
     sign_in(user)
+    browser = page.driver.browser
+    browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 1280, height: 800, deviceScaleFactor: 1, mobile: false)
+    browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "prefers-color-scheme", value: "light" } ])
     visit resolution_surface_path(observation)
-    expect(page).to have_css(".investigation-progress", text: "Queued")
-    expect(page).to have_css("turbo-cable-stream-source[connected]", visible: :all)
-    capture_resolution("investigation-queued")
+    state = ".investigation-progress li[aria-current='true']"
+    stream = "[data-controller='investigation-sync'] turbo-cable-stream-source"
+    expect(page).to have_css(state, exact_text: "Queued")
+    expect(page).to have_css(".investigation-progress li", count: 5)
+    expect(page).to have_css("#{stream}[connected]", visible: :all)
+    capture_resolution("investigation-queued", full: true)
 
-    provider = CatalogFixtures::Session.new
-    allow(RecordingResolution::ProviderSession).to receive(:new).and_return(provider)
     request = CatalogImport.where(kind: RecordingResolution::Investigation::KIND).sole
-    CanonicalCatalogJob.perform_now(request.id)
+    SolidQueue::Job.where(class_name: CanonicalCatalogJob.name).destroy_all
+    request.update!(due_at: 10.minutes.from_now)
+    Turbo::StreamsChannel.broadcast_refresh_to(request, method: :morph, scroll: :preserve)
+    expect(page).to have_text("No investigation attempt is scheduled.")
+    expect(page).to have_no_css(".investigation-progress")
+
+    request.dispatch
+    Turbo::StreamsChannel.broadcast_refresh_to(request, method: :morph, scroll: :preserve)
+    expect(page).to have_css(state, exact_text: "Waiting to retry")
+    browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 390, height: 844, deviceScaleFactor: 1, mobile: true)
+    browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "prefers-color-scheme", value: "dark" } ])
+    expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
+    capture_resolution("investigation-retry-mobile-dark")
+
+    request.update!(due_at: 1.second.ago)
+    CanonicalCatalog::Processor.new(request, session_factory: ->(*) { CatalogFixtures::Session.new }).call do
+      Turbo::StreamsChannel.broadcast_refresh_to(request, method: :morph, scroll: :preserve)
+      expect(page).to have_css(state, exact_text: "Investigating")
+      page.execute_script("window.investigationConsumer = document.querySelector(arguments[0]).subscription.consumer; window.investigationConsumer.disconnect()", stream)
+      expect(page).to have_no_css("#{stream}[connected]", visible: :all)
+    end
     expect(request.reload.state).to eq("imported")
-    expect(page).to have_css(".investigation-badge", text: /Investigation complete|Needs review/)
+    expect(page).to have_css(state, exact_text: "Investigating")
+    page.execute_script("window.investigationConsumer.connect()")
+    expect(page).to have_css(".investigation-badge", exact_text: "Investigation complete")
     expect(page).to have_css(".resolution-choice", text: "Signals")
     expect(page).to have_no_css(".investigation-progress")
-    capture_resolution("investigation-complete")
+    expect(page).to have_no_link("Refresh status")
+    browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 1280, height: 800, deviceScaleFactor: 1, mobile: false)
+    capture_resolution("investigation-complete", full: true)
+  ensure
+    CanonicalCatalogJob.queue_adapter = prior_adapter if prior_adapter
+    browser&.execute_cdp("Emulation.clearDeviceMetricsOverride")
+    browser&.execute_cdp("Emulation.setEmulatedMedia", features: [])
   end
 
   it "automatically shows pending release verification when the saved recording has no complete release evidence" do
@@ -706,12 +779,12 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     ])
     sign_in(user)
     visit resolution_surface_path(observation)
-    expect(page).to have_text("Investigation pending")
+    expect(page).to have_text("No investigation attempt is scheduled.")
     capture_resolution("pending-desktop")
 
     request = CatalogImport.where(kind: RecordingResolution::Investigation::KIND).sole
     CanonicalCatalog::Processor.new(request, session_factory: ->(*) { CatalogFixtures::Session.new }).call
-    click_link "Refresh status"
+    visit page.current_url
     click_link "Review evidence"
     expect(page).to have_css(".review-candidate.recommended")
     expect(page).to have_text("2 matching observations")
@@ -742,6 +815,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     ])
     visit resolution_surface_path(observation, assessment: ambiguous.id)
     expect(page).to have_text("Ambiguous")
+    expect(page).to have_css(".investigation-badge", exact_text: "Needs review")
     expect(page).to have_css(".resolution-choice", count: 2)
     all(".resolution-choice").last.send_keys(:enter)
     expect(page).to have_css(".resolution-choice[aria-current]", count: 1)
@@ -768,12 +842,12 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     end
     sign_in(user)
     visit resolution_surface_path(observations.first)
-    expect(page).to have_css(".investigation-progress", text: "Queued")
+    expect(page).to have_text("No investigation attempt is scheduled.")
     expect(page).to have_no_text("Provider calls")
 
     request = CatalogImport.find_by!(kind: RecordingResolution::Investigation::KIND)
     request.update!(state: "failed", attempts: 5, request_count: 5, failure: "musicbrainz throttled (503)")
-    click_link "Refresh status"
+    visit page.current_url
     within(".review-heading") do
       expect(all("dt").map(&:text)).to eq([ "Artist string", "Album string" ])
       expect(page).to have_css("h1", exact_text: claims.fetch("track_name"))

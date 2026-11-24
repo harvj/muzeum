@@ -2,33 +2,33 @@
   <% request_failed = @assessment_request&.state == "failed" %>
   <% throttled = request_failed && @assessment_request.failure == "musicbrainz throttled (503)" %>
   <% expired = @assessment_request&.expired_investigation? || @assessment_request&.failure == "Investigation expired before completion." %>
-  <% can_retry = @may_manage_observation && CatalogImport.worker_enabled? && (expired || !@assessment_request&.active?) %>
+  <% queue_state = @assessment_request.investigation_queue_state if @assessment_request && !expired && params[:assessment].blank? %>
+  <% can_retry = @may_manage_observation && CatalogImport.worker_enabled? %>
   <% if expired %>
     <p role="status" class="investigation-badge"><%= can_retry ? "Failed — Retry" : "Needs attention" %></p>
     <p class="muted">The investigation expired.</p>
     <%= button_to "Retry search", investigate_resolution_surface_path(@observation) if can_retry %>
-  <% elsif @assessment_request&.active? %>
-    <div class="investigation-progress">
-      <% if @assessment_request.state == "refreshing" && @assessment_request.lease_until.future? %>
-        <p role="status"><strong>Investigating</strong></p>
-        <p class="muted">Checking recording and release evidence.</p>
-      <% elsif @assessment_request.state == "refreshing" %>
-        <p role="status"><strong>Needs attention</strong></p>
-        <p class="muted">The worker’s investigation lease expired.</p>
-      <% elsif @assessment_request.automatic_retry_scheduled? %>
-        <p role="status"><strong>Waiting to retry</strong></p>
+  <% elsif queue_state.in?([ :queued, :investigating, :retrying ]) %>
+    <div class="investigation-progress" role="status" aria-label="Investigation progress">
+      <ul>
+        <% { queued: "Queued", investigating: "Investigating", retrying: "Waiting to retry",
+          complete: "Investigation complete", review: "Needs review" }.each do |state, label| %>
+          <%= tag.li label, aria: { current: ("true" if state == queue_state) } %>
+        <% end %>
+      </ul>
+      <% if queue_state == :retrying %>
         <p class="muted">Next attempt <%= browser_time(@assessment_request.due_at) %>.</p>
-      <% elsif @assessment_request.due_at.future? %>
-        <p role="status"><strong>Investigation pending</strong></p>
-        <p class="muted">Eligible for another attempt <%= browser_time(@assessment_request.due_at) %>.</p>
-      <% else %>
-        <p role="status"><strong>Queued</strong></p>
-        <p class="muted">Investigation pending.</p>
       <% end %>
-      <%= link_to "Refresh status", request.fullpath, data: { turbo: false } %>
     </div>
+  <% elsif @assessment_request&.active? && params[:assessment].blank? %>
+    <p role="status" class="investigation-badge">Needs attention</p>
+    <p class="muted"><%= queue_state == :unavailable ? "The investigation queue could not be checked." : "No investigation attempt is scheduled." %></p>
+    <%= button_to "Retry search", investigate_resolution_surface_path(@observation) if can_retry && queue_state != :unavailable %>
+  <% elsif request_failed && @assessment_request.failure == CatalogImport::INVESTIGATION_WORKER_FAILURE %>
+    <p role="status" class="investigation-badge">Failed — Needs Codex</p>
+    <p class="muted">The investigation worker failed unexpectedly.</p>
   <% elsif request_failed || provider_incomplete %>
-    <div class="review-failure">
+    <div class="investigation-outcome">
       <div role="status">
         <p class="investigation-badge"><%= request_failed && can_retry ? "Failed — Retry" : "Needs attention" %></p>
         <p class="muted"><%= throttled ? "MusicBrainz search unavailable" : "Provider evidence unavailable or incomplete" %></p>
@@ -43,7 +43,8 @@
       <% end %>
     </div>
   <% elsif @assessment_request&.state == "incomplete" %>
-    <p role="status"><strong>Needs review</strong> · Investigation incomplete. <%= @assessment_request.failure %></p>
+    <p role="status" class="investigation-badge">Needs review</p>
+    <p class="muted"><%= @assessment_request.failure %></p>
   <% elsif @assessment %>
     <% disputed = contexts.values.any? { |proposals| proposals.group_by { |proposal| proposal.construction.base.data.dig("release-group", "id") }.values.any?(&:many?) } %>
     <p role="status" class="investigation-badge"><%= @candidates.one? && !disputed ? "Investigation complete" : "Needs review" %></p>

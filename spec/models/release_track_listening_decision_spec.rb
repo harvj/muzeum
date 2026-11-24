@@ -17,9 +17,11 @@ RSpec.describe ReleaseTrackListeningDecision do
     expect(projection.call(listener)).to contain_exactly([ album.id, base.id ], [ single.id, bonus.id ])
     described_class.create!(user: listener, release: album, recording: bonus, included: true)
     described_class.create!(user: listener, release: album, recording: base, included: false)
-    expect(projection.call(listener)).to contain_exactly([ album.id, bonus.id ], [ single.id, bonus.id ])
-    expect(projection.call(other_listener)).to contain_exactly([ album.id, base.id ], [ single.id, bonus.id ])
-    described_class.create!(user: listener, release: album, recording: base, included: true)
     expect(projection.call(listener)).to contain_exactly([ album.id, base.id ], [ album.id, bonus.id ], [ single.id, bonus.id ])
+    expect(projection.call(other_listener)).to contain_exactly([ album.id, base.id ], [ single.id, bonus.id ])
+    album.catalog_track_slots.base_sequence.where(recording: base).delete_all
+    album.catalog_track_slots.where(recording: bonus).update_all(edition_mbid: nil)
+    expect(projection.call(listener)).to contain_exactly([ album.id, bonus.id ], [ single.id, bonus.id ])
+    expect(projection.call(other_listener)).to contain_exactly([ album.id, bonus.id ], [ single.id, bonus.id ])
   end
 end

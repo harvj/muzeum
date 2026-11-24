@@ -502,7 +502,7 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     second = catalog_observation(user, time: 1.day.ago)
 
     expect { get resolution_surface_path(observation) }.to change(CatalogImport, :count).by(1)
-    expect(response.body).to include("Unresolved", "Investigation pending")
+    expect(response.body).to include("Unresolved", "No investigation attempt is scheduled.")
     expect { get resolution_surface_path(second) }.not_to change(CatalogImport, :count)
     request = CatalogImport.where(kind: RecordingResolution::Investigation::KIND).sole
     CanonicalCatalog::Processor.new(request, session_factory: ->(*) { CatalogFixtures::Session.new }).call
@@ -535,6 +535,21 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
       "candidate_mbid" => CatalogFixtures::IDS[:studio], "affected_observation_count" => 0)
     expect(RecordingResolution::Ledger.effective(user).find(second.id).effective_recording_id).to eq(decision.recording_id)
     expect(Scrobble.find(observation.id).payload).to eq(observation.payload)
+  end
+
+  it "shows an unexpected worker failure as terminal instead of leaving an active lease" do
+    finish_oidc
+    user = User.find_by!(oidc_subject: @subject)
+    LastfmAccount.associate!(user, "catalog-worker-failure")
+    observation = catalog_observation(user)
+    get resolution_surface_path(observation)
+    request = CatalogImport.where(kind: RecordingResolution::Investigation::KIND).sole
+    allow(RecordingResolution::ProviderSession).to receive(:new).and_raise(RuntimeError, "test worker failure")
+    expect { CanonicalCatalogJob.perform_now(request.id) }.to raise_error(RuntimeError, "test worker failure")
+    expect(request.reload).to have_attributes(state: "failed", lease_until: nil)
+    get resolution_surface_path(observation)
+    expect(response.body).to include("Failed — Needs Codex")
+    expect(response.body).not_to include('class="investigation-progress"')
   end
 
   it "reports an expired investigation and replaces it only on explicit retry" do

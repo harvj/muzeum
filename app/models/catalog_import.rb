@@ -1,5 +1,6 @@
 class CatalogImport < ApplicationRecord
   RECORDING_METADATA = "recording_metadata".freeze
+  INVESTIGATION_WORKER_FAILURE = "Investigation worker failed unexpectedly.".freeze
   ACTIVE = %w[pending refreshing].freeze
   scope :active, -> { where(state: ACTIVE) }
   scope :due, -> { where(state: "pending", due_at: ..Time.current).or(where(state: "refreshing", lease_until: ..Time.current)) }
@@ -19,27 +20,30 @@ class CatalogImport < ApplicationRecord
   def dispatch
     return unless self.class.worker_enabled? && active?
 
-    job = CanonicalCatalogJob.set(wait_until: due_at).perform_later(id)
-    if due_at.future? && job && job.provider_job_id &&
-        kind.in?([ "assessment", RecordingResolution::Investigation::KIND ])
-      scheduled_id = self.class.connection.quote(job.job_id)
-      self.class.where(id:, state: "pending", due_at:).update_all(
-        "context = jsonb_set(context, '{scheduled_active_job_id}', to_jsonb(#{scheduled_id}::text))")
-    end
-    job
+    CanonicalCatalogJob.set(wait_until: due_at).perform_later(id)
   rescue ActiveJob::EnqueueError, SolidQueue::Job::EnqueueError
-    # A due request can be dispatched again from the page or the bounded recovery task.
     false
   end
 
-  def automatic_retry_scheduled?
-    return false unless state == "pending" && due_at.future? && context["scheduled_active_job_id"].present?
-    return false unless CanonicalCatalogJob.queue_adapter.is_a?(ActiveJob::QueueAdapters::SolidQueueAdapter)
+  def investigation_queue_state
+    return unless active?
+    return :investigating if state == "refreshing" && lease_until&.future?
 
-    SolidQueue::ScheduledExecution.joins(:job)
-      .exists?(solid_queue_jobs: { active_job_id: context["scheduled_active_job_id"] })
-  rescue ActiveRecord::ActiveRecordError
-    false
+    adapter = CanonicalCatalogJob.queue_adapter
+    return unless adapter.is_a?(ActiveJob::QueueAdapters::SolidQueueAdapter)
+
+    jobs = SolidQueue::Job.where(queue_name: "canonical_catalog", finished_at: nil, class_name: CanonicalCatalogJob.name)
+      .where("arguments::jsonb -> 'arguments' -> 0 = CAST(? AS jsonb)", id.to_s)
+    return :queued if jobs.joins(:ready_execution).exists? || jobs.joins(:blocked_execution).exists? ||
+      (state == "pending" && jobs.joins(:claimed_execution).exists?)
+
+    scheduled = jobs.joins(:scheduled_execution).minimum("solid_queue_scheduled_executions.scheduled_at")
+    return unless scheduled
+
+    due_at.future? && scheduled.future? ? :retrying : :queued
+  rescue ActiveRecord::ActiveRecordError => error
+    Rails.logger.warn("Investigation queue lookup failed for #{id}: #{error.class}")
+    :unavailable
   end
 
   def expired_investigation?

@@ -16,7 +16,7 @@
             <td><%= observed_text(artist, "Artist") %><br><span class="muted"><%= observed_text(album, "Album") %></span></td><td class="table-number"><%= number_with_delimiter(count) %></td>
             <% if @filter == "unresolved" %>
               <td><%= if CatalogImport::ACTIVE.include?(state)
-                "Investigation pending"
+                "Check investigation status"
               elsif candidates
                 "Review candidate evidence"
               elsif state == "failed"

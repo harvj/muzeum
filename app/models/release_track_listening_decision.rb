@@ -12,7 +12,7 @@ class ReleaseTrackListeningDecision < ApplicationRecord
           ON track_preference.release_id = catalog_track_slots.release_id
           AND track_preference.recording_id = catalog_track_slots.recording_id
       SQL
-      .where("COALESCE(track_preference.included, catalog_track_slots.edition_mbid IS NULL)")
+      .where("(catalog_track_slots.edition_mbid IS NULL OR track_preference.included = TRUE)")
       .distinct
   end
 end
