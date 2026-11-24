@@ -98,6 +98,19 @@ end %>
                   </ul>
                 </details>
               <% end %>
+              <% uncertain = proposal.construction.appearances.select { |edition| edition["uncertain_tracks"].present? } %>
+              <% if uncertain.any? %>
+                <details>
+                  <summary>Edition tracks with unverified recording identity</summary>
+                  <ul>
+                    <% uncertain.each do |edition| %>
+                      <% edition.fetch("uncertain_tracks").each do |track| %>
+                        <li><%= track.fetch("title") %> · <%= link_to edition.fetch("title"), "https://musicbrainz.org/release/#{edition.fetch('id')}" %></li>
+                      <% end %>
+                    <% end %>
+                  </ul>
+                </details>
+              <% end %>
               <% if additions.any? %>
                 <details open>
                   <summary><%= pluralize(additions.size, "additional edition track") %></summary>

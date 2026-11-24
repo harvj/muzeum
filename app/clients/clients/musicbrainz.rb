@@ -140,7 +140,7 @@ module Clients
 
       projection = method(:project_edition) if catalog
       session.get(:musicbrainz, "/ws/2/release/#{mbid}", params: {
-        fmt: "json", inc: catalog ? "recordings+artist-credits+release-groups+url-rels+release-rels+genres+tags" : "recordings+artist-credits+release-groups"
+        fmt: "json", inc: catalog ? "recordings+artist-credits+release-groups+url-rels+release-rels+genres+tags+isrcs" : "recordings+artist-credits+release-groups"
       }, &projection)["data"]
     end
 

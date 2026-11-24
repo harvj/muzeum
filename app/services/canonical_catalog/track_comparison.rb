@@ -17,14 +17,22 @@ module CanonicalCatalog
         Array(source["companion_edition_edits"]).any? { |edit| edit["recording_mbid"] == target["id"] }
       end
       corroborated = shared_isrc || shared_track || documented_edit || companion_edit
-      return corroborated ? :uncertain : :different if (titles(left) & titles(right)).empty?
+      caption = caption_key(left[:title])
+      matching_remix = caption.end_with?(" remix") && caption == caption_key(right[:title])
+      return corroborated ? :uncertain : :different if (titles(left) & titles(right)).empty? && !matching_remix
 
       # Clean and explicit describe edits. They neither establish nor rule out a shared performance.
       if versions.all?(&:present?) && versions.uniq.many? && !clean_explicit
-        return corroborated ? :uncertain : :different
+        return corroborated || matching_remix ? :uncertain : :different
       end
 
       return :uncertain unless versions.first == versions.last || documented_edit || companion_edit
+      # An edition caption can explicitly name the remixer omitted from its structured credits.
+      # Older evidence without ISRCs still warrants review, but cannot establish an alias.
+      if matching_remix
+        return shared_isrc && compatible_edition_remix?(left, right, caption) ? :equivalent : :uncertain
+      end
+
       durations = [ left, right ].map { |slot| slot[:duration_ms] || slot.dig(:recording, "length") }
       length_matches = if documented_edit || companion_edit
         compatible_edit_lengths?(first, second)
@@ -37,6 +45,34 @@ module CanonicalCatalog
       return :uncertain unless left_credits.present? && left_credits == right_credits
 
       corroborated ? :equivalent : :uncertain
+    end
+
+    def compatible_edition_remix?(left, right, caption)
+      slots = [ left, right ]
+      recordings = slots.map { |slot| slot.fetch(:recording) }
+      lengths = recordings.map { |recording| recording["length"].to_i }
+      return false unless lengths.first.positive? && lengths.uniq.one? &&
+        slots.all? { |slot| slot[:duration_ms] && (slot[:duration_ms] - lengths.first).abs < 1_000 }
+      return false unless recordings.map { |recording| recording["video"] == true }.uniq.size == 1
+
+      recording_credits = recordings.map { |source| credits(recording: source) }
+      remixer_names = recording_credits.compact.flat_map { |credit| credit.drop(1).map { |_, name, _| caption_key(name) } }
+      remixer = remixer_names.find { |name| caption.end_with?(" #{name} remix") }
+      expected = [ caption, (caption.delete_suffix(" #{remixer} remix") + " remix" if remixer) ]
+        .compact.map { |name| name.split.sort }
+      return false unless recordings.all? { |source| expected.include?(caption_key(source["title"]).split.sort) }
+
+      [ slots.map { |slot| credits(slot) }, recording_credits ].all? do |pair|
+        next false unless pair.all?(&:present?) && pair.map { |credit| credit.first.first }.uniq.one?
+
+        shorter, longer = pair.sort_by(&:size).map { |credit| credit.map { |id, name, _| [ id, caption_key(name) ] } }
+        missing = longer - shorter
+        (shorter - longer).empty? && missing.all? { |_, name| caption.end_with?(" #{name} remix") }
+      end
+    end
+
+    def caption_key(value)
+      title_key(value).gsub(/[^[:alnum:]]+/, " ").strip
     end
 
     def corroborate_companion_editions(editions)

@@ -35,7 +35,7 @@ RSpec.describe RecordingResolution::ProviderSession do
     group_request = stub_json("/release", group_query, { "release-count" => editions.size, "release-offset" => 0, "releases" => editions })
     edition_requests = editions.to_h do |edition|
       [ edition.fetch("id"), stub_json("/release/#{edition.fetch("id")}",
-        { fmt: "json", inc: "recordings+artist-credits+release-groups+url-rels+release-rels+genres+tags" }, edition) ]
+        { fmt: "json", inc: "recordings+artist-credits+release-groups+url-rels+release-rels+genres+tags+isrcs" }, edition) ]
     end
 
     freeze_time do

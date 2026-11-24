@@ -469,6 +469,9 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
   it "compares the authentic Queen of the Clouds editions and recalculates additions from the chosen base" do
     user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "queen-comparison", lastfm_username: "queen-comparison")
     editions = JSON.parse(Rails.root.join("spec/fixtures/musicbrainz/construction/queen_of_the_clouds.json").read)
+    fixtures = Rails.root.join("spec/fixtures/musicbrainz/construction")
+    editions.concat(JSON.parse(fixtures.join("queen_of_the_clouds_launch_extensions.json").read))
+    editions << JSON.parse(fixtures.join("queen_of_the_clouds_vinyl.json").read)
     canadian, overseas, worldwide = %w[
       9cd3b250-dc88-450f-8836-dbd0e0fa2ccc 17e2d704-6ee3-45ad-a494-d92b1d13abcc 1f21b9a1-0b81-4f3b-8b1b-3ff9e44a91ae
     ]
@@ -522,7 +525,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
 
     choose "construct_release_#{canadian}"
     preview = '[aria-label="Resolution preview"]'
-    expect(page).to have_css(preview, text: "4 additional edition tracks")
+    expect(page).to have_css(preview, text: "7 additional edition tracks")
     [ "Love Ballad", "Over", "Out Of Mind - Bonus Track", "Paradise" ].each do |title|
       expect(page).to have_css("#{preview} details li", text: /\A#{Regexp.escape(title)} · Edition evidence\z/, count: 1)
     end
@@ -532,7 +535,14 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 390, height: 844, deviceScaleFactor: 1, mobile: true)
     browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "prefers-color-scheme", value: "dark" } ])
     choose "construct_release_#{worldwide}"
-    expect(page).to have_no_css("#{preview} summary", text: "additional edition track")
+    expect(page).to have_css("#{preview} summary", text: "3 additional edition tracks")
+    within(preview) do
+      within("details", text: "3 additional edition tracks") do
+        expect(page).to have_no_css("li", text: /Hippie Sabotage/i)
+      end
+      find("summary", text: "Edition tracks with unverified recording identity").click
+      expect(page).to have_link("Queen of the Clouds", href: "https://musicbrainz.org/release/188f6468-b19e-4088-a6d3-0411f52692e4")
+    end
     expect(page).to have_css("#{preview} li", text: /20 tracks.*1 new release/)
     page.execute_script("window.scrollTo(0, 0)")
     capture_resolution("queen-release-comparison-mobile-dark", full: true)
@@ -563,9 +573,12 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     selected = CanonicalCatalog::Edition.new(editions.find { |edition| edition["id"] == overseas }, overseas)
     expect(release.catalog_track_slots.base_sequence.order(:medium, :position).pluck(:source_recording_mbid))
       .to eq(selected.slots.pluck(:source_recording_mbid))
+    source_signature = selected.slots.map { |slot| slot.values_at(:medium, :position, :source_recording_mbid) }
+    expect(RecordingResolution::ReleaseTracklist.new(release).evidence.fetch("tracklist_digest"))
+      .to eq(Digest::SHA256.hexdigest(source_signature.to_json))
     visit release_path(release)
-    find("summary", text: /Additional edition tracks.*4 tracks/).click
-    expect(page).to have_css(".additional-track-table tbody tr", count: 4)
+    find("summary", text: /Additional edition tracks.*7 tracks/).click
+    expect(page).to have_css(".additional-track-table tbody tr", count: 7)
     expect(release.catalog_track_slots.additional_appearances).to be_empty
     find('input[aria-label="Count Love Ballad in release listening totals"]').send_keys(:space)
     expect(page).to have_css('input[aria-label="Count Love Ballad in release listening totals"]:checked')
@@ -582,6 +595,10 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
         CanonicalCatalog::ReviewedConstruction.apply!(proposal, review, restored, corrected_release: release)
       end
       expect(release.catalog_track_slots.base_sequence.count).to eq(size)
+      expect(release.catalog_track_slots.where(source_recording_mbid: "21c565a5-fbbd-4cd3-be5d-b921e534c014")).not_to exist
+      counted = ReleaseTrackListeningDecision.included_memberships(user, [ release.id ]).pluck(:recording_id)
+      plays = RecordingResolution::Ledger.for_recordings(user, counted)
+      expect(CatalogListening.new(plays).total.plays).to eq(1)
       expect(ReleaseTrackListeningDecision.included_memberships(user, [ release.id ]).where(recording: love_ballad)).to exist
       visit release_path(release, edition_tracks: "1")
       checkbox = 'input[aria-label="Count Love Ballad in release listening totals"]:checked'

@@ -116,6 +116,58 @@ RSpec.describe CanonicalCatalog::Construction do
     expect(additions).to contain_exactly("Not Made for This World", "Not on Drugs (Ali Payami remix)")
   end
 
+  it "keeps the production vinyl remix out of both base editions’ additional tracks" do
+    fixtures = Rails.root.join("spec/fixtures/musicbrainz/construction")
+    data = %w[queen_of_the_clouds queen_of_the_clouds_launch_extensions].flat_map do |name|
+      JSON.parse(fixtures.join("#{name}.json").read)
+    end
+    vinyl = JSON.parse(fixtures.join("queen_of_the_clouds_vinyl.json").read)
+    isrcs = JSON.parse(fixtures.join("queen_of_the_clouds_remix_isrcs.json").read)
+    source, alternate = isrcs.keys
+
+    [ false, true ].each do |with_isrcs|
+      sources = [ *data, vinyl ].deep_dup
+      sources.each do |edition|
+        edition.fetch("media").flat_map { |medium| medium.fetch("tracks") }.each do |track|
+          recording = track.fetch("recording")
+          recording["isrcs"] = isrcs.fetch(recording.fetch("id")) if with_isrcs && isrcs.key?(recording.fetch("id"))
+        end
+      end
+      editions = sources.map { |edition| CanonicalCatalog::Edition.new(edition, edition.fetch("id")) }
+      vinyl_edition = editions.last
+      vinyl_remix = vinyl_edition.slots.find { |track| track[:source_recording_mbid] == alternate }
+      described_class.selectable_bases(editions).each do |base|
+        source_slots = base.slots.map { |slot| slot.values_at(:medium, :position, :number, :track_mbid, :source_recording_mbid) }
+        fingerprint = Digest::SHA256.hexdigest(base.slots.map { |slot| slot.values_at(:medium, :position, :source_recording_mbid) }.to_json)
+        base_remix = base.slots.find { |track| track[:source_recording_mbid] == source }
+        comparison = CanonicalCatalog::TrackComparison
+        expect(comparison.compare(base_remix, vinyl_remix)).to eq(with_isrcs ? :equivalent : :uncertain)
+
+        construction = described_class.new(editions, base:)
+        expected = [ "Not Made for This World", "Not on Drugs (Ali Payami remix)", "Not on Drugs (The Knocks remix)" ]
+        expected += [ "Love Ballad", "Over", "Out Of Mind - Bonus Track", "Paradise" ] if base.slots.size == 16
+        expect(construction.additional_tracks.map { |group| group.first.fetch("title") }).to match_array(expected)
+        expect(construction.additional_slots.pluck(:source_recording_mbid)).not_to include(alternate)
+        expect(construction.base.slots.map { |slot| slot.values_at(:medium, :position, :number, :track_mbid, :source_recording_mbid) }).to eq(source_slots)
+        expect(Digest::SHA256.hexdigest(construction.base.slots.map do |slot|
+          slot.values_at(:medium, :position, :source_recording_mbid)
+        end.to_json)).to eq(fingerprint)
+
+        next unless with_isrcs
+
+        other_version = vinyl_remix.deep_dup
+        other_version.fetch(:recording)["disambiguation"] = "live"
+        expect(comparison.compare(base_remix, other_version)).to eq(:uncertain)
+        other_title = vinyl_remix.deep_dup
+        other_title.fetch(:recording)["title"] = "Habits (Stay High) (another remix)"
+        expect(comparison.compare(base_remix, other_title)).to eq(:uncertain)
+        other_credit = vinyl_remix.deep_dup
+        other_credit.fetch(:recording).fetch("artist-credit").first.fetch("artist")["id"] = SecureRandom.uuid
+        expect(comparison.compare(base_remix, other_credit)).to eq(:uncertain)
+      end
+    end
+  end
+
   it "groups corroborated alternate source IDs and retains uncertain look-alikes without admitting them" do
     data = narrow_stairs_editions.find { |edition| edition["id"] == NarrowStairsFixture::ORIGINAL }
     track = data.dig("media", 0, "tracks", 2)
