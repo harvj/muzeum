@@ -75,6 +75,24 @@ RSpec.describe RecordingResolution::RecordingOrigins do
     expect(proposal.construction.additional_slots.sole).to include(position: 14, appearance_date: "2004-08-21")
   end
 
+  it "admits an independently verified first-publication compilation without treating it as an album" do
+    base = narrow_stairs_editions.find { |edition| edition["id"] == NarrowStairsFixture::ORIGINAL }
+    recording = NarrowStairsFixture::RECORDING
+    compilation = base.merge("id" => SecureRandom.uuid, "title" => "First publication",
+      "release-group" => base.fetch("release-group").merge("id" => SecureRandom.uuid, "title" => "First publication",
+        "secondary-types" => [ "Compilation" ]))
+    evidence = checked_history([ recording ], { recording => [ compilation ] }, [ compilation ])
+    history = evidence.fetch("recording_publications").fetch(recording)
+    expect(history["first_publication_compilation_group"]).to eq(compilation.dig("release-group", "id"))
+    assessment = double(evidence:)
+    proposal = CanonicalCatalog::ReviewedConstruction.for(assessment, recording).sole
+    request = CatalogImport.create!(kind: "release_construction", entity_id: 1, due_at: Time.current, state: "imported")
+    release = CanonicalCatalog::ReviewedConstruction.apply!(proposal, request, assessment)
+    expect(release).to have_attributes(primary_type: "compilation", ingested_from_release_mbid: compilation["id"])
+    expect(release.catalog_track_slots.base_sequence.count).to eq(11)
+    expect(ReleaseRanking.new(nil, [ release ])).to be_include(release)
+  end
+
   it "does not mistake an incomplete browse for a complete recording history" do
     id = NarrowStairsFixture::RECORDING
     client = Clients::Musicbrainz.new

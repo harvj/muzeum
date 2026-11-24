@@ -2,30 +2,32 @@ module CanonicalCatalog
   class ReviewedConstruction
     Proposal = Data.define(:construction, :existing)
 
-    def self.for(assessment, recording_mbid)
+    def self.for(assessment, recording_mbid, source_ids: [ recording_mbid ])
+      history = assessment&.evidence&.fetch("recording_publications", nil)
+      compilations = source_ids.filter_map { |id| history&.dig(id, "first_publication_compilation_group") }.to_set
       editions = Array(assessment&.evidence&.fetch("construction_editions", nil)).filter_map do |data|
-        next unless Edition.collection_context?(data)
+        next unless Edition.collection_context?(data, compilation: compilations.include?(data.dig("release-group", "id")))
 
         Edition.new(data, Store.mbid!(data["id"]))
       rescue Store::Unverified
         nil
       end
 
-      history = assessment&.evidence&.fetch("recording_publications", nil)
       editions.group_by { |edition| edition.data.dig("release-group", "id") }.flat_map do |group, evidence|
         if history
-          next [] unless Array(history.dig(recording_mbid, "original_groups")).include?(group)
+          next [] unless source_ids.any? { |id| Array(history.dig(id, "original_groups")).include?(group) }
         elsif group == assessment.evidence["pending_original_group"]
           next []
         end
-        next [] unless evidence.any? { |edition| edition.slots.any? { |slot| slot.dig(:recording, "id") == recording_mbid } }
+        next [] unless evidence.any? { |edition| edition.slots.any? { |slot| source_ids.include?(slot.dig(:recording, "id")) } }
 
         existing = Release.where(release_group_mbid: group).limit(2).to_a
         next [] if existing.many?
 
-        Construction.selectable_bases(evidence).filter_map do |base|
-          construction = Construction.new(evidence, base:, recording_mbid:)
-          if (base.slots + construction.additional_slots).any? { |slot| slot.dig(:recording, "id") == recording_mbid }
+        compilation = compilations.include?(group)
+        Construction.selectable_bases(evidence, compilation:).filter_map do |base|
+          construction = Construction.new(evidence, base:, recording_mbid: source_ids, compilation:)
+          if (base.slots + construction.additional_slots).any? { |slot| source_ids.include?(slot.dig(:recording, "id")) }
             Proposal.new(construction, existing.first)
           end
         end
@@ -34,9 +36,9 @@ module CanonicalCatalog
       end
     end
 
-    def self.resolution_choices(assessment, recording_mbid, recording)
+    def self.resolution_choices(assessment, recording_mbid, recording, source_ids: [ recording_mbid ])
       admitted = recording.admitted_releases.where.not(catalog_verified_at: nil) if recording
-      choices = self.for(assessment, recording_mbid)
+      choices = self.for(assessment, recording_mbid, source_ids:)
       if admitted&.exists?
         choices.select! { |proposal| proposal.existing && admitted.exists?(id: proposal.existing.id) }
       end
@@ -105,7 +107,7 @@ module CanonicalCatalog
       end
       Store.new(request, provenance).release(construction.base.data, construction.base.slots,
         strict_collection: true, checked_editions: construction.appearances,
-        additional_slots: additional, corrected_release:)
+        additional_slots: additional, corrected_release:, first_publication_compilation: construction.first_publication_compilation)
     end
   end
 end

@@ -58,7 +58,7 @@
     <p class="muted"><%= @assessment_request.failure %></p>
   <% elsif @assessment %>
     <% disputed = contexts.values.any? { |proposals| proposals.group_by { |proposal| proposal.construction.base.data.dig("release-group", "id") }.values.any?(&:many?) } %>
-    <%= badge.call("Needs review", :review) unless @candidates.one? && !disputed %>
+    <%= badge.call("Needs review", :review) unless resolution_distinct_recording_count(@assessment, @candidates) == 1 && !disputed %>
     <% unless compact %><p class="muted"><%= browser_time(@assessment.created_at) %></p><% end %>
   <% else %>
     <p>This observation has not been investigated.<%= " Background investigation is paused." unless RecordingResolution::Investigation.enabled? %></p>

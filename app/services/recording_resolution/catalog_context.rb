@@ -1,8 +1,12 @@
 module RecordingResolution
   class CatalogContext
     def initialize(candidates)
-      @recordings = Recording.where(mbid: candidates.pluck("id"))
-        .includes(:admitted_releases, recording_artists: :artist).index_by(&:mbid)
+      mbids = candidates.pluck("id")
+      aliases = RecordingSourceDecision.heads(mbids).transform_values(&:recording_id)
+      records = Recording.where(mbid: mbids).or(Recording.where(id: aliases.values))
+        .includes(:admitted_releases, recording_artists: :artist).to_a
+      by_id = records.index_by(&:id)
+      @recordings = records.index_by(&:mbid).merge(aliases.transform_values { |id| by_id[id] })
       artist_ids = candidates.flat_map { |candidate| credit_ids(candidate) }
       @artists = Artist.where(mbid: artist_ids).index_by(&:mbid)
     end

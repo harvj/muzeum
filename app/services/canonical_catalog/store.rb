@@ -6,7 +6,10 @@ module CanonicalCatalog
       def recording!(data)
         mbid = mbid!(data["id"])
         title = name!(data["title"])
-        Recording.create_or_find_by!(mbid:) { |recording| recording.title = title }
+        Recording.transaction do
+          RecordingSourceDecision.lock!
+          RecordingSourceDecision.resolve(mbid) || Recording.create_or_find_by!(mbid:) { |recording| recording.title = title }
+        end
       end
 
       def mbid!(value)
@@ -31,6 +34,8 @@ module CanonicalCatalog
       raise Unverified, "Recording identity changed" unless data["id"] == expected
 
       record = self.class.recording!(data)
+      return record if record.mbid != expected
+
       evidence = metadata_evidence(data).merge("artist_credit" => credit_evidence(data["artist-credit"]))
       evidence["verified_publication"] = publication if publication
       refresh(record, { "title" => data["title"], "duration_ms" => positive(data["length"]) }, evidence)
@@ -47,14 +52,15 @@ module CanonicalCatalog
       artist
     end
 
-    def release(data, slots, comparison: {}, strict_collection: false, checked_editions: [], additional_slots: [], corrected_release: nil)
+    def release(data, slots, comparison: {}, strict_collection: false, checked_editions: [], additional_slots: [], corrected_release: nil, first_publication_compilation: false)
+      RecordingSourceDecision.lock!
       edition = self.class.mbid!(data["id"])
       title = self.class.name!(data.dig("release-group", "title").presence || data["title"])
       group = data.dig("release-group", "id")
       signature = slots.map { |slot| [ slot.fetch(:medium), slot.fetch(:position), slot.fetch(:recording).fetch("id") ] }
       evidence = { "edition_mbid" => edition, "release_group_mbid" => group, "track_count" => slots.size,
         "tracklist_digest" => Digest::SHA256.hexdigest(signature.to_json), "discogs" => comparison }
-      evidence["original_context"] = Edition.original_context?(data) if strict_collection
+      evidence["original_context"] = Edition.original_context?(data, compilation: first_publication_compilation) if strict_collection
       evidence.merge!(metadata_evidence(data))
       evidence["checked_recording_appearances"] = checked_editions if checked_editions.present?
       release = corrected_release || Release.find_by(ingested_from_release_mbid: edition)

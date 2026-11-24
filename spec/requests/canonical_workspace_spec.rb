@@ -552,6 +552,47 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     expect(response.body).not_to include('class="investigation-progress"')
   end
 
+  it "shows the retained ambiguous Walk ’em With Grace outcome without presenting queued work" do
+    finish_oidc
+    user = User.find_by!(oidc_subject: @subject)
+    LastfmAccount.associate!(user, "walk-em-with-grace")
+    observation = Scrobble.create!(user:, lastfm_account: user.source_account, played_at: Time.current,
+      payload: { artist_name: "The Get Up Kids", album_name: "There Are Rules", track_name: "Walk ’em With Grace" })
+    surface = RecordingResolution::Ledger.attach!(observation)
+    group = RecordingResolution::Group.create!(surface_id: surface.id, version: RecordingResolution::Ledger::VERSION, claims: {})
+    candidates = %w[0351574e-2b09-4ee0-92ee-4ea9c12f8be6 b05c6f37-1f23-488d-974d-5d062dcf1c9e].map do |mbid|
+      { "id" => mbid, "title" => "Walk ’em With Grace", "artist-credit" => [ { "name" => "The Get Up Kids" } ] }
+    end
+    RecordingResolution::Assessment.create!(group_id: group.id, version: "retained-audit", actor: "fixture",
+      digest: SecureRandom.hex(32), evidence: { "candidates" => candidates })
+    CatalogImport.create!(kind: RecordingResolution::Investigation::KIND, entity_id: group.id, due_at: Time.current, state: "imported")
+
+    get resolution_surface_path(observation)
+    page = Nokogiri::HTML(response.body)
+    expect(page.at_css(".investigation-badge").text).to eq("Needs review")
+    expect(page.css(".resolution-choice").size).to eq(2)
+    expect(page.at_css(".investigation-progress")).to be_nil
+  end
+
+  it "rejects an old identity preview after a source decision changes" do
+    finish_oidc
+    user = User.find_by!(oidc_subject: @subject)
+    LastfmAccount.associate!(user, "stale-recording-identity")
+    observation, assessment = narrow_stairs_assessment(user)
+    mbid = NarrowStairsFixture::RECORDING
+    get resolution_surface_path(observation)
+    form = Nokogiri::HTML(response.body).at_css(".resolution-confirmation")
+    fingerprint = form.at_css('input[name="resolution_plan"]')["value"]
+    canonical = Recording.create!(mbid: SecureRandom.uuid, title: "No Sunlight")
+    RecordingSourceDecision.revise!(source: assessment.evidence.fetch("candidates").first, recording: canonical,
+      expected_head: nil, actor: "operator", reason: "Identity evidence was reviewed")
+    post decide_resolution_surface_path(observation), params: { scope: "surface", mode: "resolved",
+      recording_mbid: mbid, assessment_id: assessment.id, resolution_plan: fingerprint }
+    expect(RecordingResolution::Decision.count).to eq(0)
+    expect(Release.count).to eq(0)
+    expect(flash[:alert]).to be_present
+  end
+
   it "reports an expired investigation and replaces it only on explicit retry" do
     finish_oidc
     user = User.find_by!(oidc_subject: @subject)

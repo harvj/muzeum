@@ -1,14 +1,15 @@
 module CanonicalCatalog
   class Construction
-    attr_reader :base, :appearances, :additional_slots, :additional_tracks
+    attr_reader :base, :appearances, :additional_slots, :additional_tracks, :first_publication_compilation
 
     EDITION_VARIANT = /\b(?:deluxe|expanded|bonus|reissue|remaster(?:ed)?|anniversary)\b/i
 
-    def self.originals(editions)
+    def self.originals(editions, compilation: false)
+      TrackComparison.corroborate_companion_editions(editions)
       originals = editions.select do |edition|
         data = edition.data
         title_variant = data["title"].to_s != RecordingResolution::DiscoveryTitle.album_base(data["title"])
-        Edition.original_context?(data) && !title_variant && !data["disambiguation"].to_s.match?(EDITION_VARIANT)
+        Edition.original_context?(data, compilation:) && !title_variant && !data["disambiguation"].to_s.match?(EDITION_VARIANT)
       end
 
       groups = originals.sort_by { |edition| edition.data.fetch("id") }.each_with_object([]) do |edition, grouped|
@@ -41,8 +42,8 @@ module CanonicalCatalog
       end.sort_by { |edition| edition.data.fetch("id") }
     end
 
-    def self.selectable_bases(editions)
-      originals = self.originals(editions)
+    def self.selectable_bases(editions, compilation: false)
+      originals = self.originals(editions, compilation:)
       return originals unless originals.many?
 
       originals | editions.select do |edition|
@@ -54,15 +55,16 @@ module CanonicalCatalog
       edition.slots.map { |slot| slot.dig(:recording, "id") }
     end
 
-    def initialize(editions, base: nil, recording_mbid: nil)
-      editions = editions.select { |edition| Edition.collection_context?(edition.data) }
-      originals = self.class.originals(editions)
+    def initialize(editions, base: nil, recording_mbid: nil, compilation: false)
+      editions = editions.select { |edition| Edition.collection_context?(edition.data, compilation:) }
+      originals = self.class.originals(editions, compilation:)
       raise Store::Unverified, "The original tracklist remains unverified" if originals.empty?
-      if base ? !self.class.selectable_bases(editions).include?(base) : originals.many?
+      if base ? !self.class.selectable_bases(editions, compilation:).include?(base) : originals.many?
         raise Store::Unverified, "Original tracklists disagree on order or membership"
       end
 
       @base = base || originals.first
+      @first_publication_compilation = compilation
       @additional_slots = []
       groups = []
       base_recordings = self.class.sequence(@base).to_set
@@ -89,7 +91,7 @@ module CanonicalCatalog
           evidence.merge("edition_mbid" => edition.data.fetch("id"), "source_track" => slot.stringify_keys)
         end
         if recording_mbid
-          admitted = additions.select { |slot| slot.dig(:recording, "id") == recording_mbid }
+          admitted = additions.select { |slot| Array(recording_mbid).include?(slot.dig(:recording, "id")) }
           @additional_slots.concat(admitted.map { |slot| slot.merge(edition_mbid: edition.data.fetch("id"), appearance_date: date) })
         elsif originals.none? { |original| original != @base && TrackComparison.equivalent_sequence?(original.slots, edition.slots) }
           @additional_slots.concat(additions.map { |slot| slot.merge(edition_mbid: edition.data.fetch("id"), appearance_date: date) })

@@ -29,7 +29,7 @@ RSpec.describe RecordingResolution::ProviderSession do
     recording = original.dig("media", 0, "tracks", 2, "recording")
     appearances = JSON.parse(Rails.root.join("spec/fixtures/musicbrainz/construction/narrow_stairs_recordings.json").read).fetch(id)
       .select { |edition| edition.dig("release-group", "id") == NarrowStairsFixture::GROUP }
-    stub_json("/recording/#{id}", { fmt: "json", inc: "artist-credits+releases+release-groups+isrcs+genres+tags" }, recording)
+    stub_json("/recording/#{id}", { fmt: "json", inc: "artist-credits+releases+release-groups+isrcs+genres+tags+recording-rels" }, recording)
     stub_json("/release", { fmt: "json", recording: id, inc: "release-groups+media", limit: 25 },
       { "release-count" => appearances.size, "release-offset" => 0, "releases" => appearances })
     group_request = stub_json("/release", group_query, { "release-count" => editions.size, "release-offset" => 0, "releases" => editions })

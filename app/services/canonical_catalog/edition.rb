@@ -25,18 +25,19 @@ module CanonicalCatalog
       end
     end
 
-    def self.original_context?(data)
-      collection_context?(data) && data["date"] == data.dig("release-group", "first-release-date")
+    def self.original_context?(data, compilation: false)
+      collection_context?(data, compilation:) && data["date"] == data.dig("release-group", "first-release-date")
     end
 
-    def self.collection_context?(data)
+    def self.collection_context?(data, compilation: false)
       group = data["release-group"] || {}
       comparable_title = group["title"].blank? || RecordingResolution::DiscoveryTitle.match?(
         RecordingResolution::DiscoveryTitle.album_base(data["title"]), group["title"])
+      secondary = Array(group["secondary-types"])
+      supported = secondary.empty? || (compilation && secondary == [ "Compilation" ] && group["primary-type"] == "Album")
       comparable_title && Clients::Musicbrainz::MBID.match?(group["id"].to_s) && data["status"] == "Official" && data["date"].present? &&
         group["first-release-date"].present? &&
-        ((group["primary-type"] == "Album" && Array(group["secondary-types"]).empty?) ||
-          (group["primary-type"].in?(%w[Single EP]) && Array(group["secondary-types"]).empty?))
+        supported && group["primary-type"].in?(%w[Album Single EP])
     end
 
     private

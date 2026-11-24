@@ -129,6 +129,7 @@ class CanonicalLibraryController < ApplicationController
     included = { "include" => true, "exclude" => false }.fetch(params[:decision]) { return head :unprocessable_entity }
 
     updated_recording = current_user.with_lock do
+      RecordingSourceDecision.lock!
       release.lock!
       recording = if params[:recording_id].present?
         release.catalog_track_slots.additional_appearances.find_by!(recording_id: params[:recording_id]).recording

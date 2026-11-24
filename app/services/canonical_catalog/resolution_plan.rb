@@ -1,13 +1,14 @@
 module CanonicalCatalog
   class ResolutionPlan
-    attr_reader :recording, :proposals, :observation_count
+    attr_reader :recording, :proposals, :observation_count, :identity
 
     def initialize(assessment, mbid, observation_count)
       @assessment = assessment
       @mbid = mbid
-      @recording = Recording.find_by(mbid:)
+      @identity = RecordingIdentity.new(assessment, mbid)
+      @recording = identity.recording
       @observation_count = observation_count
-      @proposals = ReviewedConstruction.resolution_choices(assessment, mbid, recording).sort_by do |choices|
+      @proposals = ReviewedConstruction.resolution_choices(assessment, mbid, recording, source_ids: identity.source_ids || [ mbid ]).sort_by do |choices|
         data = choices.first.construction.base.data
         [ data.dig("release-group", "primary-type") == "Album" ? 0 : 1, data.fetch("date"), data.fetch("id") ]
       end.first || []
@@ -30,8 +31,18 @@ module CanonicalCatalog
       construction = proposal.construction
       tracks = construction.base.slots + construction.additional_slots
       mbids = tracks.map { |track| track.dig(:recording, "id") }.uniq
-      existing = Recording.where(mbid: mbids).order(:id).pluck(:id, :mbid)
-      [ mbids.size - existing.size, existing ]
+      heads = RecordingSourceDecision.heads(mbids)
+      direct = Recording.where(mbid: mbids).pluck(:mbid, :id).to_h
+      aliases = Array(identity.aliases).pluck("id")
+      existing = mbids.filter_map do |id|
+        if heads[id] || direct[id]
+          [ id, heads[id]&.recording_id || direct[id], heads[id]&.id ]
+        elsif recording && aliases.include?(id)
+          [ id, recording.id, nil ]
+        end
+      end
+      planned = (mbids - existing.map(&:first)).map { |id| aliases.include?(id) ? identity.target["id"] : id }.uniq
+      [ planned.size, existing ]
     end
 
     def fingerprint
@@ -41,7 +52,7 @@ module CanonicalCatalog
           artists(proposal).map { |artist, existing| [ artist["id"], existing&.id ] }, recordings ]
       end
       memberships = recording.admitted_releases.where.not(catalog_verified_at: nil).reorder(:id).pluck(:id) if recording
-      Digest::SHA256.hexdigest([ @assessment.id, @mbid, recording&.id, observation_count, memberships, proposals_state ].to_json)
+      Digest::SHA256.hexdigest([ @assessment.id, @mbid, identity.signature, recording&.id, observation_count, memberships, proposals_state ].to_json)
     end
   end
 end

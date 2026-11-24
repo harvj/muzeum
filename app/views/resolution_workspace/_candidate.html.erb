@@ -21,6 +21,7 @@ end %>
 <% factors = rank.fetch("inputs").select { |_, item| %w[positive contradictory].include?(item["state"]) } %>
 <% positives, conflicts = factors.partition { |_, item| item["state"] == "positive" } %>
 <% target = @selected_scrobble || @observation %>
+<% identity = resolution_recording_identity(@assessment, mbid) if @may_manage_observation && @assessment_matches_claims %>
 <details class="candidate review-candidate<%= " recommended" if recommended %>" name="resolution-candidate" <%= "open" if expanded %>>
   <summary class="review-candidate-summary">
     <span>
@@ -36,9 +37,10 @@ end %>
   <% catalog_rows = @catalog_context.rows(candidate) %>
   <% catalog_recording = catalog_rows[1][1].first %>
   <% if @may_manage_observation && @assessment_matches_claims %>
-  <% original_groups = CanonicalCatalog::ReviewedConstruction.for(@assessment, mbid).group_by { |item| item.construction.base.data.dig("release-group", "id") } %>
-  <% proposals = CanonicalCatalog::ReviewedConstruction.resolution_choices(@assessment, mbid, catalog_recording).flatten %>
+  <% original_groups = CanonicalCatalog::ReviewedConstruction.for(@assessment, mbid, source_ids: identity.source_ids || [ mbid ]).group_by { |item| item.construction.base.data.dig("release-group", "id") } %>
+  <% proposals = CanonicalCatalog::ReviewedConstruction.resolution_choices(@assessment, mbid, identity.recording || catalog_recording, source_ids: identity.source_ids || [ mbid ]).flatten %>
   <%= form_with url: decide_resolution_surface_path(@observation) do |form| %>
+    <%= form.hidden_field :identity_signature, value: identity.fingerprint, id: nil %>
     <%= form.hidden_field :recording_mbid, value: mbid, id: nil %>
     <%= form.hidden_field :assessment_id, value: @assessment.id, id: nil %>
     <% if @listener_ranking_token %><%= form.hidden_field :listener_ranking_token, value: @listener_ranking_token, id: nil %><% end %>
@@ -49,11 +51,12 @@ end %>
       <%= form.text_field :comment, id: "comment-#{mbid}", maxlength: 500 %>
     </details>
     <p class="muted">Future exact matches inherit this decision. Individual overrides are preserved.</p>
+    <% if identity.aliases&.any? %><p><%= pluralize(identity.aliases.size, "equivalent source ID") %> will be linked.</p><% end %>
     <% if (earliest = publication["earliest_publication"]) %>
       <p class="compact-meta">Earliest verified publication · <%= earliest["date"] %> · <%= link_to earliest["title"], "https://musicbrainz.org/release/#{earliest['id']}" %></p>
     <% end %>
-    <% if publication["pending"] || Array(publication["pending_groups"]).any? || proposals.empty? && @assessment.evidence["pending_original_group"].present? %>
-      <p class="muted">The available evidence does not verify the original release. You can refresh the candidate evidence.</p>
+    <% if publication["pending"] || publication["appearance_browse_incomplete"] || Array(publication["pending_groups"]).any? || proposals.empty? && @assessment.evidence["pending_original_group"].present? %>
+      <p class="muted"><%= proposals.any? ? "Some release appearances could not be checked." : "The available evidence does not verify the original release." %> You can refresh the candidate evidence.</p>
     <% end %>
     <% if proposals.any? %>
       <% if original_groups.values.any?(&:many?) %><p>Original editions differ. Choose the complete tracklist to use.</p><% end %>
@@ -151,6 +154,7 @@ end %>
     <summary>Resolve only this observation</summary>
     <p>Applies only to observation <%= target.id %>.</p>
     <%= form_with url: decide_resolution_surface_path(@observation) do |form| %>
+    <%= form.hidden_field :identity_signature, value: identity.fingerprint, id: nil %>
       <%= form.hidden_field :scope, value: "scrobble", id: nil %>
       <%= form.hidden_field :play_id, value: target.id, id: nil %>
       <%= form.hidden_field :head, value: @selected_head&.id, id: nil %>

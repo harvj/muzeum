@@ -1,8 +1,22 @@
 module ResolutionWorkspaceHelper
   def resolution_release_contexts(assessment, candidates)
     candidates.index_with do |candidate|
-      CanonicalCatalog::ReviewedConstruction.for(assessment, candidate.fetch("id"))
+      id = candidate.fetch("id")
+      identity = resolution_recording_identity(assessment, id)
+      CanonicalCatalog::ReviewedConstruction.for(assessment, id, source_ids: identity.source_ids || [ id ])
     end
+  end
+
+  def resolution_recording_identity(assessment, mbid)
+    (@resolution_recording_identities ||= {})[[ assessment.id, mbid ]] ||= CanonicalCatalog::RecordingIdentity.new(assessment, mbid)
+  end
+
+  def resolution_distinct_recording_count(assessment, candidates)
+    candidates.map do |candidate|
+      mbid = candidate.fetch("id")
+      identity = resolution_recording_identity(assessment, mbid)
+      identity.recording ? [ :canonical, identity.recording.id ] : [ :sources, (identity.source_ids || [ mbid ]).sort ]
+    end.uniq.size
   end
 
   def resolution_selected_candidate(candidates, ranking, contexts, requested, current)

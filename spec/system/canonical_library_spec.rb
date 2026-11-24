@@ -2,6 +2,7 @@ require "rails_helper"
 require_relative "../support/catalog_fixtures"
 require_relative "../support/guilt_show_fixture"
 require_relative "../support/narrow_stairs_fixture"
+require_relative "../support/lady_wood_fixture"
 
 RSpec.describe "Canonical library resolution workflow", type: :system do
   include CatalogFixtures
@@ -431,6 +432,38 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
   ensure
     browser&.execute_cdp("Emulation.clearDeviceMetricsOverride")
     browser&.execute_cdp("Emulation.setEmulatedMedia", features: [])
+  end
+
+  it "confirms a Lady Wood source alias and the authentic original program in one resolution" do
+    user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "lady-wood-browser", lastfm_username: "lady-wood-browser")
+    provider = LadyWoodFixture::Session.new
+    explicit, clean = %w[dd8c5328-1935-4ce0-a1ed-1df9e4f283cc d89399fb-fd54-4f36-8807-f679ac50a847]
+    evidence = RecordingResolution::RecordingOrigins.new(Clients::Musicbrainz.new, provider).call([ explicit, clean ], retained: [])
+    evidence["candidates"] = provider.fixture.fetch("recordings").values_at(explicit, clean)
+    observation = Scrobble.create!(user:, lastfm_account: user.source_account, played_at: Time.current,
+      payload: { artist_name: "Tove Lo", album_name: "Lady Wood", track_name: "Don’t Talk About It" })
+    surface = RecordingResolution::Ledger.attach!(observation)
+    group = RecordingResolution::Group.create!(surface_id: surface.id, version: RecordingResolution::Ledger::VERSION, claims: {})
+    RecordingResolution::Assessment.create!(group_id: group.id, version: "retained-provider", actor: "fixture",
+      digest: SecureRandom.hex(32), evidence:)
+    sign_in(user)
+    visit resolution_surface_path(observation, candidate: clean)
+    expect(page).to have_css(".review-state", exact_text: "Unresolved")
+    expect(page).to have_no_css(".investigation-badge", exact_text: "Needs review")
+    expect(page).to have_css('[aria-label="Original release"] .resolution-release-title', text: "Lady Wood")
+    expect(page).to have_css('[aria-label="Original release"] li', count: 12)
+    expect(page).to have_css('[aria-label="Resolution preview"]', text: "1 equivalent source ID will be linked")
+    page.execute_script("window.scrollTo(0, 0)")
+    capture_resolution("lady-wood-identity-and-original", full: true)
+    click_button "Resolve this observation"
+    expect(page).to have_text("Recording decision saved.")
+    decision = RecordingResolution::Decision.sole
+    canonical = Recording.find(decision.recording_id)
+    expect(canonical.mbid).to eq(explicit)
+    expect(decision.evidence.fetch("source_recording_mbid")).to eq(clean)
+    expect(RecordingSourceDecision.resolve(clean)).to eq(canonical)
+    expect(Release.sole.catalog_track_slots.base_sequence.count).to eq(12)
+    expect(Scrobble.count).to eq(1)
   end
 
   it "compares the authentic Queen of the Clouds editions and recalculates additions from the chosen base" do

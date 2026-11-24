@@ -139,6 +139,7 @@ class ResolutionWorkspaceController < ApplicationController
       current_user.lock!
       current_user.managed_archive_grants.lock.find_by!(lastfm_account_id: target.lastfm_account_id)
       if mode == "resolved"
+        RecordingSourceDecision.lock!
         if params[:resolution_plan].present?
           if params[:latest_release_review] == "1"
             claims = target.payload.slice(*RecordingResolution::PilotRunner::CLAIM_FIELDS)
@@ -153,11 +154,18 @@ class ResolutionWorkspaceController < ApplicationController
             raise ActiveRecord::StaleObjectError.new(target, "confirm resolution preview")
           end
         end
-        recording, context = selection(assessment, target)
+        identity = plan&.identity
+        if params[:identity_signature].present?
+          identity ||= CanonicalCatalog::RecordingIdentity.new(assessment, params[:recording_mbid])
+          unless ActiveSupport::SecurityUtils.secure_compare(identity.fingerprint, params[:identity_signature].to_s)
+            raise ActiveRecord::StaleObjectError.new(target, "confirm recording identity")
+          end
+        end
+        recording, context = selection(assessment, target, identity:)
       end
       previous = RecordingResolution::Ledger.effective(current_user).find(target.id)
       ranking = decision_ranking(assessment, surface, target)
-      selected_rank = ranking&.find { |entry| entry["recording_mbid"] == recording&.mbid }
+      selected_rank = ranking&.find { |entry| entry["recording_mbid"] == params[:recording_mbid] }
       if code == "verified_identifier" && selected_rank&.dig("inputs", "recording_identifier", "state") != "positive"
         raise ArgumentError
       end
@@ -167,16 +175,16 @@ class ResolutionWorkspaceController < ApplicationController
       metadata = { "reason_code" => code, "comment" => comment, "scoring_version" => ranking&.first&.fetch("version"),
         "candidate_scores" => ranking&.map { |row| row.slice("recording_mbid", "score") },
         "previous_effective_recording_id" => previous.effective_recording_id, "previous_effective_decision_id" => previous.effective_recording_decision_id,
-        "affected_scope" => scope.to_s,
+        "affected_scope" => scope.to_s, "source_recording_mbid" => (params[:recording_mbid] if recording),
         "review_snapshot" => RecordingResolution::ReviewSnapshot.capture(assessment:, ranking: ranking || [],
           feedback: { "resolved" => "selected", "unresolved" => "unresolved", "inherit" => "inherit" }.fetch(mode),
-          candidate_mbid: recording&.mbid, affected_count: affected_count(target, surface, scope)) }.compact
+          candidate_mbid: (params[:recording_mbid] if recording), affected_count: affected_count(target, surface, scope)) }.compact
       RecordingResolution::Ledger.record!(listener: current_user, scrobble: target, scope:, mode:, reason:, recording:,
         assessment:, metadata:, expected_head: params[:head].presence&.then { |value| Integer(value) })
       if recording
         request = CatalogImport.request!(CatalogImport::RECORDING_METADATA, recording.id, context)
         if scope == :surface && params[:construct_release].present?
-          construct_reviewed_release!(assessment, recording)
+          construct_reviewed_release!(assessment, recording, plan:, identity:)
         end
       end
     end
@@ -292,9 +300,10 @@ class ResolutionWorkspaceController < ApplicationController
       target.payload.slice(*RecordingResolution::PilotRunner::CLAIM_FIELDS)
   end
 
-  def construct_reviewed_release!(assessment, recording)
+  def construct_reviewed_release!(assessment, recording, plan:, identity:)
     recording.lock!
-    choices = CanonicalCatalog::ReviewedConstruction.resolution_choices(assessment, recording.mbid, recording).flatten
+    choices = plan&.proposals || CanonicalCatalog::ReviewedConstruction.resolution_choices(
+      assessment, params[:recording_mbid], recording, source_ids: identity&.source_ids || [ params[:recording_mbid] ]).flatten
     proposal = choices.find { |item| item.construction.base.data["id"] == params[:construct_release] }
     if proposal.nil?
       # A previously rendered form may still submit the release group.
@@ -318,7 +327,7 @@ class ResolutionWorkspaceController < ApplicationController
     CanonicalCatalog::ReviewedConstruction.apply!(proposal, review, assessment, corrected_release: existing)
   end
 
-  def selection(assessment, target)
+  def selection(assessment, target, identity:)
     candidate = RecordingResolution::Workspace.candidate_evidence(assessment.evidence.except("verified_recording"))
       .find { |item| item["id"] == params[:recording_mbid] }
     raise ArgumentError unless candidate
@@ -327,7 +336,8 @@ class ResolutionWorkspaceController < ApplicationController
       raise ArgumentError
     end
 
-    context = { "assessment_id" => assessment.id }
-    [ CanonicalCatalog::Store.recording!(candidate), context ]
+    context = { "assessment_id" => assessment.id, "source_recording_mbid" => candidate.fetch("id") }
+    record = identity ? identity.apply!(assessment, current_user) : CanonicalCatalog::Store.recording!(candidate)
+    [ record, context ]
   end
 end

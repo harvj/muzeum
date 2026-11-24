@@ -104,6 +104,18 @@ RSpec.describe CanonicalCatalog::Construction do
       [ "Love Ballad", "Over", "Out Of Mind - Bonus Track", "Paradise" ])
   end
 
+  it "keeps the other audited Queen launch editions as evidence beyond the two original programs" do
+    base = JSON.parse(Rails.root.join("spec/fixtures/musicbrainz/construction/queen_of_the_clouds.json").read)
+    extensions = JSON.parse(Rails.root.join("spec/fixtures/musicbrainz/construction/queen_of_the_clouds_launch_extensions.json").read)
+    editions = (base + extensions).map { |data| CanonicalCatalog::Edition.new(data, data.fetch("id")) }
+    originals = described_class.originals(editions)
+    expect(originals.map { |edition| edition.slots.size }).to contain_exactly(16, 20)
+    expect(described_class.selectable_bases(editions).map(&:data).pluck("id")).to match_array(base.pluck("id"))
+    worldwide = originals.find { |edition| edition.slots.size == 20 }
+    additions = described_class.new(editions, base: worldwide).additional_tracks.map { |group| group.first.fetch("title") }
+    expect(additions).to contain_exactly("Not Made for This World", "Not on Drugs (Ali Payami remix)")
+  end
+
   it "groups corroborated alternate source IDs and retains uncertain look-alikes without admitting them" do
     data = narrow_stairs_editions.find { |edition| edition["id"] == NarrowStairsFixture::ORIGINAL }
     track = data.dig("media", 0, "tracks", 2)

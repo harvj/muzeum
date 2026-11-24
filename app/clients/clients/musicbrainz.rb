@@ -126,7 +126,7 @@ module Clients
       return { "status" => "invalid" } unless MBID.match?(mbid.to_s)
 
       params = { fmt: "json", inc: "artist-credits+releases+release-groups+isrcs" }
-      params[:inc] += "+genres+tags" if catalog
+      params[:inc] += "+genres+tags+recording-rels" if catalog
       projection = method(:project_recording) if catalog
       first = session.get(:musicbrainz, "/ws/2/recording/#{mbid.downcase}", params:, &projection)
       return first unless first["redirect"]
@@ -203,6 +203,9 @@ module Clients
     def project_recording(data)
       data.slice("id", "title", "length", "video", "disambiguation", "first-release-date", "isrcs", "genres", "tags").merge(
         "artist-credit" => project_credits(data["artist-credit"]),
+        "edit_recording_mbids" => Array(data["relations"]).filter_map do |relation|
+          relation.dig("recording", "id") if relation["type-id"] == "ce01b3ac-dd47-4702-9302-085344f96e84"
+        end,
         "releases" => Array(data["releases"]).map do |release|
           release.slice("id", "title", "date", "country", "disambiguation", "status").merge(
             "release-group" => release["release-group"]&.slice("id", "title", "primary-type", "secondary-types", "first-release-date"))

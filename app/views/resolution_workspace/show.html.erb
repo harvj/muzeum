@@ -17,7 +17,7 @@
   <% review_state = if @current_recording
       Clients::Musicbrainz::MBID.match?(@current_recording.mbid.to_s) ? "Resolved" : "Partially resolved"
     else
-      @unresolved_count.zero? ? "Individually resolved" : (@candidates.many? ? "Ambiguous" : "Unresolved")
+      @unresolved_count.zero? ? "Individually resolved" : (resolution_distinct_recording_count(@assessment, @candidates) > 1 ? "Ambiguous" : "Unresolved")
     end %>
   <strong class="review-state<%= " review-state-resolved" if review_state == "Resolved" %>"><%= review_state %></strong>
   <% source = @selected_scrobble || @observation %>

@@ -1,5 +1,4 @@
 <% mbid = selected.fetch("id") %>
-<% catalog_recording = catalog_rows[1][1].first %>
 <% catalog_releases = catalog_rows[2][1] %>
 <% release_pending = contexts.empty? && catalog_releases.empty? %>
 <% groups = contexts.group_by { |item| item.construction.base.data.dig("release-group", "id") }.values.sort_by do |choices|
@@ -7,6 +6,7 @@
   [release.dig("release-group", "primary-type") == "Album" ? 0 : 1, release.fetch("date"), release.fetch("id")]
 end %>
 <% plan = CanonicalCatalog::ResolutionPlan.new(@assessment, mbid, @affected_count) %>
+<% catalog_recording = plan.recording || catalog_rows[1][1].first %>
 <% proposals = plan.proposals %>
 <% requested_edition = params[:edition].presence %>
 <% selected_edition = requested_edition if params[:review_edition].blank? && proposals.any? { |proposal| plan.edition_id(proposal) == requested_edition } %>
@@ -72,7 +72,9 @@ end %>
     <section aria-label="Resolution preview">
       <h2 class="section-heading">Resolution preview</h2>
       <ul class="catalog-list">
-        <li><strong>Recording</strong> · <%= selected.fetch("title") %><%= " · Reuse existing" if catalog_recording %></li>
+        <li><strong>Recording</strong> · <%= selected.fetch("title") %><%= " · Reuse existing" if catalog_recording %>
+          <% if plan.identity.aliases&.any? %> · <%= pluralize(plan.identity.aliases.size, "equivalent source ID") %> will be linked<% end %>
+        </li>
         <% if proposals.empty? %>
           <li><strong>Release</strong> · 0 new releases<%= " · #{catalog_releases.map(&:title).to_sentence}" if catalog_releases.any? %></li>
         <% else %>
@@ -86,7 +88,7 @@ end %>
               <strong>Release</strong> · <%= base.data.fetch("title") %> · <%= pluralize(base.slots.size, "track") %> ·
               <%= proposal.existing ? "Reuse existing release · Rebuild base tracklist" : "1 new release" %>
               <div class="muted"><%= [("#{pluralize(new_recordings, 'new recording')}" if new_recordings.positive?),
-                ("Reuse #{pluralize(existing_recordings.size, 'recording')}" if existing_recordings.any?)].compact.join(" · ") %></div>
+                ("Reuse #{pluralize(existing_recordings.map { |row| row[1] }.uniq.size, 'recording')}" if existing_recordings.any?)].compact.join(" · ") %></div>
               <% if artists.any? %>
                 <details><summary><%= pluralize(artists.size, "credited artist") %></summary>
                   <ul>

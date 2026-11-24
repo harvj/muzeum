@@ -891,6 +891,40 @@ ALTER SEQUENCE public.recording_artists_id_seq OWNED BY public.recording_artists
 
 
 --
+-- Name: recording_source_decisions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.recording_source_decisions (
+    id bigint NOT NULL,
+    source_mbid uuid NOT NULL,
+    recording_id bigint NOT NULL,
+    actor character varying NOT NULL,
+    evidence jsonb NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: recording_source_decisions_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.recording_source_decisions_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: recording_source_decisions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.recording_source_decisions_id_seq OWNED BY public.recording_source_decisions.id;
+
+
+--
 -- Name: recording_surfaces; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1756,6 +1790,13 @@ ALTER TABLE ONLY public.recording_artists ALTER COLUMN id SET DEFAULT nextval('p
 
 
 --
+-- Name: recording_source_decisions id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.recording_source_decisions ALTER COLUMN id SET DEFAULT nextval('public.recording_source_decisions_id_seq'::regclass);
+
+
+--
 -- Name: recording_surfaces id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -1995,6 +2036,14 @@ ALTER TABLE ONLY public.page_commits
 
 ALTER TABLE ONLY public.recording_artists
     ADD CONSTRAINT recording_artists_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: recording_source_decisions recording_source_decisions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.recording_source_decisions
+    ADD CONSTRAINT recording_source_decisions_pkey PRIMARY KEY (id);
 
 
 --
@@ -2540,6 +2589,20 @@ CREATE INDEX index_recording_artists_on_recording_id ON public.recording_artists
 --
 
 CREATE UNIQUE INDEX index_recording_artists_on_recording_id_and_artist_id ON public.recording_artists USING btree (recording_id, artist_id);
+
+
+--
+-- Name: index_recording_source_decisions_on_recording_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_recording_source_decisions_on_recording_id ON public.recording_source_decisions USING btree (recording_id);
+
+
+--
+-- Name: index_recording_source_decisions_on_source_mbid_and_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_recording_source_decisions_on_source_mbid_and_id ON public.recording_source_decisions USING btree (source_mbid, id);
 
 
 --
@@ -3488,6 +3551,14 @@ ALTER TABLE ONLY public.ingestion_issues
 
 
 --
+-- Name: recording_source_decisions fk_rails_f0a2b062ed; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.recording_source_decisions
+    ADD CONSTRAINT fk_rails_f0a2b062ed FOREIGN KEY (recording_id) REFERENCES public.recordings(id);
+
+
+--
 -- Name: release_recordings fk_rails_f336446026; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3638,6 +3709,7 @@ ALTER TABLE ONLY public.resolution_work
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261124030000'),
 ('20261123231500'),
 ('20261123230000'),
 ('20261122223000'),

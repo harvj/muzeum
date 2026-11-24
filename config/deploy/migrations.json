@@ -60,6 +60,24 @@
       "risk": "additive",
       "quiesce": true,
       "review": "Adds an empty user-scoped release ranking decision history with foreign keys and a lookup index. No observation or catalog backfill. Retain this table and its decisions during application rollback."
+    },
+    "db/migrate/20261123230000_create_release_track_listening_decisions.rb": {
+      "sha256": "874544bc3ac831644b0cf466bbebcb6ac5284437e53b6c5fb0b99ad5f160fdab",
+      "risk": "additive",
+      "quiesce": true,
+      "review": "Adds an empty listener, release and recording preference history with foreign keys and an index. No changes to existing memberships, decisions or observations. Retain the table during application recovery."
+    },
+    "db/migrate/20261123231500_add_source_provenance_to_catalog_track_slots.rb": {
+      "sha256": "ba5ac7a515034486e3e7825d691c3b3c46cc1b24e9285369d4100b9d62863292",
+      "risk": "additive",
+      "quiesce": true,
+      "review": "Adds nullable source recording ID, duration and credit fields. No backfill, source reconstruction or changes to existing values. Quiesce for the existing table lock and retain the fields during application recovery."
+    },
+    "db/migrate/20261124030000_create_recording_source_decisions.rb": {
+      "sha256": "d1cfc582a30dcf95a3033ff112b11b3ea16690eabecd0946b9117fb6cf1e91ee",
+      "risk": "additive",
+      "quiesce": true,
+      "review": "Adds an empty source identity decision history with a recording foreign key and a source and revision lookup index. No mappings or existing row changes are performed by this migration. Quiesce for the foreign key setup and keep the journal during roll-forward repair."
     }
   }
 }
