@@ -476,13 +476,33 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     surface = RecordingResolution::Ledger.attach!(play)
     group = RecordingResolution::Group.create!(surface_id: surface.id, version: RecordingResolution::Ledger::VERSION, claims: {})
     release_group = album.dig("release-group", "id")
+    full_title = %(artist:"Charli xcx" AND recording:"#{payload.fetch(:track_name)}")
+    featured_title = 'artist:"Charli xcx" AND recording:"Cross You Out" AND artist:"Sky Ferreira"'
+    legacy = RecordingResolution::Assessment.create!(group_id: group.id, version: "legacy-search-fixture", actor: "fixture",
+      digest: SecureRandom.hex(32), evidence: {
+        "candidates" => [], "search" => { "count" => 0, "returned" => 0 },
+        "requests" => [ { "provider" => "musicbrainz", "endpoint" => "/ws/2/recording", "parameters" => { "query" => full_title } } ]
+      })
+    sign_in(user)
+    visit resolution_surface_path(play, section: "evidence", assessment: legacy.id)
+    find("summary", exact_text: "Assessment evidence and provenance").click
+    expect(page).to have_text("MusicBrainz returned 0 candidates of 0.")
+    find("summary", exact_text: "MusicBrainz recording searches").click
+    expect(page).to have_css("code", exact_text: full_title)
+
     RecordingResolution::Assessment.create!(group_id: group.id, version: "featured-credit-fixture", actor: "fixture",
       digest: SecureRandom.hex(32), evidence: {
         "candidates" => [ source ], "construction_editions" => editions,
+        "recording_searches" => [ { "query" => full_title, "count" => 0, "returned" => 0 },
+          { "query" => featured_title, "count" => 1, "returned" => 1 } ],
         "recording_publications" => { source.fetch("id") => { "original_groups" => [ release_group ] } }
       })
 
-    sign_in(user)
+    visit resolution_surface_path(play, section: "evidence")
+    find("summary", exact_text: "Assessment evidence and provenance").click
+    find("summary", exact_text: "MusicBrainz recording searches").click
+    expect(page).to have_css("code", exact_text: featured_title)
+    expect(page).to have_text("1 result returned")
     visit resolution_surface_path(play)
     within(".resolution-choices") { expect(page).to have_text("Charli xcx, Sky Ferreira") }
     within('[aria-label="Resolution preview"]') do

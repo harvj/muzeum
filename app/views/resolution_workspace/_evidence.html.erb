@@ -6,7 +6,10 @@
 <% searches = evidence["recording_searches"] %>
 <% if !searches && Array(evidence["candidates"]).empty? %>
   <% searches = Array(evidence["requests"]).select { |request| request["provider"] == "musicbrainz" && request["endpoint"] == "/ws/2/recording" }
-    .filter_map { |request| { "query" => query } if (query = request.dig("parameters", "query")) } %>
+    .filter_map do |request|
+      query = request.dig("parameters", "query")
+      { "query" => query } if query.present?
+    end %>
 <% end %>
 <% if searches.present? || search_failure&.dig("parameters", "query").present? %>
   <details>
