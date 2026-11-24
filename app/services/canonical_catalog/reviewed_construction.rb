@@ -23,7 +23,7 @@ module CanonicalCatalog
         existing = Release.where(release_group_mbid: group).limit(2).to_a
         next [] if existing.many?
 
-        Construction.originals(evidence).filter_map do |base|
+        Construction.selectable_bases(evidence).filter_map do |base|
           construction = Construction.new(evidence, base:, recording_mbid:)
           if (base.slots + construction.additional_slots).any? { |slot| slot.dig(:recording, "id") == recording_mbid }
             Proposal.new(construction, existing.first)
@@ -59,11 +59,15 @@ module CanonicalCatalog
       return true if actual != expected
 
       edition_ids = proposal.construction.appearances.pluck("id")
-      actual_additions = release.catalog_track_slots.additional_appearances.where(edition_mbid: edition_ids)
-        .joins(:recording).pluck(:edition_mbid, :appearance_date, :medium, :position, Arel.sql("COALESCE(catalog_track_slots.source_recording_mbid, recordings.mbid)"))
       expected_additions = proposal.construction.additional_slots.map do |slot|
         [ *slot.values_at(:edition_mbid, :appearance_date, :medium, :position), slot.dig(:recording, "id") ]
       end
+      preferred_ids = ReleaseTrackListeningDecision.where(release:).distinct.pluck(:recording_id).to_set
+      actual_additions = release.catalog_track_slots.additional_appearances.where(edition_mbid: edition_ids)
+        .includes(:recording).filter_map do |slot|
+          position = [ slot.edition_mbid, slot.appearance_date, slot.medium, slot.position, slot.evidence_recording_mbid ]
+          position if !preferred_ids.include?(slot.recording_id) || expected_additions.include?(position)
+        end
       actual_additions.sort != expected_additions.sort || recording.nil? || !release.catalog_track_slots.exists?(recording_id: recording.id)
     end
 

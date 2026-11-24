@@ -26,11 +26,17 @@ module CanonicalCatalog
       artists.map { |artist| [ artist, existing[artist["id"]] ] }
     end
 
+    def track_recordings(proposal)
+      construction = proposal.construction
+      tracks = construction.base.slots + construction.additional_slots
+      mbids = tracks.map { |track| track.dig(:recording, "id") }.uniq
+      existing = Recording.where(mbid: mbids).order(:id).pluck(:id, :mbid)
+      [ mbids.size - existing.size, existing ]
+    end
+
     def fingerprint
       proposals_state = proposals.map do |proposal|
-        construction = proposal.construction
-        tracks = construction.base.slots + construction.additional_slots
-        recordings = Recording.where(mbid: tracks.map { |track| track.dig(:recording, "id") }).order(:id).pluck(:id, :mbid)
+        _, recordings = track_recordings(proposal)
         [ edition_id(proposal), ReviewedConstruction.head(proposal.existing),
           artists(proposal).map { |artist, existing| [ artist["id"], existing&.id ] }, recordings ]
       end

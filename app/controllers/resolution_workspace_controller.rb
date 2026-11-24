@@ -140,6 +140,13 @@ class ResolutionWorkspaceController < ApplicationController
       current_user.managed_archive_grants.lock.find_by!(lastfm_account_id: target.lastfm_account_id)
       if mode == "resolved"
         if params[:resolution_plan].present?
+          if params[:latest_release_review] == "1"
+            claims = target.payload.slice(*RecordingResolution::PilotRunner::CLAIM_FIELDS)
+            group_ids = RecordingResolution::Group.where(claims:).select(:id)
+            latest = @workspace.assessments(surface).where(group_id: group_ids)
+              .reorder(Arel.sql("(evidence->>'partial' IS NOT DISTINCT FROM 'true') ASC"), id: :desc).first
+            raise ActiveRecord::StaleObjectError.new(target, "confirm current release evidence") unless latest == assessment
+          end
           plan = CanonicalCatalog::ResolutionPlan.new(assessment, params[:recording_mbid], affected_count(target, surface, scope))
           unless ActiveSupport::SecurityUtils.secure_compare(plan.fingerprint, params[:resolution_plan].to_s) &&
               (plan.proposals.empty? ? params[:construct_release].blank? : plan.proposals.any? { |proposal| plan.edition_id(proposal) == params[:construct_release] })

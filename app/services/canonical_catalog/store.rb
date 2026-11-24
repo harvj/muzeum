@@ -96,7 +96,7 @@ module CanonicalCatalog
         evidence["previous_additions"] = release.catalog_track_slots.additional_appearances.pluck(:edition_mbid, :appearance_date, :medium, :position, :recording_id)
         evidence["previous_publication_date"] = release.attributes.values_at("release_year", "release_month", "release_day")
         release.catalog_track_slots.base_sequence.delete_all
-        release.catalog_track_slots.additional_appearances.where(edition_mbid: checked_editions.pluck("id")).delete_all
+        preserve_additional_preferences!(release, checked_editions)
       elsif existing.any? && existing != signature
         raise Unverified, "Provider track order or membership changed; existing collection kept for review"
       end
@@ -110,17 +110,41 @@ module CanonicalCatalog
         evidence.merge("artist_credit" => credit_evidence(data["artist-credit"])))
       attach_credits(release, data["artist-credit"], ReleaseArtist, :release)
 
-      (slots + additional_slots).each do |slot|
-        track_recording = self.recording(slot.fetch(:recording))
-        release.catalog_track_slots.find_or_create_by!(edition_mbid: slot[:edition_mbid], medium: slot.fetch(:medium), position: slot.fetch(:position)) do |row|
-          row.assign_attributes(slot.except(:recording).merge(recording: track_recording))
-        end
-      end
+      (slots + additional_slots).each { |slot| track_slot(release, slot) }
       release.update!(catalog_verified_at: Time.current)
       release
     end
 
+    def track_slot(release, slot)
+      track = release.catalog_track_slots.find_or_initialize_by(
+        edition_mbid: slot[:edition_mbid], medium: slot.fetch(:medium), position: slot.fetch(:position))
+      if track.persisted?
+        raise Unverified, "Track position differs from the verified evidence" unless track.evidence_recording_mbid == slot.dig(:recording, "id")
+        recording(slot.fetch(:recording))
+        return track
+      end
+
+      track_recording = recording(slot.fetch(:recording))
+      track.update!(slot.except(:recording).merge(recording: track_recording))
+      track
+    end
+
     private
+
+    def preserve_additional_preferences!(release, checked_editions)
+      reviewed = checked_editions.flat_map do |edition|
+        Array(edition["additional_tracks"]).map do |track|
+          [ edition.fetch("id"), *track.values_at("medium", "position", "recording_mbid") ]
+        end
+      end.to_set
+      with_decisions = ReleaseTrackListeningDecision.where(release:).distinct.pluck(:recording_id).to_set
+      obsolete = release.catalog_track_slots.additional_appearances.where(edition_mbid: checked_editions.pluck("id"))
+        .includes(:recording).reject do |slot|
+          with_decisions.include?(slot.recording_id) &&
+            reviewed.include?([ slot.edition_mbid, slot.medium, slot.position, slot.evidence_recording_mbid ])
+        end
+      release.catalog_track_slots.where(id: obsolete.map(&:id)).delete_all
+    end
 
     def lock_collection(group)
       Release.connection.execute(Release.sanitize_sql_array(

@@ -941,3 +941,16 @@ h3.resolution-release-title {
 .release-track-preferences { padding-inline-start: 0; list-style: none; }
 .release-track-preferences li { display: flex; align-items: center; justify-content: space-between; gap: .6rem; padding-block: .25rem; }
 .library-card .release-track-preference { margin: 0; }
+
+.release-comparison-diff { width: 100%; table-layout: fixed; border-collapse: collapse; margin-block: .75rem; }
+.release-comparison-diff :is(th, td) { padding: .4rem; text-align: start; vertical-align: top; overflow-wrap: anywhere; }
+.release-comparison-diff td { border-top: 1px solid var(--line); }
+.release-comparison-diff small { display: block; }
+.release-diff-position { font-variant-numeric: tabular-nums; color: var(--muted); }
+.release-edition-choices { border: 0; padding: 0; margin: .75rem 0; }
+.release-edition-choices legend { font-weight: 700; }
+.release-edition-group { padding-block: .35rem; }
+.release-edition-option { display: flex; flex-wrap: wrap; align-items: center; gap: .25rem .6rem; }
+.release-edition-option label { display: flex; gap: .45rem; align-items: center; margin: 0; cursor: pointer; }
+.release-edition-option input[type="radio"] { inline-size: 1rem; min-height: 1rem; padding: 0; cursor: pointer; }
+.release-edition-option a { font: .85rem monospace; }

@@ -121,14 +121,24 @@ class CanonicalLibraryController < ApplicationController
 
   def track_listening
     release = Release.find(params[:id])
-    recording = release.catalog_track_slots.find_by!(recording_id: params[:recording_id]).recording
     included = { "include" => true, "exclude" => false }.fetch(params[:decision]) { return head :unprocessable_entity }
 
     current_user.with_lock do
+      release.lock!
+      recording = if params[:recording_id].present?
+        release.catalog_track_slots.find_by!(recording_id: params[:recording_id]).recording
+      elsif included
+        include_edition_recording!(release, params[:source_recording_mbid])
+      else
+        raise ActiveRecord::RecordNotFound
+      end
+
       decisions = ReleaseTrackListeningDecision.where(user: current_user, release:, recording:)
       decisions.create!(included:) unless decisions.order(id: :desc).first&.included == included
     end
     redirect_to release_path(release, track_preferences: "1", anchor: "release-track-listening"), status: :see_other
+  rescue CanonicalCatalog::Store::Unverified
+    redirect_to release_path(release), alert: "Edition evidence changed. Review the release before including the track.", status: :see_other
   end
 
   def musical_identity
@@ -180,8 +190,28 @@ class CanonicalLibraryController < ApplicationController
 
   private
 
-  def additional_edition_evidence
-    tracklist = RecordingResolution::ReleaseTracklist.new(@entry)
+  def include_edition_recording!(release, source_mbid)
+    appearances = additional_edition_evidence(release)
+    selected = appearances.find { |track| track["recording_mbid"] == source_mbid && track["source_track"].present? }
+    raise ActiveRecord::RecordNotFound unless selected
+
+    verified_revision = RecordingResolution::ReleaseTracklist.new(release).revision
+    group = appearances.select { |track| track["comparison_group"] == selected["comparison_group"] }
+    admitted = release.catalog_track_slots.additional_appearances.includes(:recording).find do |slot|
+      group.any? { |track| track["recording_mbid"] == slot.evidence_recording_mbid }
+    end
+    return admitted.recording if admitted
+
+    request = CatalogImport.create!(kind: "release_track_inclusion", state: "imported", entity_id: release.id,
+      due_at: Time.current, context: { reviewer_id: current_user.id, release_revision_id: verified_revision.id })
+    provenance = Struct.new(:provenance).new(Array(verified_revision.evidence["requests"]))
+    slot = selected.fetch("source_track").symbolize_keys.merge(
+      edition_mbid: selected.fetch("edition_mbid"), appearance_date: selected["edition_appearance_date"])
+    CanonicalCatalog::Store.new(request, provenance).track_slot(release, slot).recording
+  end
+
+  def additional_edition_evidence(release = @entry)
+    tracklist = RecordingResolution::ReleaseTracklist.new(release)
     Array(tracklist.revision.evidence["checked_recording_appearances"]).flat_map do |edition|
       next [] unless Clients::Musicbrainz::MBID.match?(edition["id"].to_s)
 
@@ -189,7 +219,7 @@ class CanonicalLibraryController < ApplicationController
         mbid = track["recording_mbid"]
         next unless Clients::Musicbrainz::MBID.match?(mbid.to_s) && track["title"].present?
 
-        [ mbid, track["title"], edition["id"], track["edition_appearance_date"] ]
+        track.merge("edition_mbid" => edition["id"], "comparison_group" => track["comparison_group"] || mbid)
       end
     end
   rescue ArgumentError

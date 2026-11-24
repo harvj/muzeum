@@ -8,32 +8,37 @@
 end %>
 <% plan = CanonicalCatalog::ResolutionPlan.new(@assessment, mbid, @affected_count) %>
 <% proposals = plan.proposals %>
-<% choosing_release = proposals.many? && @may_manage_observation && @assessment_matches_claims %>
-<%= tag.div data: (choosing_release ? { controller: "release-proposal" } : {}) do %>
+<% requested_edition = params[:edition].presence %>
+<% selected_edition = requested_edition if params[:review_edition].blank? && proposals.any? { |proposal| plan.edition_id(proposal) == requested_edition } %>
+<% invalid_edition = requested_edition.present? && selected_edition.nil? %>
+<% can_confirm = @may_manage_observation && @assessment_matches_claims %>
+<% choosing_release = can_confirm && (proposals.many? || (invalid_edition && proposals.one?)) %>
+<% comparison = CanonicalCatalog::ReleaseComparison.new(proposals) if choosing_release %>
+<%= tag.div data: ((choosing_release || invalid_edition) ? { controller: "release-proposal", action: "turbo:morph@document->release-proposal#restoreSelection" } : {}) do %>
+<% if invalid_edition %>
+  <p role="alert" data-release-proposal-target="warning">The selected edition is no longer in this review. Choose a current edition before confirming.</p>
+<% end %>
 <% if choosing_release %>
-  <div class="resolution-release-selection">
-    <%= label_tag :construct_release, "Release to confirm" %>
-    <%= select_tag :construct_release, options_for_select(resolution_edition_options(proposals)),
-      include_blank: "Choose a verified sequence", required: true, form: "recording-resolution-confirmation",
-      data: { release_proposal_target: "choice", action: "change->release-proposal#showSelection" } %>
-  </div>
+  <%= render "release_comparison", comparison:, selected_edition: %>
 <% end %>
 <% earliest = @assessment.evidence.dig("recording_publications", mbid, "earliest_publication", "date") %>
 <section class="resolution-context" aria-label="Original release">
   <h2 class="section-heading">Original release</h2>
   <% if groups.any? %>
-    <% groups.each do |choices| %>
+    <% shown_groups = choosing_release ? [proposals] : groups %>
+    <% shown_groups.each do |choices| %>
       <% choices.each do |choice| %>
         <% base = choice.construction.base %>
         <% release = base.data %>
-        <%= tag.div hidden: choosing_release, data: (choosing_release ? { release_proposal_target: "proposal", edition: release["id"] } : {}) do %>
+        <%= tag.div hidden: choosing_release && selected_edition != release["id"], data: (choosing_release ? { release_proposal_target: "proposal", edition: release["id"] } : {}) do %>
           <h3 class="resolution-release-title"><%= release["title"] %></h3>
           <p><%= resolution_release_date(release.fetch("date")) %><%= " · #{release['country']}" if choices.many? && release["country"].present? %></p>
           <% tracks = base.slots.map do |slot|
             { "title" => slot[:title], "recording_mbid" => slot.dig(:recording, "id"),
               "length" => slot[:duration_ms] || slot.dig(:recording, "length") }
           end %>
-          <%= render "ordered_tracks", tracks:, mbid: %>
+          <% shared_count = comparison&.shared&.size.to_i %>
+          <%= render "ordered_tracks", tracks: tracks.drop(shared_count), mbid:, start: shared_count + 1 %>
         <% end %>
       <% end %>
     <% end %>
@@ -46,10 +51,11 @@ end %>
     <p>Original release verification is pending.</p>
   <% end %>
 </section>
-<% if @may_manage_observation && @assessment_matches_claims %>
+<% if can_confirm && (!invalid_edition || proposals.any?) %>
   <%= form_with url: decide_resolution_surface_path(@observation), class: "resolution-confirmation", id: "recording-resolution-confirmation" do |form| %>
     <%= form.hidden_field :recording_mbid, value: mbid %>
     <%= form.hidden_field :assessment_id, value: @assessment.id %>
+    <%= hidden_field_tag :latest_release_review, "1" if proposals.any? && params[:assessment].blank? %>
     <%= form.hidden_field :resolution_plan, value: plan.fingerprint %>
     <%= form.hidden_field :scope, value: "surface" %>
     <%= form.hidden_field :mode, value: "resolved" %>
@@ -58,7 +64,7 @@ end %>
     <% proposals.each do |proposal| %>
       <%= hidden_field_tag "construction_heads[#{proposal.construction.base.data['id']}]", CanonicalCatalog::ReviewedConstruction.head(proposal.existing), id: nil %>
     <% end %>
-    <% if proposals.one? %>
+    <% if proposals.one? && !choosing_release %>
       <%= hidden_field_tag :construct_release, proposals.first.construction.base.data["id"] %>
     <% end %>
     <section aria-label="Resolution preview">
@@ -70,11 +76,15 @@ end %>
         <% else %>
           <% proposals.each do |proposal| %>
             <% base = proposal.construction.base %>
-            <% additions = proposal.construction.additional_slots %>
+            <% additions = proposal.construction.additional_tracks %>
+            <% admitted_ids = proposal.construction.additional_slots.map { |slot| slot.dig(:recording, "id") }.to_set %>
             <% artists = plan.artists(proposal) %>
-            <%= tag.li hidden: choosing_release, data: (choosing_release ? { release_proposal_target: "proposal", edition: base.data["id"] } : {}) do %>
+            <% new_recordings, existing_recordings = plan.track_recordings(proposal) %>
+            <%= tag.li hidden: choosing_release && selected_edition != base.data["id"], data: (choosing_release ? { release_proposal_target: "proposal", edition: base.data["id"] } : {}) do %>
               <strong>Release</strong> · <%= base.data.fetch("title") %> · <%= pluralize(base.slots.size, "track") %> ·
-              <%= proposal.existing ? "Update existing" : "1 new release" %>
+              <%= proposal.existing ? "Reuse existing release · Rebuild base tracklist" : "1 new release" %>
+              <div class="muted"><%= [("#{pluralize(new_recordings, 'new recording')}" if new_recordings.positive?),
+                ("Reuse #{pluralize(existing_recordings.size, 'recording')}" if existing_recordings.any?)].compact.join(" · ") %></div>
               <% if artists.any? %>
                 <details><summary><%= pluralize(artists.size, "credited artist") %></summary>
                   <ul>
@@ -85,11 +95,16 @@ end %>
                 </details>
               <% end %>
               <% if additions.any? %>
-                <ul>
-                  <% additions.each do |slot| %>
-                    <li><strong>Additional edition track</strong> · <%= slot.fetch(:title) %> · <%= resolution_release_date(slot.fetch(:appearance_date)) %></li>
-                  <% end %>
-                </ul>
+                <details open>
+                  <summary><%= pluralize(additions.size, "additional edition track") %></summary>
+                  <ul>
+                    <% additions.each do |appearances| %>
+                      <% title = appearances.first.fetch("title") %>
+                      <% admission = appearances.any? { |track| admitted_ids.include?(track.fetch("recording_mbid")) } %>
+                      <li><%= title %> <span class="muted">· <%= admission ? "Admit selected recording" : "Edition evidence" %></span></li>
+                    <% end %>
+                  </ul>
+                </details>
               <% end %>
             <% end %>
           <% end %>
@@ -121,5 +136,7 @@ end %>
       <%= form.button "Defer", name: "feedback", value: "deferred", formnovalidate: true, formaction: defer_resolution_surface_path(@observation) %>
     </div>
   <% end %>
+<% elsif invalid_edition %>
+  <p><%= link_to "Review current proposal", resolution_surface_path(@observation, **navigation) %></p>
 <% end %>
 <% end %>

@@ -43,8 +43,9 @@
   <% end %>
 </section>
 
-<% admitted = @additional_appearances.group_by { |slot| slot.recording.mbid } %>
-<% evidence = @additional_edition_evidence.group_by(&:first) %>
+<% groups_by_mbid = @additional_edition_evidence.to_h { |track| track.values_at("recording_mbid", "comparison_group") } %>
+<% admitted = @additional_appearances.group_by { |slot| groups_by_mbid.fetch(slot.evidence_recording_mbid, slot.evidence_recording_mbid) } %>
+<% evidence = @additional_edition_evidence.group_by { |track| track.fetch("comparison_group") } %>
 <% additional_mbids = admitted.keys | evidence.keys %>
 <% if additional_mbids.any? %>
   <section class="card library-card">
@@ -53,10 +54,18 @@
       <ul class="catalog-list">
         <% additional_mbids.each do |mbid| %>
           <% slots = admitted.fetch(mbid, []) %>
-          <% sources = (slots.map { |slot| [slot.edition_mbid, slot.appearance_date] } + evidence.fetch(mbid, []).map { |row| row.last(2) }).uniq(&:first) %>
-          <% title = slots.first&.title || evidence.fetch(mbid).first[1] %>
+          <% sources = (slots.map { |slot| [slot.edition_mbid, slot.appearance_date] } + evidence.fetch(mbid, []).map { |track| track.values_at("edition_mbid", "edition_appearance_date") }).uniq(&:first) %>
+          <% title = slots.first&.title || evidence.fetch(mbid).first.fetch("title") %>
           <li><%= slots.any? ? catalog_link(slots.first.recording, title:) : title %>
             <% if sources.first.last.present? %> · <%= sources.first.last %><% end %>
+            <% version = evidence.fetch(mbid, []).find { |track| track["version"].present? }&.fetch("version") %>
+            <% if version.present? %> · <%= version %><% end %>
+            <% source = evidence.fetch(mbid, []).find { |track| track["source_track"].present? } %>
+            <% if slots.empty? && source && @archive_available && !@public_profile %>
+              <%= button_to "Include", track_listening_release_path(@entry), method: :patch,
+                params: { source_recording_mbid: source.fetch("recording_mbid"), decision: "include" },
+                form: { class: "release-track-preference" }, aria: { label: "Include #{title} in release listening totals" } %>
+            <% end %>
             <ul>
               <% sources.each do |edition_mbid, date| %>
                 <li><%= link_to ["MusicBrainz edition", date].compact.join(" · "), "https://musicbrainz.org/release/#{edition_mbid}" %></li>

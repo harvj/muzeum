@@ -1,0 +1,57 @@
+<section class="resolution-context release-comparison" aria-label="Original release comparison">
+  <h2 class="section-heading">Original release comparison</h2>
+  <% if comparison.shared.any? %>
+    <details>
+      <summary><%= pluralize(comparison.shared.size, "shared opening track") %></summary>
+      <ol><% comparison.shared.each do |slot| %><li><%= slot.fetch(:title) %></li><% end %></ol>
+    </details>
+  <% end %>
+  <% comparison.comparisons.each do |left, right, rows| %>
+    <table class="release-comparison-diff">
+      <thead><tr>
+        <% [left, right].each do |group| %>
+          <% base = group.first.construction.base %>
+          <th scope="col"><%= base.data.fetch("title") %> · <%= pluralize(base.slots.size, "track") %></th>
+        <% end %>
+      </tr></thead>
+      <tbody>
+        <% rows.each do |first, second, label| %>
+          <tr data-change="<%= label %>">
+            <% [[first, left], [second, right]].each do |slot, group| %>
+              <% if slot %>
+                <% number = group.first.construction.base.slots.index(slot) + 1 %>
+                <td><span class="release-diff-position"><%= number %></span> <%= slot.fetch(:title) %>
+                  <small class="muted"><%= label %></small></td>
+              <% else %>
+                <td><span class="muted" aria-label="<%= label %>">—</span></td>
+              <% end %>
+            <% end %>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% end %>
+
+  <fieldset class="release-edition-choices">
+    <legend>Release to confirm</legend>
+    <% comparison.groups.each do |same_sequence| %>
+      <div class="release-edition-group">
+        <strong><%= pluralize(same_sequence.first.construction.base.slots.size, "track") %> sequence</strong>
+        <% same_sequence.each do |proposal| %>
+          <% base = proposal.construction.base %>
+          <% release = base.data %>
+          <% id = release.fetch("id") %>
+          <div class="release-edition-option">
+            <label>
+              <%= radio_button_tag :construct_release, id, id == selected_edition,
+                id: "construct_release_#{id}", required: true, form: "recording-resolution-confirmation",
+                data: { release_proposal_target: "choice", action: "change->release-proposal#choose" } %>
+              <span><%= resolution_release_date(release.fetch("date")) %> · <%= release["country"].presence || "Country unknown" %> · <%= pluralize(base.slots.size, "track") %></span>
+            </label>
+            <%= link_to id.first(8), "https://musicbrainz.org/release/#{id}", aria: { label: "MusicBrainz release #{id}" } %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </fieldset>
+</section>

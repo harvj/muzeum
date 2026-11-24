@@ -1,6 +1,6 @@
 module CanonicalCatalog
   class Construction
-    attr_reader :base, :appearances, :additional_slots
+    attr_reader :base, :appearances, :additional_slots, :additional_tracks
 
     EDITION_VARIANT = /\b(?:deluxe|expanded|bonus|reissue|remaster(?:ed)?|anniversary)\b/i
 
@@ -41,6 +41,15 @@ module CanonicalCatalog
       end.sort_by { |edition| edition.data.fetch("id") }
     end
 
+    def self.selectable_bases(editions)
+      originals = self.originals(editions)
+      return originals unless originals.many?
+
+      originals | editions.select do |edition|
+        originals.any? { |original| TrackComparison.equivalent_sequence?(original.slots, edition.slots) }
+      end
+    end
+
     def self.sequence(edition)
       edition.slots.map { |slot| slot.dig(:recording, "id") }
     end
@@ -49,21 +58,16 @@ module CanonicalCatalog
       editions = editions.select { |edition| Edition.collection_context?(edition.data) }
       originals = self.class.originals(editions)
       raise Store::Unverified, "The original tracklist remains unverified" if originals.empty?
-      if base ? !originals.include?(base) : originals.many?
+      if base ? !self.class.selectable_bases(editions).include?(base) : originals.many?
         raise Store::Unverified, "Original tracklists disagree on order or membership"
       end
 
       @base = base || originals.first
-      original_date = @base.data.fetch("date")
       @additional_slots = []
-      competing = originals.excluding(@base)
+      groups = []
       base_recordings = self.class.sequence(@base).to_set
       @appearances = editions.filter_map do |edition|
         date = edition.data["date"]
-        next unless date.present? && date >= original_date
-
-        # A competing original program is evidence in its own right.
-        conflicts = competing.any? { |other| TrackComparison.equivalent_sequence?(edition.slots, other.slots) }
         additions, uncertain = [], []
         edition.slots.each do |slot|
           next if base_recordings.include?(slot.dig(:recording, "id"))
@@ -75,16 +79,29 @@ module CanonicalCatalog
             uncertain << slot
           end
         end
-        admitted = conflicts ? [] : additions
-        admitted = admitted.select { |slot| slot.dig(:recording, "id") == recording_mbid } if recording_mbid
-        @additional_slots.concat(admitted.map { |slot| slot.merge(edition_mbid: edition.data.fetch("id"), appearance_date: date) })
+        entries = additions.map do |slot|
+          group = groups.find do |existing|
+            existing.all? { |item| TrackComparison.compare(item, slot) == :equivalent }
+          end
+          group ||= [].tap { |item| groups << item }
+          group << slot
+          evidence = slot_evidence(slot, date).merge("comparison_group" => group.first.dig(:recording, "id"))
+          evidence.merge("edition_mbid" => edition.data.fetch("id"), "source_track" => slot.stringify_keys)
+        end
+        if recording_mbid
+          admitted = additions.select { |slot| slot.dig(:recording, "id") == recording_mbid }
+          @additional_slots.concat(admitted.map { |slot| slot.merge(edition_mbid: edition.data.fetch("id"), appearance_date: date) })
+        elsif originals.none? { |original| original != @base && TrackComparison.equivalent_sequence?(original.slots, edition.slots) }
+          @additional_slots.concat(additions.map { |slot| slot.merge(edition_mbid: edition.data.fetch("id"), appearance_date: date) })
+        end
         edition.data.slice("id", "title", "date", "country", "status", "packaging", "disambiguation", "edition_relationships", "genres", "tags").merge(
           "track_count" => edition.slots.size,
           "uncertain_tracks" => uncertain.map { |slot| slot_evidence(slot, date) },
-          "additional_tracks" => conflicts ? [] : additions.map { |slot| slot_evidence(slot, date) },
-          "competing_sequence_tracks" => conflicts ? additions.map { |slot| slot_evidence(slot, date) } : []
+          "additional_tracks" => entries
         )
       end.sort_by { |appearance| appearance.values_at("date", "id") }
+      @additional_tracks = @appearances.flat_map { |appearance| appearance.fetch("additional_tracks") }
+        .group_by { |track| track.fetch("comparison_group") }.values
     end
 
     private

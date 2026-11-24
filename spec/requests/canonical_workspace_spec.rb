@@ -28,7 +28,7 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
 
     get resolution_surface_path(observation)
     doc = Nokogiri::HTML(response.body)
-    expect(doc.css('select[name="construct_release"] option').filter_map { |option| option["value"].presence }).to contain_exactly(original["id"], other["id"])
+    expect(doc.css('input[type="radio"][name="construct_release"]').map { |option| option["value"] }).to contain_exactly(original["id"], other["id"])
     params = { scope: "surface", recording_mbid: NarrowStairsFixture::RECORDING, assessment_id: assessment.id }
     post decide_resolution_surface_path(observation), params: params.merge(construct_release: NarrowStairsFixture::GROUP)
     expect(RecordingResolution::Decision.count).to eq(0)
@@ -130,7 +130,7 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
       frozen_evidence = previous.evidence
 
       get resolution_surface_path(play)
-      expect(response.body).to include("May 13, 2008", "Update existing", "Resolve this observation")
+      expect(response.body).to include("May 13, 2008", "Reuse existing release", "Resolve this observation")
       expect(release.reload.ingested_from_release_mbid).to eq(NarrowStairsFixture::LATER)
       expect(RecordingResolution::Decision.count).to eq(0)
 

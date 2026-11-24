@@ -410,10 +410,9 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "prefers-color-scheme", value: "dark" } ])
     visit resolution_surface_path(observation)
     expect(page).to have_no_css(".resolution-context .review-tracks")
-    select = find("select#construct_release")
-    select.find("option[value='#{original["id"]}']").select_option
+    choose "construct_release_#{original["id"]}"
     expect(page).to have_css(".resolution-context .review-tracks", count: 1)
-    select.find("option[value='#{other["id"]}']").select_option
+    choose "construct_release_#{other["id"]}"
     expect(page).to have_css(".resolution-context .review-tracks", count: 1)
     expect(find(".resolution-context .review-tracks li", match: :first)).to have_text(tracks.first.fetch("title"))
     expect(page).to have_css('[aria-label="Resolution preview"] li', text: "1 new release", count: 1)
@@ -423,6 +422,96 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     find_button("Resolve this observation").send_keys(:enter)
     expect(page).to have_text("Recording decision saved.")
     expect(Release.sole.ingested_from_release_mbid).to eq(other["id"])
+  ensure
+    browser&.execute_cdp("Emulation.clearDeviceMetricsOverride")
+    browser&.execute_cdp("Emulation.setEmulatedMedia", features: [])
+  end
+
+  it "compares the authentic Queen of the Clouds editions and recalculates additions from the chosen base" do
+    user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "queen-comparison", lastfm_username: "queen-comparison")
+    editions = JSON.parse(Rails.root.join("spec/fixtures/musicbrainz/construction/queen_of_the_clouds.json").read)
+    canadian, overseas, worldwide = %w[
+      9cd3b250-dc88-450f-8836-dbd0e0fa2ccc 17e2d704-6ee3-45ad-a494-d92b1d13abcc 1f21b9a1-0b81-4f3b-8b1b-3ff9e44a91ae
+    ]
+    original = editions.find { |edition| edition["id"] == canadian }
+    recording = original.dig("media", 0, "tracks").map { |track| track.fetch("recording") }
+      .find { |item| item["id"] == "461e6686-2af9-4def-82b0-411ada1a73ed" }
+    observation = Scrobble.create!(user:, lastfm_account: user.source_account, played_at: Time.current,
+      payload: { artist_name: "Tove Lo", album_name: "Queen of the Clouds", track_name: "Not on Drugs" })
+    surface = RecordingResolution::Ledger.attach!(observation)
+    group = RecordingResolution::Group.create!(surface_id: surface.id, version: RecordingResolution::Ledger::VERSION, claims: {})
+    save_evidence = ->(sources) do
+      RecordingResolution::Assessment.create!(group_id: group.id, version: "construction-fixture", actor: "fixture",
+        digest: SecureRandom.hex(32), evidence: { "candidates" => [ recording ], "construction_editions" => sources })
+    end
+    save_evidence.call(editions)
+    request = CatalogImport.request!(RecordingResolution::Investigation::KIND, group.id)
+    sign_in(user)
+    browser = page.driver.browser
+    browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "prefers-color-scheme", value: "light" } ])
+    visit resolution_surface_path(observation)
+
+    within(".release-comparison") do
+      expect(page).to have_css(".release-edition-group", count: 2)
+      [ canadian, overseas, worldwide ].each do |id|
+        expect(page).to have_css("a[href='https://musicbrainz.org/release/#{id}']", text: id.first(8))
+      end
+      find("summary", text: "15 shared opening tracks").click
+      expect(page).to have_css("details[open] li", count: 15)
+      find("summary", text: "15 shared opening tracks").click
+      expect(page).to have_css('tr[data-change="Shared recording"] td', text: /1[67].*Hippie Sabotage/i, count: 2)
+    end
+
+    choose "construct_release_#{canadian}"
+    preview = '[aria-label="Resolution preview"]'
+    expect(page).to have_css(preview, text: "4 additional edition tracks")
+    [ "Love Ballad", "Over", "Out Of Mind - Bonus Track", "Paradise" ].each do |title|
+      expect(page).to have_css("#{preview} details li", text: /\A#{Regexp.escape(title)} · Edition evidence\z/, count: 1)
+    end
+    page.execute_script("window.scrollTo(0, 0)")
+    capture_resolution("queen-release-comparison-desktop", full: true)
+
+    browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 390, height: 844, deviceScaleFactor: 1, mobile: true)
+    browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "prefers-color-scheme", value: "dark" } ])
+    choose "construct_release_#{worldwide}"
+    expect(page).to have_no_css("#{preview} summary", text: "additional edition track")
+    expect(page).to have_css("#{preview} li", text: /20 tracks.*1 new release/)
+    page.execute_script("window.scrollTo(0, 0)")
+    capture_resolution("queen-release-comparison-mobile-dark", full: true)
+    expect(page).to have_css("turbo-cable-stream-source[connected]", visible: :all)
+    refreshed = save_evidence.call(editions)
+    Turbo::StreamsChannel.broadcast_refresh_to(request, method: :morph, scroll: :preserve)
+    expect(page).to have_css("input[name='assessment_id'][value='#{refreshed.id}']", visible: :all)
+    expect(page).to have_checked_field("construct_release_#{worldwide}")
+
+    changed = save_evidence.call(editions.reject { |edition| edition["id"] == worldwide })
+    Turbo::StreamsChannel.broadcast_refresh_to(request, method: :morph, scroll: :preserve)
+    expect(page).to have_css("input[name='assessment_id'][value='#{changed.id}']", visible: :all)
+    expect(page).to have_css("[role='alert']", text: "The selected edition is no longer in this review")
+    expect(page).to have_no_css(".release-edition-choices input:checked")
+
+    restored = save_evidence.call(editions)
+    Turbo::StreamsChannel.broadcast_refresh_to(request, method: :morph, scroll: :preserve)
+    expect(page).to have_css("input[name='assessment_id'][value='#{restored.id}']", visible: :all)
+    expect(page).to have_no_css(".release-edition-choices input:checked")
+    choose "construct_release_#{overseas}"
+
+    click_button "Resolve this observation"
+    expect(page).to have_text("Recording decision saved.")
+    release = Release.sole
+    expect(release.ingested_from_release_mbid).to eq(overseas)
+    selected = CanonicalCatalog::Edition.new(editions.find { |edition| edition["id"] == overseas }, overseas)
+    expect(release.catalog_track_slots.base_sequence.order(:medium, :position).pluck(:source_recording_mbid))
+      .to eq(selected.slots.pluck(:source_recording_mbid))
+    visit release_path(release)
+    find("summary", text: /Additional edition tracks.*4 tracks/).click
+    expect(page).to have_css(".additional-edition-tracks > ul > li", count: 4)
+    expect(release.catalog_track_slots.additional_appearances).to be_empty
+    find('button[aria-label="Include Love Ballad in release listening totals"]').click
+    expect(page).to have_css('button[aria-label="Exclude Love Ballad from release listening totals"]')
+    expect(ReleaseTrackListeningDecision.sole).to have_attributes(user:, release:, included: true)
+    expect(release.catalog_track_slots.additional_appearances.count).to eq(1)
+    expect(Release.count).to eq(1)
   ensure
     browser&.execute_cdp("Emulation.clearDeviceMetricsOverride")
     browser&.execute_cdp("Emulation.setEmulatedMedia", features: [])

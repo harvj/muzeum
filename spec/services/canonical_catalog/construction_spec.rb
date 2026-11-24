@@ -90,11 +90,17 @@ RSpec.describe CanonicalCatalog::Construction do
     expect(CanonicalCatalog::TrackComparison.compare(original.slots[15], expanded.slots[16])).to eq(:equivalent)
     expect(described_class.originals([ original, later, expanded ])).to contain_exactly(original, expanded)
 
+    expect(described_class.selectable_bases([ original, later, expanded ])).to contain_exactly(original, later, expanded)
+    expect(described_class.new([ original, later, expanded ], base: later).base.slots).to eq(later.slots)
+    worldwide = described_class.new([ original, later, expanded ], base: expanded)
+    expect(worldwide.base.slots).to eq(expanded.slots)
+    expect(worldwide.additional_tracks).to be_empty
+
     construction = described_class.new([ original, later, expanded ], base: original)
     expect(construction.base.slots).to eq(original.slots)
     expect(construction.additional_slots).to be_empty
     differences = construction.appearances.find { |appearance| appearance["id"] == expanded.data["id"] }
-    expect(differences.fetch("competing_sequence_tracks").pluck("title")).to eq(
+    expect(differences.fetch("additional_tracks").pluck("title")).to eq(
       [ "Love Ballad", "Over", "Out Of Mind - Bonus Track", "Paradise" ])
   end
 
