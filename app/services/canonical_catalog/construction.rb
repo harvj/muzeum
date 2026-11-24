@@ -11,13 +11,24 @@ module CanonicalCatalog
         Edition.original_context?(data) && !title_variant && !data["disambiguation"].to_s.match?(EDITION_VARIANT)
       end
 
-      by_sequence = originals.group_by { |edition| sequence(edition) }
-      # A complete launch-day edition with an appended bonus sequence is
-      # evidence of appearances. The shorter independently verified edition is the base.
-      bases = by_sequence.reject do |tracks, _|
-        by_sequence.keys.any? { |other| other.length < tracks.length && tracks.first(other.length) == other }
+      groups = originals.sort_by { |edition| edition.data.fetch("id") }.each_with_object([]) do |edition, grouped|
+        equivalent = grouped.find do |group|
+          group.all? { |other| TrackComparison.equivalent_sequence?(edition.slots, other.slots) }
+        end
+        equivalent ? equivalent << edition : grouped << [ edition ]
       end
-      bases.values.map do |equivalent|
+      # An independently verified launch sequence can identify an appended program.
+      # An uncertain MBID match does not establish that prefix.
+      bases = groups.reject do |group|
+        tracks = group.first.slots
+        groups.any? do |other|
+          shorter = other.first.slots
+          shorter.size < tracks.size && group.all? do |edition|
+            other.all? { |base| TrackComparison.equivalent_sequence?(edition.slots.take(shorter.size), base.slots) }
+          end
+        end
+      end
+      bases.map do |equivalent|
         equivalent.min_by do |edition|
           data = edition.data
           origin = Array(data["artist-credit"]).filter_map { |credit| credit.dig("artist", "country").presence }.uniq
@@ -45,32 +56,44 @@ module CanonicalCatalog
       @base = base || originals.first
       original_date = @base.data.fetch("date")
       @additional_slots = []
+      competing = originals.excluding(@base)
       base_recordings = self.class.sequence(@base).to_set
-      competing_sequences = originals.excluding(@base).map { |edition| self.class.sequence(edition) }.to_set
       @appearances = editions.filter_map do |edition|
         date = edition.data["date"]
         next unless date.present? && date >= original_date
 
-        # Competing original sequences are kept in the evidence without admitting their tracks.
-        additions = if competing_sequences.include?(self.class.sequence(edition))
-          []
-        else
-          edition.slots.select do |slot|
-            !base_recordings.include?(slot.dig(:recording, "id"))
+        # A competing original program is evidence in its own right.
+        conflicts = competing.any? { |other| TrackComparison.equivalent_sequence?(edition.slots, other.slots) }
+        additions, uncertain = [], []
+        edition.slots.each do |slot|
+          next if base_recordings.include?(slot.dig(:recording, "id"))
+
+          comparisons = @base.slots.map { |base_slot| TrackComparison.compare(slot, base_slot) }
+          if comparisons.all? { |result| result == :different }
+            additions << slot
+          elsif !comparisons.include?(:equivalent)
+            uncertain << slot
           end
         end
-        admitted = recording_mbid ? additions.select { |slot| slot.dig(:recording, "id") == recording_mbid } : additions
+        admitted = conflicts ? [] : additions
+        admitted = admitted.select { |slot| slot.dig(:recording, "id") == recording_mbid } if recording_mbid
         @additional_slots.concat(admitted.map { |slot| slot.merge(edition_mbid: edition.data.fetch("id"), appearance_date: date) })
         edition.data.slice("id", "title", "date", "country", "status", "packaging", "disambiguation", "edition_relationships", "genres", "tags").merge(
           "track_count" => edition.slots.size,
-          "additional_tracks" => additions.map do |slot|
-            { "recording_mbid" => slot.dig(:recording, "id"), "title" => slot.fetch(:title),
-              "medium" => slot.fetch(:medium), "position" => slot.fetch(:position),
-              "edition_appearance_date" => date,
-              "provider_first_release_date" => slot.dig(:recording, "first-release-date") }.compact
-          end
+          "uncertain_tracks" => uncertain.map { |slot| slot_evidence(slot, date) },
+          "additional_tracks" => conflicts ? [] : additions.map { |slot| slot_evidence(slot, date) },
+          "competing_sequence_tracks" => conflicts ? additions.map { |slot| slot_evidence(slot, date) } : []
         )
       end.sort_by { |appearance| appearance.values_at("date", "id") }
+    end
+
+    private
+
+    def slot_evidence(slot, date)
+      { "recording_mbid" => slot.dig(:recording, "id"), "track_mbid" => slot.fetch(:track_mbid), "title" => slot.fetch(:title),
+        "medium" => slot.fetch(:medium), "position" => slot.fetch(:position),
+        "edition_appearance_date" => date, "version" => slot.dig(:recording, "disambiguation").presence,
+        "provider_first_release_date" => slot.dig(:recording, "first-release-date") }.compact
     end
   end
 end

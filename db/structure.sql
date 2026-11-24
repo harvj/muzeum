@@ -378,6 +378,9 @@ CREATE TABLE public.catalog_track_slots (
     title character varying NOT NULL,
     edition_mbid character varying,
     appearance_date character varying,
+    source_recording_mbid character varying,
+    duration_ms integer,
+    source_artist_credit jsonb,
     CONSTRAINT catalog_track_slot_position CHECK (((medium > 0) AND ("position" > 0)))
 );
 
@@ -3635,6 +3638,7 @@ ALTER TABLE ONLY public.resolution_work
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261123231500'),
 ('20261123230000'),
 ('20261122223000'),
 ('20261122170100'),

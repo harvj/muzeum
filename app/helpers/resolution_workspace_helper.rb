@@ -16,8 +16,13 @@ module ResolutionWorkspaceHelper
 
   def resolution_edition_options(proposals)
     bases = proposals.map { |item| item.construction.base }
-    sequences = bases.map { |base| CanonicalCatalog::Construction.sequence(base) }
-    difference = (0...sequences.map(&:size).max).find { |index| sequences.map { |sequence| sequence[index] }.uniq.many? }
+    sequences = bases.map(&:slots)
+    difference = (0...sequences.map(&:size).max).find do |index|
+      slots = sequences.map { |sequence| sequence[index] }
+      slots.any?(&:nil?) || slots.combination(2).any? do |left, right|
+        CanonicalCatalog::TrackComparison.compare(left, right) != :equivalent
+      end
+    end
     bases.map do |base|
       data = base.data
       slot = base.slots[difference] if difference

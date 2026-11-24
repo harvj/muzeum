@@ -31,7 +31,7 @@ end %>
           <p><%= resolution_release_date(release.fetch("date")) %><%= " · #{release['country']}" if choices.many? && release["country"].present? %></p>
           <% tracks = base.slots.map do |slot|
             { "title" => slot[:title], "recording_mbid" => slot.dig(:recording, "id"),
-              "length" => slot.dig(:recording, "length") }
+              "length" => slot[:duration_ms] || slot.dig(:recording, "length") }
           end %>
           <%= render "ordered_tracks", tracks:, mbid: %>
         <% end %>

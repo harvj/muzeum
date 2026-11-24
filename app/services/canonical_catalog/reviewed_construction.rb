@@ -53,12 +53,14 @@ module CanonicalCatalog
       return true if date != base.data["date"] || current_edition(release) != base.data["id"]
 
       expected = base.slots.map { |slot| [ slot[:medium], slot[:position], slot.dig(:recording, "id") ] }
-      actual = release.catalog_track_slots.base_sequence.order(:medium, :position).joins(:recording).pluck(:medium, :position, "recordings.mbid")
+      actual = release.catalog_track_slots.base_sequence.order(:medium, :position).includes(:recording).map do |slot|
+        [ slot.medium, slot.position, slot.evidence_recording_mbid ]
+      end
       return true if actual != expected
 
       edition_ids = proposal.construction.appearances.pluck("id")
       actual_additions = release.catalog_track_slots.additional_appearances.where(edition_mbid: edition_ids)
-        .joins(:recording).pluck(:edition_mbid, :appearance_date, :medium, :position, "recordings.mbid")
+        .joins(:recording).pluck(:edition_mbid, :appearance_date, :medium, :position, Arel.sql("COALESCE(catalog_track_slots.source_recording_mbid, recordings.mbid)"))
       expected_additions = proposal.construction.additional_slots.map do |slot|
         [ *slot.values_at(:edition_mbid, :appearance_date, :medium, :position), slot.dig(:recording, "id") ]
       end
@@ -76,7 +78,7 @@ module CanonicalCatalog
 
       fields = release.attributes.values_at("id", "release_year", "release_month", "release_day", "catalog_verified_at", "ingested_from_release_mbid")
       fields << current_edition(release)
-      slots = release.catalog_track_slots.order(:id).pluck(:id, :recording_id, :title, :edition_mbid, :appearance_date, :medium, :position)
+      slots = release.catalog_track_slots.order(:id).pluck(:id, :recording_id, :title, :edition_mbid, :appearance_date, :medium, :position, :source_recording_mbid, :track_mbid, :duration_ms, :source_artist_credit)
       Digest::SHA256.hexdigest([ fields, slots ].to_json)
     end
 

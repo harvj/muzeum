@@ -4,4 +4,8 @@ class CatalogTrackSlot < ApplicationRecord
 
   belongs_to :release
   belongs_to :recording
+
+  def evidence_recording_mbid
+    source_recording_mbid || recording.mbid
+  end
 end

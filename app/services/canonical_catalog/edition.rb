@@ -51,7 +51,9 @@ module CanonicalCatalog
       Store.name!(recording["title"])
       recording = recording.merge("artist-credit" => track["artist-credit"]) if recording["artist-credit"].blank?
       { medium:, position: track["position"], number: track["number"], track_mbid: Store.mbid!(track["id"]),
-        title: Store.name!(track["title"]), recording: }
+        title: Store.name!(track["title"]), source_recording_mbid: recording.fetch("id"),
+        duration_ms: track["length"].is_a?(Integer) && track["length"].positive? ? track["length"] : nil,
+        source_artist_credit: track["artist-credit"].presence || recording["artist-credit"], recording: }
     end
   end
 end

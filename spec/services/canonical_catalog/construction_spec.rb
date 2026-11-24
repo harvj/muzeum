@@ -74,6 +74,74 @@ RSpec.describe CanonicalCatalog::Construction do
       appearance_date: "2015-02-24", recording: include("id" => later_bonus)))
   end
 
+  it "keeps Queen of the Clouds source sequences whole and identifies the genuine divergence at track 16" do
+    data = JSON.parse(Rails.root.join("spec/fixtures/musicbrainz/construction/queen_of_the_clouds.json").read)
+    original, expanded, later = %w[
+      9cd3b250-dc88-450f-8836-dbd0e0fa2ccc
+      1f21b9a1-0b81-4f3b-8b1b-3ff9e44a91ae
+      17e2d704-6ee3-45ad-a494-d92b1d13abcc
+    ].map do |id|
+      CanonicalCatalog::Edition.new(data.find { |edition| edition.fetch("id") == id }, id)
+    end
+
+    expect(CanonicalCatalog::TrackComparison.equivalent_sequence?(original.slots, later.slots)).to be(true)
+    expect(CanonicalCatalog::TrackComparison.equivalent_sequence?(original.slots.take(15), expanded.slots.take(15))).to be(true)
+    expect(CanonicalCatalog::TrackComparison.compare(original.slots[15], expanded.slots[15])).to eq(:different)
+    expect(CanonicalCatalog::TrackComparison.compare(original.slots[15], expanded.slots[16])).to eq(:equivalent)
+    expect(described_class.originals([ original, later, expanded ])).to contain_exactly(original, expanded)
+
+    construction = described_class.new([ original, later, expanded ], base: original)
+    expect(construction.base.slots).to eq(original.slots)
+    expect(construction.additional_slots).to be_empty
+    differences = construction.appearances.find { |appearance| appearance["id"] == expanded.data["id"] }
+    expect(differences.fetch("competing_sequence_tracks").pluck("title")).to eq(
+      [ "Love Ballad", "Over", "Out Of Mind - Bonus Track", "Paradise" ])
+  end
+
+  it "groups corroborated alternate source IDs and retains uncertain look-alikes without admitting them" do
+    data = narrow_stairs_editions.find { |edition| edition["id"] == NarrowStairsFixture::ORIGINAL }
+    track = data.dig("media", 0, "tracks", 2)
+    track.fetch("recording")["isrcs"] = [ "USABC0800001" ]
+    corroborated = data.deep_dup.merge("id" => SecureRandom.uuid)
+    alias_track = corroborated.dig("media", 0, "tracks", 2)
+    alias_track["id"] = SecureRandom.uuid
+    alias_track.fetch("recording")["id"] = SecureRandom.uuid
+    uncertain = corroborated.deep_dup.merge("id" => SecureRandom.uuid, "date" => "2009")
+    uncertain_track = uncertain.dig("media", 0, "tracks", 2)
+    uncertain_track["id"] = SecureRandom.uuid
+    uncertain_track.fetch("recording").merge!("id" => SecureRandom.uuid, "isrcs" => [])
+    editions = [ data, corroborated, uncertain ].map { |edition| CanonicalCatalog::Edition.new(edition, edition.fetch("id")) }
+
+    representative = described_class.originals(editions).sole
+    expect(representative).to be_in(editions.first(2))
+    construction = described_class.new(editions, base: representative)
+    expect(construction.base.slots).to eq(representative.slots)
+    expect(construction.additional_slots).to be_empty
+    expect(construction.appearances.last.fetch("uncertain_tracks")).to contain_exactly(
+      include("recording_mbid" => uncertain_track.dig("recording", "id")))
+    left = editions.first.slots.third.deep_dup
+    right = editions.second.slots.third.deep_dup
+    left.fetch(:recording)["disambiguation"] = "clean"
+    right.fetch(:recording)["disambiguation"] = "explicit"
+    expect(CanonicalCatalog::TrackComparison.compare(left, right)).to eq(:uncertain)
+    expect(Recording.count).to eq(0)
+  end
+
+  it "verifies the authentic tracklist using source IDs even when a slot points at a different canonical recording" do
+    data = narrow_stairs_editions.find { |edition| edition["id"] == NarrowStairsFixture::ORIGINAL }
+    track = data.dig("media", 0, "tracks", 2)
+    track["length"] = 159_999
+    edition = CanonicalCatalog::Edition.new(data, data.fetch("id"))
+    request = CatalogImport.create!(kind: "release", entity_id: 1, due_at: Time.current)
+    release = CanonicalCatalog::Store.new(request, Struct.new(:provenance).new([])).release(data, edition.slots)
+    slot = release.catalog_track_slots.find_by!(track_mbid: track.fetch("id"))
+    expect(slot).to have_attributes(source_recording_mbid: track.dig("recording", "id"),
+      duration_ms: 159_999, source_artist_credit: track["artist-credit"].presence || track.dig("recording", "artist-credit"))
+    slot.update!(recording: Recording.create!(title: "Fixture canonical counterpart", mbid: SecureRandom.uuid))
+    evidence = RecordingResolution::ReleaseTracklist.new(release).assessment_fields.fetch("slots").third
+    expect(evidence).to include("track_mbid" => track.fetch("id"), "recording_mbid" => track.dig("recording", "id"), "length" => 159_999)
+  end
+
   it "presents material original tracklist conflicts without merging the unselected sequence" do
     data = narrow_stairs_editions.find { |edition| edition["id"] == NarrowStairsFixture::ORIGINAL }
     other = data.deep_dup.merge("id" => SecureRandom.uuid)

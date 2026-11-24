@@ -11,7 +11,7 @@ module RecordingResolution
       @slots = release.catalog_track_slots.base_sequence.order(:medium, :position).limit(MAX_SLOTS + 1).includes(recording: :artists).to_a
       raise ArgumentError unless (1..MAX_SLOTS).cover?(slots.size)
 
-      signature = slots.map { |slot| [ slot.medium, slot.position, slot.recording.mbid ] }
+      signature = slots.map { |slot| [ slot.medium, slot.position, slot.evidence_recording_mbid ] }
       digest = Digest::SHA256.hexdigest(signature.to_json)
       @revision = CatalogRevision.where(entity_type: "Release", entity_id: release.id)
         .where("evidence @> ?", { track_count: slots.size, tracklist_digest: digest }.to_json)
@@ -35,13 +35,13 @@ module RecordingResolution
           "country" => release.catalog_country, "complete_tracklist" => true },
         "slots" => slots.map do |slot|
           { "medium" => slot.medium, "position" => slot.position, "number" => slot.number,
-            "title" => slot.title, "track_mbid" => slot.track_mbid, "recording_mbid" => slot.recording.mbid,
-            "length" => slot.recording.duration_ms }
+            "title" => slot.title, "track_mbid" => slot.track_mbid, "recording_mbid" => slot.evidence_recording_mbid,
+            "length" => slot.duration_ms || slot.recording.duration_ms, "artist-credit" => slot.source_artist_credit }
         end }
     end
 
     def independently_confirmed(listener, account_id, excluding:)
-      ids = slots.reject { |slot| excluding.include?(slot.recording.mbid) }.pluck(:recording_id)
+      ids = slots.reject { |slot| excluding.include?(slot.evidence_recording_mbid) || excluding.include?(slot.recording.mbid) }.pluck(:recording_id)
       decisions = Ledger.history(listener).where(user_id: listener.id, actor: "listener", mode: "resolved", recording_id: ids)
         .where.not("evidence ? 'release_batch'").order(id: :desc).limit(20).to_a
       plays = decisions.filter_map { |decision| decision.scrobble_id || decision.evidence["observation_id"] }

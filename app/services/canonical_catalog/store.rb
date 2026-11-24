@@ -138,7 +138,7 @@ module CanonicalCatalog
 
     def release_signature(release)
       release.catalog_track_slots.base_sequence.order(:medium, :position).includes(:recording).map do |slot|
-        [ slot.medium, slot.position, slot.recording.mbid ]
+        [ slot.medium, slot.position, slot.evidence_recording_mbid ]
       end
     end
 

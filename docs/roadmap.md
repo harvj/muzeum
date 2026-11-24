@@ -66,7 +66,7 @@ The authoritative, living domain rules are [principles](domain/principles.md), [
      - **Catalog presentation follow-up.** Refine entity headings and adopt the signed Shell 1.3.0 sticky header.
      - **v0.6.6 follow-up — Resolution and release rankings.** Preview the recording decision and admission of zero or one release. Later recording enrichment does not admit releases. Rank verified original contexts by default and retain explicit inclusion or exclusion decisions. Overlapping listening histories derive from recording membership without adding per-observation release credit.
 
-     - **v0.7.0 — Musical Collections and Autonomous Investigation.** Compare bounded original and later edition evidence, keep additional tracks distinct, apply listener-scoped track preferences to release totals, and surface durable investigation status. [Evidence and remaining decisions](v0.7.0/implementation.md).
+     - **v0.7.0 — Musical Collections and Autonomous Investigation.** Compare bounded original and later edition evidence, keep additional tracks distinct, apply listener-scoped track preferences to release totals, and surface durable investigation status. [Evidence and remaining decisions](v0.7.0/implementation.md). Compare musical sequence separately from source identity and retain per-slot provenance from one authentic representative edition.
 
 9. **P1.6 — Profile onboarding (tentative).**
    - **P1.6a — Last.fm authentication and verified username.** Use Last.fm web authorization and bind only the returned username.

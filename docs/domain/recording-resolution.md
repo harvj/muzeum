@@ -50,6 +50,9 @@ The surface `Radiohead / The Bends / Fake Plastic Trees` is explicitly assigned 
 
 **REC-009 — Support optional provider mappings.** One MusicBrainz recording may correspond to multiple Spotify track IDs, and a Spotify track ID is not the canonical identity. Record provider, identifier, match evidence and optionally a preferred playable equivalent with provenance. Spotify lookup, authorization and playlist export are later milestones. Muzeum playlists, when implemented, consist of ordered Muzeum recording references independently of Spotify.
 
+Preserve the source MusicBrainz recording identity on each verified release track slot. Edition comparison may use corroborated equivalence without changing recording assignments or treating the source ID as the canonical recording ID. A source comparison alone does not authorize merging a listener-confirmed canonical identity.
+
+
 ## Example
 
 Last.fm may deliver the same studio performance under multiple title spellings, with or without album text. If evidence supports the same canonical recording, aggregate the plays under that recording. If a similarly named live performance appears, treat it as a distinct candidate until established otherwise. Verifying a new release membership preserves the recording identity and its observations.

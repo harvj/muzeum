@@ -16,6 +16,11 @@ For original-album construction, independent recording identity and verified edi
 
 **REL-016 — Construct the musical collection from evidence.** Treat MusicBrainz editions as provenance for title, credits, dates, track order, and recording appearances. Construct the original published sequence when sufficiently supported. Retain additional edition tracks and their dates separately, without backdating additional recordings or inferring the edition played. Apply [STAT-003](listening-statistics.md#definitions) to release totals and retain the admitted membership regardless of the listener’s accounting preference. Resolve independent recording identity even while construction is pending.
 
+Use one authentic representative release and copy its complete ordered source sequence. Each new slot retains the source recording MBID, track MBID, title, track duration, and recorded credits independently of the canonical recording it points to. Keep the representative release's source evidence even if a later decision maps another recording MBID to the same canonical recording.
+
+Compare ordered musical tracks using source recording identity, titles, credited artists, durations, versions, and available corroboration. Distinct recording MBIDs are insufficient evidence of different music. Compatible matching metadata plus a shared ISRC or identical source track MBID can corroborate an equivalent comparison. A look-alike with insufficient corroboration stays uncertain. Retain competing original programs and uncertain matches as evidence. Additional edition tracks require a meaningful difference from the selected base. Representative selection weighs chronology, edition status, artist origin, country, and edition evidence together and leaves conflicts for review.
+
+
 **REL-017 — Independent chronology.** Preserve recording date, canonical publication date, recording first publication, and specific edition appearances as distinct facts. Retain unknown dates and source precision, including ranges. A publication date cannot establish when a performance was captured.
 
 The sections below describe the deferred per-play credit proposal. It does not govern v0.5.0 release histories or combined totals.

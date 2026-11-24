@@ -13,7 +13,7 @@
         <% @slots.each.with_index(@track_offset.to_i + 1) do |slot, number| %>
           <tr><td class="track-number"><%= number %></td>
             <th scope="row"><span class="play-name" data-overflow-name><%= catalog_link(slot.recording, title: slot.title) %></span></th>
-            <td class="table-number"><%= recording_duration(slot.recording.duration_ms) if slot.recording.duration_ms %></td>
+            <td class="table-number"><%= recording_duration(slot.duration_ms || slot.recording.duration_ms) %></td>
             <td class="track-play-count">
               <% if @archive_available && !@counted_tracks.include?(slot.recording_id) %>
                 Excluded
