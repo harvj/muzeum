@@ -6,7 +6,7 @@
   <% associations.clear if associations.values.uniq.size == 1 %>
   <ul class="resolution-choices">
     <% visible.each do |candidate| %>
-      <%= render "recording_choice", candidate:, association: associations[candidate], show_mbid: shared_labels.include?(candidate), selected:, navigation: %>
+      <%= render "recording_choice", candidate:, association: associations[candidate], show_mbid: shared_labels.include?(candidate), selected:, navigation:, badge: (candidate_badge if candidate == selected) %>
     <% end %>
   </ul>
   <% if (remaining = @candidates - visible).any? %>

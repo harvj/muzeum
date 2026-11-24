@@ -44,8 +44,10 @@
 </nav>
 <% if section == "candidates" %>
 <section id="review-candidates" class="resolution-decision" tabindex="-1">
-  <%= render "investigation_status", contexts:, compact: section == "candidates" %>
-  <%= render "recording_choices", selected:, contexts:, navigation:, catalog_rows: %>
+  <% candidate_badge = nil %>
+  <% position_badge = ->(badge) { candidate_badge = badge } if selected %>
+  <%= render "investigation_status", contexts:, compact: true, position_badge: %>
+  <%= render "recording_choices", selected:, contexts:, navigation:, catalog_rows:, candidate_badge: %>
   <% if @batch_releases.present? %>
     <details><summary>Review other tracks</summary>
       <ul><% @batch_releases.each do |release| %>

@@ -14,4 +14,5 @@
     <%= link_to mbid.first(8), "https://musicbrainz.org/recording/#{mbid}", class: "resolution-recording-mbid",
       aria: { label: "MusicBrainz recording #{mbid}" } %>
   <% end %>
+  <% if local_assigns[:badge] %><div class="resolution-option-status"><%= badge %></div><% end %>
 </li>

@@ -1,3 +1,12 @@
+  <% badge = ->(label, state = nil) do
+    markup = tag.p(label, role: "status", class: "investigation-badge", data: { state: })
+    if (position_badge = local_assigns[:position_badge])
+      position_badge.call(markup)
+      nil
+    else
+      markup
+    end
+  end %>
   <% provider_incomplete = @assessment&.evidence&.fetch("partial", false) %>
   <% request_failed = @assessment_request&.state == "failed" %>
   <% throttled = request_failed && @assessment_request.failure == "musicbrainz throttled (503)" %>
@@ -6,11 +15,11 @@
   <% queue_state = queue&.state %>
   <% can_retry = @may_manage_observation && CatalogImport.worker_enabled? %>
   <% if expired %>
-    <p role="status" class="investigation-badge"><%= can_retry ? "Failed — Retry" : "Needs attention" %></p>
+    <%= badge.call(can_retry ? "Failed — Retry" : "Needs attention") %>
     <p class="muted">The investigation expired.</p>
     <%= button_to "Retry search", investigate_resolution_surface_path(@observation) if can_retry %>
   <% elsif queue&.attention %>
-    <p role="status" class="investigation-badge">Needs attention</p>
+    <%= badge.call("Needs attention") %>
     <%= render "investigation_queue_details", queue: %>
   <% elsif queue_state.in?([ :queued, :investigating, :retrying ]) %>
     <div class="investigation-progress" role="status" aria-label="Investigation progress">
@@ -23,11 +32,11 @@
       <%= render "investigation_queue_details", queue: queue if queue.phase %>
     </div>
   <% elsif @assessment_request&.active? && params[:assessment].blank? %>
-    <p role="status" class="investigation-badge">Needs attention</p>
+    <%= badge.call("Needs attention") %>
     <p class="muted"><%= queue_state == :unavailable ? "The investigation queue could not be checked." : "No investigation attempt is scheduled." %></p>
     <%= button_to "Retry search", investigate_resolution_surface_path(@observation) if can_retry && queue_state != :unavailable %>
   <% elsif request_failed && @assessment_request.failure == CatalogImport::INVESTIGATION_WORKER_FAILURE %>
-    <p role="status" class="investigation-badge">Failed — Needs Codex</p>
+    <%= badge.call("Failed — Needs Codex") %>
     <p class="muted">The investigation worker failed unexpectedly.</p>
   <% elsif request_failed || provider_incomplete %>
     <div class="investigation-outcome">
@@ -45,12 +54,12 @@
       <% end %>
     </div>
   <% elsif @assessment_request&.state == "incomplete" %>
-    <p role="status" class="investigation-badge" data-state="review">Needs review</p>
+    <%= badge.call("Needs review", :review) %>
     <p class="muted"><%= @assessment_request.failure %></p>
   <% elsif @assessment %>
     <% disputed = contexts.values.any? { |proposals| proposals.group_by { |proposal| proposal.construction.base.data.dig("release-group", "id") }.values.any?(&:many?) } %>
     <% outcome = @candidates.one? && !disputed ? :complete : :review %>
-    <p role="status" class="investigation-badge" data-state="<%= outcome %>"><%= outcome == :complete ? "Investigation complete" : "Needs review" %></p>
+    <%= badge.call(outcome == :complete ? "Investigation complete" : "Needs review", outcome) %>
     <% unless compact %><p class="muted"><%= browser_time(@assessment.created_at) %></p><% end %>
   <% else %>
     <p>This observation has not been investigated.<%= " Background investigation is paused." unless RecordingResolution::Investigation.enabled? %></p>

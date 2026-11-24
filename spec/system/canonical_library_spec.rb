@@ -830,6 +830,25 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     expect(page).to have_no_css(".investigation-progress")
     expect(page).to have_no_link("Refresh status")
     browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 1280, height: 800, deviceScaleFactor: 1, mobile: false)
+    expect(page).to have_css(".resolution-option:has([aria-current]) .resolution-option-status .investigation-badge")
+    [ [ 1280, 800 ], [ 390, 844 ] ].each do |width, height|
+      browser.execute_cdp("Emulation.setDeviceMetricsOverride", width:, height:, deviceScaleFactor: 1, mobile: width < 700)
+      position = page.evaluate_script(<<~JS)
+        (() => {
+          const row = document.querySelector(".resolution-option:has([aria-current])")
+          const label = row.querySelector(".resolution-selected").getBoundingClientRect()
+          const badge = row.querySelector(".investigation-badge").getBoundingClientRect()
+          const heading = document.querySelector("#review-candidates h2").getBoundingClientRect()
+          return [Math.abs(label.top + label.height / 2 - badge.top - badge.height / 2),
+            badge.left >= label.right || badge.top >= label.bottom,
+            heading.bottom <= row.getBoundingClientRect().top,
+            badge.right <= row.getBoundingClientRect().right]
+        })()
+      JS
+      expect(position.drop(1)).to eq([ true, true, true ])
+      expect(position.first).to be < 1 if width >= 700
+    end
+    browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 1280, height: 800, deviceScaleFactor: 1, mobile: false)
     capture_resolution("investigation-complete", full: true)
   ensure
     CanonicalCatalogJob.queue_adapter = prior_adapter if prior_adapter

@@ -868,6 +868,9 @@ main .resolution-option .resolution-recording-mbid {
   font: .8rem ui-monospace, monospace;
   text-decoration: underline;
 }
+.resolution-option:has(.resolution-option-status) { grid-template-columns: minmax(0, 1fr) auto auto; }
+.resolution-option-status { justify-self: end; padding-inline: .65rem; }
+.resolution-review .resolution-option-status .investigation-badge { margin: 0; }
 .resolution-choice .muted { color: var(--choice-muted); }
 .resolution-choice > span:first-child > span { display: block; font-size: .875rem; }
 .resolution-association { grid-column: 2; font-size: .875rem; }
@@ -901,6 +904,7 @@ main .resolution-option a:focus-visible { outline: 2px solid var(--ink); outline
   main .resolution-option .resolution-choice { grid-template-columns: minmax(0, 1fr) 5rem; gap: .2rem .5rem; }
   .resolution-association { grid-area: 2 / 1 / auto / -1; }
   .resolution-selected { grid-column: 2; grid-row: 1; }
+  .resolution-option-status { grid-column: 1 / -1; padding-block-end: .4rem; }
 }
 
 html { scroll-padding-block-start: calc(var(--shell-header-height, 84px) + env(safe-area-inset-top, 0px)); }
