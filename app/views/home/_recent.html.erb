@@ -5,7 +5,7 @@
     <%= form_with url: archive_path, method: :get, class: "catalog-filter archive-search" do |form| %>
       <div><%= form.label :q, "Search archive" %><%= form.search_field :q, value: @query %></div>
       <%= form.submit "Search", class: "catalog-submit" %>
-      <%= link_to "Clear search", archive_path, class: "clear-search" if @query.present? %>
+      <%= link_to "Clear search", archive_path, class: "utility-link clear-search" if @query.present? %>
     <% end %>
   <% end %>
   <% if @recent.any? %>

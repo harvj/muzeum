@@ -7,7 +7,7 @@
   <%= form_with url: catalog_index_path(@section), method: :get, class: "catalog-filter" do |form| %>
     <div><%= form.label :q, "Search #{@section}" %><%= form.search_field :q, value: @query %></div>
     <%= form.submit "Search", class: "catalog-submit" %>
-    <%= link_to "Clear search", catalog_index_path(@section), class: "clear-search" if @query.present? %>
+    <%= link_to "Clear search", catalog_index_path(@section), class: "utility-link clear-search" if @query.present? %>
   <% end %>
   <% if @entries.any? %>
     <%= render "entries", title: @section.capitalize, items: @entries, listening: @index_listening, maximum: @index_time_max %>

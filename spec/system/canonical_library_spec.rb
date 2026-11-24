@@ -136,6 +136,11 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
         fill_in "Search #{section}", with: "zero-play"
         click_button "Search"
         expect(page).to have_link("Clear search")
+        verify_clear_search_style
+        if section == "recordings" && [ [ 1440, "light" ], [ 390, "dark" ] ].include?([ width, theme ])
+          page.execute_script("document.activeElement.blur()") if theme == "light"
+          capture_resolution("clear-search-#{width}-#{theme}")
+        end
         find_link("Clear search").send_keys(:enter)
         expect(page).to have_no_link("Clear search")
         expect(page).to have_css(".catalog-table tbody tr", count: section == "recordings" ? 1 : 2)
@@ -143,6 +148,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
 
       visit archive_path(q: "bad days")
       expect(page).to have_css(".play-row", count: 1, text: pending.payload.fetch("track_name"))
+      verify_clear_search_style
       capture_resolution("catalog-archive-search-#{width}-#{theme}")
       find_link("Clear search").send_keys(:enter)
       expect(page).to have_no_link("Clear search")
@@ -562,6 +568,26 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     browser = page.driver.browser
     browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 1280, height: 800, deviceScaleFactor: 1, mobile: false)
     browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "prefers-color-scheme", value: "light" } ])
+    [ [ 1280, 800 ], [ 390, 844 ] ].product(%w[light dark]).each do |(width, height), theme|
+      browser.execute_cdp("Emulation.setDeviceMetricsOverride", width:, height:, deviceScaleFactor: 1, mobile: width < 700)
+      browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "prefers-color-scheme", value: theme } ])
+      geometry = page.evaluate_script(<<~JS)
+        (() => {
+          const baseRows = document.querySelectorAll(".release-tracks:not(.additional-track-table) tbody tr")
+          const baseHeight = Math.min(...Array.from(baseRows, row => row.getBoundingClientRect().height))
+          const row = document.querySelector(".additional-track-table tbody tr")
+          const rect = row.getBoundingClientRect()
+          const checkbox = row.cells[0].querySelector("input[type=checkbox]").getBoundingClientRect()
+          return [Math.abs((checkbox.top + checkbox.height / 2) - (rect.top + rect.height / 2)), baseHeight, rect.height,
+            Array.from(row.cells).map(cell => getComputedStyle(cell).whiteSpace)]
+        })()
+      JS
+      expect(geometry[0]).to be < 1
+      expect((geometry[1] - geometry[2]).abs).to be < 2
+      expect(geometry[3]).to eq(Array.new(6, "nowrap"))
+    end
+    browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 1280, height: 800, deviceScaleFactor: 1, mobile: false)
+    browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "prefers-color-scheme", value: "light" } ])
     page.execute_script("window.scrollTo(0, 0)")
     capture_resolution("guilt-show-additional-tracks", full: true)
     expect(page).to have_text("0 distinct resolved observations")
@@ -726,8 +752,13 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     expect(page).to have_css("#{stream}[connected]", visible: :all)
     expect(page).to have_text("Eligible worker unavailable")
     expect(page).to have_text("A reliable position is unavailable")
-    colors = page.evaluate_script("Array.from(document.querySelectorAll('.investigation-progress li'), node => getComputedStyle(node).backgroundColor)")
-    expect(colors.uniq.size).to eq(5)
+    [ [ 1280, 800 ], [ 390, 844 ] ].product(%w[light dark]).each do |(width, height), theme|
+      browser.execute_cdp("Emulation.setDeviceMetricsOverride", width:, height:, deviceScaleFactor: 1, mobile: width < 700)
+      browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "prefers-color-scheme", value: theme } ])
+      verify_investigation_state_colors("queued")
+    end
+    browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 1280, height: 800, deviceScaleFactor: 1, mobile: false)
+    browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "prefers-color-scheme", value: "light" } ])
 
     request = CatalogImport.where(kind: RecordingResolution::Investigation::KIND).sole
     queued = SolidQueue::ReadyExecution.sole
@@ -775,8 +806,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 390, height: 844, deviceScaleFactor: 1, mobile: true)
     browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "prefers-color-scheme", value: "dark" } ])
     expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
-    dark_colors = page.evaluate_script("Array.from(document.querySelectorAll('.investigation-progress li'), node => getComputedStyle(node).backgroundColor)")
-    expect(dark_colors.uniq.size).to eq(5)
+    verify_investigation_state_colors("retrying")
     capture_resolution("investigation-retry-mobile-dark")
 
     SolidQueue::ScheduledExecution.sole.update!(scheduled_at: 10.minutes.ago)
@@ -788,6 +818,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     CanonicalCatalog::Processor.new(request, session_factory: ->(*) { CatalogFixtures::Session.new }).call do
       Turbo::StreamsChannel.broadcast_refresh_to(request, method: :morph, scroll: :preserve)
       expect(page).to have_css(state, exact_text: "Investigating")
+      verify_investigation_state_colors("investigating")
       page.execute_script("window.investigationConsumer = document.querySelector(arguments[0]).subscription.consumer; window.investigationConsumer.disconnect()", stream)
       expect(page).to have_no_css("#{stream}[connected]", visible: :all)
     end
@@ -1097,6 +1128,56 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
         };
       })(arguments[0])
     JS
+  end
+
+  def verify_clear_search_style
+    link = find_link("Clear search")
+    submit = find_button("Search")
+    page.driver.browser.action.move_to(submit.native).perform
+    styles = -> do
+      page.evaluate_script(<<~JS, link, submit)
+        ((link, submit) => {
+          const style = getComputedStyle(link)
+          const button = getComputedStyle(submit)
+          const l = link.getBoundingClientRect()
+          const s = submit.getBoundingClientRect()
+          return {
+            muted: style.color === getComputedStyle(link.closest("form").querySelector("label")).color ||
+              style.color !== button.color,
+            smaller: parseFloat(style.fontSize) < parseFloat(button.fontSize),
+            centered: Math.abs(l.top + l.height / 2 - s.top - s.height / 2) < 2,
+            background: style.backgroundColor,
+            border: style.borderTopWidth,
+            underline: style.textDecorationLine,
+            focus: link.matches(":focus-visible") && style.outlineStyle === "solid"
+          }
+        })(arguments[0], arguments[1])
+      JS
+    end
+    expect(styles.call).to include("muted" => true, "smaller" => true, "centered" => true,
+      "background" => "rgba(0, 0, 0, 0)", "border" => "0px", "underline" => "none")
+    page.driver.browser.action.move_to(link.native).perform
+    expect(styles.call).to include("background" => "rgba(0, 0, 0, 0)", "underline" => "underline")
+    page.driver.browser.action.move_to(submit.native).perform
+    submit.send_keys(:tab)
+    expect(styles.call).to include("background" => "rgba(0, 0, 0, 0)", "focus" => true)
+  end
+
+  def verify_investigation_state_colors(active)
+    result = page.evaluate_script(<<~JS, active)
+      ((active) => {
+        const list = document.querySelector(".investigation-progress ul")
+        const states = Array.from(list.children)
+        const current = states.find(state => state.getAttribute("aria-current") === "true")
+        const transparent = states.filter(state => getComputedStyle(state).backgroundColor === "rgba(0, 0, 0, 0)")
+        const muted = getComputedStyle(document.querySelector(".resolution-review .review-observation-meta")).color
+        return states.map(state => state.dataset.state).join(",") === "queued,investigating,retrying,complete,review" &&
+          current.dataset.state === active && transparent.length === 4 && !transparent.includes(current) &&
+          transparent.every(state => getComputedStyle(state).color === muted) &&
+          !list.querySelector("a, button")
+      })(arguments[0])
+    JS
+    expect(result).to be(true)
   end
 
   def capture_resolution(name, full: false)

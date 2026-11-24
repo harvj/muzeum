@@ -45,13 +45,13 @@
 <% evidence = @additional_edition_evidence.group_by { |track| track.fetch("comparison_group") } %>
 <% additional_mbids = admitted.keys | evidence.keys %>
 <% if additional_mbids.any? %>
-  <section class="card library-card">
+  <section class="card library-card music-sheet">
     <details class="additional-edition-tracks"<%= " open" if params[:edition_tracks] == "1" %>>
       <summary><strong>Additional edition tracks</strong> <span class="muted"><%= pluralize(additional_mbids.size, "track") %></span></summary>
       <% if @archive_available && !@public_profile %><p class="muted">Checked tracks count toward your release totals.</p><% end %>
       <%= dense_table("Additional edition tracks", classes: "release-tracks additional-track-table") do %>
         <thead><tr>
-          <th scope="col"><span class="visually-hidden">Include</span></th>
+          <th scope="col" class="track-number"><span class="visually-hidden">Include</span></th>
           <th scope="col">Recording</th><th scope="col">Source edition</th><th scope="col">MBID</th>
           <th scope="col" class="table-number">Length</th><th scope="col" class="table-number">Resolved plays</th>
         </tr></thead>
@@ -67,7 +67,7 @@
             <% recording_ids = slots.map(&:recording_id) | entries.filter_map { |entry| @additional_recordings[entry["recording_mbid"]]&.id } %>
             <% duration = slots.first&.duration_ms || primary.dig("source_track", "duration_ms") || recording&.duration_ms || primary.dig("source_track", "recording", "length") %>
             <tr id="<%= "edition-track-#{slots.first.recording_id}" if slots.any? %>">
-              <td class="additional-track-check">
+              <td class="track-number additional-track-check">
                 <% source = entries.find { |track| track["source_track"].present? } %>
                 <% if (slots.any? || source) && @archive_available && !@public_profile %>
                   <% checked = slots.any? && @counted_tracks.include?(slots.first.recording_id) %>
