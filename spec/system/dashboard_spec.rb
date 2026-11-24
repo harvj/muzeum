@@ -1,8 +1,10 @@
 require "rails_helper"
+require_relative "../support/site_art_pair"
 require "base64"
 
 RSpec.describe "Dashboard appearance", type: :system do
   before do
+    allow(SiteArt).to receive(:snapshot).and_return(SiteArtPair::SNAPSHOT)
     skip "Run with BROWSER_TESTS=1 for responsive browser verification" unless ENV["BROWSER_TESTS"] == "1"
     driven_by :selenium, using: :headless_chrome do |options|
       options.binary = ENV["CHROME_BINARY"] if ENV["CHROME_BINARY"]
@@ -31,11 +33,11 @@ RSpec.describe "Dashboard appearance", type: :system do
     [ [ "desktop", 1440, 960 ], [ "mobile", 390, 844 ] ].each do |size, width, height|
       page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: width, height: height, deviceScaleFactor: 1, mobile: size == "mobile")
       %w[light dark].each do |mode|
-        find(".harvj-session > summary").send_keys(:enter)
+        find(".shell-appearance > summary").send_keys(:enter)
         expect(page).to have_select("Appearance")
         select mode.capitalize, from: "Appearance"
-        find(".harvj-session > summary").send_keys(:enter)
-        expect(page.evaluate_script("document.documentElement.dataset.appearance")).to eq(mode)
+        find(".shell-appearance > summary").send_keys(:enter)
+        expect(page).to have_css("html[data-appearance='#{mode}']", visible: :all)
         page.execute_script("document.documentElement.dataset.still = 'true'")
         page.execute_script("return document.fonts.ready")
         expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)

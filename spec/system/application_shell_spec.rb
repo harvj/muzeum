@@ -84,7 +84,7 @@ RSpec.describe "Application Shell navigation", type: :system do
     page.driver.browser.manage.add_cookie(name: "session_id", value: jar[:session_id], path: "/", http_only: true)
     provider = instance_double(OidcClient)
     allow(OidcClient).to receive(:new).and_return(provider)
-    evidence = { username: "alex", ids: %w[continuum-engine remote-gaming muzeum], expires_at: 50.seconds.from_now.to_i }
+    evidence = { username: "alex", ids: %w[continuum-engine remote-gaming muzeum], issued_at: Time.current.to_i, expires_at: 50.seconds.from_now.to_i }
     allow(provider).to receive(:shell_evidence).and_return(evidence)
 
     [ [ 1440, 960 ], [ 701, 750 ], [ 700, 750 ], [ 390, 844 ], [ 320, 540 ] ].each do |width, height|
@@ -95,7 +95,8 @@ RSpec.describe "Application Shell navigation", type: :system do
         (() => {
           const wordmark = document.querySelector(".harvj-wordmark").getBoundingClientRect()
           const trigger = document.querySelector(".harvj-session summary").getBoundingClientRect()
-          return [wordmark.left, wordmark.top, innerWidth - trigger.right, trigger.height]
+          return [wordmark.left, wordmark.top, innerWidth - trigger.right, trigger.height,
+            parseFloat(getComputedStyle(document.querySelector(".library-nav")).columnGap)]
         })()
       JS
       inset = width <= 700 ? 28 : width * 0.065
@@ -103,6 +104,7 @@ RSpec.describe "Application Shell navigation", type: :system do
       expect(geometry[1]).to be_within(1).of(width <= 700 ? 27 : 35)
       expect(geometry[2]).to be_within(1).of(inset)
       expect(geometry[3]).to be >= 44
+      expect(geometry[4]).to eq(width <= 700 ? 12 : 20)
       find(".harvj-session summary").send_keys(:enter)
       within(".harvj-session-panel") do
         expect(page).to have_link("Remote-Gaming", href: "https://gaming.harvj.com/")
@@ -206,7 +208,7 @@ RSpec.describe "Application Shell navigation", type: :system do
     provider = instance_double(OidcClient)
     allow(OidcClient).to receive(:new).and_return(provider)
     username = "alex-#{'a' * 27}"
-    allow(provider).to receive(:shell_evidence).and_return(username:, ids: [], expires_at: 45.seconds.from_now.to_i)
+    allow(provider).to receive(:shell_evidence).and_return(username:, ids: [], issued_at: Time.current.to_i, expires_at: 45.seconds.from_now.to_i)
     visit archive_path
     expect(page).to have_css(".harvj-session summary", text: username)
     tree = browser.execute_cdp("Accessibility.getFullAXTree")
@@ -221,7 +223,7 @@ RSpec.describe "Application Shell navigation", type: :system do
     browser.execute_cdp("Input.dispatchTouchEvent", type: "touchStart", touchPoints: [ { x: trigger[0], y: trigger[1] } ])
     browser.execute_cdp("Input.dispatchTouchEvent", type: "touchEnd", touchPoints: [])
     expect(page).to have_css(".harvj-session[open]")
-    expect(page).to have_select("Appearance")
+    expect(page).to have_no_css(".harvj-session select#appearance")
     expect(page).to have_button("Log Out")
     page.execute_script("document.documentElement.style.fontSize = '200%'")
     expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
@@ -238,7 +240,7 @@ RSpec.describe "Application Shell navigation", type: :system do
     provider = instance_double(OidcClient)
     allow(OidcClient).to receive(:new).and_return(provider)
     allow(provider).to receive(:shell_evidence).and_return(username: "Jim-Harvey",
-      ids: %w[remote-gaming continuum-engine continuum], expires_at: 50.seconds.from_now.to_i)
+      ids: %w[remote-gaming continuum-engine continuum], issued_at: Time.current.to_i, expires_at: 50.seconds.from_now.to_i)
 
     [ 1440, 701, 700, 390, 320 ].each do |width|
       browser.execute_cdp("Emulation.setDeviceMetricsOverride", width:, height: 240, deviceScaleFactor: 1, mobile: width <= 700)

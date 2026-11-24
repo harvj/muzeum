@@ -125,7 +125,8 @@ class ApplicationShellRegistry
 
     manifest = parse(manifest_raw)
     hashes = manifest.fetch("files")
-    unless manifest.values_at("version", "behavior_baseline", "registry_schema") == [ version, "shell-v1", 1 ] &&
+    unless manifest.values_at("version", "registry_schema") == [ version, 1 ] &&
+        %w[shell-v1 shell-v2].include?(manifest["behavior_baseline"]) &&
         hashes.is_a?(Hash) && hashes.keys.sort == PAYLOADS.sort &&
         hashes.all? { |name, hash| Digest::SHA256.hexdigest(bundle.fetch(prefix + name)) == hash }
       raise Invalid

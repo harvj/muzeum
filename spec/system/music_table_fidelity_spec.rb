@@ -1,4 +1,5 @@
 require "rails_helper"
+require_relative "../support/site_art_pair"
 
 RSpec.describe "Music table fidelity", type: :system do
   LONG_TITLE = "A Very Long Recording Title for a Late Night Listening Session, including the complete unabridged alternate take and the full session notes"
@@ -166,8 +167,7 @@ RSpec.describe "Music table fidelity", type: :system do
 
   it "centers the shared footer at the viewport bottom or after long content in either theme" do
     user, = seed_library
-    allow(SiteArt).to receive(:snapshot).and_return(
-      light: { url: "/environments/stone/limestone.jpg" }, dark: { url: "/environments/stone/onyx.jpg" })
+    allow(SiteArt).to receive(:snapshot).and_return(SiteArtPair::SNAPSHOT)
     revision = "a" * 40
     metadata = Tempfile.create("muzeum-footer")
     metadata.write("#{revision} v0.2.1\n")
@@ -194,7 +194,10 @@ RSpec.describe "Music table fidelity", type: :system do
   end
 
   def verify_footer(length, screen, width, height)
-    expect(page).to have_css("body > .site-footer", text: "© 2026 Jim Harvey · Muzeum v0.2.1", count: 1, visible: :all)
+    within("body > .site-footer .footer-release") do
+      expect(page).to have_css("span", exact_text: "© 2026 Jim Harvey")
+      expect(page).to have_css("span", exact_text: "Muzeum v0.2.1")
+    end
     %w[light dark].each do |appearance|
       page.execute_script(<<~JS, appearance)
         const control = document.querySelector(".controls select");
@@ -338,7 +341,7 @@ RSpec.describe "Music table fidelity", type: :system do
   end
 
   def capture(name, appearance: "light")
-    page.execute_script("document.documentElement.dataset.appearance = arguments[0]; document.documentElement.dataset.still = 'true'", appearance)
+    page.execute_script("document.documentElement.dataset.appearancePreference = arguments[0]; document.documentElement.dataset.still = 'true'", appearance)
     return unless ENV["MUSIC_TABLE_CAPTURES"]
 
     page.evaluate_async_script("const done = arguments[0]; document.fonts.ready.then(() => requestAnimationFrame(() => done(true)))")

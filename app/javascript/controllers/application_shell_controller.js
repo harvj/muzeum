@@ -71,7 +71,7 @@ export default class extends Controller {
       if (this.request !== request || request.signal.aborted) return
       const remaining = evidence.valid_for * 1000 - (performance.now() - startedAt) - 1000
       if (!(remaining > 0 && remaining <= 60000)) return
-      if (this.usernameTarget.hasAttribute("data-identity-pending") && evidence.username) {
+      if (evidence.username && this.usernameTarget.textContent !== evidence.username) {
         this.usernameTarget.textContent = evidence.username
         this.usernameTarget.removeAttribute("data-identity-pending")
       }

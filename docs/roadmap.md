@@ -68,6 +68,7 @@ The authoritative, living domain rules are [principles](domain/principles.md), [
 
      - **v0.7.0 — Musical Collections and Autonomous Investigation.** Compare bounded original and later edition evidence, keep additional tracks distinct, always count the base tracks, and apply listener-scoped additional-track preferences to release totals, and surface durable investigation status. [Evidence and remaining decisions](v0.7.0/implementation.md). Keep source recording IDs on authentic track slots, use revisable corroborated aliases for canonical recording identity, require exact edition selection when credible sequences diverge, and calculate additional tracks from that selected base.
      - **v0.7.1 — Featured-artist discovery and ordered credits.** Search explicit title feature credits as separate provider evidence. Display each recording’s and release’s independent ordered credits as comma-separated canonical artist names. General parenthetical title fallback remains future work. [Release notes](v0.7.1/release-notes.md) · [Browser evidence](design/v0.7.1/README.md).
+     - **v0.7.2 — Application Shell v2.0.0 adoption.** Qualify the responsive Shell, verified session identity refresh, shared Site Art control and exact-artifact release lifecycle. [Adoption evidence](v0.7.2/shell-adoption.md).
 
 9. **P1.6 — Profile onboarding (tentative).**
    - **P1.6a — Last.fm authentication and verified username.** Use Last.fm web authorization and bind only the returned username.

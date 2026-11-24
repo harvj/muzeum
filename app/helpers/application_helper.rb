@@ -15,6 +15,12 @@ module ApplicationHelper
     end.first
   end
 
+  def running_release_label
+    config = Rails.configuration.x
+    config.release_identity&.label || published_release_tag || config.development_release_label ||
+      ("Version unavailable#{(" (#{config.running_revision})") if config.running_revision}" if Rails.env.production?)
+  end
+
   # The current Auth contract has no consumer administrator-role evidence.
   # Never infer this from email, subject, an application membership, or parameters.
   def auth_administration_available?

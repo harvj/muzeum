@@ -1,5 +1,6 @@
 require "rails_helper"
 require "tmpdir"
+require Rails.root.join("lib/muzeum_publication_receipt")
 require_relative "../support/oidc_flow"
 require_relative "../support/archive_scale"
 
@@ -48,6 +49,46 @@ RSpec.describe "Listening archive", type: :request do
       get archive_path
       expect(Nokogiri::HTML(response.body).at_css(".site-footer").text).not_to include("Muzeum v")
     end
+  end
+
+  it "renders the same running candidate before and after exact artifact publication" do
+    records = JSON.parse(Rails.root.join("spec/fixtures/files/application_shell/v2-release-identity.json").read).fetch("records")
+    identity = records.fetch("rc2").merge("application" => "muzeum")
+    publication = records.fetch("final").merge("candidate" => identity)
+    Dir.mktmpdir do |directory|
+      path = Pathname(directory)
+      first = path.join("first").tap(&:mkdir)
+      second = path.join("second").tap(&:mkdir)
+      current = path.join("current")
+      current.make_symlink(first)
+      first.join("ARTIFACT_IDENTITY.json").write(identity.to_json)
+      second.join("ARTIFACT_IDENTITY.json").write(records.fetch("rc1").merge("application" => "muzeum").to_json)
+      receipts = path.join("receipts").tap(&:mkdir)
+      running = MuzeumArtifactIdentity.boot(current.realpath, revision: identity.fetch("source_sha"), receipts:)
+      allow(Rails.configuration.x).to receive(:release_identity).and_return(running)
+
+      get archive_path
+      expect(response.body).to include("Muzeum v0.26.0-rc.2")
+      expect(Nokogiri::HTML(response.body).at_css('.site-footer a[href="https://harvj.com/"]').text).to eq("Jim Harvey")
+      current.unlink
+      current.make_symlink(second)
+      get archive_path
+      expect(response.body).to include("Muzeum v0.26.0-rc.2")
+
+      receipt = MuzeumPublicationReceipt.write!(receipts, publication)
+      get archive_path
+      expect(response.body).to include("Muzeum v0.26.0</span>")
+      expect(response.body).not_to include("v0.26.0-rc.2")
+      receipt.unlink
+      get archive_path
+      expect(response.body).to include("Muzeum v0.26.0</span>")
+    end
+  end
+
+  it "uses the development label when no deployed artifact is bound" do
+    allow(Rails.configuration.x).to receive(:development_release_label).and_return("v0.7.2-dev")
+    get archive_path
+    expect(response.body).to include("Muzeum v0.7.2-dev")
   end
 
   it "uses the packaged version only for the running revision before publication" do

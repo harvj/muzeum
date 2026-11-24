@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <title>Muzeum — listening archive</title>
-    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
     <% if current_user || @public_profile || controller_name == "landing" %><meta name="turbo-cache-control" content="no-cache"><% end %>
@@ -51,14 +51,16 @@
     </main>
     <footer class="site-footer">
       <nav aria-label="Help"><%= link_to "Guide", "#guide-overview", class: "entity-link guide-trigger", data: { action: "guide#open" } %></nav>
-      <span>© <%= Date.current.year %> <%= link_to "Jim Harvey", "https://harvj.com/" %><% if (tag = published_release_tag) %> · Muzeum <%= tag %><% elsif Rails.env.production? %> · Muzeum · Version unavailable<% end %></span>
+      <div class="footer-release">
+        <span>© <%= Date.current.year %> <%= link_to "Jim Harvey", "https://harvj.com/" %></span>
+        <% if (label = running_release_label) %><span>Muzeum <%= label %></span><% end %>
+      </div>
     </footer>
-    <% unless current_user %>
-      <details class="anonymous-appearance">
-        <summary title="Appearance settings"><span aria-hidden="true">◐</span><span class="visually-hidden">Appearance settings</span></summary>
-        <%= render "shared/appearance" %>
-      </details>
-    <% end %>
+    <details class="shell-appearance" hidden data-controller="appearance"
+      data-action="keydown.esc->appearance#dismiss">
+      <summary aria-label="Appearance settings"><span aria-hidden="true">◐</span></summary>
+      <%= render "shared/appearance" %>
+    </details>
     <%= render "shared/guide" %>
   </body>
 </html>

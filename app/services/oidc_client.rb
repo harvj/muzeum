@@ -40,7 +40,7 @@ class OidcClient
     required_acr = ENV["OIDC_REQUIRED_ACR"].presence
     raise Failure if required_acr && identity.acr != required_acr
     raise Failure if token.refresh_token.blank?
-    [ identity.sub, token.refresh_token, claims["preferred_username"] ]
+    [ identity.sub, token.refresh_token, claims["preferred_username"], identity.iat.to_i ]
   rescue OpenIDConnect::Exception, Rack::OAuth2::Client::Error, JSON::JWT::Exception, Faraday::Error, URI::InvalidURIError
     raise Failure
   end

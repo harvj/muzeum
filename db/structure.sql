@@ -1459,7 +1459,9 @@ CREATE TABLE public.sessions (
     updated_at timestamp(6) without time zone NOT NULL,
     grant_token text,
     verified_at timestamp(6) without time zone,
-    last_seen_at timestamp(6) without time zone
+    last_seen_at timestamp(6) without time zone,
+    shell_username character varying,
+    shell_username_issued_at bigint
 );
 
 
@@ -3709,6 +3711,7 @@ ALTER TABLE ONLY public.resolution_work
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261124162000'),
 ('20261124030000'),
 ('20261123231500'),
 ('20261123230000'),

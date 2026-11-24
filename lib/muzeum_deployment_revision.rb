@@ -6,10 +6,10 @@ module MuzeumDeploymentRevision
   SHA = /\A[0-9a-f]{40}\z/
   RELEASES = File.expand_path("../config/deploy/releases.json", __dir__)
 
-  def self.command(*arguments)
+  def self.command(*arguments, raw: false)
     output, _errors, status = Open3.capture3({ "GIT_TERMINAL_PROMPT" => "0", "GH_PROMPT_DISABLED" => "true", "GIT_SSH_COMMAND" => "ssh -o BatchMode=yes -o StrictHostKeyChecking=yes" }, *arguments)
     raise "Deployment preflight command failed: #{arguments.first}" unless status.success?
-    output.strip
+    raw ? output : output.strip
   end
 
   def self.checkout!(branch)

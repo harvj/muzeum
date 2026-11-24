@@ -15,14 +15,24 @@ module Authentication
   end
 
   def session_username
-    session_id, username = session[:authenticated_username]
-    username if Current.session && session_id == Current.session.id
+    return unless Current.session
+
+    # Keep the verified label on sessions created before this release.
+    legacy_id, legacy_username = session[:authenticated_username]
+    Current.session.shell_username || (legacy_username if legacy_id == Current.session.id)
   end
 
-  def remember_session_username(username)
-    if Current.session && !session_username && username.is_a?(String) && ApplicationShellEvidence::USERNAME.match?(username)
-      session[:authenticated_username] = [ Current.session.id, username ]
+  def remember_session_username(username, issued_at:)
+    if Current.session && issued_at.is_a?(Integer) &&
+        username.is_a?(String) && ApplicationShellEvidence::USERNAME.match?(username)
+      # Compare the source timestamp in the write so concurrent valid responses
+      # cannot replace newer identity evidence with older evidence.
+      identities = Session.unexpired.where(id: Current.session.id, user_id: Current.user.id)
+      identities.where("shell_username_issued_at IS NULL OR shell_username_issued_at < ?", issued_at)
+        .update_all(shell_username: username, shell_username_issued_at: issued_at)
+      return identities.pick(:shell_username)
     end
+
     session_username
   end
 

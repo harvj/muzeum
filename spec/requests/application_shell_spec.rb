@@ -75,6 +75,30 @@ RSpec.describe "Application Shell evidence", type: :request do
     expect(response.body).not_to include('data-application-shell-target="username"')
   end
 
+  it "updates identity only from newer evidence and retains it when grants cannot be verified" do
+    finish_oidc(claims: { preferred_username: "original" })
+    local_session = Session.last
+    headers = { "X-Muzeum-Shell-Session" => ApplicationShellEvidence.session_binding(local_session) }
+    initial = local_session.shell_username_issued_at
+    provider = instance_double(OidcClient)
+    allow(OidcClient).to receive(:new).and_return(provider)
+
+    allow(provider).to receive(:shell_evidence).and_return(
+      { username: "renamed", ids: [], issued_at: initial + 1, expires_at: 30.seconds.from_now.to_i },
+      { username: "original", ids: [], issued_at: initial, expires_at: 30.seconds.from_now.to_i }
+    )
+    2.times do
+      get application_shell_path, headers: headers
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body).to include("username" => "renamed", "applications" => [])
+    end
+    allow(provider).to receive(:shell_evidence).and_raise(OidcClient::Failure)
+    get application_shell_path, headers: headers
+    expect(response).to have_http_status(:service_unavailable)
+    get archive_path
+    expect(Nokogiri::HTML(response.body).at_css('[data-application-shell-target="username"]').text).to eq("renamed")
+  end
+
   it "does not authorize a page bound to the session replaced by a new login" do
     finish_oidc
     original = ApplicationShellEvidence.session_binding(Session.last)

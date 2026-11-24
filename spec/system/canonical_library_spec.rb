@@ -1,4 +1,5 @@
 require "rails_helper"
+require_relative "../support/site_art_pair"
 require_relative "../support/catalog_fixtures"
 require_relative "../support/guilt_show_fixture"
 require_relative "../support/narrow_stairs_fixture"
@@ -13,6 +14,8 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     skip "Run with BROWSER_TESTS=1 for canonical workspace browser verification" unless ENV["BROWSER_TESTS"] == "1"
 
     stub_request(:get, "#{OidcClient::ISSUER}/.well-known/oauth-authorization-server").to_return(status: 503)
+
+    allow(SiteArt).to receive(:snapshot).and_return(SiteArtPair::SNAPSHOT)
 
     driven_by :selenium, using: :headless_chrome do |options|
       options.binary = ENV["CHROME_BINARY"] if ENV["CHROME_BINARY"]
@@ -227,10 +230,10 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
       expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
       page.execute_script("window.scrollTo(0, 0)")
       %w[light dark].each do |mode|
-        find(".harvj-session > summary").send_keys(:enter) unless page.has_css?(".harvj-session[open]", wait: 0)
+        find(".shell-appearance > summary").send_keys(:enter)
         select mode.capitalize, from: "Appearance"
-        find(".harvj-session[open] > summary").send_keys(:enter) if page.has_css?(".harvj-session[open]", wait: 0)
-        expect(page.evaluate_script("document.documentElement.dataset.appearance")).to eq(mode)
+        find(".shell-appearance > summary").send_keys(:escape)
+        expect(page).to have_css("html[data-appearance='#{mode}']", visible: :all)
         page.execute_script("window.scrollTo(0, 0)")
         capture_resolution("narrow-stairs-#{width}-#{mode}", full: true)
         primary = find(".resolution-primary")
@@ -1378,10 +1381,10 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     [ [ "desktop", 1440, 960 ], [ "mobile", 390, 844 ] ].each do |size, width, height|
       page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width:, height:, deviceScaleFactor: 1, mobile: size == "mobile")
       %w[light dark].each do |mode|
-        find(".harvj-session > summary").send_keys(:enter) unless page.has_css?(".harvj-session[open]", wait: 0)
+        find(".shell-appearance > summary").send_keys(:enter) unless page.has_css?(".shell-appearance[open]", wait: 0)
         select mode.capitalize, from: "Appearance"
-        find(".harvj-session[open] > summary").send_keys(:enter) if page.has_css?(".harvj-session[open]", wait: 0)
-        expect(page.evaluate_script("document.documentElement.dataset.appearance")).to eq(mode)
+        find(".shell-appearance[open] > summary").send_keys(:enter) if page.has_css?(".shell-appearance[open]", wait: 0)
+        expect(page).to have_css("html[data-appearance='#{mode}']", visible: :all)
         expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
         if section.start_with?("resolution")
           page.execute_script("window.scrollTo(0, 0)")

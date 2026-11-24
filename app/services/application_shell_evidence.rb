@@ -19,6 +19,6 @@ class ApplicationShellEvidence
         ids.is_a?(Array) && ids.size <= 64 && ids.uniq.size == ids.size && ids.all? { |id| id.is_a?(String) && id.bytesize <= 64 && ApplicationShellRegistry::ID.match?(id) }
       raise Invalid
     end
-    { username: username, ids: ids, expires_at: expires }
+    { username: username, ids: ids, issued_at: issued, expires_at: expires }
   end
 end

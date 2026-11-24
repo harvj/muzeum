@@ -21,7 +21,7 @@ class ApplicationShellController < ApplicationController
     applications = ApplicationShellRegistry.entries.select do |entry|
       entry["availability"] == "production" && entry["id"] != "muzeum" && evidence.fetch(:ids).include?(entry["id"])
     end
-    username = remember_session_username(evidence.fetch(:username))
+    username = remember_session_username(evidence.fetch(:username), issued_at: evidence.fetch(:issued_at))
     render json: { username: username, valid_for: valid_for, applications: applications }
   rescue OidcClient::Failure
     head :service_unavailable

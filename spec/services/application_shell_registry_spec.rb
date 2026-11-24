@@ -49,6 +49,7 @@ RSpec.describe ApplicationShellRegistry do
       replacement = JSON.generate(replacement)
       manifest = JSON.parse(original.fetch(manifest_path))
       manifest["version"] = "1.1.1"
+      manifest["behavior_baseline"] = "shell-v2"
       manifest.fetch("files")["application-shell-registry.json"] = Digest::SHA256.hexdigest(replacement)
       manifest = JSON.generate(manifest)
       next_bundle = original.merge(registry_path => replacement, manifest_path => manifest)

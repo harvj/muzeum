@@ -19,7 +19,9 @@ set :default_env, fetch(:default_env).merge("PATH" => "/home/muzeum/.rbenv/shims
 set :ssh_options, { forward_agent: false, verify_host_key: :always, auth_methods: %w[publickey], non_interactive: true }
 
 require_relative "../lib/muzeum_deployment_revision"
-require_relative "../lib/muzeum_published_release"
+require_relative "../lib/muzeum_release_identity_tasks"
+require_relative "../lib/muzeum_shell_preflight"
+include MuzeumReleaseIdentityTasks
 require_relative "../lib/muzeum_deployment_reporting"
 require "digest"
 require "securerandom"
@@ -76,15 +78,11 @@ namespace :muzeum do
     Rake::Task["deploy"].invoke
   end
 
-  desc "Synchronize a published tag with the live SHA without deploying or restarting"
-  task :sync_release, [ :tag ] do |_, args|
-    tag = args.fetch(:tag).to_s
-    current = File.join(fetch(:deploy_to), "current")
+  desc "Synchronize verified publication with the running release without a restart"
+  task :sync_release, [ :tag, :deployment, :status ] do |_, args|
     on primary(:app) do
-      revision = capture(:cat, File.join(current, "REVISION"))
-      MuzeumPublishedRelease.verify!(revision, tag:, command: MuzeumDeploymentRevision.method(:command))
-      execute "/home/muzeum/.rbenv/shims/ruby", File.join(current, "lib/muzeum_published_release.rb"), revision, tag
-      puts "Synchronized Muzeum #{tag} for live revision #{revision}"
+      muzeum_sync_release(args.fetch(:tag).to_s, deployment: args[:deployment], status: args[:status],
+        ruby: "/home/muzeum/.rbenv/shims/ruby", command: MuzeumDeploymentRevision.method(:command))
     end
   end
 
@@ -98,6 +96,8 @@ namespace :muzeum do
   task :authorize do
     selection = fetch(:muzeum_release_selection, nil)
     approval = selection ? MuzeumDeploymentRevision.resolve_release!(*selection) : MuzeumDeploymentRevision.resolve!
+    MuzeumShellPreflight.verify!(approval.fetch(:sha))
+    set :target_version, approval[:version]&.delete_prefix("v")
     set :approved_revision, approval.fetch(:sha)
     set :branch, approval.fetch(:sha)
     set :deployment_token, SecureRandom.hex(16)
@@ -132,6 +132,10 @@ namespace :muzeum do
 
   task :prepare do
     on primary(:app) do
+      target = fetch(:target_version) || capture(:cat, release_path.join("VERSION"))
+      candidate = muzeum_package_identity(release_path, fetch(:approved_revision), target, ruby: "/home/muzeum/.rbenv/shims/ruby")
+      muzeum_reporting.bind_artifact(fetch(:deployment_token), candidate)
+      set :packaged_candidate, candidate
       execute :sudo, "-n", "/usr/local/sbin/muzeum-deploy", "prepare", fetch(:approved_revision), fetch(:deployment_token), release_path
     end
   end
@@ -144,6 +148,11 @@ namespace :muzeum do
 
   task :complete do
     on primary(:app) do
+      artifact = capture(:readlink, "-f", current_path)
+      candidate = muzeum_verify_artifact(release_path, fetch(:approved_revision), ruby: "/home/muzeum/.rbenv/shims/ruby")
+      unless artifact == release_path.to_s && candidate == fetch(:packaged_candidate)
+        raise "Running artifact differs from the packaged candidate"
+      end
       execute :sudo, "-n", "/usr/local/sbin/muzeum-deploy", "complete", fetch(:approved_revision), fetch(:deployment_token)
       set :deployment_lock_acquired, false
     end

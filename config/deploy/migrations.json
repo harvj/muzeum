@@ -1,6 +1,12 @@
 {
   "format": 1,
   "migrations": {
+    "db/migrate/20261124162000_add_verified_shell_identity_to_sessions.rb": {
+      "sha256": "24a059f80fd3ceff1aadcc08d1d91b51ac1b2ea18c911e810f6d9547f3806fbd",
+      "risk": "additive",
+      "quiesce": true,
+      "review": "v0.7.2 SH-05: adds two nullable columns to the Muzeum sessions table. No defaults, backfill, index rebuild or catalog writes. Brief table lock during Muzeum-only quiescence. Older releases can ignore both columns."
+    },
     "db/migrate/20261118120000_add_recording_resolution.rb": {
       "sha256": "9d2678e0e0383c0845277c738f0bd506142880cbee4b987f1bdedcf2a434e875",
       "risk": "additive",

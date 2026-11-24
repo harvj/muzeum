@@ -2,7 +2,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main, 'release/v*', candidate/v0.3.4-shell, candidate/v0.3.4-shell-revocation]
+    branches: [main, 'release/v*', candidate/v0.3.4-shell, candidate/v0.3.4-shell-revocation, codex/v072-shell-adoption]
 permissions:
   contents: read
 jobs:
@@ -54,6 +54,40 @@ jobs:
           SECRET_KEY_BASE_DUMMY: '1'
       - name: Validate Capistrano configuration without contacting the server
         run: bundle exec cap production -T
+      - name: Fetch the reviewed Infrastructure verifier
+        if: github.event_name == 'push' && (github.ref_name == 'codex/v072-shell-adoption' || github.ref_name == 'release/v0.7.2')
+        env:
+          INFRASTRUCTURE_READ_KEY: ${{ secrets.INFRASTRUCTURE_STANDARDS_SSH_KEY }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          verifier="$RUNNER_TEMP/shell-infrastructure"
+          credentials="$(mktemp -d)"
+          trap 'rm -rf "$credentials"' EXIT
+          install -m 600 /dev/null "$credentials/key"
+          printf '%s\n' "$INFRASTRUCTURE_READ_KEY" > "$credentials/key"
+          gh api meta --jq '.ssh_keys[] | "github.com " + .' > "$credentials/known_hosts"
+          git init "$verifier"
+          export GIT_SSH_COMMAND="ssh -i $credentials/key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$credentials/known_hosts -o BatchMode=yes"
+          git -C "$verifier" fetch --depth 1 git@github.com:harvj/infrastructure.git a1a4fb8ca40869f77e60bbe8d830e256fde3acfd
+          git -C "$verifier" checkout --detach FETCH_HEAD
+      - name: Collect signed Shell v2 evidence for this commit
+        if: github.event_name == 'push' && (github.ref_name == 'codex/v072-shell-adoption' || github.ref_name == 'release/v0.7.2')
+        env:
+          SHELL_SELECTED: ${{ vars.MUZEUM_SHELL_SELECTED_VERSION }}
+          SHELL_ADOPTED: ${{ vars.MUZEUM_SHELL_ADOPTED_VERSION }}
+        run: |
+          test -n "$SHELL_SELECTED" && test -n "$SHELL_ADOPTED" || exit 1
+          "$RUNNER_TEMP/shell-infrastructure/bin/application-shell-ci" \
+            --app muzeum --revision "$GITHUB_SHA" --checkout "$GITHUB_WORKSPACE" \
+            --version "$SHELL_SELECTED" --adopted-version "$SHELL_ADOPTED" \
+            --adapter "$GITHUB_WORKSPACE/config/application_shell/ci-adapter.json" \
+            --output "$RUNNER_TEMP/muzeum-shell-evidence" --mode audit
+      - uses: actions/upload-artifact@v4
+        if: always() && github.event_name == 'push' && (github.ref_name == 'codex/v072-shell-adoption' || github.ref_name == 'release/v0.7.2')
+        with:
+          name: muzeum-shell-${{ github.sha }}
+          path: "${{ runner.temp }}/muzeum-shell-evidence/*.json"
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
