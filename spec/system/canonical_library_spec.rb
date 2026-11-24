@@ -722,6 +722,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     expect(page).to have_css(".review-catalog-context a[href='#{release_path(release)}']")
 
     click_link "Releases"
+    expect(page).to have_current_path(releases_path)
     click_link "Night Drive"
     expect(page).to have_text(/track listing/i)
     within("#listening-activity") do
