@@ -1,0 +1,26 @@
+<div class="investigation-queue-details muted">
+  <% if queue.attention %>
+    <p><%= { paused: "The catalog queue is paused.", worker_unavailable: "No eligible worker has a current heartbeat.",
+      dispatcher_unavailable: "The attempt is due and no dispatcher has a current heartbeat.",
+      dispatch_stalled: "The attempt is overdue and still awaiting dispatch.",
+      stalled: "The queue appears stalled. An eligible worker has reported capacity, with no ready jobs ahead or recent queue completions.",
+      blocked: "The job is still blocked by a concurrency limit.",
+      delayed: "The job has been waiting longer than expected." }.fetch(queue.attention) %></p>
+  <% end %>
+  <p>
+    <%= { ready: (queue.worker == :paused ? "Ready execution held by a queue pause" : "Eligible to run now"), blocked: "Blocked by a concurrency limit", scheduled: "Scheduled for a future attempt",
+      dispatching: "Due, awaiting dispatch", claimed: "Claimed by Solid Queue, awaiting investigation lease" }.fetch(queue.phase) %>
+    <% if queue.scheduled_at %> · Next attempt <%= browser_time(queue.scheduled_at) %><% end %>
+    · <%= { scheduled: "Time since enqueue", claimed: "Time since claim" }.fetch(queue.phase, "Time waiting") %> <%= recording_duration(queue.waiting_seconds * 1000) %>
+  </p>
+  <% if queue.worker %>
+    <p><%= { paused: "Queue paused", busy: "Eligible workers are busy", available: "An eligible worker has reported capacity", assigned: "Worker assigned by Solid Queue",
+      unavailable: "Eligible worker unavailable", unknown: "Eligible worker capacity unknown" }.fetch(queue.worker) %>
+      <% if queue.ahead %>
+        · <%= pluralize(queue.ahead, "ready job") %> ahead at last check
+      <% elsif queue.phase == :ready %>
+        · A reliable position is unavailable for the recorded worker queue configuration.
+      <% end %>
+    </p>
+  <% end %>
+</div>

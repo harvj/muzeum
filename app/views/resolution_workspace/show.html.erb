@@ -5,6 +5,7 @@
 <% if @assessment_request&.active? && params[:assessment].blank? && !@assessment_request.expired_investigation? %>
   <% check_at = @assessment_request.state == "refreshing" ? @assessment_request.lease_until : @assessment_request.due_at %>
   <div id="investigation-stream-<%= @assessment_request.id %>" hidden data-controller="investigation-sync"
+    data-investigation-sync-pending-value="<%= @assessment_request.state == "pending" %>"
     data-investigation-sync-check-at-value="<%= check_at&.iso8601(3) %>"
     data-action="turbo:before-morph-attribute->investigation-sync#preserveConnection">
     <%= turbo_stream_from @assessment_request %>

@@ -61,8 +61,13 @@ class CanonicalLibraryController < ApplicationController
       end
       @counted_tracks = ReleaseTrackListeningDecision.included_memberships(listening_user, [ @entry.id ])
         .pluck(:recording_id).to_set
-      @track_counts = recording_plays(base_slots.distinct.pluck(:recording_id))
+      @additional_recordings = Recording.where(mbid: @additional_edition_evidence.pluck("recording_mbid")).index_by(&:mbid)
+      base_recording_ids = base_slots.distinct.pluck(:recording_id)
+      track_recording_ids = base_recording_ids | @additional_appearances.map(&:recording_id) |
+        @additional_recordings.values.map(&:id)
+      @track_counts = recording_plays(track_recording_ids)
         .group("effective_resolution.recording_id").count(:id)
+      @base_track_max = @track_counts.values_at(*base_recording_ids).compact.max.to_i
       other_ids = Array(params[:with_release]).first(PAGE).map { |id| Integer(id, exception: false) }.compact
       @activity_releases = catalog_scope.where(id: [ @entry.id, *other_ids ]).order(:id).to_a
       member_ids = ReleaseTrackListeningDecision.included_memberships(listening_user, @activity_releases.map(&:id)).pluck(:recording_id)
@@ -222,7 +227,8 @@ class CanonicalLibraryController < ApplicationController
         mbid = track["recording_mbid"]
         next unless Clients::Musicbrainz::MBID.match?(mbid.to_s) && track["title"].present?
 
-        track.merge("edition_mbid" => edition["id"], "comparison_group" => track["comparison_group"] || mbid)
+        track.merge("edition_mbid" => edition["id"], "edition_name" => edition["title"], "edition_country" => edition["country"],
+          "comparison_group" => track["comparison_group"] || mbid)
       end
     end
   rescue ArgumentError

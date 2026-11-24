@@ -6,7 +6,6 @@
     · <%= render "shared/geographic_place", country: @entry.catalog_country %></p>
   <% if @slots.any? %>
     <% colors = musical_identity_attributes(@entry) %>
-    <% maximum = @track_counts.values.max.to_i %>
     <%= dense_table("Track listing", classes: "release-tracks") do %>
       <thead><tr><th scope="col" class="track-number" aria-label="Track number">#</th><th scope="col">Recording</th><th scope="col" class="table-number">Length</th><th scope="col" class="track-play-count">Resolved plays</th></tr></thead>
       <tbody>
@@ -15,11 +14,9 @@
             <th scope="row"><span class="play-name" data-overflow-name><%= catalog_link(slot.recording, title: slot.title) %></span></th>
             <td class="table-number"><%= recording_duration(slot.duration_ms || slot.recording.duration_ms) %></td>
             <td class="track-play-count">
-              <% if @archive_available && !@counted_tracks.include?(slot.recording_id) %>
-                Excluded
-              <% elsif @archive_available %>
+              <% if @archive_available %>
                 <% count = @track_counts.fetch(slot.recording_id, 0) %>
-                <%= render "listening_bar", value: count, maximum:, label: number_with_delimiter(count),
+                <%= render "listening_bar", value: count, maximum: @base_track_max, label: number_with_delimiter(count),
                   accessible_label: pluralize(count, "resolved play"), colors:,
                   path: catalog_entry_path(slot.recording, anchor: "listening-activity") %>
               <% else %>
@@ -52,40 +49,62 @@
     <details class="additional-edition-tracks"<%= " open" if params[:edition_tracks] == "1" %>>
       <summary><strong>Additional edition tracks</strong> <span class="muted"><%= pluralize(additional_mbids.size, "track") %></span></summary>
       <% if @archive_available && !@public_profile %><p class="muted">Checked tracks count toward your release totals.</p><% end %>
-      <ul class="catalog-list">
-        <% additional_mbids.each do |mbid| %>
-          <% slots = admitted.fetch(mbid, []) %>
-          <% sources = (slots.map { |slot| [slot.edition_mbid, slot.appearance_date] } + evidence.fetch(mbid, []).map { |track| track.values_at("edition_mbid", "edition_appearance_date") }).uniq(&:first) %>
-          <% title = slots.first&.title || evidence.fetch(mbid).first.fetch("title") %>
-          <li id="<%= "edition-track-#{slots.first.recording_id}" if slots.any? %>">
-            <% source = evidence.fetch(mbid, []).find { |track| track["source_track"].present? } %>
-            <% if (slots.any? || source) && @archive_available && !@public_profile %>
-              <% checked = slots.any? && @counted_tracks.include?(slots.first.recording_id) %>
-              <%= form_with url: track_listening_release_path(@entry), method: :patch, class: "edition-track-choice",
-                data: { controller: "edition-track" } do %>
-                <% if slots.any? %>
-                  <%= hidden_field_tag :recording_id, slots.first.recording_id, id: nil %>
-                <% else %>
-                  <%= hidden_field_tag :source_recording_mbid, source.fetch("recording_mbid"), id: nil %>
+      <%= dense_table("Additional edition tracks", classes: "release-tracks additional-track-table") do %>
+        <thead><tr>
+          <th scope="col"><span class="visually-hidden">Include</span></th>
+          <th scope="col">Recording</th><th scope="col">Source edition</th><th scope="col">MBID</th>
+          <th scope="col" class="table-number">Length</th><th scope="col" class="table-number">Resolved plays</th>
+        </tr></thead>
+        <tbody>
+          <% additional_mbids.each do |mbid| %>
+            <% slots = admitted.fetch(mbid, []) %>
+            <% entries = evidence.fetch(mbid, []) %>
+            <% sources = (entries + slots.map { |slot| { "edition_mbid" => slot.edition_mbid, "edition_appearance_date" => slot.appearance_date } }).uniq { |row| row.fetch("edition_mbid") } %>
+            <% primary, *others = sources %>
+            <% title = slots.first&.title || entries.first.fetch("title") %>
+            <% version = entries.filter_map { |entry| entry["version"].presence }.first %>
+            <% recording = slots.first&.recording || entries.filter_map { |entry| @additional_recordings[entry["recording_mbid"]] }.first %>
+            <% recording_ids = slots.map(&:recording_id) | entries.filter_map { |entry| @additional_recordings[entry["recording_mbid"]]&.id } %>
+            <% duration = slots.first&.duration_ms || primary.dig("source_track", "duration_ms") || recording&.duration_ms || primary.dig("source_track", "recording", "length") %>
+            <tr id="<%= "edition-track-#{slots.first.recording_id}" if slots.any? %>">
+              <td class="additional-track-check">
+                <% source = entries.find { |track| track["source_track"].present? } %>
+                <% if (slots.any? || source) && @archive_available && !@public_profile %>
+                  <% checked = slots.any? && @counted_tracks.include?(slots.first.recording_id) %>
+                  <%= form_with url: track_listening_release_path(@entry), method: :patch, class: "edition-track-choice",
+                    data: { controller: "edition-track" } do %>
+                    <% if slots.any? %>
+                      <%= hidden_field_tag :recording_id, slots.first.recording_id, id: nil %>
+                    <% else %>
+                      <%= hidden_field_tag :source_recording_mbid, source.fetch("recording_mbid"), id: nil %>
+                    <% end %>
+                    <%= hidden_field_tag :decision, "exclude", id: nil %>
+                    <%= check_box_tag :decision, "include", checked, id: "edition-track-choice-#{mbid}",
+                      aria: { label: "Count #{title} in release listening totals" }, data: { action: "change->edition-track#save" } %>
+                    <noscript><%= submit_tag "Save", name: nil %></noscript>
+                  <% end %>
                 <% end %>
-                <%= hidden_field_tag :decision, "exclude", id: nil %>
-                <%= check_box_tag :decision, "include", checked, id: "edition-track-choice-#{mbid}",
-                  aria: { label: "Count #{title} in release listening totals" }, data: { action: "change->edition-track#save" } %>
-                <noscript><%= submit_tag "Save", name: nil %></noscript>
-              <% end %>
-            <% end %>
-            <%= slots.any? ? catalog_link(slots.first.recording, title:) : title %>
-            <% if sources.first.last.present? %> · <%= sources.first.last %><% end %>
-            <% version = evidence.fetch(mbid, []).find { |track| track["version"].present? }&.fetch("version") %>
-            <% if version.present? %> · <%= version %><% end %>
-            <ul>
-              <% sources.each do |edition_mbid, date| %>
-                <li><%= link_to ["MusicBrainz edition", date].compact.join(" · "), "https://musicbrainz.org/release/#{edition_mbid}" %></li>
-              <% end %>
-            </ul>
-          </li>
-        <% end %>
-      </ul>
+              </td>
+              <th scope="row"><%= recording ? catalog_link(recording, title:) : title %>
+                <% if version %><small class="muted"> · <%= version %></small><% end %>
+              </th>
+              <td><%= [primary["edition_name"].presence || "Edition title unavailable", primary["edition_country"], primary["edition_appearance_date"]].compact.join(" · ") %></td>
+              <td>
+                <%= render "edition_source_link", source: primary %>
+                <% if others.any? %>
+                  <details class="additional-track-sources"><summary><%= pluralize(others.size, "other source") %></summary>
+                    <% others.each do |edition| %>
+                      <div><%= edition["edition_name"] %> · <%= edition["edition_appearance_date"] %> · <%= render "edition_source_link", source: edition %></div>
+                    <% end %>
+                  </details>
+                <% end %>
+              </td>
+              <td class="table-number"><%= recording_duration(duration) %></td>
+              <td class="table-number"><%= @archive_available ? number_with_delimiter(recording_ids.sum { |id| @track_counts.fetch(id, 0) }) : "Unavailable" %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      <% end %>
     </details>
   </section>
 <% end %>

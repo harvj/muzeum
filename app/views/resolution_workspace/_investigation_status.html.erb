@@ -2,23 +2,25 @@
   <% request_failed = @assessment_request&.state == "failed" %>
   <% throttled = request_failed && @assessment_request.failure == "musicbrainz throttled (503)" %>
   <% expired = @assessment_request&.expired_investigation? || @assessment_request&.failure == "Investigation expired before completion." %>
-  <% queue_state = @assessment_request.investigation_queue_state if @assessment_request && !expired && params[:assessment].blank? %>
+  <% queue = RecordingResolution::QueueStatus.new(@assessment_request) if @assessment_request && !expired && params[:assessment].blank? %>
+  <% queue_state = queue&.state %>
   <% can_retry = @may_manage_observation && CatalogImport.worker_enabled? %>
   <% if expired %>
     <p role="status" class="investigation-badge"><%= can_retry ? "Failed — Retry" : "Needs attention" %></p>
     <p class="muted">The investigation expired.</p>
     <%= button_to "Retry search", investigate_resolution_surface_path(@observation) if can_retry %>
+  <% elsif queue&.attention %>
+    <p role="status" class="investigation-badge">Needs attention</p>
+    <%= render "investigation_queue_details", queue: %>
   <% elsif queue_state.in?([ :queued, :investigating, :retrying ]) %>
     <div class="investigation-progress" role="status" aria-label="Investigation progress">
       <ul>
         <% { queued: "Queued", investigating: "Investigating", retrying: "Waiting to retry",
           complete: "Investigation complete", review: "Needs review" }.each do |state, label| %>
-          <%= tag.li label, aria: { current: ("true" if state == queue_state) } %>
+          <%= tag.li label, data: { state: }, aria: { current: ("true" if state == queue_state) } %>
         <% end %>
       </ul>
-      <% if queue_state == :retrying %>
-        <p class="muted">Next attempt <%= browser_time(@assessment_request.due_at) %>.</p>
-      <% end %>
+      <%= render "investigation_queue_details", queue: queue if queue.phase %>
     </div>
   <% elsif @assessment_request&.active? && params[:assessment].blank? %>
     <p role="status" class="investigation-badge">Needs attention</p>
@@ -43,11 +45,12 @@
       <% end %>
     </div>
   <% elsif @assessment_request&.state == "incomplete" %>
-    <p role="status" class="investigation-badge">Needs review</p>
+    <p role="status" class="investigation-badge" data-state="review">Needs review</p>
     <p class="muted"><%= @assessment_request.failure %></p>
   <% elsif @assessment %>
     <% disputed = contexts.values.any? { |proposals| proposals.group_by { |proposal| proposal.construction.base.data.dig("release-group", "id") }.values.any?(&:many?) } %>
-    <p role="status" class="investigation-badge"><%= @candidates.one? && !disputed ? "Investigation complete" : "Needs review" %></p>
+    <% outcome = @candidates.one? && !disputed ? :complete : :review %>
+    <p role="status" class="investigation-badge" data-state="<%= outcome %>"><%= outcome == :complete ? "Investigation complete" : "Needs review" %></p>
     <% unless compact %><p class="muted"><%= browser_time(@assessment.created_at) %></p><% end %>
   <% else %>
     <p>This observation has not been investigated.<%= " Background investigation is paused." unless RecordingResolution::Investigation.enabled? %></p>

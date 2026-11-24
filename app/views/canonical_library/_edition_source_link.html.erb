@@ -1,0 +1,2 @@
+<% id = source.fetch("edition_mbid") %>
+<%= link_to id.first(8), "https://musicbrainz.org/release/#{id}", aria: { label: "MusicBrainz release #{id}" } %>

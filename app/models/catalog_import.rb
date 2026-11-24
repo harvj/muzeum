@@ -26,24 +26,7 @@ class CatalogImport < ApplicationRecord
   end
 
   def investigation_queue_state
-    return unless active?
-    return :investigating if state == "refreshing" && lease_until&.future?
-
-    adapter = CanonicalCatalogJob.queue_adapter
-    return unless adapter.is_a?(ActiveJob::QueueAdapters::SolidQueueAdapter)
-
-    jobs = SolidQueue::Job.where(queue_name: "canonical_catalog", finished_at: nil, class_name: CanonicalCatalogJob.name)
-      .where("arguments::jsonb -> 'arguments' -> 0 = CAST(? AS jsonb)", id.to_s)
-    return :queued if jobs.joins(:ready_execution).exists? || jobs.joins(:blocked_execution).exists? ||
-      (state == "pending" && jobs.joins(:claimed_execution).exists?)
-
-    scheduled = jobs.joins(:scheduled_execution).minimum("solid_queue_scheduled_executions.scheduled_at")
-    return unless scheduled
-
-    due_at.future? && scheduled.future? ? :retrying : :queued
-  rescue ActiveRecord::ActiveRecordError => error
-    Rails.logger.warn("Investigation queue lookup failed for #{id}: #{error.class}")
-    :unavailable
+    RecordingResolution::QueueStatus.new(self).state
   end
 
   def expired_investigation?

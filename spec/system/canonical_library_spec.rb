@@ -506,7 +506,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
       .to eq(selected.slots.pluck(:source_recording_mbid))
     visit release_path(release)
     find("summary", text: /Additional edition tracks.*4 tracks/).click
-    expect(page).to have_css(".additional-edition-tracks > ul > li", count: 4)
+    expect(page).to have_css(".additional-track-table tbody tr", count: 4)
     expect(release.catalog_track_slots.additional_appearances).to be_empty
     find('input[aria-label="Count Love Ballad in release listening totals"]').send_keys(:space)
     expect(page).to have_css('input[aria-label="Count Love Ballad in release listening totals"]:checked')
@@ -551,7 +551,14 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     expect(page).to have_css("details.additional-edition-tracks:not([open])", text: "Additional edition tracks")
     within(".additional-edition-tracks") { expect(page).to have_no_link("Like a Man Possessed") }
     find("summary", text: "Additional edition tracks").send_keys(:enter)
-    expect(page).to have_text("Like a Man Possessed · 2004-08-21")
+    within(".additional-track-table tbody tr") do
+      expect(page).to have_link("Like a Man Possessed")
+      edition = guilt_show_editions.second.fetch("id")
+      expect(page).to have_css("a[href='https://musicbrainz.org/release/#{edition}']", exact_text: edition.first(8))
+      expect(page).to have_text("Guilt Show")
+      expect(page).to have_text("4:08")
+      expect(page).to have_css("td:last-child", exact_text: "3")
+    end
     browser = page.driver.browser
     browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 1280, height: 800, deviceScaleFactor: 1, mobile: false)
     browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "prefers-color-scheme", value: "light" } ])
@@ -578,6 +585,16 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     visit page.current_url
     expect(page).to have_css("#{checkbox}:checked")
     page.execute_script("window.scrollTo(0, 0)")
+    expect(page.evaluate_script(<<~JS)).to be(true)
+      (() => {
+        const row = document.querySelector(".additional-track-table tbody tr")
+        const scroller = row.closest(".table-scroll")
+        scroller.scrollLeft = scroller.scrollWidth
+        const visible = scroller.scrollLeft > 0 && row.lastElementChild.textContent.trim() === "3"
+        scroller.scrollLeft = 0
+        return visible && document.documentElement.scrollWidth <= innerWidth
+      })()
+    JS
     capture_resolution("guilt-show-track-preferences", full: true)
     browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
     browser.execute_cdp("Emulation.setEmulatedMedia", features: [])
@@ -707,9 +724,45 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     expect(page).to have_css(state, exact_text: "Queued")
     expect(page).to have_css(".investigation-progress li", count: 5)
     expect(page).to have_css("#{stream}[connected]", visible: :all)
-    capture_resolution("investigation-queued", full: true)
+    expect(page).to have_text("Eligible worker unavailable")
+    expect(page).to have_text("A reliable position is unavailable")
+    colors = page.evaluate_script("Array.from(document.querySelectorAll('.investigation-progress li'), node => getComputedStyle(node).backgroundColor)")
+    expect(colors.uniq.size).to eq(5)
 
     request = CatalogImport.where(kind: RecordingResolution::Investigation::KIND).sole
+    queued = SolidQueue::ReadyExecution.sole
+    worker = SolidQueue::Process.create!(kind: "Worker", name: "queue-test", pid: 1, hostname: "test",
+      created_at: 12.minutes.ago, last_heartbeat_at: Time.current, metadata: { queues: "default,canonical_catalog", pool_size: 1 })
+    higher = CanonicalCatalogJob.new(0).serialize.merge("queue_name" => "default")
+    job = SolidQueue::Job.create!(queue_name: "default", class_name: CanonicalCatalogJob.name, arguments: higher, priority: 0)
+    Turbo::StreamsChannel.broadcast_refresh_to(request, method: :morph, scroll: :preserve)
+    expect(page).to have_text("1 ready job ahead at last check")
+    capture_resolution("investigation-queued", full: true)
+
+    job.ready_execution.destroy!
+    SolidQueue::ClaimedExecution.create!(job:, process_id: worker.id)
+    queued.update!(created_at: 10.minutes.ago)
+    Turbo::StreamsChannel.broadcast_refresh_to(request, method: :morph, scroll: :preserve)
+    expect(page).to have_text("Eligible workers are busy")
+    expect(page).to have_text("Time waiting 10:")
+    expect(page).to have_css(state, exact_text: "Queued")
+
+    job.destroy!
+    expect(page).to have_text("The queue appears stalled", wait: 20)
+    expect(page).to have_no_css(".investigation-progress")
+    worker.update!(last_heartbeat_at: 30.minutes.ago)
+    Turbo::StreamsChannel.broadcast_refresh_to(request, method: :morph, scroll: :preserve)
+    expect(page).to have_text("No eligible worker has a current heartbeat")
+    expect(page).to have_no_css(".investigation-progress")
+
+    waiting_job = queued.job
+    queued.destroy!
+    waiting_job.update!(concurrency_key: "queue-test")
+    SolidQueue::BlockedExecution.create!(job: waiting_job)
+    Turbo::StreamsChannel.broadcast_refresh_to(request, method: :morph, scroll: :preserve)
+    expect(page).to have_text("Blocked by a concurrency limit")
+    expect(page).to have_no_text("ready job ahead")
+
     SolidQueue::Job.where(class_name: CanonicalCatalogJob.name).destroy_all
     request.update!(due_at: 10.minutes.from_now)
     Turbo::StreamsChannel.broadcast_refresh_to(request, method: :morph, scroll: :preserve)
@@ -722,7 +775,14 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 390, height: 844, deviceScaleFactor: 1, mobile: true)
     browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "prefers-color-scheme", value: "dark" } ])
     expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
+    dark_colors = page.evaluate_script("Array.from(document.querySelectorAll('.investigation-progress li'), node => getComputedStyle(node).backgroundColor)")
+    expect(dark_colors.uniq.size).to eq(5)
     capture_resolution("investigation-retry-mobile-dark")
+
+    SolidQueue::ScheduledExecution.sole.update!(scheduled_at: 10.minutes.ago)
+    Turbo::StreamsChannel.broadcast_refresh_to(request, method: :morph, scroll: :preserve)
+    expect(page).to have_text("The attempt is due and no dispatcher has a current heartbeat.")
+    expect(page).to have_no_css(".investigation-progress")
 
     request.update!(due_at: 1.second.ago)
     CanonicalCatalog::Processor.new(request, session_factory: ->(*) { CatalogFixtures::Session.new }).call do
