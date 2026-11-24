@@ -20,14 +20,18 @@ module ResolutionWorkspaceHelper
     difference = (0...sequences.map(&:size).max).find do |index|
       slots = sequences.map { |sequence| sequence[index] }
       slots.any?(&:nil?) || slots.combination(2).any? do |left, right|
-        CanonicalCatalog::TrackComparison.compare(left, right) != :equivalent
+        CanonicalCatalog::TrackComparison.compare(left, right) == :different
       end
     end
     bases.map do |base|
       data = base.data
       slot = base.slots[difference] if difference
       label = [ data["title"], data["country"], pluralize(base.slots.size, "track") ].compact
-      label << "Track #{difference + 1}: #{slot[:title]}" if slot
+      if slot
+        label << "Track #{difference + 1}: #{slot[:title]}"
+      elsif difference.nil?
+        label << "Source recording identity needs review"
+      end
       [ label.join(" · "), data.fetch("id") ]
     end
   end

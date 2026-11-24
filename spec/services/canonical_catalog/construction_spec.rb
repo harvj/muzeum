@@ -124,6 +124,10 @@ RSpec.describe CanonicalCatalog::Construction do
     left.fetch(:recording)["disambiguation"] = "clean"
     right.fetch(:recording)["disambiguation"] = "explicit"
     expect(CanonicalCatalog::TrackComparison.compare(left, right)).to eq(:uncertain)
+    plausible = uncertain.deep_dup.merge("date" => data["date"])
+    alternative = CanonicalCatalog::Edition.new(plausible, plausible.fetch("id"))
+    proposals = [ representative, alternative ].map { |base| double(construction: double(base:)) }
+    expect(ApplicationController.helpers.resolution_edition_options(proposals).map(&:first)).to all(include("Source recording identity needs review"))
     expect(Recording.count).to eq(0)
   end
 
