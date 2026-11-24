@@ -22,3 +22,20 @@ The next page render sees the receipt without a restart. There are no publicatio
 ## Qualification status
 
 The matching SH-07 fixtures, miniature package tests, disposable Capistrano hooks and Rails footer requests exercise development and RC labels, digest binding, same-process publication, stale or contradictory evidence, and candidate and published recovery. Full Shell v2 adoption still needs the other checks from the v0.7.1 review, including the session and Site Art gaps. Before requesting production approval, qualify the exact adopting artifact and exercise this lifecycle with the operator's retained Capistrano configuration. Its integration uses the same `MuzeumReleaseIdentityTasks` package, verify and sync steps. Apply those steps in the existing staging, acceptance and sync call sites, without copying its deployment workflow or changing the installed production helpers.
+
+## Writable runtime files
+
+Capistrano links the entire release `tmp` directory to Muzeum's existing
+`shared/tmp`. The shared directory retains the existing `pids` and `sockets`
+subdirectories. Rails and Bootsnap use their ordinary paths, so web, Solid Queue,
+and maintenance processes resolve their caches and temporary files outside the
+sealed tree. The packager requires that exact symlink and still hashes
+application files, their executable bits, compiled assets, and release metadata.
+Runtime writes to the existing shared storage and log directories also stay
+outside the artifact.
+
+In the operator Capistrano configuration, mirror the same linked directories
+and create `shared/tmp/pids`, `shared/tmp/sockets`, and `shared/tmp/storage`
+before linking. The tracked-file comparison skips the three empty-directory
+sentinels under `tmp` after validating the symlink. The protected backup,
+migration, and recovery commands are unchanged.

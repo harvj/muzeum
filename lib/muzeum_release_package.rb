@@ -7,9 +7,13 @@ require_relative "muzeum_candidate_number"
 # Shared runtime state is represented by the link itself, never by its contents.
 class MuzeumReleasePackage
   IDENTITY = "ARTIFACT_IDENTITY.json"
-  RUNTIME_LINKS = %w[.env log storage tmp/pids tmp/sockets].freeze
+  RUNTIME_LINKS = %w[.env log storage tmp].freeze
 
   def self.digest(release, shared:)
+    unless release.join("tmp").symlink? && release.join("tmp").readlink == shared.join("tmp")
+      raise "Release tmp must link to the application shared runtime directory"
+    end
+
     entries = []
     Find.find(release.to_s, ignore_error: false) do |absolute|
       path = Pathname(absolute)

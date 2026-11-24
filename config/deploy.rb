@@ -6,7 +6,9 @@ set :branch, -> { fetch(:approved_revision) }
 set :keep_releases, 5
 set :bundle_flags, "--quiet"
 append :linked_files, ".env"
-append :linked_dirs, "storage", "log", "tmp/pids", "tmp/sockets"
+append :linked_dirs, "storage", "log", "tmp"
+
+before "deploy:symlink:linked_dirs", "muzeum:shared_runtime"
 set :default_env, { "RAILS_ENV" => "production", "RBENV_VERSION" => "3.4.12", "BUNDLE_PATH" => "/var/www/muzeum/shared/bundle" }
 set :bundle_version, 4
 set :bundle_jobs, 2
@@ -52,6 +54,12 @@ rescue StandardError
 end
 
 namespace :muzeum do
+  task :shared_runtime do
+    on roles(:app) do
+      execute :mkdir, "-p", shared_path.join("tmp/pids"), shared_path.join("tmp/sockets"), shared_path.join("tmp/storage")
+    end
+  end
+
   desc "Verify the exact local revision and installed production readiness without deploying"
   task :preflight do
     approval = MuzeumDeploymentRevision.resolve!
