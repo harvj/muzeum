@@ -78,7 +78,8 @@ jobs:
           SHELL_ADOPTED: ${{ vars.MUZEUM_SHELL_ADOPTED_VERSION }}
         run: |
           test -n "$SHELL_SELECTED" && test -n "$SHELL_ADOPTED" || exit 1
-          "$RUNNER_TEMP/shell-infrastructure/bin/application-shell-ci" \
+          export APPLICATION_SHELL_VERIFIER="$RUNNER_TEMP/shell-infrastructure"
+          "$APPLICATION_SHELL_VERIFIER/bin/application-shell-ci" \
             --app muzeum --revision "$GITHUB_SHA" --checkout "$GITHUB_WORKSPACE" \
             --version "$SHELL_SELECTED" --adopted-version "$SHELL_ADOPTED" \
             --adapter "$GITHUB_WORKSPACE/config/application_shell/ci-adapter.json" \

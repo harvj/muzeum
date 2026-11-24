@@ -25,6 +25,11 @@
       "cases": ["SH-09"],
       "argv": ["bundle", "exec", "rspec", "spec/services/application_shell_registry_spec.rb"],
       "evidence": "Signed registry refresh and withdrawal on shell-v2, persisted replay high-water mark and outage fallback"
+    },
+    {
+      "cases": ["SH-10"],
+      "argv": ["bash", "-ec", "python3 -m unittest discover -s \"$APPLICATION_SHELL_VERIFIER/tests\" -p test_application_shell_gate.py && bundle exec rspec spec/operations/deployment_hooks_spec.rb"],
+      "evidence": "Infrastructure signed selection, invalidation and outage fixtures, plus Muzeum exact-review refusal before any protected phase"
     }
   ]
 }

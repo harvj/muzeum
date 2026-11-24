@@ -11,7 +11,7 @@ The baseline is published v0.7.1 at `73d06e785e4dd673f9088650b75c406fdbf2c4c3`. 
 | SH-07 | See [release identity](shell-v2-sh07.md) for packaging, acceptance, same-process publication, and retained artifact verification. |
 | SH-08 | Local browser regressions exercise public, signed-in and public-profile routes. The operator's independent rollback through the existing protected configuration still needs end-to-end rehearsal. |
 | SH-09 | Schema 1 accepts both supported behavior baselines. Signed refresh and the existing verified local fallback preserve replay and tamper protection. |
-| SH-10 | CI selects the signed bundle with Muzeum-owned trusted settings and uploads evidence for the exact SHA. The Capistrano acceptance path consumes the exact review and stops before opening a deployment on rejection. CI is in audit mode while acceptance evidence remains open. |
+| SH-10 | CI selects the signed bundle with Muzeum-owned trusted settings and uploads evidence for the exact SHA. The Capistrano acceptance path consumes the exact review and stops before opening a deployment on rejection. The audit runs the Infrastructure preflight suite against disposable signed bundles and verifies that Capistrano refuses rejected evidence before any protected phase. CI remains in audit mode while SH-08 acceptance evidence is open. |
 
 The SH-05 migration adds two nullable columns to `sessions`. It requires the existing Muzeum-only quiescence and fresh encrypted backup and isolated recovery verification. Older builds ignore the columns. Catalog tables, grants and source observations need no backfill or rewrite.
 
