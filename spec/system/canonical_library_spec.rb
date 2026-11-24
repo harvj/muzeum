@@ -692,8 +692,9 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     sign_in(user)
     visit releases_path
     expect(page).to have_text("No canonical releases yet")
-    click_link "Resolution"
+    visit resolution_surfaces_path
     click_link "Signals"
+    expect(page).to have_current_path(resolution_surface_path(observation))
     find_button("Resolve recording only").send_keys(:enter)
     expect(page).to have_text("Recording decision saved.")
 
@@ -706,6 +707,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     CanonicalCatalogJob.perform_now(request.id)
     expect(request.reload.state).to eq("imported")
     expect(Release.count).to eq(0)
+    expect(page).to have_css(".review-catalog-context", text: "Release verification pending")
     explicit = CatalogImport.request!("recording", request.entity_id)
     CanonicalCatalogJob.perform_now(explicit.id)
     expect(page).to have_css(".review-catalog-context dl > div:last-child .review-catalog-mark.present")
@@ -721,9 +723,9 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     expect(Release.where(title: "Night Drive").pluck(:id)).to eq([ release.id ])
     expect(page).to have_css(".review-catalog-context a[href='#{release_path(release)}']")
 
-    click_link "Releases"
-    expect(page).to have_current_path(releases_path)
+    visit releases_path
     click_link "Night Drive"
+    expect(page).to have_current_path(release_path(release))
     expect(page).to have_text(/track listing/i)
     within("#listening-activity") do
       expect(page).to have_text("1 distinct resolved observation")
@@ -742,12 +744,14 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     capture_link_state("focus")
 
     click_link "Different Song"
+    expect(page).to have_current_path(recording_path(Recording.find_by!(title: "Different Song")))
     expect(page).to have_text("0 resolved listening observations")
     expect(page).to have_link("Night Drive")
     click_button "Import"
     expect(page).to have_text("Pending enrichment")
-    click_link "Artists"
+    visit artists_path
     click_link "Night Lines"
+    expect(page).to have_current_path(artist_path(Artist.find_by!(name: "Night Lines")))
     expect(page).to have_link("Different Song")
     expect(page).to have_link("Night Drive")
     expect(page).to have_css("#listening-history", text: "3m estimated listening time")
