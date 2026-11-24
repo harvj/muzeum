@@ -10,7 +10,16 @@ class CanonicalLibraryController < ApplicationController
     @query = params[:q].to_s.strip.first(100)
     records = catalog_scope
     field = @model == Artist ? "name" : "title"
-    records = records.where("#{field} ILIKE ?", "%#{@model.sanitize_sql_like(@query)}%") if @query.present?
+    if @query.present?
+      pattern = "%#{@model.sanitize_sql_like(@query)}%"
+      matches = records.where("#{field} ILIKE ?", pattern)
+      unless @model == Artist
+        credit = @model == Recording ? RecordingArtist : ReleaseArtist
+        matching_artists = Artist.where("name ILIKE ?", pattern).select(:id)
+        matches = matches.or(records.where(id: credit.where(artist_id: matching_artists).select(@model.name.foreign_key)))
+      end
+      records = matches
+    end
     cursor = params[:before].to_i
     @entries = if @model == Recording
       records = records.where("id < ?", cursor) if cursor.positive?

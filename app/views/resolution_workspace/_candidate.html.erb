@@ -27,7 +27,7 @@ end %>
     <span>
       <% if recommended %><strong class="review-recommendation" aria-label="Muzeum’s recommendation">Recommended</strong><% end %>
       <strong class="review-candidate-title"><%= candidate["title"] %></strong>
-      <span class="review-credit"><%= Array(candidate["artist-credit"]).map { |credit| "#{credit["name"]}#{credit["joinphrase"]}" }.join.presence || "Artist credit unavailable" %>
+      <span class="review-credit"><%= resolution_candidate_credit(candidate) %>
         <% if candidate["disambiguation"].present? %> · <%= candidate["disambiguation"] %><% end %></span>
 
       <span class="compact-meta"><%= recording_duration(candidate["length"]) if candidate["length"] %><%= " · " if candidate["length"] %>MusicBrainz ID <%= mbid.first(8) %></span>

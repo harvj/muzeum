@@ -65,7 +65,7 @@ module RecordingResolution
         row.duration_ms = verified["length"]
       end
       recording.lock!
-      verified.fetch("artist-credit").each_with_index do |credit, position|
+      verified.fetch("artist-credit").each.with_index(1) do |credit, position|
         source = credit.fetch("artist")
         artist = Artist.create_or_find_by!(mbid: source.fetch("id")) { |row| row.name = source.fetch("name") }
         RecordingArtist.create_or_find_by!(recording:, artist:) { |row| row.position = position }

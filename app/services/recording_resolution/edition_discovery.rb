@@ -140,7 +140,7 @@ module RecordingResolution
         tracks.filter_map do |slot|
           recording = slot["recording"]
           next unless recording && Clients::Musicbrainz::MBID.match?(recording["id"].to_s) &&
-            DiscoveryTitle.match?(slot["title"], surface.track) && artist_matches?(surface, recording)
+            DiscoveryTitle.recording_match?(surface.track, slot["title"], slot["artist-credit"].presence || recording["artist-credit"]) && artist_matches?(surface, recording)
 
           appearance = edition.slice("id", "title", "disambiguation", "date", "country", "release-group").merge(
             "relationship" => (DiscoveryTitle.displayed_edition?(surface.album, edition) ? "matching_catalog_caption" : "related_catalog_title"),

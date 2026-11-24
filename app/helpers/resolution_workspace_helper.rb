@@ -86,6 +86,8 @@ module ResolutionWorkspaceHelper
   end
 
   def resolution_candidate_credit(candidate)
-    Array(candidate["artist-credit"]).map { |credit| "#{credit['name']}#{credit['joinphrase']}" }.join.presence || "Artist credit unavailable"
+    Array(candidate["artist-credit"]).filter_map do |credit|
+      credit.dig("artist", "name").presence || credit["name"].presence
+    end.join(", ").presence || "Artist credit unavailable"
   end
 end

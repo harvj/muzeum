@@ -27,7 +27,8 @@ RSpec.describe CanonicalCatalog::Processor do
       CanonicalCatalog::Store.new(request, session).recording(data)
     end.to change(Artist, :count).by(1).and change(RecordingArtist, :count).by(2)
     wiz = Artist.find_by!(mbid: wiz_data.fetch("id"))
-    expect(entry.recording_artists.order(:position).pluck(:artist_id)).to eq([ tove.id, wiz.id ])
+    expect(entry.reload.recording_artists.pluck(:position, :artist_id)).to eq([ [ 1, tove.id ], [ 2, wiz.id ] ])
+    expect(entry.artists.pluck(:id)).to eq([ tove.id, wiz.id ])
     expect(CatalogRevision.find_by!(entity_type: "Recording", entity_id: entry.id).evidence.fetch("artist_credit"))
       .to eq([
         { "artist_mbid" => tove.mbid, "credited_name" => "Tove Lo", "join_phrase" => " feat. " },
@@ -52,6 +53,20 @@ RSpec.describe CanonicalCatalog::Processor do
       surface = RecordingResolution::RealCorpusEvaluation::Observation.new(artist: artist.name, album: "Lady Wood", track: "Influence")
       expect(RecordingResolution::LocalCandidates.catalog_identity(surface)).to include(artist_mbid: artist.mbid, recording_mbid: entry.mbid)
     end
+  end
+
+  it "reads legacy zero-based release positions in source order without changing recording credits" do
+    artists = %w[First Second].map { |name| Artist.create!(name:, mbid: SecureRandom.uuid) }
+    release = Release.create!(title: "Independent credit order")
+    ReleaseArtist.create!(release:, artist: artists.last, position: 2)
+    ReleaseArtist.create!(release:, artist: artists.first, position: 1)
+    RecordingArtist.create!(recording:, artist: artists.last, position: 1)
+
+    expect(release.release_artists.pluck(:position, :artist_id)).to eq([ [ 1, artists.first.id ], [ 2, artists.last.id ] ])
+    expect(release.artists.pluck(:name)).to eq(%w[First Second])
+    expect(recording.artists.pluck(:name)).to eq([ "Second" ])
+    expect(artists.last.releases).to include(release)
+    expect(ReleaseArtist.connection.select_values("SELECT position FROM release_artists ORDER BY position")).to eq([ 0, 1 ])
   end
 
   it "admits one contextual edition with a complete multi-disc listing and no new plays" do

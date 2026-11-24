@@ -27,10 +27,10 @@ module RecordingResolution
       evidence["canonical_artist_mbid"] = @catalog_identity[:artist_mbid] if @catalog_identity[:artist_mbid]
       page = recording_page(surface)
       candidates = page.fetch("recordings")
-      evidence["search"] = page.slice("count", "offset").merge("returned" => candidates.size)
+      evidence["search"] = page.slice("count", "offset").merge("returned" => candidates.size) unless evidence["recording_searches"]
       evidence["candidates"] = candidates.map { |candidate| recording_evidence(candidate) }
       yield evidence if block_given?
-      reason("incomplete_search", evidence["search"].merge("provider" => "musicbrainz")) if page["count"] != candidates.size
+      reason("incomplete_search", { "provider" => "musicbrainz" }.merge(evidence["search"] || {})) if page["incomplete"] || page["count"] != candidates.size
       reason("missing_album", "field" => "album") if surface.album.blank?
       reason("missing_source_mbid", "field" => "track_mbid") if claims["track_mbid"].blank?
 
@@ -102,7 +102,8 @@ module RecordingResolution
     private
 
     def recording_page(surface)
-      if (id = @catalog_identity[:recording_mbid])
+      feature = DiscoveryTitle.featured_credit(surface.track) if @workspace
+      if !feature && (id = @catalog_identity[:recording_mbid])
         data = @musicbrainz.verify_recording(@session, id, catalog: true)["data"]
         if data&.fetch("id", nil) == id
           return { "count" => 1, "offset" => 0, "recordings" => [ data ] }
@@ -110,10 +111,31 @@ module RecordingResolution
       end
 
       scope = @catalog_identity.slice(:artist_mbid)
-      page = @musicbrainz.candidate_page(@session, artist: surface.artist, title: surface.track, catalog: @workspace, **scope)
+      return search_surface(surface, surface.track, scope) unless feature
+
+      evidence["recording_searches"] = []
+      original = search_surface(surface, surface.track, scope)
+      title, guest = feature
+      credit = search_surface(surface, title, scope, featured_artist: guest)
+      recordings = (original.fetch("recordings") + credit.fetch("recordings")).uniq { |row| row.fetch("id") }
+      incomplete = evidence["recording_searches"].any? { |search| search.fetch("count") != search.fetch("returned") }
+      { "count" => recordings.size, "offset" => 0, "recordings" => recordings, "incomplete" => incomplete }
+    end
+
+    def search_surface(surface, title, scope, **interpretation)
+      page = search_page(surface, title, **scope, **interpretation)
       return page if scope.empty? || page.fetch("recordings").any?
 
-      @musicbrainz.candidate_page(@session, artist: surface.artist, title: surface.track, catalog: @workspace)
+      search_page(surface, title, **interpretation)
+    end
+
+    def search_page(surface, title, **options)
+      page = @musicbrainz.candidate_page(@session, artist: surface.artist, title:, catalog: @workspace, **options)
+      if (searches = evidence["recording_searches"])
+        searches << { "query" => @session.current_request.dig("parameters", "query"),
+          "count" => page.fetch("count"), "returned" => page.fetch("recordings").size }
+      end
+      page
     end
 
     def merge_discovered(discovered)

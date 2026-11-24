@@ -1,6 +1,6 @@
 class Release < ApplicationRecord
   has_many :catalog_track_slots, dependent: :restrict_with_exception
-  has_many :release_artists, dependent: :destroy
+  has_many :release_artists, -> { order(:position, :id) }, dependent: :destroy
   has_many :artists, through: :release_artists
 
   has_many :release_recordings, dependent: :destroy

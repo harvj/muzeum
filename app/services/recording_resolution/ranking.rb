@@ -46,9 +46,14 @@ module RecordingResolution
       factor("recording_identifier", verified ? true : nil, 8, 0, "Verified source recording identifier", nil)
       claimed_other = @evidence.dig("verified_recording", "id") == expected_id && expected_id.present? && !id.casecmp?(expected_id)
       factor("different_verified_recording", claimed_other ? false : nil, 0, -6, nil, "The source recording identifier resolves to a different recording")
-      factor("title", comparable(@surface.track, @candidate["title"]), 2, -3,
-        "Recording title matches after text normalization", "Recording title differs")
       catalog_artist = @evidence["canonical_artist_mbid"] if @source_hints
+      primary = credits.first || {}
+      primary_match = (catalog_artist.present? && primary.dig("artist", "id") == catalog_artist) ||
+        [ primary["name"], primary.dig("artist", "name") ].any? { |name| comparable(@surface.artist, name) }
+      title_match = comparable(@surface.track, @candidate["title"])
+      credited_title = @discovery && !title_match && primary_match && DiscoveryTitle.recording_match?(@surface.track, @candidate["title"], credits)
+      factor("title", credited_title || title_match, 2, -3,
+        credited_title ? "Recording title and featured artist credit match" : "Recording title matches after text normalization", "Recording title differs")
       catalog_match = catalog_artist.present? && artist_ids.include?(catalog_artist)
       artist_match = catalog_match || names.any? { |name| comparable(@surface.artist, name) } unless names.empty? || @surface.artist.blank?
       factor("artist_name", catalog_match ? true : artist_match, 2, -3,
@@ -58,10 +63,13 @@ module RecordingResolution
       factor("artist_identifier", !Clients::Musicbrainz::MBID.match?(artist_id.to_s) || artist_ids.empty? ? nil : artist_ids.any? { |other| artist_id.casecmp?(other) },
         3, -4, "The source artist identifier matches a credited artist", "The source artist identifier differs from the credited artists")
       slot = @evidence.dig("edition", "title").present? && @evidence.dig("edition", "title") == @surface.album &&
-        Array(@evidence["slots"]).any? { |entry| entry["recording_mbid"] == id && entry["title"] == @surface.track }
+        Array(@evidence["slots"]).any? do |entry|
+          entry["recording_mbid"] == id && (entry["title"] == @surface.track ||
+            credited_title && DiscoveryTitle.recording_match?(@surface.track, entry["title"], credits))
+        end
       factor("edition_slot", slot ? true : nil, 4, 0, "A checked MusicBrainz edition contains this track slot", nil)
 
-      observed_versions = versions(@surface.track)
+      observed_versions = versions(credited_title ? DiscoveryTitle.featured_credit(@surface.track).first : @surface.track)
       candidate_versions = versions([ @candidate["title"], @candidate["disambiguation"] ].join(" "))
       version_match = if observed_versions.any? && candidate_versions.any?
         observed_versions == candidate_versions

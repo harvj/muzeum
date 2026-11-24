@@ -65,7 +65,7 @@ module CanonicalLibraryHelper
 
   def catalog_artists(entry, badges: true)
     credits = entry.is_a?(Release) ? entry.release_artists : entry.recording_artists
-    links = credits.sort_by { |credit| [ credit.position || Float::INFINITY, credit.id ] }.map do |credit|
+    links = credits.map do |credit|
       artist = credit.artist
       badges ? catalog_link(artist) : entity_link(artist.name, catalog_entry_path(artist))
     end
@@ -87,20 +87,6 @@ module CanonicalLibraryHelper
       end
     end
     tag.time(label, datetime: timestamp, class: "catalog-release-date")
-  end
-
-  def verified_catalog_credit(entry)
-    credits = CatalogRevision.where(entity_type: entry.class.name, entity_id: entry.id)
-      .where("evidence ? 'artist_credit'").order(id: :desc).pick(:evidence)&.fetch("artist_credit", nil)
-    return catalog_artists(entry) if credits.blank?
-
-    artists = entry.artists.index_by(&:mbid)
-    return catalog_artists(entry) unless credits.pluck("artist_mbid").to_set == artists.keys.to_set
-
-    safe_join(credits.flat_map do |credit|
-      artist = artists.fetch(credit.fetch("artist_mbid"))
-      [ entity_link(credit["credited_name"].presence || artist.name, catalog_entry_path(artist)), credit["join_phrase"].to_s ]
-    end)
   end
 
   def import_status(request, verified: false)

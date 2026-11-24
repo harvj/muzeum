@@ -466,6 +466,56 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     expect(Scrobble.count).to eq(1)
   end
 
+  it "keeps independent ordered Charli artist lists in review, catalog pages, and credited-artist searches" do
+    editions = JSON.parse(Rails.root.join("spec/fixtures/musicbrainz/construction/charli_featured_credit.json").read)
+    album = editions.first
+    source = album.dig("media", 0, "tracks", 2, "recording")
+    user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "ordered-credits", lastfm_username: "ordered-credits")
+    payload = { artist_name: "Charli xcx", album_name: "Charli", track_name: "Cross You Out (feat. Sky Ferreira)" }
+    play = Scrobble.create!(user:, lastfm_account: user.source_account, played_at: Time.current, payload:)
+    surface = RecordingResolution::Ledger.attach!(play)
+    group = RecordingResolution::Group.create!(surface_id: surface.id, version: RecordingResolution::Ledger::VERSION, claims: {})
+    release_group = album.dig("release-group", "id")
+    RecordingResolution::Assessment.create!(group_id: group.id, version: "featured-credit-fixture", actor: "fixture",
+      digest: SecureRandom.hex(32), evidence: {
+        "candidates" => [ source ], "construction_editions" => editions,
+        "recording_publications" => { source.fetch("id") => { "original_groups" => [ release_group ] } }
+      })
+
+    sign_in(user)
+    visit resolution_surface_path(play)
+    within(".resolution-choices") { expect(page).to have_text("Charli xcx, Sky Ferreira") }
+    within('[aria-label="Resolution preview"]') do
+      expect(page).to have_text("Recording · Cross You Out · Charli xcx, Sky Ferreira")
+      expect(page).to have_text("Release · Charli · 15 tracks")
+    end
+    capture_resolution("featured-credit-resolution", full: true)
+    click_button "Resolve this observation"
+    expect(page).to have_text("Recording decision saved.")
+
+    entry = Recording.find_by!(mbid: source.fetch("id"))
+    release = Release.sole
+    expect(entry.recording_artists.includes(:artist).map { |row| [ row.position, row.artist.name ] })
+      .to eq([ [ 1, "Charli xcx" ], [ 2, "Sky Ferreira" ] ])
+    expect(release.release_artists.includes(:artist).map { |row| [ row.position, row.artist.name ] }).to eq([ [ 1, "Charli xcx" ] ])
+    expect(Artist.where(name: [ "Charli xcx", "Sky Ferreira" ]).count).to eq(2)
+    expect(Artist.find_by!(name: "Sky Ferreira").recordings).to include(entry)
+    expect(play.reload.payload.slice(*payload.keys.map(&:to_s))).to eq(payload.stringify_keys)
+    expect(Scrobble.count).to eq(1)
+
+    visit recording_path(entry)
+    expect(page).to have_css(".catalog-credit", exact_text: "Charli xcx, Sky Ferreira")
+    capture_resolution("ordered-recording-credits")
+    visit release_path(release)
+    expect(page).to have_css(".catalog-credit", exact_text: "Charli xcx")
+
+    visit recordings_path(q: "Sky Ferreira")
+    expect(page).to have_link("Cross You Out")
+    expect(page).to have_text("Charli xcx, Sky Ferreira")
+    visit releases_path(q: "Sky Ferreira")
+    expect(page).to have_no_link("Charli", exact: true)
+  end
+
   it "compares the authentic Queen of the Clouds editions and recalculates additions from the chosen base" do
     user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "queen-comparison", lastfm_username: "queen-comparison")
     editions = JSON.parse(Rails.root.join("spec/fixtures/musicbrainz/construction/queen_of_the_clouds.json").read)

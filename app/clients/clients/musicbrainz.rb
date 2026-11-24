@@ -92,9 +92,10 @@ module Clients
 
     MBID = /\A[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\z/i
 
-    def candidate_page(session, artist:, title:, offset: 0, catalog: false, artist_mbid: nil)
+    def candidate_page(session, artist:, title:, offset: 0, catalog: false, artist_mbid: nil, featured_artist: nil)
       query = build_recording_query(artist:, recording: title, release: nil)
       query = %(arid:#{artist_mbid} AND recording:"#{escape_phrase(title)}") if MBID.match?(artist_mbid.to_s)
+      query += %( AND artist:"#{escape_phrase(featured_artist)}") if featured_artist.present?
       params = { query:, limit: 25, offset:, fmt: "json" }
       session.get(:musicbrainz, "/ws/2/recording", params:) do |data|
         unless data["count"].is_a?(Integer) && data["offset"] == offset && data["recordings"].is_a?(Array) &&

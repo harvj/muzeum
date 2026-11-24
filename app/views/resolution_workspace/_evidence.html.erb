@@ -2,6 +2,25 @@
 <% discogs = evidence.fetch("discogs", {}) %>
 <% if evidence.dig("search", "count") %><p>MusicBrainz returned <%= pluralize(evidence.dig("search", "returned") || Array(evidence["candidates"]).size, "candidate") %> of <%= evidence.dig("search", "count") %>.</p><% end %>
 <% outage = evidence.dig("reason_details", "provider_temporarily_unavailable") %>
+<% search_failure = outage || evidence.dig("reason_details", "provider_request_stopped") %>
+<% searches = evidence["recording_searches"] %>
+<% if !searches && Array(evidence["candidates"]).empty? %>
+  <% searches = Array(evidence["requests"]).select { |request| request["provider"] == "musicbrainz" && request["endpoint"] == "/ws/2/recording" }
+    .filter_map { |request| { "query" => query } if (query = request.dig("parameters", "query")) } %>
+<% end %>
+<% if searches.present? || search_failure&.dig("parameters", "query").present? %>
+  <details>
+    <summary>MusicBrainz recording searches</summary>
+    <ul class="catalog-list">
+      <% Array(searches).each do |search| %>
+        <li><code><%= search.fetch("query") %></code><% if search.key?("count") %> · <%= pluralize(search.fetch("returned"), "result") %> returned<%= " of #{search.fetch('count')}" if search.fetch("returned") != search.fetch("count") %><% end %></li>
+      <% end %>
+      <% if search_failure&.dig("parameters", "query").present? %>
+        <li><code><%= search_failure.dig("parameters", "query") %></code> · <%= search_failure.fetch("message", "Provider unavailable") %><%= " (HTTP #{search_failure['http_status']})" if search_failure["http_status"] %></li>
+      <% end %>
+    </ul>
+  </details>
+<% end %>
 <% if outage&.fetch("provider", nil) == "discogs" %>
   <p>Discogs could not complete its check. MusicBrainz candidates remain available for review, and release verification may still be pending.</p>
 <% end %>

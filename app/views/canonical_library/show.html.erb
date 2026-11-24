@@ -3,7 +3,7 @@
     <%= catalog_release_date(@entry) if @entry.is_a?(Release) %></h1>
   <% case @entry
      when Release, Recording %>
-    <p><span class="catalog-credit"><%= verified_catalog_credit(@entry).presence || "Artist credits pending" %></span></p>
+    <p><span class="catalog-credit"><%= catalog_artists(@entry, badges: false).presence || "Artist credits pending" %></span></p>
   <% when Artist %>
     <% if @entry.country.present? %><p><span class="catalog-credit"><%= render "shared/geographic_place", country: @entry.country %></span></p><% end %>
   <% end %>

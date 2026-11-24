@@ -132,14 +132,14 @@ module Releases
     def link_release_artists!(release, artists)
       release_artists = []
 
-      artists.each_with_index do |artist, index|
+      artists.each.with_index(1) do |artist, position|
         created = false
         ra = ReleaseArtist.find_or_create_by!(
           release: release,
           artist: artist
         ) do |i|
           created = true
-          i.position = index
+          i.position = position
         end
 
         release_artists << ra
@@ -196,7 +196,7 @@ module Releases
     end
 
     def ingest_recording_artists!(recording, track)
-      Array(track.dig("recording", "artist-credit")).each_with_index do |credit, index|
+      Array(track.dig("recording", "artist-credit")).each.with_index(1) do |credit, position|
         artist_data = credit["artist"]
 
         artist_created = false
@@ -205,11 +205,7 @@ module Releases
           a.name = artist_data["name"]
         end
 
-        RecordingArtist.create!(
-          recording: recording,
-          artist: artist,
-          position: index
-        )
+        RecordingArtist.find_or_create_by!(recording:, artist:) { |row| row.position = position }
 
         log_ingest(artist, artist_created, :name) unless main_artists.map(&:id).include?(artist.id)
       end

@@ -72,7 +72,7 @@ end %>
     <section aria-label="Resolution preview">
       <h2 class="section-heading">Resolution preview</h2>
       <ul class="catalog-list">
-        <li><strong>Recording</strong> · <%= selected.fetch("title") %><%= " · Reuse existing" if catalog_recording %>
+        <li><strong>Recording</strong> · <%= selected.fetch("title") %> · <%= resolution_candidate_credit(selected) %><%= " · Reuse existing" if catalog_recording %>
           <% if plan.identity.aliases&.any? %> · <%= pluralize(plan.identity.aliases.size, "equivalent source ID") %> will be linked<% end %>
         </li>
         <% if proposals.empty? %>
@@ -87,6 +87,7 @@ end %>
             <%= tag.li hidden: choosing_release && selected_edition != base.data["id"], data: (choosing_release ? { release_proposal_target: "proposal", edition: base.data["id"] } : {}) do %>
               <strong>Release</strong> · <%= base.data.fetch("title") %> · <%= pluralize(base.slots.size, "track") %> ·
               <%= proposal.existing ? "Reuse existing release · Rebuild base tracklist" : "1 new release" %>
+              <div class="muted"><%= resolution_candidate_credit(base.data) %></div>
               <div class="muted"><%= [("#{pluralize(new_recordings, 'new recording')}" if new_recordings.positive?),
                 ("Reuse #{pluralize(existing_recordings.map { |row| row[1] }.uniq.size, 'recording')}" if existing_recordings.any?)].compact.join(" · ") %></div>
               <% if artists.any? %>

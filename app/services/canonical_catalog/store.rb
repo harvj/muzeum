@@ -161,7 +161,7 @@ module CanonicalCatalog
     def equivalent_release(title, group, signature, credits)
       artist_mbids = credit_evidence(credits).pluck("artist_mbid").uniq
       Release.where(title:, release_group_mbid: group).where.not(catalog_verified_at: nil).order(:id).find do |item|
-        item.artists.order(Arel.sql("release_artists.position ASC NULLS LAST"), :id).pluck(:mbid) == artist_mbids &&
+        item.artists.pluck(:mbid) == artist_mbids &&
           release_signature(item).map(&:last) == signature.map(&:last)
       end
     end
@@ -200,10 +200,11 @@ module CanonicalCatalog
         raise Unverified, "Provider artist credits are incomplete"
       end
 
-      credits.each_with_index do |credit, index|
-        credited_artist = artist(credit.fetch("artist"))
-        row = join.create_or_find_by!(association => entity, artist: credited_artist) { |created| created.position = index }
-        row.update!(position: index) if row.is_a?(RecordingArtist) && row.position != index
+      incoming = credits.map { |credit| artist(credit.fetch("artist")) }.uniq
+      retained = entity.artists.to_a - incoming
+      (incoming + retained).each.with_index(1) do |credited_artist, position|
+        row = join.create_or_find_by!(association => entity, artist: credited_artist) { |created| created.position = position }
+        row.update!(position:) if row.position != position
       end
     end
 

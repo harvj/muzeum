@@ -15,7 +15,7 @@ RSpec.describe "Release tracklist review", type: :request do
     @release = Release.create!(title: "Fixture album", ingested_from_release_mbid: SecureRandom.uuid, catalog_verified_at: Time.current)
     @anchor, @accepted, @rejected = %w[Anchor Candidate Alternate].each_with_index.map do |title, i|
       recording = Recording.create!(title:, mbid: SecureRandom.uuid)
-      RecordingArtist.create!(artist: @artist, recording:, position: 0)
+      RecordingArtist.create!(artist: @artist, recording:, position: 1)
       CatalogTrackSlot.create!(release: @release, recording:, medium: 1, position: i + 1, track_mbid: SecureRandom.uuid, title:)
       observation(title, recording)
     end
@@ -93,7 +93,7 @@ RSpec.describe "Release tracklist review", type: :request do
 
   it "keeps duplicate tracks and conflicting editions out of batch acceptance" do
     competing = Recording.create!(title: "Candidate", mbid: SecureRandom.uuid)
-    RecordingArtist.create!(recording: competing, artist: @artist, position: 0)
+    RecordingArtist.create!(recording: competing, artist: @artist, position: 1)
     CatalogTrackSlot.create!(release: @release, recording: competing, medium: 2, position: 1,
       track_mbid: SecureRandom.uuid, title: "Candidate")
     record_tracklist
