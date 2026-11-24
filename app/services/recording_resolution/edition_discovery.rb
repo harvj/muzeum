@@ -25,8 +25,7 @@ module RecordingResolution
       found = results.flat_map { |edition| appearances(surface, edition) }
       # Preserve a fixed fallback budget even when search supplies many releases.
       unless preferred || review_alternative || results.empty?
-        retain_original_editions if origins
-        return found
+        return scan_original_editions(surface, candidates, found, origins:)
       end
 
       references = candidates.filter_map do |candidate|
@@ -46,11 +45,28 @@ module RecordingResolution
           found.concat(appearances(surface, edition)) if edition
         end
       end
-      retain_original_editions if origins
-      found
+      scan_original_editions(surface, candidates, found, origins:)
     end
 
     private
+
+    def scan_original_editions(surface, candidates, found, origins:)
+      # Recording searches can return only the unseparated act or medley.
+      # Check already-bounded same-day editions for an exact credited slot.
+      matching_candidate = candidates.any? do |candidate|
+        DiscoveryTitle.recording_match?(surface.track, candidate["title"], candidate["artist-credit"]) &&
+          artist_matches?(surface, candidate)
+      end
+      needs_slot = found.empty? && !matching_candidate
+      return found unless origins || needs_slot
+
+      known_editions = @construction_editions.keys
+      retain_original_editions
+      return found unless needs_slot
+
+      added = @construction_editions.except(*known_editions).values
+      found + added.flat_map { |edition| appearances(surface, edition) }
+    end
 
     def retain_original_editions
       context = @construction_editions.values.first
@@ -63,7 +79,8 @@ module RecordingResolution
           DiscoveryTitle.match?(DiscoveryTitle.album_base(row["title"]), title)
       end
       references = references.reject { |row| @construction_editions.key?(row["id"]) }
-      originals = references.map do |row|
+      @pending_original_group = group["id"] if references.size > MAX_ORIGINAL_LOOKUPS
+      references.first(MAX_ORIGINAL_LOOKUPS).each do |row|
         id = row.fetch("id")
         edition = @musicbrainz.edition(@session, id, catalog: true)
         unless edition && edition.dig("release-group", "id") == group["id"] &&
@@ -71,8 +88,10 @@ module RecordingResolution
           raise CanonicalCatalog::Store::Unverified, "Original edition could not be verified"
         end
         CanonicalCatalog::Edition.new(edition, id)
+        retain(id, edition)
+      rescue CanonicalCatalog::Store::Unverified
+        @pending_original_group = group["id"]
       end
-      originals.each { |edition| retain(edition.data.fetch("id"), edition.data) }
     rescue ProviderError => error
       raise if error.deferred
 
@@ -145,7 +164,7 @@ module RecordingResolution
           appearance = edition.slice("id", "title", "disambiguation", "date", "country", "release-group").merge(
             "relationship" => (DiscoveryTitle.displayed_edition?(surface.album, edition) ? "matching_catalog_caption" : "related_catalog_title"),
             "medium" => medium["position"], "position" => slot["position"], "track_mbid" => slot["id"],
-            "track_title" => slot["title"])
+            "track_title" => slot["title"], "track_length" => slot["length"])
           recording.merge("release_discovery" => appearance, "releases" => [ edition.slice("id", "title", "date", "country") ])
         end
       end

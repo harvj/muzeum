@@ -469,6 +469,11 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     head = RecordingResolution::Decision.last
     expect(head).to have_attributes(scrobble_id: second.id, reason: "Left unresolved",
       evidence: a_hash_including("reason_code" => "left_unresolved"))
+    get resolution_surfaces_path(filter: "unresolved")
+    row = Nokogiri::HTML(response.body).at_css("tbody tr")
+    expect(row.at_css("td.table-number").text).to eq("1")
+    expect(row.at_css("th a")["href"]).to eq(resolution_surface_path(second))
+    expect(row.text).to include("Candidate found", "Review candidate evidence")
     get resolution_surfaces_path(filter: "exceptions")
     expect(response.body).to include("Signals")
     expect(RecordingResolution::Ledger.effective(user).find(second.id).effective_recording_id).to be_nil

@@ -38,20 +38,21 @@ module RecordingResolution
     end
 
     def list(filter:, before_id:, before_count: 0)
-      # Aggregate exact surfaces before examining their decisions or assessment evidence.
-      grouped = observations.group("lastfm_account_id", *Ledger::PAYLOAD_FIELDS.map { |field| "payload->>'#{field}'" })
-        .select("MIN(id) AS first_id", "COUNT(*) AS observation_count", "lastfm_account_id",
-          "payload->>'artist_name' AS artist", "payload->>'album_name' AS album", "payload->>'track_name' AS track")
+      # Count effective unresolved observations before ranking their exact surfaces.
       prioritized = filter == "unresolved"
+      plays = prioritized ? Ledger.effective(listener, bulk_surface_lookup: true).where("effective_resolution.recording_id IS NULL").unscope(:select) : observations
+      grouped = plays.group("scrobbles.lastfm_account_id", *Ledger::PAYLOAD_FIELDS.map { |field| "payload->>'#{field}'" })
+        .select("MIN(scrobbles.id) AS first_id", "COUNT(*) AS observation_count", "scrobbles.lastfm_account_id",
+          "payload->>'artist_name' AS artist", "payload->>'album_name' AS album", "payload->>'track_name' AS track")
       if before_id.positive?
         grouped = if prioritized && before_count.positive?
-          grouped.having("(COUNT(*), MIN(id)) < (?, ?)", before_count, before_id)
+          grouped.having("(COUNT(*), MIN(scrobbles.id)) < (?, ?)", before_count, before_id)
         else
-          grouped.having("MIN(id) < ?", before_id)
+          grouped.having("MIN(scrobbles.id) < ?", before_id)
         end
       end
       rows = Scrobble.from(grouped, :workspace_rows)
-      rows = filter_surfaces(rows, filter) if filter
+      rows = filter_surfaces(rows, filter) if filter && !prioritized
       order = prioritized ? "workspace_rows.observation_count DESC, workspace_rows.first_id DESC" : "workspace_rows.first_id DESC"
       page = rows.order(Arel.sql(order)).limit(PAGE + 1)
       return page.pluck(
@@ -63,21 +64,21 @@ module RecordingResolution
         LEFT JOIN resolution_surfaces queue_surface ON queue_surface.lastfm_account_id = workspace_rows.lastfm_account_id
           AND queue_surface.exact_key = resolution_surface_key(workspace_rows.artist, workspace_rows.album, workspace_rows.track)
         LEFT JOIN LATERAL (
-          SELECT ci.state FROM resolution_groups g JOIN catalog_imports ci
+          SELECT ci.state, ci.failure FROM resolution_groups g JOIN catalog_imports ci
             ON ci.kind = 'recording_investigation' AND ci.entity_id = g.id
           WHERE g.surface_id = queue_surface.id ORDER BY ci.id DESC LIMIT 1
         ) investigation ON true
         LEFT JOIN LATERAL (
-          SELECT true AS has_candidates FROM resolution_groups g JOIN resolution_assessments a ON a.group_id = g.id
+          SELECT a.evidence FROM resolution_groups g JOIN resolution_assessments a ON a.group_id = g.id
           WHERE g.surface_id = queue_surface.id
-            AND (jsonb_array_length(COALESCE(a.evidence->'ranking', a.evidence->'candidates', '[]')) > 0
-              OR a.evidence->>'verified_recording' IS NOT NULL)
-          LIMIT 1
+          ORDER BY a.id DESC LIMIT 1
         ) evidence ON true
       SQL
         Arel.sql("workspace_rows.first_id"), Arel.sql("workspace_rows.artist"), Arel.sql("workspace_rows.album"),
         Arel.sql("workspace_rows.track"), Arel.sql("workspace_rows.observation_count"),
-        Arel.sql("investigation.state"), Arel.sql("evidence.has_candidates"))
+        Arel.sql("investigation.state"), Arel.sql("investigation.failure"), Arel.sql("evidence.evidence::text")).map do |id, artist, album, track, count, state, failure, evidence|
+        [ id, artist, album, track, count, review_action(state, failure, JSON.parse(evidence || "{}")) ]
+      end
     end
 
     def assessments(surface)
@@ -100,14 +101,32 @@ module RecordingResolution
 
     private
 
+    def review_action(state, failure, evidence)
+      if state == "pending"
+        return [ "Investigation requested", "Check investigation status" ]
+      elsif state == "refreshing"
+        return [ "Investigating", "Check investigation status" ]
+      end
+
+      candidates = self.class.candidate_evidence(evidence)
+      return [ "Ambiguous", "Compare candidates" ] if candidates.many?
+      return [ "Candidate found", "Review candidate evidence" ] if candidates.one?
+      if failure.to_s.match?(/musicbrainz|discogs/i) || evidence["partial"] == true || state == "incomplete"
+        return [ "Provider evidence incomplete", "Review evidence and retry" ]
+      end
+      return [ "Investigation failed", "Review investigation details" ] if state == "failed"
+      return [ "No credible candidate", "Review search evidence" ] if state || evidence.present?
+
+      [ "Uninvestigated", "Open to investigate" ]
+    end
+
     def filter_surfaces(rows, filter)
       surfaces = Surface.from("resolution_surfaces workspace_surface")
         .where("workspace_surface.lastfm_account_id" => listener.user_lastfm_accounts.active.select(:lastfm_account_id))
         .select("workspace_surface.id", "workspace_surface.lastfm_account_id",
           "workspace_surface.artist", "workspace_surface.album", "workspace_surface.track")
-      resolved = %w[resolved unresolved].include?(filter)
-      surfaces = surfaces.joins(head_join) if resolved
-      eligible = apply_filter(surfaces, resolved ? "resolved" : filter)
+      surfaces = surfaces.joins(head_join) if filter == "resolved"
+      eligible = apply_filter(surfaces, filter)
       # Evaluate decisions on attached surfaces. Array equality matches NULL elements and supports a hash join.
       rows = rows.joins(<<~SQL)
         LEFT JOIN (#{eligible.to_sql} OFFSET 0) eligible_surface
@@ -115,7 +134,7 @@ module RecordingResolution
           AND ARRAY[eligible_surface.artist, eligible_surface.album, eligible_surface.track] =
             ARRAY[workspace_rows.artist, workspace_rows.album, workspace_rows.track]
       SQL
-      filter == "unresolved" ? rows.where("eligible_surface.id IS NULL") : rows.where("eligible_surface.id IS NOT NULL")
+      rows.where("eligible_surface.id IS NOT NULL")
     end
 
     def head_join

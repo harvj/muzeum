@@ -782,8 +782,15 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     sign_in(user)
     visit releases_path
     expect(page).to have_text("No canonical releases yet")
-    visit resolution_surfaces_path
-    click_link "Signals"
+    visit resolution_surfaces_path(filter: "unresolved")
+    expect(page).to have_text("Candidate found")
+    capture_resolution("unresolved-queue-desktop")
+    browser = page.driver.browser
+    browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 390, height: 844, deviceScaleFactor: 1, mobile: true)
+    expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
+    capture_resolution("unresolved-queue-mobile")
+    browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
+    click_link "Review candidate evidence"
     expect(page).to have_current_path(resolution_surface_path(observation))
     find_button("Resolve recording only").send_keys(:enter)
     expect(page).to have_text("Recording decision saved.")

@@ -52,8 +52,17 @@ module RecordingResolution
         [ primary["name"], primary.dig("artist", "name") ].any? { |name| comparable(@surface.artist, name) }
       title_match = comparable(@surface.track, @candidate["title"])
       credited_title = @discovery && !title_match && primary_match && DiscoveryTitle.recording_match?(@surface.track, @candidate["title"], credits)
-      factor("title", credited_title || title_match, 2, -3,
-        credited_title ? "Recording title and featured artist credit match" : "Recording title matches after text normalization", "Recording title differs")
+      slot_title = @candidate.dig("release_discovery", "track_title") if @discovery
+      numbered_caption = !title_match && primary_match && DiscoveryTitle.match?(@surface.track, slot_title) &&
+        DiscoveryTitle.match?(slot_title.to_s.split(":", 2).second, @candidate["title"])
+      title_explanation = if numbered_caption
+        "The checked track caption matches; the recording title omits its section prefix"
+      elsif credited_title
+        "Recording title and featured artist credit match"
+      else
+        "Recording title matches after text normalization"
+      end
+      factor("title", credited_title || title_match || numbered_caption, 2, -3, title_explanation, "Recording title differs")
       catalog_match = catalog_artist.present? && artist_ids.include?(catalog_artist)
       artist_match = catalog_match || names.any? { |name| comparable(@surface.artist, name) } unless names.empty? || @surface.artist.blank?
       factor("artist_name", catalog_match ? true : artist_match, 2, -3,

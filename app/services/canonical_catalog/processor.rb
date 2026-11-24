@@ -222,8 +222,8 @@ module CanonicalCatalog
             recording_evidence["manually_verified_mbid"] = recording.fetch("id")
           end
         end
-        investigate_publication(surface, recording_evidence)
       end
+      investigate_publication(surface, evidence)
       edition_slots = Array(evidence["slots"])
       candidates = RecordingResolution::Workspace.candidate_evidence(evidence)
       supported = candidates.select do |candidate|
@@ -244,6 +244,17 @@ module CanonicalCatalog
         inputs = rank.fetch("inputs")
         rank["recording_mbid"] if inputs.dig("title", "state") == "positive" && inputs.dig("artist_name", "state") == "positive"
       end.first(RecordingResolution::Workspace::REVIEW_CANDIDATES)
+      # A checked track caption can identify a split movement even when its
+      # recording title omits the section prefix used in the source.
+      caption_ids = RecordingResolution::Ranking.call(surface, evidence, source_hints: true).filter_map do |rank|
+        inputs = rank.fetch("inputs")
+        appearance = inputs.dig("catalog_release_appearance", "provenance")
+        if appearance&.fetch("relationship", nil) == "matching_catalog_caption" &&
+            inputs.dig("title", "state") == "positive" && inputs.dig("artist_name", "state") == "positive"
+          rank["recording_mbid"]
+        end
+      end
+      ids = (ids | caption_ids).first(RecordingResolution::Workspace::REVIEW_CANDIDATES)
       ids |= Array(evidence["manually_verified_mbid"])
 
       previous = RecordingResolution::Assessment.where(group_id: @group&.id, created_at: 1.day.ago..)
