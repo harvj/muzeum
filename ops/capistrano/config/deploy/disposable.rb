@@ -30,6 +30,9 @@ namespace :muzeum do
       ruby = SSHKit.config.command_map[:ruby]
       version = capture(:cat, release_path.join("VERSION"))
       candidate = muzeum_package_identity(release_path, revision, version, ruby:)
+      identity = root.join("qualified-artifact.json")
+      identity.write(JSON.generate(candidate))
+      ENV["MUZEUM_QUALIFIED_ARTIFACT"] = identity.to_s
       raise "Staged artifact changed" unless muzeum_verify_artifact(release_path, revision, ruby:) == candidate
 
       puts JSON.generate(candidate)
