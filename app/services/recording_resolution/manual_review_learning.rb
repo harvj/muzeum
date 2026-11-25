@@ -54,7 +54,9 @@ module RecordingResolution
         "held_out_examples" => held_out.length, "factor_adjustments" => weights,
         "held_out_recommendation_outcomes" => held_out.map { |row| recommendation_outcome(row.fetch("snapshot")) }.tally,
         "baseline_top_choice" => agreement(held_out, {}),
-        "shadow_top_choice" => agreement(held_out, weights)
+        "shadow_top_choice" => agreement(held_out, weights),
+        "shadow_discovery" => discovery_order(eligible, held_out),
+        "shadow_review_policy" => review_policy(held_out, weights)
       }
     end
 
@@ -105,6 +107,45 @@ module RecordingResolution
         end
       end
       counts.sort.to_h.transform_values { |count| count <=> 0 }.reject { |_, sign| sign.zero? }
+    end
+
+    def discovery_order(training, held_out)
+      paths = ->(row) { Array(row.dig("snapshot", "discovery", "adaptive_searches")) }
+      matches = ->(attempt, row) { Array(attempt["accepted_ids"]).include?(row.dig("snapshot", "candidate_mbid")) }
+      successes = Hash.new(0)
+      training.each do |row|
+        paths.call(row).select { |attempt| matches.call(attempt, row) }.pluck("strategy").uniq.each do |strategy|
+          successes[strategy] += 1
+        end
+      end
+      comparable = held_out.select do |row|
+        attempted = paths.call(row)
+        attempted.many? && attempted.any? { |attempt| matches.call(attempt, row) }
+      end
+      positions = comparable.map do |row|
+        attempted = paths.call(row)
+        reordered = attempted.each_with_index.sort_by { |attempt, index| [ -successes.fetch(attempt["strategy"], 0), index ] }.map(&:first)
+        [ attempted, reordered ].map { |order| order.index { |attempt| matches.call(attempt, row) } + 1 }
+      end
+      { "observed_training_hits" => successes.sort.to_h, "comparable_held_out" => comparable.size,
+        "baseline_requests_to_first_hit" => positions.sum(&:first), "shadow_requests_to_first_hit" => positions.sum(&:last) }
+    end
+
+    def review_policy(rows, weights)
+      rows.each_with_object(Hash.new(0)) do |row, totals|
+        snapshot = row.fetch("snapshot")
+        adjusted = snapshot.fetch("ranking").map do |rank|
+          rank.merge("score" => self.class.adjusted_score(rank, weights))
+        end.sort_by { |rank| [ -rank.fetch("score"), rank.fetch("recording_mbid") ] }
+        outcome = if !Ranking.recommended?(adjusted)
+          "abstained"
+        elsif adjusted.first["recording_mbid"] == snapshot["candidate_mbid"]
+          "agreed_with_selection"
+        else
+          "disagreed_with_selection"
+        end
+        totals[outcome] += 1
+      end
     end
 
     def agreement(rows, weights)

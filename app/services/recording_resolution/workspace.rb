@@ -61,17 +61,23 @@ module RecordingResolution
 
       # Status probes run only after limiting the grouped page.
       Scrobble.from(page.select("workspace_rows.*"), :workspace_rows).joins(<<~SQL).order(Arel.sql(order)).pluck(
+        JOIN scrobbles queue_observation ON queue_observation.id = workspace_rows.first_id
         LEFT JOIN resolution_surfaces queue_surface ON queue_surface.lastfm_account_id = workspace_rows.lastfm_account_id
           AND queue_surface.exact_key = resolution_surface_key(workspace_rows.artist, workspace_rows.album, workspace_rows.track)
+        CROSS JOIN LATERAL (
+          SELECT COALESCE(jsonb_object_agg(key, value), '{}'::jsonb) AS claims
+          FROM jsonb_each(queue_observation.payload::jsonb)
+          WHERE key IN ('artist_mbid', 'album_mbid', 'track_mbid')
+        ) observation_evidence
         LEFT JOIN LATERAL (
           SELECT ci.state, ci.failure FROM resolution_groups g JOIN catalog_imports ci
             ON ci.kind = 'recording_investigation' AND ci.entity_id = g.id
-          WHERE g.surface_id = queue_surface.id ORDER BY ci.id DESC LIMIT 1
+          WHERE g.surface_id = queue_surface.id AND g.claims = observation_evidence.claims ORDER BY ci.id DESC LIMIT 1
         ) investigation ON true
         LEFT JOIN LATERAL (
           SELECT a.evidence FROM resolution_groups g JOIN resolution_assessments a ON a.group_id = g.id
-          WHERE g.surface_id = queue_surface.id
-          ORDER BY a.id DESC LIMIT 1
+          WHERE g.surface_id = queue_surface.id AND g.claims = observation_evidence.claims
+          ORDER BY (a.evidence->>'partial' IS NOT DISTINCT FROM 'true') ASC, a.id DESC LIMIT 1
         ) evidence ON true
       SQL
         Arel.sql("workspace_rows.first_id"), Arel.sql("workspace_rows.artist"), Arel.sql("workspace_rows.album"),
@@ -108,9 +114,9 @@ module RecordingResolution
         return [ "Investigating", "Check investigation status" ]
       end
 
-      candidates = self.class.candidate_evidence(evidence)
-      return [ "Ambiguous", "Compare candidates" ] if candidates.many?
-      return [ "Candidate found", "Review candidate evidence" ] if candidates.one?
+      count = evidence["ranking"]&.size || self.class.candidate_evidence(evidence).size
+      return [ "Ambiguous", "Compare candidates" ] if count > 1
+      return [ "Candidate found", "Review candidate evidence" ] if count == 1
       if failure.to_s.match?(/musicbrainz|discogs/i) || evidence["partial"] == true || state == "incomplete"
         return [ "Provider evidence incomplete", "Review evidence and retry" ]
       end

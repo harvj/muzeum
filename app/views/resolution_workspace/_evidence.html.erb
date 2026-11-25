@@ -4,13 +4,15 @@
 <% outage = evidence.dig("reason_details", "provider_temporarily_unavailable") %>
 <% search_failure = outage || evidence.dig("reason_details", "provider_request_stopped") %>
 <% searches = evidence["recording_searches"] %>
-<% if !searches && Array(evidence["candidates"]).empty? %>
+<% adaptive = Array(evidence["adaptive_searches"]).select { |attempt| attempt["query"].present? } %>
+<% if !searches && (Array(evidence["candidates"]).empty? || adaptive.any?) %>
   <% searches = Array(evidence["requests"]).select { |request| request["provider"] == "musicbrainz" && request["endpoint"] == "/ws/2/recording" }
     .filter_map do |request|
       query = request.dig("parameters", "query")
       { "query" => query } if query.present?
     end %>
 <% end %>
+<% searches = (adaptive + Array(searches)).uniq { |search| search["query"] } %>
 <% if searches.present? || search_failure&.dig("parameters", "query").present? %>
   <details>
     <summary>MusicBrainz recording searches</summary>

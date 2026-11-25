@@ -31,17 +31,9 @@
     <% if request_failed && !throttled && @assessment_request.failure == "Investigation expired before completion." %>
       <%= button_to "Retry search", investigate_resolution_surface_path(@observation) %>
     <% end %>
-    <details>
-      <summary><%= request_failed ? "Look up a recording identifier" : "Retry or look up a recording identifier" %></summary>
-      <% unless request_failed %>
-        <%= button_to "Refresh candidate evidence", investigate_resolution_surface_path(@observation) %>
-      <% end %>
-      <%= form_with url: investigate_resolution_surface_path(@observation) do |form| %>
-        <%= form.label :manual_mbid, "MusicBrainz recording identifier" %>
-        <%= form.text_field :manual_mbid, maxlength: 36, required: true %>
-        <%= form.submit "Look up recording", class: "catalog-submit" %>
-      <% end %>
-    </details>
+    <% unless request_failed %>
+      <%= button_to "Refresh candidate evidence", investigate_resolution_surface_path(@observation) %>
+    <% end %>
   <% end %>
   <details>
     <summary>Recent assessments</summary>

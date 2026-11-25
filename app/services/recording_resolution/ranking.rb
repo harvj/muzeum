@@ -51,6 +51,10 @@ module RecordingResolution
       primary_match = (catalog_artist.present? && primary.dig("artist", "id") == catalog_artist) ||
         [ primary["name"], primary.dig("artist", "name") ].any? { |name| comparable(@surface.artist, name) }
       title_match = comparable(@surface.track, @candidate["title"])
+      if @candidate["adaptive_search"] && !title_match && primary_match
+        observed_title = DiscoveryTitle.credit_key(@surface.track)
+        title_match = observed_title.present? && observed_title == DiscoveryTitle.credit_key(@candidate["title"])
+      end
       credited_title = @discovery && !title_match && primary_match && DiscoveryTitle.recording_match?(@surface.track, @candidate["title"], credits)
       slot_title = @candidate.dig("release_discovery", "track_title") if @discovery
       numbered_caption = !title_match && primary_match && DiscoveryTitle.match?(@surface.track, slot_title) &&
@@ -112,7 +116,12 @@ module RecordingResolution
       end
 
       # Text narrows discovery. A text-only candidate is still a choice for human review.
-      return unless verified || slot || manual || appearance || (@inputs["title"]["state"] == "positive" &&
+      adaptive = @candidate["adaptive_search"]
+      if adaptive
+        factor("adaptive_search", true, 0, 0, "Found through a broader search; verify the title qualifier and version before confirming", nil)
+        @inputs.fetch("adaptive_search")["provenance"] = adaptive
+      end
+      return unless verified || slot || manual || appearance || adaptive || (@inputs["title"]["state"] == "positive" &&
         %w[artist_name artist_identifier].any? { |key| @inputs[key]["state"] == "positive" })
 
       {

@@ -5,7 +5,7 @@ module RecordingResolution
 
     attr_reader :evidence
 
-    def initialize(session, discogs:, workspace: false, discover: workspace, review_alternative: false, review_release: nil, catalog_identity: {}, origins: true)
+    def initialize(session, discogs:, workspace: false, discover: workspace, review_alternative: false, review_release: nil, catalog_identity: {}, origins: true, adaptive: false)
       @session = session
       @discogs = DiscogsEvidence.new(discogs, expanded: workspace) if discogs
       @workspace = workspace
@@ -14,6 +14,7 @@ module RecordingResolution
       @review_release = review_release
       @catalog_identity = catalog_identity
       @origins = origins
+      @adaptive = adaptive
       @musicbrainz = Clients::Musicbrainz.new
     end
 
@@ -81,6 +82,7 @@ module RecordingResolution
         end
         evidence["pending_original_group"] = discovery.pending_original_group if discovery.pending_original_group
       end
+      broaden_recording_search(surface) if @adaptive && @discover
       if verified
         slot_check = {
           "requested_edition_mbid" => edition_id, "returned_edition_mbid" => edition&.fetch("id", nil),
@@ -136,6 +138,43 @@ module RecordingResolution
           "count" => page.fetch("count"), "returned" => page.fetch("recordings").size }
       end
       page
+    end
+
+    def broaden_recording_search(surface)
+      credible = Ranking.call(surface, evidence, source_hints: true).any? do |rank|
+        rank.dig("inputs", "title", "state") == "positive" && rank.dig("inputs", "artist_name", "state") == "positive" &&
+          rank.dig("inputs", "version", "state") != "contradictory"
+      end
+      return if credible
+
+      scoped = DiscoveryTitle.alternate_titles(surface.track).first(2).map { |title| [ title, { artist: surface.artist } ] }
+      # The album can recover different credit arrangements; require the credited
+      # artist before retaining any of these hits.
+      scoped << [ surface.track, { artist: nil, release: surface.album } ] if surface.album.present?
+      evidence["adaptive_searches"] = []
+      known = evidence.fetch("candidates").pluck("id").to_set
+      scoped.each do |title, options|
+        attempt = { "strategy" => options[:release] ? "title_and_album" : "alternate_title", "title" => title }
+        evidence["adaptive_searches"] << attempt
+        page = @musicbrainz.candidate_page(@session, title:, catalog: true, **options)
+        attempt.merge!("count" => page["count"], "returned" => page.fetch("recordings").size,
+          "query" => @session.current_request.dig("parameters", "query"))
+        accepted = page.fetch("recordings").select do |row|
+          DiscoveryTitle.credit_key(row["title"]) == DiscoveryTitle.credit_key(title) &&
+            Array(row["artist-credit"]).any? do |credit|
+              (@catalog_identity[:artist_mbid].present? && credit.dig("artist", "id") == @catalog_identity[:artist_mbid]) ||
+                [ credit["name"], credit.dig("artist", "name") ].any? { |name| DiscoveryTitle.match?(name, surface.artist) }
+            end
+        end
+        attempt["accepted_ids"] = accepted.pluck("id")
+        accepted.first(5).each do |row|
+          next unless known.add?(row.fetch("id"))
+
+          evidence.fetch("candidates") << recording_evidence(row).merge("adaptive_search" => attempt.slice("strategy", "title", "query"))
+        end
+        # Retain alternatives for manual review; their presence is not identity proof.
+        break if accepted.any? { |row| DiscoveryTitle.credit_key(surface.track) == DiscoveryTitle.credit_key(row["title"]) }
+      end
     end
 
     def merge_discovered(discovered)

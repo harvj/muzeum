@@ -32,6 +32,14 @@ module RecordingResolution
       end
     end
 
+    def self.alternate_titles(title)
+      base = featured_credit(title)&.first || title.to_s
+      qualifier = base.sub(/\s+[(\[][^()\[\]]+[)\]]\z/, "")
+      subtitle = base.split(/:\s+|\s+[–—]\s+/, 2)
+      [ credit_key(base), qualifier, *subtitle.reverse ].map(&:strip)
+        .reject { |value| value.length < 3 || key(value) == key(title) }.uniq
+    end
+
     def self.credit_key(name)
       key(name).gsub(/[^[:alnum:]]+/, " ").strip
     end

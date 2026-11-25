@@ -92,8 +92,8 @@ module Clients
 
     MBID = /\A[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\z/i
 
-    def candidate_page(session, artist:, title:, offset: 0, catalog: false, artist_mbid: nil, featured_artist: nil)
-      query = build_recording_query(artist:, recording: title, release: nil)
+    def candidate_page(session, artist:, title:, offset: 0, catalog: false, artist_mbid: nil, featured_artist: nil, release: nil)
+      query = build_recording_query(artist:, recording: title, release:)
       query = %(arid:#{artist_mbid} AND recording:"#{escape_phrase(title)}") if MBID.match?(artist_mbid.to_s)
       query += %( AND artist:"#{escape_phrase(featured_artist)}") if featured_artist.present?
       params = { query:, limit: 25, offset:, fmt: "json" }
@@ -249,7 +249,7 @@ module Clients
 
     def build_recording_query(artist:, recording:, release:)
       parts = []
-      parts << %(artist:"#{escape_phrase(artist)}")
+      parts << %(artist:"#{escape_phrase(artist)}") if artist.present?
       parts << %(recording:"#{escape_phrase(recording)}")
       parts << %(release:"#{escape_phrase(release)}") if release.present?
       parts.join(" AND ")
