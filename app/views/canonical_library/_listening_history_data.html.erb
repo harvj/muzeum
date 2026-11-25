@@ -5,6 +5,7 @@
 <h3 class="section-heading">Listening history data</h3>
 <ul class="listening-periods">
   <% @timeline.each do |date, totals| %>
+    <% next if totals.plays.zero? %>
     <li data-duration-ms="<%= totals.milliseconds %>">
       <time datetime="<%= date.iso8601 %>"><%= date.iso8601 %></time>
       <% label = counts ? pluralize(totals.plays, "play") : estimated_listening_time(totals) %>

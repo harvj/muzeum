@@ -111,7 +111,9 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     MusicalIdentityDecision.create!(entity: artist, user:, colors: %w[light-green blue])
     ReleaseRankingDecision.create!(user:, release:, included: true)
     payload = { artist_name: artist.name, album_name: release.title, track_name: recording.title }
-    dates = [ 6.years.ago, 3.years.ago, 6.months.ago, 50.days.ago, *Array.new(12) { |i| (i + 1).days.ago } ]
+    recent_days = [ Time.current, 2.days.ago.utc.change(hour: 13) ] +
+      ((1..12).to_a - [ 4, 8 ]).map { |days| days.days.ago.utc.change(hour: 12) }
+    dates = [ Time.utc(2019, 12, 31), Time.utc(2020, 1, 2), 6.months.ago, 50.days.ago, *recent_days ]
     observations = dates.map { |played_at| Scrobble.create!(user:, lastfm_account: user.source_account, played_at:, payload:) }
     RecordingResolution::Ledger.record!(listener: user, scrobble: observations.first, scope: :surface,
       mode: "resolved", recording:, reason: "Fixture")
@@ -137,7 +139,8 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
       end
 
       within("nav[aria-label='Listening history grouping']") { click_link "Months" }
-      expect(page).to have_css(".artist-timeline-column time", text: 6.months.ago.strftime("%b %Y"))
+      expect(page).to have_css(".artist-timeline-column[data-date='#{6.months.ago.to_date.beginning_of_month}']")
+      expect(page).to have_css(".artist-timeline-column[data-date='2020-01-01'] time", exact_text: "2020")
       { "Year" => 14, "90d" => 13, "30d" => 12 }.each do |period, expected_plays|
         within("nav[aria-label='Listening history period']") { click_link period }
         expect(page).to have_css("nav[aria-label='Listening history grouping'] [aria-current]", exact_text: "Months")
@@ -148,10 +151,12 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
         JS
       end
       within("nav[aria-label='Listening history grouping']") { click_link "Days" }
-      expect(page).to have_css(".artist-timeline-column", count: 12)
-      expect(page).to have_css(".artist-timeline-fill[title$='#{label == 'Recording' ? '1 play' : '3 min'}']", count: 12)
+      expect(page).to have_css(".artist-timeline-column[data-date='#{4.days.ago.utc.to_date}']:not(:has(.artist-timeline-fill))", visible: :all)
+      expect(page).to have_css(".artist-timeline + .listening-summary", text: "(all time)")
+      expect(page).to have_css(".artist-timeline-fill[title$='#{label == 'Recording' ? '1 play' : '3 min'}']", count: 10)
+      expect(page).to have_css(".artist-timeline-fill[title$='#{label == 'Recording' ? '2 plays' : '5 min'}']", count: 1)
       find("#entity-details > summary").send_keys(:enter)
-      expect(page).to have_css("#entity-details[open] .listening-periods li", count: 12)
+      expect(page).to have_css("#entity-details[open] .listening-periods li", count: 11)
       find("#entity-details > summary").send_keys(:space)
       expect(page).to have_css("#entity-details:not([open])")
 
@@ -160,17 +165,52 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
         browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "prefers-color-scheme", value: theme } ])
         visit polymorphic_path(entity, range: "30d", grouping: "days")
         expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
-        expect(page.evaluate_script(<<~JS)).to be(true)
+        expect(page.evaluate_script(<<~JS)).to eq([ 10, 8, 2, true, true, true ])
           (() => {
+            const mobile = #{size == "mobile"}
             const plot = document.querySelector(".listening-plot")
-            const first = plot.scrollLeft
-            plot.scrollLeft = plot.scrollWidth
-            const scrolls = plot.scrollLeft > first
-            plot.scrollLeft = first
-            return scrolls
+            const rects = [...plot.querySelectorAll(".artist-timeline-column")].map(slot => slot.getBoundingClientRect())
+            const first = rects[0]
+            const second = rects[1]
+            const fills = [...plot.querySelectorAll(".artist-timeline-fill")].map(bar => bar.getBoundingClientRect())
+            const sizes = fills.map(bar => mobile ? bar.width : bar.height)
+            const heading = document.querySelector(".listening-history-heading h2").getBoundingClientRect()
+            const controls = document.querySelector(".listening-controls").getBoundingClientRect()
+            return [
+              mobile ? first.top - second.top : second.left - first.left,
+              mobile ? fills[0].height : fills[0].width,
+              Math.max(...sizes) / Math.min(...sizes),
+              mobile ? plot.scrollHeight > plot.clientHeight && plot.scrollWidth === plot.clientWidth
+                : plot.scrollHeight === plot.clientHeight && rects.length * 10 < innerWidth / 2,
+              mobile ? controls.top >= heading.bottom : controls.left >= heading.right && Math.abs(controls.top - heading.top) < 16,
+              mobile ? rects.at(-1).top <= plot.getBoundingClientRect().top + 1
+                : document.querySelector(".artist-timeline-bars").getBoundingClientRect().width === rects.length * 10
+            ]
           })()
         JS
         capture_resolution("entity-#{label.downcase}-#{size}", full: true)
+        %w[years months days].each do |grouping|
+          visit polymorphic_path(entity, grouping:)
+          expect(page).to have_css(".artist-timeline-column:not(:has(.artist-timeline-fill))", minimum: 1, visible: :all)
+          if grouping != "years"
+            expect(page).to have_css(".artist-timeline-column[data-date='2020-01-01'] time", exact_text: "2020")
+          end
+          expect(page.evaluate_script(<<~JS)).to be(true)
+            (() => {
+              const mobile = #{size == "mobile"}
+              const plot = document.querySelector(".listening-plot")
+              const first = plot.querySelector(".artist-timeline-column").getBoundingClientRect()
+              const last = plot.querySelector(".artist-timeline-column:last-child").getBoundingClientRect()
+              const labels = [...plot.querySelectorAll(mobile ? ".listening-label-mobile" : ".listening-label-desktop")]
+                .map(label => label.getBoundingClientRect()).sort((a, b) => mobile ? a.top - b.top : a.left - b.left)
+              return (mobile ? last.top < first.top : last.left > first.left)
+                && labels.every((label, i) => !i || (mobile ? labels[i - 1].bottom <= label.top : labels[i - 1].right <= label.left))
+                && (#{grouping != "days"} || (mobile
+                  ? plot.scrollHeight > plot.clientHeight
+                  : plot.scrollWidth > plot.clientWidth))
+            })()
+          JS
+        end
       end
     end
     expect(observations.map { |observation| observation.reload.payload }).to all(eq(payload.stringify_keys))

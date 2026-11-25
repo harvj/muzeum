@@ -100,8 +100,22 @@ module CanonicalLibraryHelper
     end
   end
 
-  def listening_bucket_date(date, grouping)
-    date.strftime({ "years" => "%Y", "months" => "%b %Y", "days" => "%b %-d, %Y" }.fetch(grouping))
+  def listening_calendar_labels(timeline, grouping, spacing:, from_newest: false)
+    years = grouping == "years"
+    transitions = timeline.each_index.select { |i| timeline[i].first.yday == 1 } unless years
+    reserved = Set.new
+    labels = {}
+    Array(transitions).each do |i|
+      labels[i] = timeline[i].first.strftime("%Y")
+      reserved.merge((i - spacing + 1)...(i + spacing))
+    end
+    timeline.each_with_index do |(date, _), i|
+      offset = from_newest ? timeline.size - i - 1 : i
+      next unless (offset % spacing).zero? && !reserved.include?(i)
+
+      labels[i] = date.strftime(years ? "%Y" : "%m-%d")
+    end
+    labels
   end
 
   def recording_duration(milliseconds)

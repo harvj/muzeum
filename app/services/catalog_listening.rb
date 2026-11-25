@@ -33,8 +33,22 @@ class CatalogListening
     observations = observations.where(played_at: (now - window)..now) if window
 
     bucket = Arel.sql("date_trunc('#{unit}', scrobbles.played_at)::date")
-    observations.group(bucket).order(bucket).pluck(bucket, Arel.sql(metrics))
-      .map { |date, *stats| [ date.to_date, Stats.new(*stats) ] }
+    totals = observations.group(bucket).pluck(bucket, Arel.sql(metrics))
+      .to_h { |date, *stats| [ date.to_date, Stats.new(*stats) ] }
+    return [] if totals.empty?
+
+    first, last = if window
+      [ (now - window).utc.to_date, now.utc.to_date ].map { |date| date.public_send("beginning_of_#{unit}").to_date }
+    else
+      totals.keys.minmax
+    end
+    points = []
+    date = first
+    while date <= last
+      points << [ date, totals.fetch(date, EMPTY) ]
+      date = date.advance("#{unit}s": 1)
+    end
+    points
   end
 
   private
