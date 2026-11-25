@@ -40,7 +40,13 @@ module RecordingResolution
     def list(filter:, before_id:, before_count: 0)
       # Count effective unresolved observations before ranking their exact surfaces.
       prioritized = filter == "unresolved"
-      plays = prioritized ? Ledger.effective(listener, bulk_surface_lookup: true).where("effective_resolution.recording_id IS NULL").unscope(:select) : observations
+      plays = observations
+      if prioritized
+        accounts = listener.user_lastfm_accounts.active.joins(:user)
+          .where(users: { disabled_at: nil, oidc_issuer: OidcClient::ISSUER }).where.not(users: { oidc_subject: [ nil, "" ] })
+          .select(:lastfm_account_id)
+        plays = Scrobble.where(lastfm_account_id: accounts).where.not(id: Ledger.assigned_observation_ids(listener, accounts))
+      end
       grouped = plays.group("scrobbles.lastfm_account_id", *Ledger::PAYLOAD_FIELDS.map { |field| "payload->>'#{field}'" })
         .select("MIN(scrobbles.id) AS first_id", "COUNT(*) AS observation_count", "scrobbles.lastfm_account_id",
           "payload->>'artist_name' AS artist", "payload->>'album_name' AS album", "payload->>'track_name' AS track")

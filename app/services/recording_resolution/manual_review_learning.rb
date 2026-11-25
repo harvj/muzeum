@@ -79,12 +79,13 @@ module RecordingResolution
           Time.iso8601(snapshot.dig("assessment", "created_at")) <= taken_at &&
           Array(snapshot.dig("assessment", "requests")).all? { |request|
             !request["retrieved_at"] || Time.iso8601(request["retrieved_at"]) <= taken_at
-          } && shown.many? && ids(row).include?(snapshot["candidate_mbid"])
+          } && shown.many? && shown.pluck("recording_mbid").include?(snapshot["candidate_mbid"])
       end
     end
 
     def ids(row)
-      row.fetch("snapshot").fetch("ranking").pluck("recording_mbid")
+      snapshot = row.fetch("snapshot")
+      snapshot.fetch("ranking").pluck("recording_mbid") | Array(snapshot["candidate_pool"])
     end
 
     def recommendation_outcome(snapshot)
