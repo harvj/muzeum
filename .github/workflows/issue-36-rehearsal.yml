@@ -1,0 +1,42 @@
+name: Issue 36 disposable staging
+on:
+  push:
+    branches: [release/v0.7.4-issue36-rehearsal]
+permissions:
+  contents: read
+jobs:
+  staging:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.4.13'
+          bundler: '4'
+          bundler-cache: true
+      - name: Stage and verify two exact revisions
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$RUNNER_ENVIRONMENT" = github-hosted
+          app=/var/www/muzeum
+          sudo install -d -o "$(id -un)" -m 0755 "$app" "$app/shared"
+          touch "$app/.muzeum-disposable"
+          install -m 0600 /dev/null "$app/shared/.env"
+          sudo install -d /opt/muzeum/ruby-3.4.13
+          sudo ln -s "$(dirname "$(command -v ruby)")" /opt/muzeum/ruby-3.4.13/bin
+          export MUZEUM_DISPOSABLE_ROOT="$app" MUZEUM_DISPOSABLE_REPO="$GITHUB_WORKSPACE"
+          bundle_config=$(bundle exec ruby -e 'puts Bundler.bundle_path')
+          mkdir -p "$app/shared/bundle/ruby-3.4.13"
+          cp -a "$bundle_config/../.."/. "$app/shared/bundle/ruby-3.4.13/"
+          export BUNDLE_GEMFILE="$GITHUB_WORKSPACE/Gemfile"
+          cd ops/capistrano
+          for revision in 3454a1f20ec4e908109e0509d69a27bc4cd19dfa 2c2ed7fd8ef413cffce3e444e1e81a4f6ff9e32c; do
+            MUZEUM_DISPOSABLE_REVISION="$revision" bundle exec cap disposable muzeum:qualify_staging
+            release=$(find "$app/releases" -mindepth 1 -maxdepth 1 -type d | sort | tail -1)
+            ruby "$release/script/muzeum_release_identity.rb" verify "$revision"
+          done
