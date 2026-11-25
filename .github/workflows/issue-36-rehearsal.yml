@@ -50,7 +50,7 @@ jobs:
           ssh -o BatchMode=yes -o StrictHostKeyChecking=yes 127.0.0.1 true
           export BUNDLE_GEMFILE="$GITHUB_WORKSPACE/Gemfile"
           cd ops/capistrano
-          for revision in 3454a1f20ec4e908109e0509d69a27bc4cd19dfa 5779b79ed8d10f39f056fff04f3f13ce309e4d94; do
+          for revision in 3454a1f20ec4e908109e0509d69a27bc4cd19dfa 9d52918453b3e04f4559b2a671bbadbe401a9625; do
             MUZEUM_DISPOSABLE_REVISION="$revision" bundle exec cap disposable muzeum:qualify_staging
             release=$(find "$app/releases" -mindepth 1 -maxdepth 1 -type d | sort | tail -1)
             ruby "$release/script/muzeum_release_identity.rb" verify "$revision"
