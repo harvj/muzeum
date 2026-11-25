@@ -40,6 +40,14 @@ jobs:
           bundle_config=$(bundle exec ruby -e 'puts Bundler.bundle_path')
           mkdir -p "$app/shared/bundle/ruby-3.4.13"
           cp -a "$bundle_config/../.."/. "$app/shared/bundle/ruby-3.4.13/"
+          mkdir -p -m 0700 ~/.ssh
+          ssh-keygen -q -t ed25519 -N "" -f ~/.ssh/id_ed25519
+          cp ~/.ssh/id_ed25519.pub ~/.ssh/authorized_keys
+          chmod 0600 ~/.ssh/authorized_keys
+          sudo ssh-keygen -A
+          printf '127.0.0.1 %s\n' "$(cat /etc/ssh/ssh_host_ed25519_key.pub)" > ~/.ssh/known_hosts
+          sudo systemctl start ssh
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes 127.0.0.1 true
           export BUNDLE_GEMFILE="$GITHUB_WORKSPACE/Gemfile"
           cd ops/capistrano
           for revision in 3454a1f20ec4e908109e0509d69a27bc4cd19dfa 2c2ed7fd8ef413cffce3e444e1e81a4f6ff9e32c; do

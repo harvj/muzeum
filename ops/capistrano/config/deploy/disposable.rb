@@ -12,14 +12,14 @@ abort "Expected a local Git repository and an immutable revision" unless repo.di
   /\A[0-9a-f]{40}\z/.match?(revision)
 abort "The reviewed Muzeum operator workflow is required" unless respond_to?(:muzeum_check_target, true)
 
-server "localhost", roles: %w[app web db]
+server "127.0.0.1", user: ENV.fetch("USER"), roles: %w[app web db],
+  ssh_options: { keys: [File.expand_path("~/.ssh/id_ed25519")], keys_only: true }
 set :deploy_to, root
 set :repo_url, repo.to_s
 set :branch, revision
 
 namespace :muzeum do
   task :qualify_staging do
-    SSHKit.config.backend = SSHKit::Backend::Local
     environment = root.join("shared/.env")
     abort "Expected a private disposable environment file" unless environment.file? &&
       !environment.symlink? && environment.stat.mode & 0o077 == 0
