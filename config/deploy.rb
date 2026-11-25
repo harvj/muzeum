@@ -73,22 +73,6 @@ namespace :muzeum do
     end
   end
 
-  desc "Verify the reviewed release checkout and live production baseline without deploying"
-  task :release_preflight, [ :version, :checkout ] do |_, args|
-    approval = MuzeumDeploymentRevision.resolve_release!(args[:version], args[:checkout])
-    puts "Preflight #{approval.fetch(:branch)} at #{approval.fetch(:sha)}; CI #{approval.fetch(:ci)}"
-    muzeum_verify_helper
-    on primary(:app) do
-      execute :sudo, "-n", "/usr/local/sbin/muzeum-deploy", "release-preflight", approval.fetch(:baseline)
-    end
-  end
-
-  desc "Deploy an explicitly reviewed release checkout through the guarded workflow"
-  task :release_deploy, [ :version, :checkout ] do |_, args|
-    set :muzeum_release_selection, [ args[:version], args[:checkout] ]
-    Rake::Task["deploy"].invoke
-  end
-
   desc "Synchronize verified publication with the running release without a restart"
   task :sync_release, [ :tag, :deployment, :status ] do |_, args|
     on primary(:app) do
@@ -105,10 +89,8 @@ namespace :muzeum do
   end
 
   task :authorize do
-    selection = fetch(:muzeum_release_selection, nil)
-    approval = selection ? MuzeumDeploymentRevision.resolve_release!(*selection) : MuzeumDeploymentRevision.resolve!
+    approval = MuzeumDeploymentRevision.resolve!
     MuzeumShellPreflight.verify!(approval.fetch(:sha))
-    set :target_version, approval[:version]&.delete_prefix("v")
     set :approved_revision, approval.fetch(:sha)
     set :branch, approval.fetch(:sha)
     set :deployment_token, SecureRandom.hex(16)
@@ -117,12 +99,7 @@ namespace :muzeum do
     outbox.check_clear!
     muzeum_verify_helper
     on primary(:app) do
-      if selection
-        execute :sudo, "-n", "/usr/local/sbin/muzeum-deploy", "begin-release", fetch(:approved_revision),
-          fetch(:deployment_token), *approval.values_at(:branch, :version, :baseline, :scope, :ci)
-      else
-        execute :sudo, "-n", "/usr/local/sbin/muzeum-deploy", "begin", fetch(:approved_revision), fetch(:deployment_token)
-      end
+      execute :sudo, "-n", "/usr/local/sbin/muzeum-deploy", "begin", fetch(:approved_revision), fetch(:deployment_token)
       set :deployment_lock_acquired, true
     end
     begin
@@ -143,7 +120,7 @@ namespace :muzeum do
 
   task :prepare do
     on primary(:app) do
-      target = fetch(:target_version) || capture(:cat, release_path.join("VERSION"))
+      target = capture(:cat, release_path.join("VERSION"))
       candidate = muzeum_package_identity(release_path, fetch(:approved_revision), target, ruby: "/home/muzeum/.rbenv/shims/ruby")
       muzeum_reporting.bind_artifact(fetch(:deployment_token), candidate)
       set :packaged_candidate, candidate

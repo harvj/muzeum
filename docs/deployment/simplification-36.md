@@ -1,0 +1,20 @@
+# Muzeum deployment simplification
+
+Prepared against the v0.7.3 production installation. Installed controls remain unchanged until separately approved.
+
+| Before | Prepared path and reason |
+| --- | --- |
+| The deployment health check booted Rails twice, once to print archive counts and once to inspect readiness. | Remove the status helper and its deployment call. Keep systemd state, the loopback HTTP probe, and the single read-only inspector. The inspector checks four database connections, restricted grants, live Solid Queue heartbeats, source protections, and pending migrations. Archive counts are available in the signed-in application. |
+| Deployment and migration imported a separate root-owned runtime selector and repeatedly hashed the same fixed binaries. | Use the fixed Ruby and bundle paths already used by systemd and recovery. The existing deployment module checks root ownership, real paths and write permissions and discards application-supplied loader overrides. Migration reuses this environment. Keep installer verification of the pinned Ruby build. Runtime package maintenance remains an independent installation operation. |
+| A static v0.3.2 manifest provided a second release selector and preflight. | Remove the obsolete manifest, its Capistrano tasks and coordinator protocol. Retain the clean-main entry point and the current operator exact-revision selection. The operator baseline comparison still runs under the protected lock. |
+| Historical application source still had auxiliary schema bootstrap and a v0.6.0 index exception. | Use the installed scoped migration behavior as source. It verifies the active protected receipt, matching checked migration bytes, the isolated DB identity and a bounded process group. Expire the historical exception and keep a general additive schema-preservation check. |
+| Installed recovery source diverged from version control. | Record the installed workflow in source. Keep the shared runtime ownership and permissions checks, source tree verification against the matching Git revision, seal verification, valid release-local assets and four isolated restores. Retained pre-v0.7.2 releases still use separate PID/socket links and need the legacy branch for matching historical snapshots. |
+| Both systemd launch overrides are loaded. | Prepare to archive the two `20-runtime.conf` files. Their only directives clear and set `ExecStart`, which the later `30-capistrano.conf` resets. Retain the standard units and effective fixed-runtime paths. |
+
+The protected phase coordinator has a distinct role. It retains the deployment attempt across disconnects, coordinates Muzeum's route and writers around migrations, and records the result. Backup and restore code protects durable data independently of the release seal. The seal identifies immutable bytes, whereas Git tree checks anchor application source and the readiness probe checks running services. Keep those safeguards.
+
+## One-time installation after acceptance
+
+Install the reviewed deployment module and migration helper together under their existing root-owned paths. Their expected helper hash changes once. Recovery source is reconciled to the installed bytes. Preserve the backup and route entry points, scoped identities, lock files, and historical receipts. After validating the installed helpers and effective units, archive the superseded launch overrides and the unused runtime checker and selector files through the normal operator procedure. Reload unit definitions only after separate approval. Archive installed files until acceptance gives a recovery reference.
+
+The local phase tests exercise two successive exact source IDs and a schema-compatible retained activation with the same coordinator. They use a fixture service and route adapter. A real isolated Linux rehearsal must run complete Capistrano staging, preserve both sealed identities, boot the application and worker for each successor, exercise the installed recovery wrapper against four disposable databases, and confirm neighboring service isolation. Record that result and finish candidate-bound signed Shell review before changing live controls.

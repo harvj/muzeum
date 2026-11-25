@@ -6,12 +6,10 @@ Production: https://muzeum.fm/. [Deployment/acceptance record](status.md), [cano
 
 ```sh
 ssh harvj 'systemctl is-active muzeum-web muzeum-worker'
-ssh harvj 'sudo -n /usr/local/sbin/check-muzeum-runtime status'
-ssh harvj 'sudo -n /usr/local/sbin/check-muzeum-runtime session'
 curl --fail https://muzeum.fm/up
 ```
 
-`status` reports a read-only repeatable-read snapshot of real counts/checkpoints; `session` reports native grant validity and timestamps, never credentials. `/up` is liveness, not a worker/database guarantee. Inspect Muzeum-only journals without printing environment files. Private dashboard statistics require a valid local session and live provider admission within the 60-second cache.
+`/up` reports web liveness. The protected deployment inspector checks database connectivity, grants, source protections, and Solid Queue heartbeats. The signed-in dashboard reports import status and session activity. Inspect Muzeum-only journals without printing environment files. Private dashboard statistics require a valid local session and live provider admission within the 60-second cache.
 
 The import runs in Solid Queue on `imports`, separately from web. P1.2 continuous synchronization is active for the approved `qalephd` archive; authenticated dashboard updates appear automatically without refreshing. Resume re-enqueues the durable checkpoint. Failed imports also offer restart/replay without deleting observations. API/history drift can require a restart. Do not change an archived username manually, seed users, enable MusicBrainz resolution, or run a full real archive locally. The durable central scheduler uses bounded overlapping incremental windows and the shared one-start/second Last.fm budget. Source history/import and per-account grants remain authoritative. To stop unexpected synchronization, disable the global gate in protected configuration and restart only Muzeum; preserve all checkpoints/evidence. Do not start another historical import as a test.
 
