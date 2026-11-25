@@ -9,7 +9,7 @@ require_relative "../lib/muzeum_release_package"
 append :linked_files, *MuzeumReleasePackage::LINKED_FILES
 append :linked_dirs, *MuzeumReleasePackage::LINKED_DIRECTORIES
 # capistrano-rails defaults to shared assets; the sealed manifest must be release-local.
-Rake::Task["deploy:set_linked_dirs"].clear_actions
+Rake::Task["deploy:set_linked_dirs"].clear_actions if Rake::Task.task_defined?("deploy:set_linked_dirs")
 
 before "deploy:symlink:linked_dirs", "muzeum:shared_runtime"
 set :default_env, { "RAILS_ENV" => "production", "RBENV_VERSION" => "3.4.12", "BUNDLE_PATH" => "/var/www/muzeum/shared/bundle" }

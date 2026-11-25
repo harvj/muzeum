@@ -23,11 +23,19 @@ RSpec.describe MuzeumReleasePackage do
       release.join("assets_manifest_backup").mkdir
       release.join("assets_manifest_backup/.manifest.json").write(assets.join(".manifest.json").read)
 
-      revision_time = release.join("REVISION_TIME")
-      revision_time.unlink
+      described_class::GENERATED_FILES.each do |name|
+        generated = release.join(name)
+        contents = generated.binread
+        generated.unlink
+        expect { described_class.record!(release, shared:, revision:, version: "0.7.1") }
+          .to raise_error("Missing or invalid staged file: #{name}")
+        generated.binwrite(contents)
+      end
+      config = release.join(".bundle/config")
+      config.write("---\nBUNDLE_PRIVATE__EXAMPLE: fixture\n")
       expect { described_class.record!(release, shared:, revision:, version: "0.7.1") }
-        .to raise_error("Missing or invalid staged file: REVISION_TIME")
-      revision_time.write("1795574382\n")
+        .to raise_error("Staged Bundler configuration contains unexpected settings")
+      config.write("---\nBUNDLE_DEPLOYMENT: true\n")
 
       identity = described_class.record!(release, shared:, revision:, version: "0.7.1")
       expect(identity.fetch("candidate_number")).to eq(1)

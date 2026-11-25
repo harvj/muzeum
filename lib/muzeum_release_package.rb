@@ -1,6 +1,7 @@
 require "find"
 require "pathname"
 require "tempfile"
+require "yaml"
 require_relative "muzeum_candidate_number"
 
 # Hashes a packaged release tree, after Capistrano builds its local assets.
@@ -10,6 +11,7 @@ class MuzeumReleasePackage
   LINKED_FILES = %w[.env].freeze
   LINKED_DIRECTORIES = %w[log storage tmp].freeze
   RUNTIME_LINKS = (LINKED_FILES + LINKED_DIRECTORIES).freeze
+  BUNDLER_SETTINGS = %w[BUNDLE_DEPLOYMENT BUNDLE_PATH BUNDLE_WITHOUT].freeze
   GENERATED_FILES = %w[REVISION_TIME .bundle/config public/assets/.manifest.json assets_manifest_backup/.manifest.json].freeze
 
   def self.digest(release, shared:)
@@ -52,6 +54,10 @@ class MuzeumReleasePackage
     end
     unless /\A[0-9]+\z/.match?(release.join("REVISION_TIME").read.strip)
       raise "Invalid staged revision time"
+    end
+    bundler_settings = YAML.safe_load(release.join(".bundle/config").read)
+    unless bundler_settings.is_a?(Hash) && (bundler_settings.keys - BUNDLER_SETTINGS).empty?
+      raise "Staged Bundler configuration contains unexpected settings"
     end
     raise "Release revision differs" unless release.join("REVISION").read.strip == revision
 
