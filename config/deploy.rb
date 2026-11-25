@@ -12,15 +12,26 @@ append :linked_dirs, *MuzeumReleasePackage::LINKED_DIRECTORIES
 Rake::Task["deploy:set_linked_dirs"].clear_actions if Rake::Task.task_defined?("deploy:set_linked_dirs")
 
 before "deploy:symlink:linked_dirs", "muzeum:shared_runtime"
-set :default_env, { "RAILS_ENV" => "production", "RBENV_VERSION" => "3.4.12", "BUNDLE_PATH" => "/var/www/muzeum/shared/bundle" }
 set :bundle_version, 4
 set :bundle_jobs, 2
-SSHKit.config.command_map[:bundle] = "/home/muzeum/.rbenv/shims/bundle"
 set :assets_prefix, "assets"
 set :assets_manifests, [ "public/assets/.manifest.json" ]
 set :rails_env, "production"
 set :assets_roles, [ :web ]
-set :default_env, fetch(:default_env).merge("PATH" => "/home/muzeum/.rbenv/shims:/home/muzeum/.rbenv/bin:$PATH", "SECRET_KEY_BASE_DUMMY" => "1")
+runtime = "/opt/muzeum/ruby-3.4.13/bin"
+set :bundle_path, "/var/www/muzeum/shared/bundle/ruby-3.4.13"
+set :bundle_env_variables, { BUNDLE_FROZEN: "true" }
+set :default_env, { "PATH" => "#{runtime}:/usr/bin:/bin", "SECRET_KEY_BASE_DUMMY" => "1", "DISABLE_BOOTSNAP" => "1" }
+SSHKit.config.command_map[:ruby] = "#{runtime}/ruby"
+bundle = "#{runtime}/ruby #{runtime}/bundle"
+SSHKit.config.command_map[:bundle] = bundle
+if Rake::Task.task_defined?("bundler:map_bins")
+  Rake::Task["bundler:map_bins"].enhance do
+    fetch(:bundle_bins).each do |bin|
+      SSHKit.config.command_map.prefix[bin.to_sym].map! { |prefix| prefix == "bundle exec" ? "#{bundle} exec" : prefix }
+    end
+  end
+end
 set :ssh_options, { forward_agent: false, verify_host_key: :always, auth_methods: %w[publickey], non_interactive: true }
 
 require_relative "../lib/muzeum_deployment_revision"
@@ -77,7 +88,7 @@ namespace :muzeum do
   task :sync_release, [ :tag, :deployment, :status ] do |_, args|
     on primary(:app) do
       muzeum_sync_release(args.fetch(:tag).to_s, deployment: args[:deployment], status: args[:status],
-        ruby: "/home/muzeum/.rbenv/shims/ruby", command: MuzeumDeploymentRevision.method(:command))
+        ruby: SSHKit.config.command_map[:ruby], command: MuzeumDeploymentRevision.method(:command))
     end
   end
 
@@ -121,7 +132,7 @@ namespace :muzeum do
   task :prepare do
     on primary(:app) do
       target = capture(:cat, release_path.join("VERSION"))
-      candidate = muzeum_package_identity(release_path, fetch(:approved_revision), target, ruby: "/home/muzeum/.rbenv/shims/ruby")
+      candidate = muzeum_package_identity(release_path, fetch(:approved_revision), target, ruby: SSHKit.config.command_map[:ruby])
       muzeum_reporting.bind_artifact(fetch(:deployment_token), candidate)
       set :packaged_candidate, candidate
       execute :sudo, "-n", "/usr/local/sbin/muzeum-deploy", "prepare", fetch(:approved_revision), fetch(:deployment_token), release_path
@@ -137,7 +148,7 @@ namespace :muzeum do
   task :complete do
     on primary(:app) do
       artifact = capture(:readlink, "-f", current_path)
-      candidate = muzeum_verify_artifact(release_path, fetch(:approved_revision), ruby: "/home/muzeum/.rbenv/shims/ruby")
+      candidate = muzeum_verify_artifact(release_path, fetch(:approved_revision), ruby: SSHKit.config.command_map[:ruby])
       unless artifact == release_path.to_s && candidate == fetch(:packaged_candidate)
         raise "Running artifact differs from the packaged candidate"
       end
