@@ -40,6 +40,9 @@ class CanonicalLibraryController < ApplicationController
       @revision = CatalogRevision.where(entity_type: @model.name, entity_id: @entry.id).order(id: :desc).first
     end
 
+    @history_range = CatalogListening::RANGES.key?(params[:range]) ? params[:range] : "all"
+    @history_grouping = CatalogListening::GROUPINGS.key?(params[:grouping]) ? params[:grouping] : "years"
+
     case @entry
     when Artist
       @geography = CatalogRevision.where(entity_type: CanonicalCatalog::ArtistGeography::ENTITY_TYPE, entity_id: @entry.id)
@@ -81,9 +84,10 @@ class CanonicalLibraryController < ApplicationController
       @activity_releases = catalog_scope.where(id: [ @entry.id, *other_ids ]).order(:id).to_a
       member_ids = ReleaseTrackListeningDecision.included_memberships(listening_user, @activity_releases.map(&:id)).pluck(:recording_id)
       release_plays = recording_plays(member_ids)
-      @listening_total = CatalogListening.new(release_plays).total
+      listening = CatalogListening.new(release_plays)
+      @listening_total = listening.total
       @observation_count = @listening_total.plays
-      @timeline = CatalogListening.new(release_plays).timeline("all") if @archive_available
+      @timeline = listening.timeline(@history_range, @history_grouping) if @archive_available
       @plays = ListeningPage.chronological(release_plays, before: params[:before_play]).limit(PAGE + 1).to_a
       @next_release_play = @plays.pop && @plays.last.id if @plays.size > PAGE
       @activity_recordings = Recording.where(id: @plays.map(&:effective_recording_id)).index_by(&:id)
@@ -106,7 +110,7 @@ class CanonicalLibraryController < ApplicationController
       plays = recording_plays([ @entry.id ])
       listening = CatalogListening.new(plays)
       @listening_total = listening.total
-      @timeline = listening.timeline("all") if @archive_available
+      @timeline = listening.timeline(@history_range, @history_grouping) if @archive_available
       @observation_count = @listening_total.plays
       if @public_profile
         plays = ListeningPage.chronological(plays, before: params[:before])
@@ -130,7 +134,7 @@ class CanonicalLibraryController < ApplicationController
       latest = ReleaseRankingDecision.latest_for(current_user, [ release.id ])[release.id]
       ReleaseRankingDecision.create!(user: current_user, release:, included:) unless latest&.included == included
     end
-    redirect_to release_path(release), status: :see_other
+    redirect_to release_path(release, details: "1", anchor: "entity-details"), status: :see_other
   end
 
   def track_listening
@@ -203,7 +207,7 @@ class CanonicalLibraryController < ApplicationController
     kind = @section.singularize
     request = CatalogImport.request!(kind, entry.id)
     request.dispatch
-    redirect_to polymorphic_path(entry), notice: "Import requested.", status: :see_other
+    redirect_to helpers.catalog_entry_path(entry, details: "1", anchor: "entity-details"), notice: "Import requested.", status: :see_other
   end
 
   private
@@ -283,9 +287,7 @@ class CanonicalLibraryController < ApplicationController
     artist_listening = CatalogListening.new(recording_plays(records.map(&:id)))
     stats = artist_listening.by_recording
     @listening_total = stats.values.reduce(CatalogListening::EMPTY, :+)
-    @history_range = params[:range].to_s
-    @history_range = "all" unless CatalogListening::RANGES.key?(@history_range)
-    @timeline = artist_listening.timeline(@history_range)
+    @timeline = artist_listening.timeline(@history_range, @history_grouping) if @archive_available
     @recording_count = records.size
     @recording_sort = %w[plays title length recent].find { |sort| sort == params[:recording_sort] } || "plays"
     @recording_rows = records.map { |record| [ record, stats.fetch(record.id, CatalogListening::EMPTY) ] }

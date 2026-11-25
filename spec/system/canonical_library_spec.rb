@@ -100,6 +100,85 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     browser&.execute_cdp("Emulation.setEmulatedMedia", features: [])
   end
 
+  it "shares independently grouped listening history and keyboard-accessible details across entity pages" do
+    user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "entity-history", lastfm_username: "entity-history")
+    artist = Artist.create!(name: "Charli xcx", mbid: SecureRandom.uuid)
+    release = Release.create!(title: "Charli", release_year: 2019, catalog_verified_at: Time.current)
+    recording = Recording.create!(title: "Next Level Charli", mbid: SecureRandom.uuid, duration_ms: 158_000)
+    recording.artists << artist
+    release.artists << artist
+    release.catalog_track_slots.create!(recording:, title: recording.title, medium: 1, position: 1, track_mbid: SecureRandom.uuid)
+    MusicalIdentityDecision.create!(entity: artist, user:, colors: %w[light-green blue])
+    ReleaseRankingDecision.create!(user:, release:, included: true)
+    payload = { artist_name: artist.name, album_name: release.title, track_name: recording.title }
+    dates = [ 6.years.ago, 3.years.ago, 6.months.ago, 50.days.ago, *Array.new(12) { |i| (i + 1).days.ago } ]
+    observations = dates.map { |played_at| Scrobble.create!(user:, lastfm_account: user.source_account, played_at:, payload:) }
+    RecordingResolution::Ledger.record!(listener: user, scrobble: observations.first, scope: :surface,
+      mode: "resolved", recording:, reason: "Fixture")
+    sign_in(user)
+
+    browser = page.driver.browser
+    [ [ "Recording", recording, recordings_path ], [ "Release", release, releases_path ], [ "Artist", artist, artists_path ] ].each do |label, entity, index|
+      visit index
+      expect(page).to have_css(".library-nav a[aria-current='page'][href='#{index}']", exact_text: label.pluralize)
+      visit polymorphic_path(entity)
+      expect(page).to have_no_css(".library-nav [aria-current]")
+      expect(page).to have_css(".entity-heading-label + h1")
+      expect(page).to have_css(".entity-heading-label", exact_text: label.upcase)
+      expect(page).to have_css(".catalog-heading + .entity-history")
+      expect(page).to have_css("#entity-details:not([open])")
+      expect(page).to have_no_button("Import")
+      expect(page.evaluate_script("document.querySelector('.listening-plot').scrollWidth")).to be < 390
+      expect(page).to have_text("42 min")
+      if label == "Recording"
+        expect(page).to have_css(".entity-history + section", text: /release appearances/i)
+        expect(page).to have_css("#recording-chronology + #entity-details")
+        expect(page).to have_text("Recording duration 2:38")
+      end
+
+      within("nav[aria-label='Listening history grouping']") { click_link "Months" }
+      expect(page).to have_css(".artist-timeline-column time", text: 6.months.ago.strftime("%b %Y"))
+      { "Year" => 14, "90d" => 13, "30d" => 12 }.each do |period, expected_plays|
+        within("nav[aria-label='Listening history period']") { click_link period }
+        expect(page).to have_css("nav[aria-label='Listening history grouping'] [aria-current]", exact_text: "Months")
+        expect(page).to have_css("nav[aria-label='Listening history period'] [aria-current]", exact_text: period)
+        expect(page.evaluate_script(<<~JS)).to eq(expected_plays * recording.duration_ms)
+          [...document.querySelectorAll(".listening-periods [data-duration-ms]")]
+            .reduce((total, bucket) => total + Number(bucket.dataset.durationMs), 0)
+        JS
+      end
+      within("nav[aria-label='Listening history grouping']") { click_link "Days" }
+      expect(page).to have_css(".artist-timeline-column", count: 12)
+      expect(page).to have_css(".artist-timeline-fill[title$='#{label == 'Recording' ? '1 play' : '3 min'}']", count: 12)
+      find("#entity-details > summary").send_keys(:enter)
+      expect(page).to have_css("#entity-details[open] .listening-periods li", count: 12)
+      find("#entity-details > summary").send_keys(:space)
+      expect(page).to have_css("#entity-details:not([open])")
+
+      [ [ "desktop", 1440, 960, "light" ], [ "mobile", 390, 844, "dark" ] ].each do |size, width, height, theme|
+        browser.execute_cdp("Emulation.setDeviceMetricsOverride", width:, height:, deviceScaleFactor: 1, mobile: size == "mobile")
+        browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "prefers-color-scheme", value: theme } ])
+        visit polymorphic_path(entity, range: "30d", grouping: "days")
+        expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
+        expect(page.evaluate_script(<<~JS)).to be(true)
+          (() => {
+            const plot = document.querySelector(".listening-plot")
+            const first = plot.scrollLeft
+            plot.scrollLeft = plot.scrollWidth
+            const scrolls = plot.scrollLeft > first
+            plot.scrollLeft = first
+            return scrolls
+          })()
+        JS
+        capture_resolution("entity-#{label.downcase}-#{size}", full: true)
+      end
+    end
+    expect(observations.map { |observation| observation.reload.payload }).to all(eq(payload.stringify_keys))
+  ensure
+    browser&.execute_cdp("Emulation.clearDeviceMetricsOverride")
+    browser&.execute_cdp("Emulation.setEmulatedMedia", features: [])
+  end
+
   it "orders catalog listening totals and clears filters without losing Archive colors" do
     user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "catalog-polish", lastfm_username: "catalog-polish")
     artist = Artist.create!(name: "Tove Lo", country: "SE", mbid: SecureRandom.uuid)
@@ -132,8 +211,8 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
         expect(page).to have_no_link("Clear search")
         first, second = all(".catalog-table tbody tr")
         if section != "recordings"
-          expect(first).to have_css(".listening-bar:not([data-identity-first])", text: "4m")
-          expect(second).to have_text("0s")
+          expect(first).to have_css(".listening-bar:not([data-identity-first])", text: "4 min")
+          expect(second).to have_text("0 min")
           expect(page).to have_no_css(".intro h1")
         end
         capture_resolution("catalog-#{section}-#{width}-#{theme}") if section != "recordings"
@@ -163,7 +242,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
       capture_resolution("catalog-archive-#{width}-#{theme}")
 
       visit artist_path(artist)
-      find("summary", text: "Listening history data").click
+      find("#entity-details > summary").click
       expect(page).to have_css('.listening-periods .listening-bar[data-identity-first="pink"][data-identity-second="gray"]')
       capture_resolution("catalog-artist-listening-#{width}-#{theme}")
 
@@ -739,14 +818,14 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     expect(page).to have_css("#{checkbox}:not(:checked)")
     find(checkbox).send_keys(:space)
     expect(page).to have_text("3 distinct resolved observations")
-    expect(page).to have_text("12m estimated listening time")
+    expect(page).to have_text("12 min estimated listening time")
     release_url = page.current_url
     artist = Release.sole.artists.find_by!(name: "The Get Up Kids")
     visit artist_path(artist)
     within("#artist-releases") do
       expect(page).to have_link("Guilt Show")
       expect(page).to have_text("3 plays")
-      expect(page).to have_text("12m")
+      expect(page).to have_text("12 min")
     end
     visit release_url
     browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 390, height: 844, deviceScaleFactor: 1, mobile: true)
@@ -826,11 +905,12 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     expect(page).to have_text(/track listing/i)
     within("#listening-activity") do
       expect(page).to have_text("1 distinct resolved observation")
-      expect(page).to have_link("Signals")
     end
     expect(all("tbody tr").length).to eq(3)
     expect(all(".track-number", minimum: 4).map(&:text)).to eq([ "#", "1", "2", "3" ])
     verify_appearances("release")
+    find("#entity-details > summary").send_keys(:enter)
+    within("#entity-details") { expect(page).to have_link("Signals") }
     find_link("Different Song").hover
     expect(inverted_link?).to be(true)
     capture_link_state("hover")
@@ -844,6 +924,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     expect(page).to have_current_path(recording_path(Recording.find_by!(title: "Different Song")))
     expect(page).to have_text("0 resolved listening observations")
     expect(page).to have_link("Night Drive")
+    find("#entity-details > summary").send_keys(:enter)
     click_button "Import"
     expect(page).to have_text("Pending enrichment")
     visit artists_path
@@ -851,7 +932,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     expect(page).to have_current_path(artist_path(Artist.find_by!(name: "Night Lines")))
     expect(page).to have_link("Different Song")
     expect(page).to have_link("Night Drive")
-    expect(page).to have_css("#listening-history", text: "3m estimated listening time")
+    expect(page).to have_css("#listening-history", text: "3 min estimated listening time")
     expect(page).to have_css(".artist-timeline-fill[data-listening-scale-percent-value='100.0']")
     find("#listening-history a", text: "30d").click
     expect(page).to have_text("No resolved plays in this period.")
@@ -860,7 +941,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     find("#artist-recordings a", exact_text: "Title").send_keys(:enter)
     expect(page).to have_css("#artist-recordings th[aria-sort='ascending']", text: "Title")
     expect(page).to have_css("#artist-recordings tbody tr:first-child", text: "Different Song")
-    expect(page).to have_css("#artist-releases .listening-bar", text: "3m")
+    expect(page).to have_css("#artist-releases .listening-bar", text: "3 min")
     expect(page).to have_css("#artist-releases", text: "1 play")
     visit artist_path(Artist.find_by!(name: "Night Lines"))
     verify_appearances("artist")
@@ -1401,7 +1482,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
           capture_resolution("release-listening-#{size}-#{mode}")
         elsif section.start_with?("artist")
           expect(page).to have_css("#artist-recordings .listening-bar", text: "1")
-          expect(page).to have_css("#artist-releases .listening-bar", text: "3m")
+          expect(page).to have_css("#artist-releases .listening-bar", text: "3 min")
           table_ids = page.all("main .library-card[id]").map { |card| card[:id] }
           expect(table_ids).to include("listening-history", "artist-recordings", "artist-releases")
           page.execute_script("window.scrollTo(0, 0)")

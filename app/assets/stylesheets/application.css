@@ -100,11 +100,11 @@ header :is(.library-nav-item, .account-nav > a) { padding-inline: .38rem; border
   text-decoration: none;
   text-shadow: var(--art-text-shadow, none);
 }
-.library-nav a.library-nav-item:is(:hover, :focus-visible) {
+.library-nav a.library-nav-item:not([aria-current]):is(:hover, :focus-visible) {
   background: color-mix(in srgb, currentColor 12%, transparent);
 }
 .library-nav a.library-nav-item:focus-visible {
-  outline: 2px solid currentColor;
+  outline: 2px solid var(--art-foreground, var(--ink));
   outline-offset: 2px;
 }
 .library-nav .library-nav-item[aria-current="page"] {
@@ -532,25 +532,29 @@ main .review-candidate.recommended { border-color: #378c48; }
 }
 }
 
-.artist-history-heading { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem 1rem; }
-.artist-history-heading p { margin-block: .25rem; }
-.artist-ranges { display: flex; flex-wrap: wrap; align-self: start; border: 1px solid var(--line); border-radius: .5rem; }
+.catalog-heading > .entity-heading-label { margin-block: 0 .2rem; }
+.entity-heading-label > span { display: block; }
+.entity-history > p { margin-block: .25rem; }
+.listening-controls { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; margin-block: .8rem; }
+.listening-control { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; }
+.artist-ranges { display: flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: .5rem; }
 .artist-ranges a { padding: .25rem .65rem; border-radius: .4rem; }
 .artist-ranges a[aria-current] { font-weight: 700; background: var(--surface-accent); }
-.artist-timeline { display: flex; gap: .5rem; margin: 1rem 0; }
-.artist-timeline-axis { display: flex; height: 8rem; flex-direction: column; justify-content: space-between; font-size: .75em; }
+.artist-timeline { display: flex; gap: .5rem; margin: 1rem 0 0; max-width: 48rem; }
+.artist-timeline-axis { display: flex; height: 8rem; flex: none; flex-direction: column; justify-content: space-between; font-size: .75em; }
+.listening-plot:focus-visible, .entity-details > summary:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.listening-plot { min-width: 0; overflow-x: auto; padding-bottom: 1.75rem; }
 .artist-timeline-bars {
   display: flex;
-  flex: 1;
-  min-width: 0;
+  width: max-content;
   height: 8rem;
   border-bottom: 1px solid currentColor;
   background: repeating-linear-gradient(to top, transparent 0 calc(50% - 1px), var(--line) calc(50% - 1px) 50%);
 }
-.artist-timeline-column { position: relative; display: flex; align-items: end; flex: 1; min-width: 0; height: 100%; }
-.artist-timeline-fill { width: min(80%, 15px); margin-inline: auto; height: var(--listening-scale, 0%); background: currentColor; border-radius: 2px 2px 0 0; }
-.artist-timeline-column span { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: .7em; }
-.artist-timeline-data { margin-block: 1.75rem .25rem; }
+.artist-timeline-column { position: relative; display: flex; align-items: end; width: 5.5rem; height: 100%; }
+.artist-timeline-fill { width: 1.5rem; margin-inline: auto; height: var(--listening-scale, 0%); background: currentColor; border-radius: 2px 2px 0 0; }
+.artist-timeline-column time { position: absolute; top: 100%; width: 100%; text-align: center; white-space: nowrap; font-size: .72em; }
+
 .artist-listening-table { width: 100%; table-layout: fixed; border-collapse: collapse; margin-block: .5rem; }
 .artist-listening-table :is(td, th) { padding: .3rem .45rem; text-align: left; overflow-wrap: anywhere; }
 .artist-listening-table th { border-bottom: 1px solid var(--line); }
@@ -602,12 +606,10 @@ main .review-candidate.recommended { border-color: #378c48; }
   background: var(--card);
   color: var(--ink);
 }
-.artist-metadata-tools { margin-top: 1rem; }
 @media (max-width: 480px) {
   .artist-listening-table { font-size: .82rem; }
   .artist-listening-table :is(td, th) { padding-inline: .2rem; }
   .artist-recordings :is(td, th):nth-child(2) { width: 17%; }
-  .artist-timeline-column span { font-size: .62em; }
 }
 
 /* Outer, inset and raised reading surfaces share the current theme palette. */
@@ -919,7 +921,7 @@ html { scroll-padding-block-start: calc(var(--shell-header-height, 84px) + env(s
 }
 
 
-:is(h2, h3).section-heading {
+:is(h2, h3).section-heading, .entity-heading-label > .section-heading {
   margin-block: 0 .4rem;
   color: var(--muted);
   font-family: inherit;
@@ -929,6 +931,7 @@ html { scroll-padding-block-start: calc(var(--shell-header-height, 84px) + env(s
   line-height: 1.35;
   text-transform: uppercase;
 }
+.entity-details > .section-heading { margin-block-start: 1rem; }
 h3.resolution-release-title {
   margin: 0;
   font-family: inherit;

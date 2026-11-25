@@ -74,9 +74,10 @@ RSpec.describe "Public listening profiles", type: :request do
 
     get public_profile_artists_path(profile)
     expect(response.body).to include(public_profile_artist_path(profile, fixture.fetch(:artist)))
+    expect(Nokogiri::HTML(response.body).css('.library-nav a[aria-current="page"]').map(&:text)).to eq([ "Artists" ])
     get public_profile_artist_path(profile, fixture.fetch(:artist))
     navigation = Nokogiri::HTML(response.body).at_css(".library-nav")
-    expect(navigation.css('span[aria-current="page"]').map(&:text)).to eq([ "Artists" ])
+    expect(navigation.css('[aria-current="page"]')).to be_empty
     expect(navigation.at_css("a[href='#{public_profile_path(profile)}']").text).to eq("Archive")
     expect(response.body).to include(public_profile_release_path(profile, fixture.fetch(:album)))
     get public_profile_releases_path(profile)

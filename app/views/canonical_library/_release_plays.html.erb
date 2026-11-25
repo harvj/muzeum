@@ -1,0 +1,9 @@
+<ol class="catalog-list">
+  <% @plays.each do |play| %>
+    <li><%= @public_profile ? browser_time(play.played_at) : entity_link(browser_time(play.played_at), resolution_surface_path(play)) %>
+      · <%= catalog_link(@activity_recordings.fetch(play.effective_recording_id)) %></li>
+  <% end %>
+</ol>
+<% if @next_release_play %>
+  <p><%= link_to "Older observations", catalog_entry_path(@entry, before_play: @next_release_play, with_release: @activity_releases.reject { |release| release == @entry }.map(&:id), details: "1", range: @history_range, grouping: @history_grouping, anchor: "entity-details") %></p>
+<% end %>

@@ -1,6 +1,7 @@
 # Aggregates the effective observation relation supplied by the resolution ledger.
 class CatalogListening
   RANGES = { "all" => nil, "year" => 1.year, "90d" => 90.days, "30d" => 30.days }.freeze
+  GROUPINGS = { "years" => "year", "months" => "month", "days" => "day" }.freeze
   Stats = Data.define(:plays, :milliseconds, :known_durations, :last_played) do
     def +(other)
       self.class.new(plays + other.plays, milliseconds + other.milliseconds,
@@ -25,29 +26,15 @@ class CatalogListening
     @plays.group(id).pluck(id, Arel.sql(metrics)).to_h { |key, *values| [ key, Stats.new(*values) ] }
   end
 
-  def timeline(range, now: Time.current)
+  def timeline(range, grouping, now: Time.current)
     window = RANGES.fetch(range)
-    first = window ? (now - window).utc.to_date + 1 : @plays.minimum(:played_at)&.utc&.to_date
-    return [] unless first
+    unit = GROUPINGS.fetch(grouping)
+    observations = @plays.where(played_at: ..now)
+    observations = observations.where(played_at: (now - window)..now) if window
 
-    last = now.utc.to_date
-    unit = if range == "year" || (range == "all" && (last - first) < 730)
-      "month"
-    elsif range == "all"
-      "year"
-    else
-      "day"
-    end
     bucket = Arel.sql("date_trunc('#{unit}', scrobbles.played_at)::date")
-    values = @plays.where(played_at: Time.utc(first.year, first.month, first.day)..now).group(bucket)
-      .pluck(bucket, Arel.sql(metrics)).to_h { |date, *stats| [ date.to_date, Stats.new(*stats) ] }
-    date = first.public_send("beginning_of_#{unit}").to_date
-    points = []
-    while date <= last
-      points << [ date, values.fetch(date, EMPTY) ]
-      date = date.advance("#{unit}s": 1)
-    end
-    points
+    observations.group(bucket).order(bucket).pluck(bucket, Arel.sql(metrics))
+      .map { |date, *stats| [ date.to_date, Stats.new(*stats) ] }
   end
 
   private

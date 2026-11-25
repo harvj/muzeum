@@ -24,8 +24,9 @@ RSpec.describe "Application Shell navigation", type: :system do
       browser.execute_cdp("Emulation.setDeviceMetricsOverride", width:, height:, deviceScaleFactor: 1, mobile: width < 700)
       browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "prefers-color-scheme", value: theme } ])
       visit recording_path(record)
-      expect(page).to have_css('nav.library-nav span[aria-current="page"]', exact_text: "Recordings")
-      expect(page).to have_no_css('nav.library-nav a[aria-current]')
+      expect(page).to have_no_css('nav.library-nav [aria-current]')
+      within(".library-nav") { click_link "Recordings" }
+      expect(page).to have_css('nav.library-nav a[aria-current="page"]', exact_text: "Recordings")
       expect(page.evaluate_script(<<~JS)).to eq([ true, true, true, true ])
         (() => {
           const current = document.querySelector(".library-nav [aria-current]")
@@ -39,7 +40,7 @@ RSpec.describe "Application Shell navigation", type: :system do
           document.body.append(probe)
           const style = getComputedStyle(current)
           const result = [style.backgroundColor === getComputedStyle(probe).color,
-            style.color === getComputedStyle(probe).backgroundColor, current.tabIndex === -1,
+            style.color === getComputedStyle(probe).backgroundColor, current.tabIndex === 0,
             [...nav.children].every(item => getComputedStyle(item).textDecorationLine === "none")]
           probe.remove()
           return result
@@ -47,7 +48,7 @@ RSpec.describe "Application Shell navigation", type: :system do
       JS
       within(".library-nav") do
         expect(page).to have_link("Archive")
-        expect(page).to have_no_link("Recordings")
+        expect(page).to have_link("Recordings", href: recordings_path)
         find_link("Releases").hover
       end
       expect(page).to have_css(".library-nav a:hover", text: "Releases")

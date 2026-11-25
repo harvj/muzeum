@@ -1,5 +1,3 @@
-<%= render "recording_chronology" %>
-
 <% unless Clients::Musicbrainz::MBID.match?(@entry.mbid.to_s) %>
   <p class="muted">Partially resolved · The provider identity is unverified.</p>
 <% end %>
@@ -12,31 +10,3 @@
     <p>Release memberships pending verification.</p>
   </section>
 <% end %>
-<section class="card library-card" id="listening-activity">
-  <h2 class="section-heading">Listening activity</h2>
-  <p>Recording duration <%= recording_duration(@entry.duration_ms) %></p>
-  <% if @archive_available %>
-    <p><strong><%= pluralize(@observation_count, "resolved listening observation") %></strong></p>
-    <p>Estimated listening time: <%= estimated_listening_time(@listening_total) %></p>
-    <%= render "duration_coverage", totals: @listening_total %>
-    <%= render "artist_timeline", metric: :plays if @timeline&.any? { |_, totals| totals.plays.positive? } %>
-    <% unless @public_profile %><p class="muted">Unresolved observations are outside this count.</p><% end %>
-    <% if @plays.any? %>
-      <%= dense_table("Listening activity") do %>
-        <thead><tr><th scope="col">Played at</th></tr></thead>
-        <tbody>
-          <% @plays.each do |play| %>
-            <tr><th scope="row"><% if @public_profile %>
-              <%= browser_time(play.played_at) %>
-            <% else %>
-              <%= entity_link browser_time(play.played_at), resolution_surface_path(play) %>
-            <% end %></th></tr>
-          <% end %>
-        </tbody>
-      <% end %>
-      <% if @next_page %><p><%= link_to "Older observations", catalog_entry_path(@entry, before: @next_page) %></p><% end %>
-    <% end %>
-  <% else %>
-    <p>Listening activity is unavailable until you connect a Last.fm archive.</p>
-  <% end %>
-</section>

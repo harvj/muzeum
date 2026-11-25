@@ -1,43 +1,16 @@
 <%= tag.section class: "intro catalog-heading", data: musical_identity_attributes(@entry) do %>
+  <p class="entity-heading-label"><span class="section-heading"><%= @entry.model_name.human %></span></p>
   <h1><%= musical_identity_badge(@entry, detailed: true) %><%= catalog_title(@entry) %>
     <%= catalog_release_date(@entry) if @entry.is_a?(Release) %></h1>
   <% case @entry
      when Release, Recording %>
     <p><span class="catalog-credit"><%= catalog_artists(@entry, badges: false).presence || "Artist credits pending" %></span></p>
+    <% if @entry.is_a?(Recording) %><p><span class="catalog-credit">Recording duration <%= recording_duration(@entry.duration_ms) %></span></p><% end %>
   <% when Artist %>
     <% if @entry.country.present? %><p><span class="catalog-credit"><%= render "shared/geographic_place", country: @entry.country %></span></p><% end %>
   <% end %>
 <% end %>
-<% if @entry.is_a?(Release) %>
-  <%= render "release" %>
-  <% unless @public_profile %>
-    <%= button_to (@ranked_release ? "Exclude from my release rankings" : "Include in my release rankings"),
-      ranking_release_path(@entry), method: :patch, params: { decision: @ranked_release ? "exclude" : "include" } %>
-  <% end %>
-<% end %>
-<% if @entry.is_a?(Artist) %><%= render "artist" %>
-<details class="card library-card"><summary>Geographic evidence</summary>
-  <%= render "artist_metadata" %>
-</details>
-<% end %>
-<% unless @public_profile %>
-<% if @entry.is_a?(Artist) %>
-<details class="card library-card artist-metadata-tools"><summary>Catalog tools</summary>
-<% else %>
-<section class="card library-card"><h2 class="section-heading">Catalog import</h2>
-<% end %>
-  <p role="status"><%= import_status(@import_request, verified: @revision.present?) %></p>
-  <% if @import_request&.active? && !CatalogImport.worker_enabled? %><p>Background imports are paused in this environment.</p><% end %>
-  <% if @import_request&.failure.present? %><p><%= @import_request.failure %></p><% end %>
-  <%= button_to (@import_request&.state == "failed" ? "Retry import" : "Import"),
-      catalog_import_path(@entry) if @may_import %>
-  <% if @revision %>
-    <details>
-      <summary>Metadata provenance</summary>
-      <p>MusicBrainz · <%= browser_time(@revision.created_at) %></p>
-      <% if @revision.evidence["conflicts"].present? %><p>Existing values kept for review: <%= @revision.evidence["conflicts"].keys.join(", ").humanize %>.</p><% end %>
-    </details>
-  <% end %>
-<% if @entry.is_a?(Artist) %></details><% else %></section><% end %>
-<% end %>
-<%= render "recording" if @entry.is_a?(Recording) %>
+<%= render "listening_history", metric: (@entry.is_a?(Recording) ? :plays : :milliseconds) %>
+<%= render @entry.model_name.singular %>
+<%= render "recording_chronology" if @entry.is_a?(Recording) %>
+<%= render "entity_details" if !@public_profile || @timeline.present? || @plays.present? || @entry.is_a?(Artist) %>

@@ -100,6 +100,10 @@ module CanonicalLibraryHelper
     end
   end
 
+  def listening_bucket_date(date, grouping)
+    date.strftime({ "years" => "%Y", "months" => "%b %Y", "days" => "%b %-d, %Y" }.fetch(grouping))
+  end
+
   def recording_duration(milliseconds)
     return "Unknown" unless milliseconds
 
@@ -110,11 +114,7 @@ module CanonicalLibraryHelper
   end
 
   def compact_listening_time(milliseconds)
-    minutes, seconds = (milliseconds / 1000).divmod(60)
-    return "#{minutes / 60}h #{minutes % 60}m" if minutes >= 60
-    return "#{minutes}m" if minutes.positive?
-
-    "#{seconds}s"
+    "#{number_with_delimiter((milliseconds / 60_000.0).round)} min"
   end
 
   def estimated_listening_time(totals)

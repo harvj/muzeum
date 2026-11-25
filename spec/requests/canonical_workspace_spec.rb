@@ -307,7 +307,7 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     [ album, single ].each do |release|
       get release_path(release)
       expect(response.body).to include("8 distinct resolved observations")
-      expect(Nokogiri::HTML(response.body).css("#listening-activity > ol > li").size).to eq(8)
+      expect(Nokogiri::HTML(response.body).css("#entity-details > ol > li").size).to eq(8)
     end
     get recording_path(recording)
     expect(response.body).to include("8 resolved listening observations")
@@ -338,11 +338,11 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
       document = Nokogiri::HTML(response.body)
       expect(document.at_css("#artist-recordings tr:first-child td a").text).to include("girl right?")
       expect(document.at_css("#artist-recordings .listening-bar").text).to include("9")
-      expect(document.at_css("#listening-history").text).to include("27m estimated listening time")
+      expect(document.at_css("#listening-history").text).to include("27 min estimated listening time")
       expect(document.at_css("#listening-history [aria-current=true]").text).to eq("30d")
-      expect(document.css(".artist-timeline-data li").sum { |row| row["data-duration-ms"].to_i }).to eq(1_260_000)
+      expect(document.css(".listening-periods li").sum { |row| row["data-duration-ms"].to_i }).to eq(1_260_000)
       expect(document.css("#artist-releases .listening-bar").size).to eq(2)
-      expect(document.css("#artist-releases .listening-bar").map(&:text)).to all(include("27m"))
+      expect(document.css("#artist-releases .listening-bar").map(&:text)).to all(include("27 min"))
     end
     expect(response.body).to include("Duration known for 9 of 10 plays.", "Unknown duration")
 

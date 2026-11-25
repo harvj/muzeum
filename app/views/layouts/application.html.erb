@@ -25,14 +25,14 @@
           <nav class="library-nav" aria-label="Public profile">
             <%= shell_navigation_item "Archive", public_profile_path(@public_profile), descendants: false %>
             <% %w[artists releases recordings].each do |section| %>
-              <%= shell_navigation_item section.capitalize, catalog_index_path(section) %>
+              <%= shell_navigation_item section.capitalize, catalog_index_path(section), descendants: false %>
             <% end %>
           </nav>
         <% elsif current_user %>
           <nav class="library-nav" aria-label="Music library">
             <% { "Recordings" => recordings_path, "Releases" => releases_path, "Artists" => artists_path,
                  "Archive" => archive_path, "Resolution" => resolution_surfaces_path }.each do |label, path| %>
-              <%= shell_navigation_item label, path %>
+              <%= shell_navigation_item label, path, descendants: %w[Archive Resolution].include?(label) %>
             <% end %>
           </nav>
         <% end %>

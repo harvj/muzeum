@@ -1,28 +1,4 @@
 <% colors = musical_identity_attributes(@entry) %>
-<section class="card library-card artist-history" id="listening-history">
-  <div class="artist-history-heading">
-    <div>
-      <h2 class="section-heading">Listening history</h2>
-      <% if @archive_available %>
-        <p><strong><%= estimated_listening_time(@listening_total) %></strong> estimated listening time · <%= pluralize(@listening_total.plays, "resolved play") %></p>
-        <%= render "duration_coverage", totals: @listening_total %>
-      <% end %>
-    </div>
-    <% if @archive_available %>
-      <nav aria-label="Listening history period" class="artist-ranges">
-        <% { "all" => "All", "year" => "Year", "90d" => "90d", "30d" => "30d" }.each do |range, label| %>
-          <%= link_to label, catalog_entry_path(@entry, **request.query_parameters.slice("recording_sort", "recording_page").merge(range: range, anchor: "listening-history")),
-            aria: { current: ("true" if range == @history_range) } %>
-        <% end %>
-      </nav>
-    <% end %>
-  </div>
-  <% if @archive_available && @timeline.any? { |_, totals| totals.plays.positive? } %>
-    <%= render "artist_timeline" %>
-  <% else %>
-    <p><%= @archive_available ? "No resolved plays in this period." : "Listening history is unavailable." %></p>
-  <% end %>
-</section>
 <section class="card library-card" id="artist-recordings">
   <h2 class="section-heading">Recordings (<%= @recording_count %>)</h2>
   <% if @recording_rows.any? %>
@@ -30,7 +6,7 @@
       <thead><tr>
         <% { "title" => "Title", "length" => "Length", "recent" => "Last listened", "plays" => "Play count" }.each do |sort, label| %>
           <th scope="col" aria-sort="<%= (@recording_sort == sort ? (sort == "title" ? "ascending" : "descending") : "none") %>">
-            <%= link_to label, catalog_entry_path(@entry, range: @history_range, recording_sort: sort, anchor: "artist-recordings") %>
+            <%= link_to label, catalog_entry_path(@entry, range: @history_range, grouping: @history_grouping, recording_sort: sort, anchor: "artist-recordings") %>
           </th>
         <% end %>
       </tr></thead>
@@ -46,10 +22,10 @@
       </tbody>
     </table>
     <% if @recording_page.positive? %>
-      <%= link_to "Previous recordings", catalog_entry_path(@entry, range: @history_range, recording_sort: @recording_sort, recording_page: @recording_page - 1, anchor: "artist-recordings") %>
+      <%= link_to "Previous recordings", catalog_entry_path(@entry, range: @history_range, grouping: @history_grouping, recording_sort: @recording_sort, recording_page: @recording_page - 1, anchor: "artist-recordings") %>
     <% end %>
     <% if (@recording_page + 1) * 10 < @recording_count %>
-      <%= link_to "More recordings", catalog_entry_path(@entry, range: @history_range, recording_sort: @recording_sort, recording_page: @recording_page + 1, anchor: "artist-recordings") %>
+      <%= link_to "More recordings", catalog_entry_path(@entry, range: @history_range, grouping: @history_grouping, recording_sort: @recording_sort, recording_page: @recording_page + 1, anchor: "artist-recordings") %>
     <% end %>
   <% else %>
     <p>No canonical recordings are available.</p>

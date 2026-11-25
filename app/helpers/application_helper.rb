@@ -1,10 +1,10 @@
 module ApplicationHelper
   def shell_navigation_item(label, path, descendants: true)
     current = request.path == path || (descendants && request.path.start_with?("#{path}/"))
-    if current
+    if current && descendants
       tag.span(label, class: "library-nav-item", aria: { current: "page" })
     else
-      link_to(label, path, class: "library-nav-item")
+      link_to(label, path, class: "library-nav-item", aria: { current: ("page" if current) })
     end
   end
 

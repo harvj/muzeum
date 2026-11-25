@@ -1,0 +1,22 @@
+<% counts = metric == :plays %>
+<% maximum = @timeline.map { |_, totals| totals.public_send(metric) }.max %>
+<% colors = @activity_releases&.many? ? {} : musical_identity_attributes(@entry) %>
+<%= tag.figure class: "artist-timeline identity-chart", data: colors,
+  aria: { label: counts ? "Plays by date" : "Estimated listening time by date" } do %>
+  <div class="artist-timeline-axis" aria-hidden="true">
+    <% (maximum.positive? ? [maximum, 0] : [0]).each do |value| %>
+      <span><%= counts ? number_with_delimiter(value) : compact_listening_time(value) %></span>
+    <% end %>
+  </div>
+  <div class="listening-plot" tabindex="0" role="region" aria-label="Listening chart">
+    <div class="artist-timeline-bars" aria-hidden="true">
+      <% @timeline.each do |date, totals| %>
+        <% percent = maximum.positive? ? 100.0 * totals.public_send(metric) / maximum : 0 %>
+        <div class="artist-timeline-column">
+          <div class="artist-timeline-fill" data-controller="listening-scale" data-listening-scale-percent-value="<%= percent %>" title="<%= date.iso8601 %> · <%= counts ? pluralize(totals.plays, "play") : estimated_listening_time(totals) %>"></div>
+          <time datetime="<%= date.iso8601 %>"><%= listening_bucket_date(date, @history_grouping) %></time>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>
