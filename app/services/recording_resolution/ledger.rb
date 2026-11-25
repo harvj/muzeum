@@ -128,7 +128,7 @@ module RecordingResolution
           )
           AND effective_resolution.recording_id IS NOT NULL
       SQL
-      Scrobble.from("(#{statement}) assigned_plays").select("assigned_plays.id")
+      Scrobble.from(Arel.sql("(#{statement}) assigned_plays")).select("assigned_plays.id")
     end
 
     def self.effective_decision_join(user, observation)
