@@ -7,11 +7,17 @@ require_relative "muzeum_candidate_number"
 # Shared runtime state is represented by the link itself, never by its contents.
 class MuzeumReleasePackage
   IDENTITY = "ARTIFACT_IDENTITY.json"
-  RUNTIME_LINKS = %w[.env log storage tmp].freeze
+  LINKED_FILES = %w[.env].freeze
+  LINKED_DIRECTORIES = %w[log storage tmp].freeze
+  RUNTIME_LINKS = (LINKED_FILES + LINKED_DIRECTORIES).freeze
+  GENERATED_FILES = %w[REVISION_TIME .bundle/config public/assets/.manifest.json assets_manifest_backup/.manifest.json].freeze
 
   def self.digest(release, shared:)
-    unless release.join("tmp").symlink? && release.join("tmp").readlink == shared.join("tmp")
-      raise "Release tmp must link to the application shared runtime directory"
+    RUNTIME_LINKS.each do |name|
+      link = release.join(name)
+      unless link.symlink? && link.readlink == shared.join(name)
+        raise "Release #{name} must link to the application shared runtime path"
+      end
     end
 
     entries = []
@@ -40,7 +46,13 @@ class MuzeumReleasePackage
 
   def self.record!(release, shared:, version:, revision:)
     raise "Release target differs from the packaged VERSION" unless release.join("VERSION").read.strip == version
-    raise "Packaged assets are missing" unless release.join("public/assets/.manifest.json").file?
+    GENERATED_FILES.each do |name|
+      path = release.join(name)
+      raise "Missing or invalid staged file: #{name}" unless path.file? && !path.symlink? && path.size.positive?
+    end
+    unless /\A[0-9]+\z/.match?(release.join("REVISION_TIME").read.strip)
+      raise "Invalid staged revision time"
+    end
     raise "Release revision differs" unless release.join("REVISION").read.strip == revision
 
     artifact_sha256 = digest(release, shared:)
