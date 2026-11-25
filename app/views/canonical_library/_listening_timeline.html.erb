@@ -3,8 +3,8 @@
 <% peak = counts ? number_with_delimiter(maximum) : compact_listening_time(maximum) %>
 <% minimum = counts ? "0" : "0 min" %>
 <% colors = @activity_releases&.many? ? {} : musical_identity_attributes(@entry) %>
-<% desktop_labels = listening_calendar_labels(@timeline, @history_grouping, spacing: 5) %>
-<% mobile_labels = listening_calendar_labels(@timeline, @history_grouping, spacing: 3, from_newest: true) %>
+<% desktop_labels = listening_calendar_labels(@timeline, @history_window.grouping, spacing: 5) %>
+<% mobile_labels = listening_calendar_labels(@timeline, @history_window.grouping, spacing: 3, from_newest: true) %>
 <%= tag.figure class: "artist-timeline identity-chart", data: colors,
   aria: { label: counts ? "Plays by date" : "Estimated listening time by date" } do %>
   <div class="artist-timeline-axis" aria-hidden="true">

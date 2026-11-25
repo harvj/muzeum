@@ -1,6 +1,5 @@
 # Aggregates the effective observation relation supplied by the resolution ledger.
 class CatalogListening
-  RANGES = { "all" => nil, "year" => 1.year, "90d" => 90.days, "30d" => 30.days }.freeze
   GROUPINGS = { "years" => "year", "months" => "month", "days" => "day" }.freeze
   Stats = Data.define(:plays, :milliseconds, :known_durations, :last_played) do
     def +(other)
@@ -26,19 +25,23 @@ class CatalogListening
     @plays.group(id).pluck(id, Arel.sql(metrics)).to_h { |key, *values| [ key, Stats.new(*values) ] }
   end
 
-  def timeline(range, grouping, now: Time.current)
-    window = RANGES.fetch(range)
-    unit = GROUPINGS.fetch(grouping)
-    observations = @plays.where(played_at: ..now)
-    observations = observations.where(played_at: (now - window)..now) if window
+  def timeline(window)
+    unit = GROUPINGS.fetch(window.grouping)
+    observations = @plays.where(played_at: ..window.now)
+    if window.historical?
+      start_at = Time.utc(window.first.year, window.first.month, window.first.day)
+      end_date = window.last + 1
+      end_at = Time.utc(end_date.year, end_date.month, end_date.day)
+      observations = observations.where(played_at: start_at...end_at)
+    end
 
     bucket = Arel.sql("date_trunc('#{unit}', scrobbles.played_at)::date")
     totals = observations.group(bucket).pluck(bucket, Arel.sql(metrics))
       .to_h { |date, *stats| [ date.to_date, Stats.new(*stats) ] }
-    return [] if totals.empty?
+    return [] if totals.empty? && !window.historical?
 
-    first, last = if window
-      [ (now - window).utc.to_date, now.utc.to_date ].map { |date| date.public_send("beginning_of_#{unit}").to_date }
+    first, last = if window.historical?
+      [ window.first, window.last ].map { |date| date.public_send("beginning_of_#{unit}").to_date }
     else
       totals.keys.minmax
     end

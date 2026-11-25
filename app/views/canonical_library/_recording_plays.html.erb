@@ -10,4 +10,4 @@
     <% end %>
   </tbody>
 <% end %>
-<% if @next_page %><p><%= link_to "Older observations", catalog_entry_path(@entry, before: @next_page, details: "1", range: @history_range, grouping: @history_grouping, anchor: "entity-details") %></p><% end %>
+<% if @next_page %><p><%= link_to "Older observations", catalog_entry_path(@entry, before: @next_page, details: "1", **@history_window.query, anchor: "entity-details") %></p><% end %>

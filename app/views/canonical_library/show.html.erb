@@ -13,4 +13,4 @@
 <%= render "listening_history", metric: (@entry.is_a?(Recording) ? :plays : :milliseconds) %>
 <%= render @entry.model_name.singular %>
 <%= render "recording_chronology" if @entry.is_a?(Recording) %>
-<%= render "entity_details" if !@public_profile || @timeline.present? || @plays.present? || @entry.is_a?(Artist) %>
+<%= render "entity_details" if !@public_profile || @timeline&.any? { |_, totals| totals.plays.positive? } || @plays.present? || @entry.is_a?(Artist) %>

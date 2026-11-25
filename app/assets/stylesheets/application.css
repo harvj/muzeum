@@ -541,6 +541,23 @@ main .review-candidate.recommended { border-color: #378c48; }
 .artist-ranges { display: flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: .5rem; }
 .artist-ranges a { padding: .2rem .55rem; border-radius: .4rem; }
 .artist-ranges a[aria-current] { font-weight: 700; background: var(--surface-accent); }
+.listening-window { display: flex; flex: 0 0 100%; justify-content: flex-end; align-items: center; gap: .4rem; font-size: .8rem; }
+.listening-window-dates { text-align: center; font-variant-numeric: tabular-nums; }
+.listening-window .listening-window-arrow {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 2rem;
+  min-height: 2rem;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: .35rem;
+  background: var(--control);
+  color: var(--ink);
+  font-size: 1.25rem;
+  line-height: 1;
+  text-decoration: none;
+}
+.listening-window .listening-window-arrow:disabled { opacity: .45; cursor: default; }
 .listening-summary { margin-block-start: .65rem; }
 .listening-summary p { margin-block: .2rem 0; }
 .artist-timeline {

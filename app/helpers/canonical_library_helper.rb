@@ -100,6 +100,14 @@ module CanonicalLibraryHelper
     end
   end
 
+  def listening_window_arrow(glyph, label, date, query)
+    if date
+      link_to glyph, catalog_entry_path(@entry, **query.merge(start: date.iso8601)), class: "listening-window-arrow", aria: { label: }
+    else
+      tag.button glyph, type: "button", disabled: true, class: "listening-window-arrow", aria: { label: }
+    end
+  end
+
   def listening_calendar_labels(timeline, grouping, spacing:, from_newest: false)
     years = grouping == "years"
     transitions = timeline.each_index.select { |i| timeline[i].first.yday == 1 } unless years

@@ -40,8 +40,7 @@ class CanonicalLibraryController < ApplicationController
       @revision = CatalogRevision.where(entity_type: @model.name, entity_id: @entry.id).order(id: :desc).first
     end
 
-    @history_range = CatalogListening::RANGES.key?(params[:range]) ? params[:range] : "all"
-    @history_grouping = CatalogListening::GROUPINGS.key?(params[:grouping]) ? params[:grouping] : "years"
+    @history_window = CatalogListening::Window.new(period: params[:range], grouping: params[:grouping], start: params[:start])
 
     case @entry
     when Artist
@@ -87,7 +86,7 @@ class CanonicalLibraryController < ApplicationController
       listening = CatalogListening.new(release_plays)
       @listening_total = listening.total
       @observation_count = @listening_total.plays
-      @timeline = listening.timeline(@history_range, @history_grouping) if @archive_available
+      @timeline = listening.timeline(@history_window) if @archive_available
       @plays = ListeningPage.chronological(release_plays, before: params[:before_play]).limit(PAGE + 1).to_a
       @next_release_play = @plays.pop && @plays.last.id if @plays.size > PAGE
       @activity_recordings = Recording.where(id: @plays.map(&:effective_recording_id)).index_by(&:id)
@@ -110,7 +109,7 @@ class CanonicalLibraryController < ApplicationController
       plays = recording_plays([ @entry.id ])
       listening = CatalogListening.new(plays)
       @listening_total = listening.total
-      @timeline = listening.timeline(@history_range, @history_grouping) if @archive_available
+      @timeline = listening.timeline(@history_window) if @archive_available
       @observation_count = @listening_total.plays
       if @public_profile
         plays = ListeningPage.chronological(plays, before: params[:before])
@@ -287,7 +286,7 @@ class CanonicalLibraryController < ApplicationController
     artist_listening = CatalogListening.new(recording_plays(records.map(&:id)))
     stats = artist_listening.by_recording
     @listening_total = stats.values.reduce(CatalogListening::EMPTY, :+)
-    @timeline = artist_listening.timeline(@history_range, @history_grouping) if @archive_available
+    @timeline = artist_listening.timeline(@history_window) if @archive_available
     @recording_count = records.size
     @recording_sort = %w[plays title length recent].find { |sort| sort == params[:recording_sort] } || "plays"
     @recording_rows = records.map { |record| [ record, stats.fetch(record.id, CatalogListening::EMPTY) ] }

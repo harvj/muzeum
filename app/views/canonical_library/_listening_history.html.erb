@@ -3,20 +3,7 @@
   <div class="listening-history-heading">
     <h2 class="section-heading"><%= @activity_releases&.many? ? "Combined listening history" : "Listening history" %></h2>
     <% if @archive_available %>
-      <div class="listening-controls">
-        <% options = request.query_parameters.slice("recording_sort", "recording_page", "after_appearance", "after_track", "after_legacy_track", "with_release", "edition_tracks").merge(range: @history_range, grouping: @history_grouping, anchor: anchor) %>
-        <% [[:range, "Period", { "all" => "All", "year" => "Year", "90d" => "90d", "30d" => "30d" }, @history_range],
-            [:grouping, "Group by", CatalogListening::GROUPINGS.keys.index_with(&:capitalize), @history_grouping]].each do |key, heading, choices, selected| %>
-          <div class="listening-control">
-            <span class="muted"><%= heading %></span>
-            <nav aria-label="Listening history <%= key == :range ? 'period' : 'grouping' %>" class="artist-ranges">
-              <% choices.each do |value, label| %>
-                <%= link_to label, catalog_entry_path(@entry, **options.merge(key => value)), aria: { current: ("true" if value == selected) } %>
-              <% end %>
-            </nav>
-          </div>
-        <% end %>
-      </div>
+      <%= render "listening_controls", window: @history_window, anchor: %>
     <% end %>
   </div>
   <% if @archive_available %>
@@ -25,7 +12,8 @@
     <% end %>
     <% if @timeline.any? %>
       <%= render "listening_timeline", metric: %>
-    <% else %>
+    <% end %>
+    <% if @timeline.none? { |_, totals| totals.plays.positive? } %>
       <p>No resolved plays in this period.</p>
     <% end %>
     <div class="listening-summary">

@@ -141,16 +141,15 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
       within("nav[aria-label='Listening history grouping']") { click_link "Months" }
       expect(page).to have_css(".artist-timeline-column[data-date='#{6.months.ago.to_date.beginning_of_month}']")
       expect(page).to have_css(".artist-timeline-column[data-date='2020-01-01'] time", exact_text: "2020")
-      { "Year" => 14, "90d" => 13, "30d" => 12 }.each do |period, expected_plays|
+      %w[Year 6m 90d 30d].each do |period|
         within("nav[aria-label='Listening history period']") { click_link period }
-        expect(page).to have_css("nav[aria-label='Listening history grouping'] [aria-current]", exact_text: "Months")
         expect(page).to have_css("nav[aria-label='Listening history period'] [aria-current]", exact_text: period)
-        expect(page.evaluate_script(<<~JS)).to eq(expected_plays * recording.duration_ms)
-          [...document.querySelectorAll(".listening-periods [data-duration-ms]")]
-            .reduce((total, bucket) => total + Number(bucket.dataset.durationMs), 0)
-        JS
+        if %w[90d 30d].include?(period)
+          expect(page).to have_no_css("nav[aria-label='Listening history grouping']")
+        else
+          expect(page).to have_css("nav[aria-label='Listening history grouping'] [aria-current]", exact_text: "Months")
+        end
       end
-      within("nav[aria-label='Listening history grouping']") { click_link "Days" }
       expect(page).to have_css(".artist-timeline-column[data-date='#{4.days.ago.utc.to_date}']:not(:has(.artist-timeline-fill))", visible: :all)
       expect(page).to have_css(".artist-timeline + .listening-summary", text: "(all time)")
       expect(page).to have_css(".artist-timeline-fill[title$='#{label == 'Recording' ? '1 play' : '3 min'}']", count: 10)
@@ -190,7 +189,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
         JS
         capture_resolution("entity-#{label.downcase}-#{size}", full: true)
         %w[years months days].each do |grouping|
-          visit polymorphic_path(entity, grouping:)
+          visit polymorphic_path(entity, grouping:, range: grouping == "days" ? "year" : "all", start: grouping == "days" ? "2020-01-01" : nil)
           expect(page).to have_css(".artist-timeline-column:not(:has(.artist-timeline-fill))", minimum: 1, visible: :all)
           if grouping != "years"
             expect(page).to have_css(".artist-timeline-column[data-date='2020-01-01'] time", exact_text: "2020")

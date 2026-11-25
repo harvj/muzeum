@@ -1,6 +1,6 @@
 <%= tag.details class: "card library-card entity-details", id: "entity-details", open: params[:details] == "1" do %>
   <summary>Details</summary>
-  <%= render "listening_history_data" if @timeline.present? %>
+  <%= render "listening_history_data" if @timeline&.any? { |_, totals| totals.plays.positive? } %>
   <% if @plays.present? %>
     <h3 class="section-heading"><%= @entry.is_a?(Recording) ? "Played at" : "Individual plays" %></h3>
     <%= render(@entry.is_a?(Recording) ? "recording_plays" : "release_plays") %>

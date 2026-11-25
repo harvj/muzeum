@@ -5,5 +5,5 @@
   <% end %>
 </ol>
 <% if @next_release_play %>
-  <p><%= link_to "Older observations", catalog_entry_path(@entry, before_play: @next_release_play, with_release: @activity_releases.reject { |release| release == @entry }.map(&:id), details: "1", range: @history_range, grouping: @history_grouping, anchor: "entity-details") %></p>
+  <p><%= link_to "Older observations", catalog_entry_path(@entry, before_play: @next_release_play, with_release: @activity_releases.reject { |release| release == @entry }.map(&:id), details: "1", **@history_window.query, anchor: "entity-details") %></p>
 <% end %>
