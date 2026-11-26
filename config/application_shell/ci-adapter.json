@@ -22,6 +22,11 @@
       "evidence": "Packaged RC identity, exact publication evidence, same-process rendering and retained identity"
     },
     {
+      "cases": ["SH-08"],
+      "argv": ["python3", "ops/shell/check-sh08.py", "--output", "tmp/application-shell-sh08-source.json"],
+      "evidence": "Signed public-profile exception, focused browser route checks and retained Muzeum-only isolation and recovery evidence. Operator preflight completes the check against the exact staged artifact."
+    },
+    {
       "cases": ["SH-09"],
       "argv": ["bundle", "exec", "rspec", "spec/services/application_shell_registry_spec.rb"],
       "evidence": "Signed registry refresh and withdrawal on shell-v2, persisted replay high-water mark and outage fallback"
