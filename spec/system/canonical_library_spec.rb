@@ -6,6 +6,7 @@ require_relative "../support/narrow_stairs_fixture"
 require_relative "../support/lady_wood_fixture"
 require_relative "../support/interpol_membership_fixture"
 require_relative "../support/leisure_configurations_fixture"
+require_relative "../support/queen_short_track_fixture"
 
 RSpec.describe "Canonical library resolution workflow", type: :system do
   include CatalogFixtures
@@ -13,6 +14,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
   include NarrowStairsFixture
   include InterpolMembershipFixture
   include LeisureConfigurationsFixture
+  include QueenShortTrackFixture
 
   before do
     skip "Run with BROWSER_TESTS=1 for canonical workspace browser verification" unless ENV["BROWSER_TESTS"] == "1"
@@ -24,6 +26,34 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     driven_by :selenium, using: :headless_chrome do |options|
       options.binary = ENV["CHROME_BINARY"] if ENV["CHROME_BINARY"]
     end
+  end
+
+  it "reviews a Queen of the Clouds interlude without changing observed listening in both layouts" do
+    user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "queen-short-track", lastfm_username: "queen-short-track")
+    release, = queen_short_track_fixture(user)
+    sign_in(user)
+    browser = page.driver.browser
+    [ [ 1440, 960, "desktop", "Confirm inferred listen", "confirmed" ],
+      [ 390, 844, "mobile", "Reject inference", "rejected" ] ].each do |width, height, size, action, decision|
+      browser.execute_cdp("Emulation.setDeviceMetricsOverride", width:, height:, deviceScaleFactor: 1, mobile: size == "mobile")
+      visit release_path(release)
+      find("summary", text: "Review possible unscrobbled tracks").send_keys(:enter)
+      expect(page).to have_text("Timebomb → The Love (interlude) → Moments")
+      click_button action
+      expect(page).to have_text("Inference review saved.")
+      find("summary", text: "Review possible unscrobbled tracks").send_keys(:enter)
+      expect(page).to have_text("Latest decision: #{decision}")
+      expect(page).to have_text("2 distinct resolved observations")
+      expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
+      if ENV["QUEEN_INFERENCE_CAPTURES"]
+        find("#short-track-inference").scroll_to(:top)
+        page.save_screenshot(File.join(ENV.fetch("QUEEN_INFERENCE_CAPTURES"), "queen-inference-#{size}.png"))
+      end
+    end
+    expect(Scrobble.count).to eq(2)
+    expect(ShortTrackInferenceDecision.order(:id).pluck(:decision)).to eq(%w[confirmed rejected])
+  ensure
+    browser&.execute_cdp("Emulation.clearDeviceMetricsOverride")
   end
 
   it "switches verified Leisure configurations and uses their dates in catalog filters" do

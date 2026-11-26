@@ -96,3 +96,19 @@ base date is known. A date filter matches partial evidence only when its full
 possible interval falls within the requested range. Sorting uses the earliest
 supported bound, with unknown dates last. Shared publication history remains
 separate from these listener-scoped projections.
+
+### Contextual short-track review
+
+The v0.8.0 review checks a bounded page of a listener’s release observations. A
+proposal needs two consecutive Last.fm observations from the same source
+account, an unambiguous one-position gap within one medium of a verified
+configuration, and known source track lengths. The missing track must be a
+labeled intro or interlude shorter than both neighbors. The elapsed time must
+match the first track plus the interlude at the observations’ second
+resolution. Tied or intervening observations disqualify the proposal. A
+matching gap makes the inference reviewable and leaves playback and the
+edition actually heard uncertain. Confirmation and rejection append private
+decisions and follow STAT-013.
+
+**Open:** Broader track types, a duration cutoff and any timing tolerance need
+evidence before applying them. Opening or closing tracks lack two anchors.

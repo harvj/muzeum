@@ -22,6 +22,7 @@ Rails.application.routes.draw do
       patch :musical_identity, on: :member
       if section == :releases
         patch :configuration, on: :member
+        post :short_track_inference, on: :member
         patch :ranking, on: :member
         patch :track_listening, on: :member
         post :admit_edition_track, on: :member

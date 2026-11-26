@@ -327,6 +327,7 @@ class ResolutionWorkspaceController < ApplicationController
     end
     known = Release.where(release_group_mbid: programs.map { |_, edition| edition.dig("release-group", "id") }).pluck(:release_group_mbid).to_set
     programs.reject { |_, edition| known.include?(edition.dig("release-group", "id")) }
+      .uniq { |_, edition| edition.fetch("id") }
   end
 
   def configurations_for(assessment)

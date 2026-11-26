@@ -101,6 +101,11 @@ class CanonicalLibraryController < ApplicationController
       @plays = ListeningPage.chronological(release_plays, before: params[:before_play]).limit(PAGE + 1).to_a
       @next_release_play = @plays.pop && @plays.last.id if @plays.size > PAGE
       @activity_recordings = Recording.where(id: @plays.map(&:effective_recording_id)).index_by(&:id)
+      unless @public_profile
+        @short_track_review = ShortTrackInference.new(current_user, @entry, @preferred_configuration)
+        @short_track_proposals = @short_track_review.proposals(@plays)
+        @short_track_history = @short_track_review.history.includes(:recording).order(id: :desc).limit(30).to_a
+      end
     when Recording
       @chronology = CanonicalCatalog::RecordingChronology.latest(@entry)
       chronology_revisions = CatalogRevision.where(entity_type: "Recording", entity_id: @entry.id).order(id: :desc)
@@ -141,6 +146,16 @@ class CanonicalLibraryController < ApplicationController
     snapshot = release.release_configurations.find(params[:configuration_id]) if params[:configuration_id].present?
     ReleaseConfigurationDecision.select!(current_user, release, snapshot)
     redirect_to release_path(release), status: :see_other
+  end
+
+  def short_track_inference
+    release = catalog_scope.find(params[:id])
+    configuration = ReleaseConfigurationSelection.new(current_user, [ release.id ]).configuration(release)
+    input = params.expect(inference: [ :before_id, :after_id, :recording_id, :evidence_digest, :decision ])
+    ShortTrackInference.new(current_user, release, configuration).record!(**input.to_h.symbolize_keys)
+    redirect_to release_path(release, anchor: "short-track-inference"), notice: "Inference review saved.", status: :see_other
+  rescue ArgumentError => error
+    redirect_to release_path(release, anchor: "short-track-inference"), alert: error.message.presence || "Invalid inference review.", status: :see_other
   end
 
   def ranking

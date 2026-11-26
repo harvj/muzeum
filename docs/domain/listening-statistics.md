@@ -55,3 +55,12 @@ The album and single each show 150 contributed observations. Their combined hist
 ## Default release rankings (v0.6.6)
 
 Rank eligible canonical releases by estimated listening time, breaking ties by title and canonical ID. Eligibility requires a verified original publication context or a verified first-publication appearance of a member recording; it does not follow from catalog membership alone. A listener’s latest explicit inclusion or exclusion supersedes the default. Keep preference history without changing catalog membership or observations. Release detail, catalog totals, artist release rankings, and combined histories use the applicable included memberships for the listener. Release-ranking eligibility stays independent of the track-level calculation. Count distinct effective observations within each result, and use the union of observations for combined totals.
+
+**STAT-013 — Confirmed short-track inferences are separate.** Record confirmation
+or rejection in the listener’s inference decision history. An inference does
+not add a Last.fm observation, modify recording or release attribution, or
+contribute to existing counts, minutes, rankings, histories, or combined totals.
+Confirmed inferences are visible as such in private review. Any future combined
+observed-and-inferred metric requires an explicit accounting decision about
+deduplication against later observations, superseded evidence and overlapping
+releases, plus separately labeled observed and inferred contributions.

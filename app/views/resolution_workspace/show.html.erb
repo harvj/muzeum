@@ -74,6 +74,12 @@
       <% @adjacent_programs.each do |mbid, edition| %>
         <details>
           <summary><%= [edition["title"], edition.dig("release-group", "primary-type"), edition["country"], edition["date"]].compact.join(" · ") %></summary>
+          <% history = @assessment.evidence.fetch("additional_recording_publications").fetch(mbid) %>
+          <p>Checked recording <%= link_to history.dig("exact_recording", "title").presence || mbid, "https://musicbrainz.org/recording/#{mbid}" %>
+            appears on this independent program.</p>
+          <% if history["incomplete"] %>
+            <p>Investigation incomplete. <%= Array(history["limitations"]).join(" ") %></p>
+          <% end %>
           <p><%= link_to "MusicBrainz source release", "https://musicbrainz.org/release/#{edition.fetch("id")}" %></p>
           <% edition.fetch("media").sort_by { |medium| medium.fetch("position") }.each do |medium| %>
             <p>Medium <%= medium.fetch("position") %></p>

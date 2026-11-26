@@ -1,6 +1,9 @@
 require "rails_helper"
+require_relative "../../support/leisure_configurations_fixture"
 
 RSpec.describe RecordingResolution::RecordingProvenance do
+  include LeisureConfigurationsFixture
+
   let(:evidence) do
     JSON.parse(Rails.root.join("spec/fixtures/musicbrainz/release_provenance/interpol.json").read)
   end
@@ -70,6 +73,26 @@ RSpec.describe RecordingResolution::RecordingProvenance do
     expect(history.fetch("exact_recording").fetch("id")).to eq(id)
     expect(history.fetch("releases").sole.fetch("slots").sole.fetch("position")).to eq(12)
     expect(history.fetch("classification")).to eq("unclassified")
+  end
+
+  it "finds the checked original Leisure-adjacent single without claiming a complete failed browse" do
+    evidence = JSON.parse(Rails.root.join("docs/design/release-configurations/tracklists.json").read)
+    single = source_edition(evidence.fetch("adjacent_program_editions").find { |item| item["id"].start_with?("b11e") })
+    single["release-group"].merge!("primary-type" => "Single", "first-release-date" => single.fetch("date"))
+    anniversary = source_edition(evidence.fetch("leisure_editions").find { |item| item["id"].start_with?("5834") })
+    recording_id = "87dfe8ce-4861-4327-b16c-60423529e352"
+    allow(client).to receive(:provenance_recording).with(session, recording_id)
+      .and_return("id" => recording_id, "title" => "I Know (extended)")
+    allow(client).to receive(:provenance_releases).with(session, recording_id) do |*_, &progress|
+      progress.call([ single.except("media"), anniversary.except("media") ])
+      raise CanonicalCatalog::Store::Unverified, "Replay browse ended before the final page"
+    end
+    expect(client).to receive(:edition).with(session, single.fetch("id"), catalog: true).and_return(single)
+    result = check.call(recording_id, retained: [ anniversary ], counterparts: [])
+    expect(result.fetch("adjacent_programs")).to eq([ single ])
+    expect(result.fetch("releases").find { |row| row["id"] == single["id"] }.fetch("slots").sole)
+      .to include("position" => 2, "title" => "I Know (extended)")
+    expect(result).to include("browse_complete" => false, "incomplete" => true, "classification" => "unclassified")
   end
 
   it "paginates exact release results across groups and retains the accepted pages" do

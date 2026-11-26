@@ -71,6 +71,8 @@ The authoritative, living domain rules are [principles](domain/principles.md), [
      - **v0.7.1 — Featured-artist discovery and ordered credits.** Search explicit title feature credits as separate provider evidence. Display each recording’s and release’s independent ordered credits as comma-separated canonical artist names. General parenthetical title fallback remains future work. [Release notes](v0.7.1/release-notes.md) · [Browser evidence](design/v0.7.1/README.md).
      - **v0.7.2 — Application Shell v2.0.0 adoption.** Qualify the responsive Shell, verified session identity refresh, shared Site Art control and exact-artifact release lifecycle. [Adoption evidence](v0.7.2/shell-adoption.md).
 
+     - **v0.8.0 — Release configurations and contextual listening.** Include the accepted configuration implementation, explicit adjacent-release admission, and private review of probable unscrobbled intros and interludes. Keep observed and inferred totals separate.
+
 9. **P1.6 — Profile onboarding (tentative).**
    - **P1.6a — Last.fm authentication and verified username.** Use Last.fm web authorization and bind only the returned username.
    - **P1.6b — Self-service account linking.** Resolve duplicate claims, relinking and provider session security.

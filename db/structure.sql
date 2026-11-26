@@ -3879,7 +3879,144 @@ CREATE UNIQUE INDEX index_release_configuration_snapshots ON public.release_conf
 
 CREATE INDEX index_release_configuration_decision_history ON public.release_configuration_decisions USING btree (user_id, release_id, id);
 
+--
+-- Name: short_track_inference_decisions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.short_track_inference_decisions (
+    id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    release_id bigint NOT NULL,
+    before_play_id bigint NOT NULL,
+    after_play_id bigint NOT NULL,
+    recording_id bigint NOT NULL,
+    predecessor_id bigint,
+    decision character varying NOT NULL,
+    evidence jsonb NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT valid_short_track_inference_decision CHECK ((((decision)::text = ANY ((ARRAY['confirmed'::character varying, 'rejected'::character varying])::text[])) AND (before_play_id <> after_play_id)))
+);
+
+
+--
+-- Name: short_track_inference_decisions_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.short_track_inference_decisions_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: short_track_inference_decisions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.short_track_inference_decisions_id_seq OWNED BY public.short_track_inference_decisions.id;
+
+
+--
+-- Name: short_track_inference_decisions id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.short_track_inference_decisions ALTER COLUMN id SET DEFAULT nextval('public.short_track_inference_decisions_id_seq'::regclass);
+
+
+--
+-- Name: short_track_inference_decisions short_track_inference_decisions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.short_track_inference_decisions
+    ADD CONSTRAINT short_track_inference_decisions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: index_short_track_inference_decisions_on_after_play_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_short_track_inference_decisions_on_after_play_id ON public.short_track_inference_decisions USING btree (after_play_id);
+
+
+--
+-- Name: index_short_track_inference_decisions_on_before_play_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_short_track_inference_decisions_on_before_play_id ON public.short_track_inference_decisions USING btree (before_play_id);
+
+
+--
+-- Name: index_short_track_inference_decisions_on_predecessor_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_short_track_inference_decisions_on_predecessor_id ON public.short_track_inference_decisions USING btree (predecessor_id);
+
+
+--
+-- Name: index_short_track_inference_decisions_on_recording_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_short_track_inference_decisions_on_recording_id ON public.short_track_inference_decisions USING btree (recording_id);
+
+
+--
+-- Name: index_short_track_inference_history; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_short_track_inference_history ON public.short_track_inference_decisions USING btree (user_id, release_id, before_play_id, after_play_id, recording_id, id);
+
+
+--
+-- Name: short_track_inference_decisions fk_rails_3506dab902; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.short_track_inference_decisions
+    ADD CONSTRAINT fk_rails_3506dab902 FOREIGN KEY (predecessor_id) REFERENCES public.short_track_inference_decisions(id);
+
+
+--
+-- Name: short_track_inference_decisions fk_rails_3ac458a50e; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.short_track_inference_decisions
+    ADD CONSTRAINT fk_rails_3ac458a50e FOREIGN KEY (after_play_id) REFERENCES public.scrobbles(id);
+
+
+--
+-- Name: short_track_inference_decisions fk_rails_4edb294d3c; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.short_track_inference_decisions
+    ADD CONSTRAINT fk_rails_4edb294d3c FOREIGN KEY (before_play_id) REFERENCES public.scrobbles(id);
+
+
+--
+-- Name: short_track_inference_decisions fk_rails_6c3fcd75f1; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.short_track_inference_decisions
+    ADD CONSTRAINT fk_rails_6c3fcd75f1 FOREIGN KEY (release_id) REFERENCES public.releases(id);
+
+
+--
+-- Name: short_track_inference_decisions fk_rails_8986676585; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.short_track_inference_decisions
+    ADD CONSTRAINT fk_rails_8986676585 FOREIGN KEY (recording_id) REFERENCES public.recordings(id);
+
+
+--
+-- Name: short_track_inference_decisions fk_rails_a143154156; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.short_track_inference_decisions
+    ADD CONSTRAINT fk_rails_a143154156 FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
 INSERT INTO "schema_migrations" (version) VALUES
+('20261126173000'),
 ('20261126170000'),
 ('20261124162000'),
 ('20261124030000'),
