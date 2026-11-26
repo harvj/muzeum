@@ -20,7 +20,7 @@ end %>
 <% if invalid_edition %>
   <p role="alert" data-release-proposal-target="warning">The selected edition is no longer in this review. Choose a current edition before confirming.</p>
 <% end %>
-<%= render "release_provenance", provenance:, mbid:, recording_ids: plan.identity.source_ids || [mbid] if established %>
+<%= render "release_provenance", provenance:, mbid:, recording_ids: plan.identity.source_ids || [mbid] if established && !@release_review&.policy %>
 <% if choosing_release %>
   <% if established %>
     <details><summary>Review a correction to the selected base edition</summary>
@@ -31,7 +31,7 @@ end %>
   <% end %>
 <% end %>
 <% earliest = @assessment.evidence.dig("recording_publications", mbid, "earliest_publication", "date") %>
-<% unless established %>
+<% unless established || @release_review&.policy %>
 <section class="resolution-context" aria-label="Original release">
   <h2 class="section-heading">Original release</h2>
   <% if groups.any? %>
@@ -65,6 +65,7 @@ end %>
 </section>
   <%= render "release_provenance", provenance:, mbid:, recording_ids: plan.identity.source_ids || [mbid] %>
 <% end %>
+<%= render("other_recording_appearances", provenance:) if @release_review&.policy %>
 <% if can_confirm && (!invalid_edition || proposals.any?) %>
   <%= form_with url: decide_resolution_surface_path(@observation), class: "resolution-confirmation", id: "recording-resolution-confirmation" do |form| %>
     <%= form.hidden_field :recording_mbid, value: mbid %>
@@ -151,7 +152,9 @@ end %>
     <div class="resolution-actions">
       <%= form.button class: "resolution-primary" do %>
         <span class="resolution-confirmation-mark" aria-hidden="true">✓</span>
-        <%= if release_pending
+        <%= if @release_review&.policy && @affected_count.positive?
+          "Resolve all #{@affected_count} observations"
+        elsif release_pending
           "Resolve recording only"
         elsif @affected_count.zero?
           "Resolve future matches"

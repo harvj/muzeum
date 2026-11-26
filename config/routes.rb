@@ -33,6 +33,7 @@ Rails.application.routes.draw do
   resources :resolution_surfaces, path: "resolution", controller: "resolution_workspace", only: %i[index show] do
     post :investigate, on: :member
     post :retain_configuration, on: :member
+    post :select_reviewed_configuration, on: :member
     post :admit_adjacent_release, on: :member
     post :defer, on: :member
     post :decide, on: :member

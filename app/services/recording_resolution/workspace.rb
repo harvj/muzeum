@@ -30,11 +30,9 @@ module RecordingResolution
     end
 
     def matching_page(observation, before_id:)
-      matches = matching(observation).select("scrobbles.id", "COUNT(*) OVER () AS total")
-      page = Scrobble.from(matches, :exact_matches).order(Arel.sql("exact_matches.id DESC")).limit(PAGE + 1)
-      page = page.where("exact_matches.id < ?", before_id) if before_id.positive?
-      rows = page.pluck(Arel.sql("exact_matches.id"), Arel.sql("exact_matches.total"))
-      [ rows.map(&:first), rows.first&.last || (before_id.positive? ? matching(observation).count : 0) ]
+      matches = matching(observation)
+      page = ListeningPage.chronological(matches, before: before_id.presence).limit(PAGE + 1)
+      [ page.pluck(:id), matches.count ]
     end
 
     def list(filter:, before_id:, before_count: 0)

@@ -8,6 +8,9 @@ module CanonicalCatalog
       @identity = RecordingIdentity.new(assessment, mbid)
       @recording = identity.recording
       @observation_count = observation_count
+      @proposals = []
+      return if RecordingResolution::ReleaseReview.new(assessment.evidence).policy
+
       @proposals = ReviewedConstruction.resolution_choices(assessment, mbid, recording, source_ids: identity.source_ids || [ mbid ]).sort_by do |choices|
         data = choices.first.construction.base.data
         [ data.dig("release-group", "primary-type") == "Album" ? 0 : 1, data.fetch("date"), data.fetch("id") ]

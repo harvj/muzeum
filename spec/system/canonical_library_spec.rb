@@ -798,10 +798,10 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
       sign_in(user) if position == 12
       visit resolution_surface_path(play)
       expect(page).to have_css("h1", exact_text: title)
-      within('[aria-label="Original release"]') do
-        expect(page).to have_css("h3", exact_text: "Leisure", count: 1)
+      expect(page).to have_no_css('[aria-label="Original release"]')
+      within('[aria-label="Verified album configurations"]') do
+        expect(page).to have_css("summary", text: "Disputed source", count: 1)
         expect(page).to have_no_text("Modern Life Is Rubbish")
-        expect(page).to have_css("li", text: "candidate recording")
       end
       expect(page).to have_css("#recording-resolution-confirmation button", text: /Resolve/)
       if position == 12

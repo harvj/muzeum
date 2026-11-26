@@ -127,13 +127,7 @@ class CanonicalLibraryController < ApplicationController
       @listening_total = listening.total
       @timeline = listening.timeline(@history_window) if @archive_available
       @observation_count = @listening_total.plays
-      if @public_profile
-        plays = ListeningPage.chronological(plays, before: params[:before])
-      else
-        plays = plays.where("scrobbles.id < ?", params[:before].to_i) if params[:before].to_i.positive?
-        plays = plays.order(id: :desc)
-      end
-      @plays = plays.limit(PAGE + 1).to_a
+      @plays = ListeningPage.chronological(plays, before: params[:before]).limit(PAGE + 1).to_a
       @next_page = @plays.pop && @plays.last.id if @plays.size > PAGE
     end
     related = [ *@recording_rows&.map(&:first), *@release_rows&.map(&:first), *@slots&.map(&:recording), *@additional_appearances&.map(&:recording), *@releases ]

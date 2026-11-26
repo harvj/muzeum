@@ -204,6 +204,16 @@ module CanonicalCatalog
       end
       return assess_track_provenance if @request.context["provenance_mbid"]
 
+      if (reassessment = @group && RecordingResolution::Assessment.find_by(id: @request.context["reassessment_id"], group_id: @group.id))
+        review = RecordingResolution::ReleaseReview.new(reassessment.evidence)
+        if review.policy || !reassessment.evidence["partial"]
+          evidence = review.policy ? review.refresh(@musicbrainz, @session) : reassessment.evidence.dup
+          evidence["reassessment"] = { "previous_id" => reassessment.id, "checked_at" => Time.current.utc.iso8601(6) }
+          evidence["reused_publication_requests"] = (Array(evidence["reused_publication_requests"]) + Array(evidence["requests"])).uniq
+          return complete { write_assessment(evidence) }
+        end
+      end
+
       @local_candidates = RecordingResolution::LocalCandidates.call(surface)
       identity = RecordingResolution::LocalCandidates.catalog_identity(surface)
       unless @request.context["refresh"] == true || RecordingResolution::TitleInterpretation.call(surface.track)
@@ -332,7 +342,7 @@ module CanonicalCatalog
       group = @group || RecordingResolution::Group.create_or_find_by!(surface_id: @surface.id,
         version: RecordingResolution::Ledger::VERSION, claims: @claims)
       digest = Digest::SHA256.hexdigest(evidence.to_json)
-      RecordingResolution::Assessment.create_or_find_by!(group_id: group.id, version: "workspace-evidence-v2", digest:) do |row|
+      RecordingResolution::Assessment.create_or_find_by!(group_id: group.id, version: RecordingResolution::Assessment::INTERPRETATION_VERSION, digest:) do |row|
         row.actor = "catalog_workspace"
         row.evidence = evidence.merge("requests" => @session.provenance)
       end

@@ -1,0 +1,72 @@
+<section class="resolution-context" aria-label="Verified album configurations">
+  <h2>Verified album configurations</h2>
+  <% album = Release.find_by(release_group_mbid: review.group) %>
+  <% if album %><p>Canonical album · <%= link_to album.title, release_path(album) %></p><% end %>
+  <p>These source configurations describe one album. The edition played remains unverified.</p>
+  <% baseline = review.configurations.first&.slots || [] %>
+  <% review.configurations.each do |edition| %>
+    <details>
+      <summary><%= [edition.data["title"], resolution_release_date(edition.data["date"]), edition.data["country"]].compact.join(" · ") %> · <%= pluralize(edition.slots.size, "track") %></summary>
+      <p><%= resolution_source_edition(edition.data) %></p>
+      <% slots = edition.slots.map do |slot|
+        { "title" => slot[:title], "recording_mbid" => slot[:source_recording_mbid], "length" => slot[:duration_ms] }
+      end %>
+      <% if edition.slots != baseline %>
+        <% different = edition.slots.zip(baseline).count { |slot, base| slot.values_at(:medium, :position, :source_recording_mbid) != base&.values_at(:medium, :position, :source_recording_mbid) } %>
+        <p><%= pluralize(different, "position") %> differ from the first configuration by source recording ID or track order. Different IDs leave audio equivalence uncertain.</p>
+      <% end %>
+      <%= render "ordered_tracks", tracks: slots, mbid: nil, recording_ids: [] %>
+      <% if @may_manage_observation && @assessment_matches_claims %>
+        <%= button_to(album ? "Prefer this configuration" : "Admit album using this configuration",
+          select_reviewed_configuration_resolution_surface_path(@observation),
+          params: { assessment_id: @assessment.id, edition_mbid: edition.data["id"], admit: ("1" unless album) }) %>
+        <% if album %>
+          <%= button_to "Retain configuration evidence", retain_configuration_resolution_surface_path(@observation),
+            params: { assessment_id: @assessment.id, edition_mbid: edition.data["id"] } %>
+        <% else %>
+          <%= link_to "Keep as source evidence", resolution_surface_path(@observation, section: "evidence", assessment: @assessment.id) %>
+        <% end %>
+      <% end %>
+    </details>
+  <% end %>
+  <% if review.configurations.size < review.policy.fetch("configurations").size %>
+    <p>Some verified configuration tracklists are missing from this assessment. Refresh the investigation to check them.</p>
+  <% end %>
+  <% review.disputed.each do |edition, note| %>
+    <details>
+      <summary>Disputed source · <%= resolution_release_date(edition.data["date"]) %> · <%= edition.data["country"] %></summary>
+      <p><%= resolution_source_edition(edition.data) %></p>
+      <p><%= note %></p>
+      <%= render "ordered_tracks", tracks: edition.slots.map { |slot| { "title" => slot[:title], "length" => slot[:duration_ms] } }, mbid: nil, recording_ids: [] %>
+    </details>
+  <% end %>
+</section>
+<section class="resolution-context" aria-label="Adjacent recording programs">
+  <h2>Adjacent recording programs</h2>
+  <% admitted = Release.where(release_group_mbid: review.programs.map { |edition, _| edition.data.dig("release-group", "id") }).pluck(:release_group_mbid).to_set %>
+  <% review.programs.each do |edition, matches| %>
+    <details>
+      <summary><%= [edition.data["title"], resolution_release_date(edition.data["date"]), edition.data["country"]].compact.join(" · ") %></summary>
+      <p><%= resolution_source_edition(edition.data) %></p>
+      <p>Exact recording appearances: <%= matches.pluck(:title).to_sentence %>. The full recording history may be incomplete.</p>
+      <%= render "ordered_tracks", tracks: edition.slots.map { |slot| { "title" => slot[:title], "length" => slot[:duration_ms] } }, mbid: nil, recording_ids: [] %>
+      <% if @may_manage_observation && @assessment_matches_claims && !admitted.include?(edition.data.dig("release-group", "id")) %>
+        <%= button_to "Admit this independent release", admit_adjacent_release_resolution_surface_path(@observation),
+          params: { assessment_id: @assessment.id, edition_mbid: edition.data["id"], recording_mbid: matches.first.fetch(:source_recording_mbid) } %>
+      <% end %>
+    </details>
+  <% end %>
+  <% if review.programs.size < review.policy.fetch("adjacent").size %>
+    <p>Some reviewed recording appearances still need a complete source tracklist. Refresh the investigation to check missing evidence.</p>
+  <% end %>
+  <details>
+    <summary>Other additional material</summary>
+    <p>Unclassified recordings remain in the source evidence. An edition appearance does not establish canonical membership.</p>
+    <ul>
+      <% review.other_tracks.each do |track| %>
+        <li><%= link_to track.fetch(:title), "https://musicbrainz.org/recording/#{track.fetch(:source_recording_mbid)}" %></li>
+      <% end %>
+    </ul>
+    <%= link_to "Review retained evidence", resolution_surface_path(@observation, section: "evidence", assessment: @assessment.id) %>
+  </details>
+</section>

@@ -1,0 +1,21 @@
+{
+  "6ef2736f-e68b-3512-97e5-0b5003fd3d9a": {
+    "configurations": [
+      "d550f756-9e71-3e6b-8492-84a37154c10f",
+      "d81bfb74-5d2e-4dcf-956f-550cfde5eed5",
+      "9ab639ba-9ad7-4128-9ba2-c5d607f56156"
+    ],
+    "disputed": {
+      "dc2c22eb-9e48-4caa-8263-87c4cfe40a1a": "The August US date and program differ from the verified September US configuration. The recording IDs alone cannot establish audio equivalence."
+    },
+    "adjacent": [
+      "b11e8000-f0c2-4277-befb-b125a5edece7",
+      "ea3df91a-d85f-435c-8c75-c0a5494e662c",
+      "7916ce29-57d6-40d8-b046-016a0a5f4417"
+    ],
+    "reference": "docs/design/release-configurations/README.md",
+    "incomplete_browses": [
+      "61c92a73-c3d5-43f6-8410-49156604b1cb"
+    ]
+  }
+}

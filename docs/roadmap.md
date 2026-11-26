@@ -72,6 +72,7 @@ The authoritative, living domain rules are [principles](domain/principles.md), [
      - **v0.7.2 — Application Shell v2.0.0 adoption.** Qualify the responsive Shell, verified session identity refresh, shared Site Art control and exact-artifact release lifecycle. [Adoption evidence](v0.7.2/shell-adoption.md).
 
      - **v0.8.0 — Release configurations and contextual listening.** Include the accepted configuration implementation, explicit adjacent-release admission, and private review of probable unscrobbled intros and interludes. Keep observed and inferred totals separate.
+     - **v0.8.1 — Resolution review and chronological observations.** Surface reviewed album configurations and adjacent programs in Resolution, refresh older interpretation without changing assignments, and order individual histories by the original listening timestamp. [Birthday acceptance](design/v0.8.1/README.md).
 
 9. **P1.6 — Profile onboarding (tentative).**
    - **P1.6a — Last.fm authentication and verified username.** Use Last.fm web authorization and bind only the returned username.

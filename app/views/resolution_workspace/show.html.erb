@@ -49,12 +49,32 @@
       class: ("review-primary-section" if section == tab), aria: { current: ("page" if section == tab) } %>
   <% end %>
 </nav>
+<% if @assessment && %w[candidates evidence].include?(section) %>
+  <p class="compact-meta">Last assessment <%= browser_time(@assessment.created_at) %>.
+    <% if @assessment.version != RecordingResolution::Assessment::INTERPRETATION_VERSION %>Earlier investigation logic.<% end %>
+    <% if @assessment.evidence["reassessment"].present? %>
+      Retained evidence was reassessed.
+      <% if (lookup = @assessment.evidence["reviewed_release_lookup"]) %>
+        <%= pluralize(Array(lookup["attempted"]).size, "reviewed edition lookup") %> attempted.
+        <%= pluralize(Array(lookup["missing"]).size, "edition lookup") %> still missing.
+        <% if @assessment.evidence.fetch("reviewed_recording_browses", {}).values.any? { |browse| !browse["complete"] } %>
+          Recording appearance coverage is incomplete.
+        <% end %>
+      <% end %>
+    <% end %>
+  </p>
+  <% if @may_manage_observation && @assessment_matches_claims && !@assessment_request&.active? %>
+    <%= button_to "Refresh investigation", investigate_resolution_surface_path(@observation),
+      params: { reassess: "1", assessment_id: @assessment.id } %>
+  <% end %>
+<% end %>
 <% if section == "candidates" %>
 <section id="review-candidates" class="resolution-decision" tabindex="-1">
   <% candidate_badge = nil %>
   <% position_badge = ->(badge) { candidate_badge = badge } if selected %>
   <%= render "investigation_status", contexts:, compact: true, position_badge: %>
   <%= render "recording_choices", selected:, contexts:, navigation:, catalog_rows:, candidate_badge: %>
+  <%= render "reviewed_release_programs", review: @release_review if @release_review&.policy %>
   <% if @batch_releases.present? %>
     <details><summary>Review other tracks</summary>
       <ul><% @batch_releases.each do |release| %>
@@ -74,7 +94,7 @@
       <% @adjacent_programs.each do |mbid, edition| %>
         <details>
           <summary><%= [edition["title"], edition.dig("release-group", "primary-type"), edition["country"], edition["date"]].compact.join(" · ") %></summary>
-          <% history = @assessment.evidence.fetch("additional_recording_publications").fetch(mbid) %>
+          <% history = @assessment.evidence.fetch("additional_recording_publications", {}).fetch(mbid, {}) %>
           <p>Checked recording <%= link_to history.dig("exact_recording", "title").presence || mbid, "https://musicbrainz.org/recording/#{mbid}" %>
             appears on this independent program.</p>
           <% if history["incomplete"] %>

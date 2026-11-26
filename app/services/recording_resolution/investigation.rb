@@ -18,8 +18,8 @@ module RecordingResolution
       Group.find_by(surface_id: surface.id, version: VERSION, claims: @claims)
     end
 
-    def request(refresh: false, manual_mbid: nil, release_mbid: nil, provenance_mbid: nil, provenance_assessment_id: nil)
-      return unless self.class.enabled? || (refresh && CatalogImport.worker_enabled?)
+    def request(refresh: false, manual_mbid: nil, release_mbid: nil, provenance_mbid: nil, provenance_assessment_id: nil, reassessment: nil, automatic: false)
+      return unless self.class.enabled? || (refresh && !automatic && CatalogImport.worker_enabled?)
       return if manual_mbid.nil? && @observation.payload.values_at("artist_name", "track_name").any?(&:blank?)
 
       created = nil
@@ -27,9 +27,15 @@ module RecordingResolution
         @listener.managed_archive_grants.lock.find_by!(lastfm_account_id: @observation.lastfm_account_id)
         surface = Ledger.attach!(@observation)
         group = Group.create_or_find_by!(surface_id: surface.id, version: VERSION, claims: @claims)
+        if reassessment
+          next unless reassessment.group_id == group.id
+          latest = Assessment.where(group_id: group.id).order(id: :desc).first
+          next if latest != reassessment || (automatic && latest.version == Assessment::INTERPRETATION_VERSION)
+        end
         previous = CatalogImport.latest(KIND, group.id)
         if previous
           next previous unless refresh
+          next previous if automatic && previous.context["reassessment_id"] == reassessment&.id && !previous.active?
 
           previous.with_lock do
             if previous.expired_investigation?
@@ -45,6 +51,7 @@ module RecordingResolution
 
         context = { "observation_id" => @observation.id, "requester_id" => @listener.id, "refresh" => refresh,
           "manual_mbid" => manual_mbid, "release_mbid" => release_mbid }
+        context["reassessment_id"] = reassessment.id if reassessment
         if provenance_mbid
           context.merge!("provenance_mbid" => provenance_mbid, "provenance_assessment_id" => provenance_assessment_id)
         end

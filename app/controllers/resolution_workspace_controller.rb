@@ -1,7 +1,7 @@
 class ResolutionWorkspaceController < ApplicationController
   before_action :workspace
   before_action :observation, except: :index
-  before_action :authorize_management, only: %i[investigate decide defer release_batch confirm_release_batch retain_configuration admit_adjacent_release]
+  before_action :authorize_management, only: %i[investigate decide defer release_batch confirm_release_batch retain_configuration admit_adjacent_release select_reviewed_configuration]
 
   def index
     @filter = params[:filter].presence_in(RecordingResolution::Workspace::FILTERS)
@@ -17,9 +17,9 @@ class ResolutionWorkspaceController < ApplicationController
     @observation = @workspace.matching(@observation).find(params[:play]) if params[:play].present?
     @may_manage_observation = current_user.managed_archive_grants.exists?(lastfm_account_id: @observation.lastfm_account_id)
     @surface = @workspace.surface(@observation)
-    ids, @observations_count = @workspace.matching_page(@observation, before_id: params[:before].to_i)
+    ids, @observations_count = @workspace.matching_page(@observation, before_id: params[:before])
     @next_scrobble = ids.pop && ids.last if ids.size > RecordingResolution::Workspace::PAGE
-    @scrobbles = RecordingResolution::Ledger.effective(current_user).where(id: ids).order(id: :desc).to_a
+    @scrobbles = RecordingResolution::Ledger.effective(current_user).where(id: ids).order(played_at: :desc, id: :desc).to_a
     @history = @workspace.history(@surface)
     @surface_head = @history.find_by(user_id: current_user.id, scrobble_id: nil)
     @inherited_head = @surface_head unless @surface_head&.mode == "inherit"
@@ -78,6 +78,15 @@ class ResolutionWorkspaceController < ApplicationController
         params[:assessment].blank? && params[:before].blank? && params[:history_before].blank?
       @assessment_request = investigation.request
     end
+    if @assessment && @assessment_matches_claims
+      @release_review = RecordingResolution::ReleaseReview.new(@assessment.evidence)
+      if @assessment.version.start_with?("workspace-evidence-") &&
+          @assessment.version != RecordingResolution::Assessment::INTERPRETATION_VERSION && @may_manage_observation &&
+          params[:assessment].blank? && !@assessment_request&.active? &&
+          ![ request.headers["Purpose"], request.headers["Sec-Purpose"] ].compact.any? { |value| value.include?("prefetch") }
+        @assessment_request = investigation.request(refresh: true, reassessment: @assessment, automatic: true) || @assessment_request
+      end
+    end
     @assessment_request ||= legacy_request
     if @selected_scrobble
       @selected_head = @history.find_by(user_id: current_user.id, scrobble_id: @selected_scrobble.id)
@@ -103,6 +112,14 @@ class ResolutionWorkspaceController < ApplicationController
   end
 
   def investigate
+    if params[:reassess] == "1"
+      current = @workspace.assessments(@workspace.surface(@observation)).find(params[:assessment_id])
+      raise ActiveRecord::RecordNotFound unless assessment_matches_claims?(current, @observation)
+
+      RecordingResolution::Investigation.new(current_user, @observation).request(refresh: true, reassessment: current)
+      return redirect_to resolution_surface_path(@observation), status: :see_other
+    end
+
     manual = params[:manual_mbid].to_s.strip.presence
     if manual && !Clients::Musicbrainz::MBID.match?(manual)
       return redirect_to resolution_surface_path(@observation), alert: "Enter a MusicBrainz recording identifier.", status: :see_other
@@ -264,6 +281,40 @@ class ResolutionWorkspaceController < ApplicationController
     redirect_to resolution_surface_path(@observation, section: "evidence"), alert: error.message, status: :see_other
   end
 
+  def select_reviewed_configuration
+    assessment = @workspace.assessments(@workspace.surface(@observation)).find(params[:assessment_id])
+    raise ActiveRecord::RecordNotFound unless assessment_matches_claims?(assessment, @observation)
+
+    review = RecordingResolution::ReleaseReview.new(assessment.evidence)
+    raise ActiveRecord::RecordNotFound unless review.policy
+
+    edition = review.configurations.find { |item| item.data["id"] == params[:edition_mbid] }
+    raise ActiveRecord::RecordNotFound unless edition
+
+    release = current_user.with_lock do
+      RecordingSourceDecision.lock!
+      records = Release.where(release_group_mbid: review.group).limit(2).to_a
+      raise CanonicalCatalog::Store::Unverified, "Review conflicting catalog releases first." if records.many?
+
+      parent = records.first
+      if parent.nil? && params[:admit] == "1"
+        request = CatalogImport.create!(kind: "reviewed_configuration_admission", state: "imported",
+          entity_id: assessment.id, due_at: Time.current, context: { reviewer_id: current_user.id, assessment_id: assessment.id })
+        evidence = Struct.new(:provenance).new(Array(assessment.evidence["requests"]))
+        parent = CanonicalCatalog::Store.new(request, evidence).release(edition.data, edition.slots, strict_collection: true)
+      end
+      raise CanonicalCatalog::Store::Unverified, "Admit an album configuration before choosing a preference." unless parent
+
+      snapshot = ReleaseConfiguration.retain!(parent, edition.data,
+        provenance: { "assessment_id" => assessment.id, "assessment_digest" => assessment.digest })
+      ReleaseConfigurationDecision.select!(current_user, parent, snapshot)
+      parent
+    end
+    redirect_to release_path(release), notice: "Release configuration selected.", status: :see_other
+  rescue CanonicalCatalog::Store::Unverified => error
+    redirect_to resolution_surface_path(@observation), alert: error.message, status: :see_other
+  end
+
   def admit_adjacent_release
     assessments = @workspace.assessments(@workspace.surface(@observation))
     assessment = assessments.find(params[:assessment_id])
@@ -278,7 +329,7 @@ class ResolutionWorkspaceController < ApplicationController
         mbid == params[:recording_mbid] && data["id"] == params[:edition_mbid]
       end || raise(ActiveRecord::RecordNotFound)
       verified = CanonicalCatalog::Edition.new(edition, edition.fetch("id"), recording_mbid: source)
-      history = assessment.evidence.fetch("additional_recording_publications").fetch(source)
+      history = assessment.evidence.fetch("additional_recording_publications", {}).fetch(source, assessment.evidence)
       review = CatalogImport.create!(kind: "adjacent_release_admission", state: "imported", entity_id: assessment.id,
         due_at: Time.current, context: { reviewer_id: current_user.id, assessment_id: assessment.id,
           assessment_digest: assessment.digest, source_recording_mbid: source, edition_mbid: edition.fetch("id") })
@@ -324,6 +375,10 @@ class ResolutionWorkspaceController < ApplicationController
 
         [ mbid, edition ]
       end
+    end
+    review = RecordingResolution::ReleaseReview.new(assessment.evidence)
+    if review.policy
+      programs += review.programs.map { |edition, matches| [ matches.first.fetch(:source_recording_mbid), edition.data ] }
     end
     known = Release.where(release_group_mbid: programs.map { |_, edition| edition.dig("release-group", "id") }).pluck(:release_group_mbid).to_set
     programs.reject { |_, edition| known.include?(edition.dig("release-group", "id")) }
