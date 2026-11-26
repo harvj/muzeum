@@ -28,6 +28,12 @@ RSpec.describe RecordingResolution::TitleInterpretation do
     expect(described_class.recording_title_match?(interpretation, "Song")).to be(false)
   end
 
+  it "reads the dated live disambiguation returned by MusicBrainz for the Blur fallback" do
+    descriptor = described_class.descriptor("live, 1990-11-11: University of London Union, London, UK")
+    expect(descriptor).to include("name" => "live", "reported_date" => "1990-11-11",
+      "reported_place" => "University of London Union, London, UK")
+  end
+
   it "does not shorten genuine or ambiguous titles without explicit musical evidence" do
     [ "Live Forever", "1979", "The Man - 2007", "Song (Blue)", "I Want You (She's So Heavy)", "Live" ].each do |title|
       expect(described_class.call(title)).to be_nil

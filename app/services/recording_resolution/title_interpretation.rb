@@ -4,7 +4,7 @@ module RecordingResolution
     VERSION = "recording-title-v1"
     MASTERING = /\A(?:(?<before>(?:19|20)\d{2})\s+)?(?:digitally\s+)?remaster(?:ed)?(?:\s+version)?(?:\s+(?<after>(?:19|20)\d{2}))?\z/i
     VERSION_WORDS = {
-      "live" => /live(?:\s+(?:at|from|in|on)\s+.+)?/i,
+      "live" => /live(?:(?:\s+(?:at|from|in|on)\s+|[,;:]\s*).+)?/i,
       "instrumental" => /instrumental(?:\s+(?:mix|version))?/i,
       "acoustic" => /acoustic(?:\s+version)?/i,
       "demo" => /demo(?:\s+version)?/i,
@@ -27,9 +27,9 @@ module RecordingResolution
       version = VERSION_WORDS.find { |_, pattern| text.match?(/\A#{pattern}\z/) }&.first
       return unless version
 
-      context = text[/\Alive\s+(?:at|from|in|on)\s+(.+)\z/i, 1] if version == "live"
+      context = text[/\Alive(?:\s+(?:at|from|in|on)\s+|[,;:]\s*)(.+)\z/i, 1] if version == "live"
       date = context&.[](/\b(?:19|20)\d{2}(?:-\d{2}-\d{2})?\b/)
-      place = context&.delete_suffix(date.to_s)&.sub(/[,;\s]+\z/, "")
+      place = context&.sub(/\A#{Regexp.escape(date.to_s)}:\s*/, "")&.delete_suffix(date.to_s)&.sub(/[,;\s]+\z/, "")
       { "kind" => "version", "name" => version, "text" => text,
         "performance_context" => context, "reported_place" => place.presence, "reported_date" => date }.compact
     end
