@@ -44,7 +44,16 @@ module RecordingResolution
         "original_groups" => [], "pending_groups" => [], "verified_recording" => recording.except("releases"),
         "appearance_browse_incomplete" => browse_incomplete == true
       }
-      groups = appearances.select { |row| CanonicalCatalog::Edition.collection_context?(row) }
+      # A mispressing can document an exact appearance without identifying the
+      # release group's intended program. Verify only the referenced edition.
+      appearances.select { |row| CanonicalCatalog::Edition.mispressing?(row) }.each do |row|
+        verified_edition(row.fetch("id"), row.dig("release-group", "id"), editions, compilation: false)
+      rescue CanonicalCatalog::Store::Unverified
+        next
+      end
+      groups = appearances.select do |row|
+        CanonicalCatalog::Edition.collection_context?(row) && !CanonicalCatalog::Edition.mispressing?(row)
+      end
         .group_by { |row| row.dig("release-group", "id") }
       if groups.empty? && !browse_incomplete && earliest && CanonicalCatalog::Edition.original_context?(earliest, compilation: true) &&
           earliest.dig("release-group", "secondary-types") == [ "Compilation" ] &&

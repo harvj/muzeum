@@ -8,7 +8,7 @@ end %>
 <% plan = CanonicalCatalog::ResolutionPlan.new(@assessment, mbid, @affected_count) %>
 <% catalog_recording = plan.recording || catalog_rows[1][1].first %>
 <% proposals = plan.proposals %>
-<% provenance = RecordingResolution::ReleaseProvenance.new(@assessment.evidence, contexts:, releases: catalog_releases) %>
+<% provenance = RecordingResolution::ReleaseProvenance.new(@assessment.evidence, contexts:, releases: catalog_releases, recording_mbid: mbid) %>
 <% established = provenance.established.any? %>
 <% requested_edition = params[:edition].presence %>
 <% selected_edition = requested_edition if params[:review_edition].blank? && proposals.any? { |proposal| plan.edition_id(proposal) == requested_edition } %>

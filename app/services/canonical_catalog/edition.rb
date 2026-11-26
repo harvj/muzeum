@@ -25,6 +25,10 @@ module CanonicalCatalog
       end
     end
 
+    def self.mispressing?(data)
+      data["disambiguation"].to_s.match?(/\bmispress(?:ed|ing)?\b/i)
+    end
+
     def self.original_context?(data, compilation: false)
       collection_context?(data, compilation:) && data["date"] == data.dig("release-group", "first-release-date")
     end

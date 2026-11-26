@@ -12,18 +12,24 @@ module RecordingResolution
       @artist_mbid = artist_mbid
     end
 
-    def call(surface, candidates, checked:, attempted:, search:, review_alternative: false, preferred: nil, origins: true)
+    def call(surface, candidates, checked:, attempted:, search:, review_alternative: false, preferred: nil, origins: true, retained: [])
       @interpretation = TitleInterpretation.call(surface.track)
       @pending_original_group = nil
       @tracklists = {}
       @construction_editions = {}
-      results = [ checked ].compact
-      if surface.album.present? && search
-        results.concat(related_editions(surface, candidates, attempted || checked&.fetch("id", nil)))
-      end
+      results = ([ checked ].compact + retained.select { |edition| DiscoveryTitle.release_context?(surface.album, edition) }).uniq { |edition| edition["id"] }
       results.each { |edition| retain(edition.fetch("id"), edition) }
-      retain(attempted, nil) if attempted && checked.nil? && release_request(attempted)
       found = results.flat_map { |edition| appearances(surface, edition) }
+      if surface.album.present? && search && (found.empty? || retained.empty?)
+        related_editions(surface, candidates, attempted || checked&.fetch("id", nil)).each do |edition|
+          next if @tracklists.key?(edition["id"])
+
+          results << edition
+          retain(edition.fetch("id"), edition)
+          found.concat(appearances(surface, edition))
+        end
+      end
+      retain(attempted, nil) if attempted && checked.nil? && release_request(attempted)
       # Preserve a fixed fallback budget even when search supplies many releases.
       unless preferred || review_alternative || results.empty?
         return scan_original_editions(surface, candidates, found, origins:)

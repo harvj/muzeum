@@ -5,7 +5,7 @@ module RecordingResolution
 
     attr_reader :evidence
 
-    def initialize(session, discogs:, workspace: false, discover: workspace, review_alternative: false, review_release: nil, catalog_identity: {}, origins: true, adaptive: false)
+    def initialize(session, discogs:, workspace: false, discover: workspace, review_alternative: false, review_release: nil, catalog_identity: {}, origins: true, adaptive: false, retained: [])
       @session = session
       @discogs = DiscogsEvidence.new(discogs, expanded: workspace) if discogs
       @workspace = workspace
@@ -15,6 +15,7 @@ module RecordingResolution
       @catalog_identity = catalog_identity
       @origins = origins
       @adaptive = adaptive
+      @retained = retained
       @musicbrainz = Clients::Musicbrainz.new
     end
 
@@ -33,6 +34,9 @@ module RecordingResolution
       evidence["candidates"] = candidates.map { |candidate| recording_evidence(candidate) }
       yield evidence if block_given?
       reason("incomplete_search", { "provider" => "musicbrainz" }.merge(evidence["search"] || {})) if page["incomplete"] || page["count"] != candidates.size
+      if evidence["recording_search_failures"]
+        reason("incomplete_search", "provider" => "musicbrainz", "attempts" => evidence["recording_search_failures"])
+      end
       reason("missing_album", "field" => "album") if surface.album.blank?
       reason("missing_source_mbid", "field" => "track_mbid") if claims["track_mbid"].blank?
 
@@ -75,7 +79,7 @@ module RecordingResolution
           DiscoveryTitle.album_base(surface.album) != surface.album || surface.album.to_s.match?(VERSION_MARKER)
         search = related
         discovery = EditionDiscovery.new(@musicbrainz, @session, **@catalog_identity.slice(:artist_mbid))
-        merge_discovered(discovery.call(surface, candidates, checked: edition, attempted: edition_id, search:, review_alternative: @review_alternative, preferred: @review_release, origins: @origins))
+        merge_discovered(discovery.call(surface, candidates, checked: edition, attempted: edition_id, search:, review_alternative: @review_alternative, preferred: @review_release, origins: @origins, retained: @retained))
         evidence["review_tracklists"] = discovery.tracklists if discovery.tracklists.any?
         if discovery.construction_editions.any?
           evidence["construction_editions"] = (Array(evidence["construction_editions"]) + discovery.construction_editions.values)
@@ -148,6 +152,13 @@ module RecordingResolution
           "count" => page.fetch("count"), "returned" => page.fetch("recordings").size }
       end
       page
+    rescue ProviderError => error
+      raise unless @workspace && evidence["title_interpretation"] && !error.deferred && !error.terminal
+
+      search = { "query" => @session.current_request&.dig("parameters", "query"),
+        "message" => error.message, "http_status" => error.http_status }.compact
+      (evidence["recording_search_failures"] ||= []) << search
+      { "count" => 0, "offset" => 0, "recordings" => [] }
     end
 
     def broaden_recording_search(surface)

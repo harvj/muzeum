@@ -700,6 +700,49 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     expect(RecordingResolution::Decision.count).to eq(0)
   end
 
+  it "shows the selected Blur album once and confines a verified mispressing to recording provenance" do
+    editions = JSON.parse(Rails.root.join("spec/fixtures/musicbrainz/discovery/blur-checked-editions.json").read)
+    album = editions.find { |edition| edition["id"] == "dc2c22eb-9e48-4caa-8263-87c4cfe40a1a" }
+    user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "blur-provenance", lastfm_username: "blur-provenance")
+    groups = editions.map { |edition| edition.dig("release-group", "id") }.uniq
+    [ [ 12, "Wear Me Down - 2012 Remaster" ], [ 1, "She's so High – 2012 Remaster" ] ].each do |position, title|
+      payload = { artist_name: "Blur", album_name: "Leisure", track_name: title }
+      play = Scrobble.create!(user:, lastfm_account: user.source_account, played_at: Time.current, payload:)
+      surface = RecordingResolution::Ledger.attach!(play)
+      group = RecordingResolution::Group.create!(surface_id: surface.id, version: RecordingResolution::Ledger::VERSION, claims: {})
+      recording = album.dig("media", 0, "tracks", position - 1, "recording")
+      RecordingResolution::Assessment.create!(group_id: group.id, version: "blur-provenance-fixture", actor: "fixture",
+        digest: SecureRandom.hex(32), evidence: {
+          "title_interpretation" => RecordingResolution::TitleInterpretation.call(surface.track),
+          "candidates" => [ recording ], "construction_editions" => editions,
+          "recording_publications" => { recording.fetch("id") => { "original_groups" => groups } }
+        })
+
+      sign_in(user) if position == 12
+      visit resolution_surface_path(play)
+      expect(page).to have_css("h1", exact_text: title)
+      within('[aria-label="Original release"]') do
+        expect(page).to have_css("h3", exact_text: "Leisure", count: 1)
+        expect(page).to have_no_text("Modern Life Is Rubbish")
+        expect(page).to have_css("li", text: "candidate recording")
+      end
+      expect(page).to have_css("#recording-resolution-confirmation button", text: /Resolve/)
+      if position == 12
+        disclosure = find("summary", exact_text: "Other verified appearances of this recording")
+        expect(disclosure.find(:xpath, "..")).to match_css("details:not([open])")
+        disclosure.click
+        expect(page).to have_css('a[href="https://musicbrainz.org/release/12625b09-8ea4-46d8-b4e3-b916e819e039"]', text: /Modern Life Is Rubbish.*mispressing/)
+        expect(page).to have_text("Medium 1, track 14")
+        capture_resolution("wear-me-down-desktop", full: true)
+      else
+        page.driver.browser.manage.window.resize_to(390, 844)
+        capture_resolution("shes-so-high-mobile", full: true)
+      end
+      expect(play.reload.payload.fetch("track_name")).to eq(title)
+    end
+    expect(RecordingResolution::Decision.count).to eq(0)
+  end
+
   it "keeps independent ordered Charli artist lists in review, catalog pages, and credited-artist searches" do
     editions = JSON.parse(Rails.root.join("spec/fixtures/musicbrainz/construction/charli_featured_credit.json").read)
     album = editions.first

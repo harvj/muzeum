@@ -213,9 +213,12 @@ module CanonicalCatalog
         ranks = RecordingResolution::Ranking.call(surface, local_evidence, source_hints: true)
         return complete { write_assessment(local_evidence) } if ranks.one? && RecordingResolution::Ranking.recommended?(ranks)
       end
+      previous = RecordingResolution::Assessment.where(group_id: @group&.id).where("evidence ? 'construction_editions'")
+        .order(id: :desc).pick(:evidence)
+      retained = Array(previous&.fetch("construction_editions", nil)) if RecordingResolution::TitleInterpretation.call(surface.track)
       @evaluator = RecordingResolution::Evaluator.new(@session, discogs: nil, workspace: true,
         review_alternative: @request.context["refresh"] == true, review_release: @request.context["release_mbid"],
-        catalog_identity: identity, origins: false, adaptive: true)
+        catalog_identity: identity, origins: false, adaptive: true, retained: retained || [])
       evidence = @evaluator.call(surface, @claims) do |recording_evidence|
         if (manual = @request.context["manual_mbid"]).present?
           result = @musicbrainz.verify_recording(@session, manual, catalog: true)

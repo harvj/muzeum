@@ -59,3 +59,14 @@
     <% end %>
   <% end %>
 <% end %>
+
+<% if provenance.other_recording_appearances.any? %>
+  <details class="release-provenance">
+    <summary>Other verified appearances of this recording</summary>
+    <ul>
+      <% provenance.other_recording_appearances.each do |source, slots| %>
+        <li><%= resolution_source_edition(source) %> · <%= slots.map { |slot| "Medium #{slot[:medium]}, track #{slot[:position]}" }.join(" · ") %></li>
+      <% end %>
+    </ul>
+  </details>
+<% end %>

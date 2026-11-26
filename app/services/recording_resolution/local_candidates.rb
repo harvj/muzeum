@@ -4,7 +4,10 @@ module RecordingResolution
 
     def self.call(surface)
       title = DiscoveryTitle.key(surface.track)
-      titles = [ surface.track.to_s.downcase, title, title.tr("'", "’") ].uniq
+      interpretation = TitleInterpretation.call(surface.track)
+      base = interpretation["base_title"] if TitleInterpretation.mastering_only?(interpretation)
+      titles = [ surface.track.to_s.downcase, title, DiscoveryTitle.key(base) ].reject(&:blank?)
+      titles = titles.flat_map { |value| [ value, value.tr("'", "’") ] }.uniq
       rows = Recording.where("lower(title) IN (?)", titles).order(:id).limit(LIMIT).includes(:artists).to_a
       direct = rows.map do |recording|
         {
@@ -29,7 +32,7 @@ module RecordingResolution
         .order(:id).limit(4).flat_map do |release|
         tracklist = ReleaseTracklist.new(release)
         matching = tracklist.slots.select do |slot|
-          [ slot.title, slot.recording.title ].any? { |title| DiscoveryTitle.match?(title, surface.track) }
+          [ slot.title, slot.recording.title ].any? { |title| DiscoveryTitle.match?(title, surface.track) || mastering_title_match?(surface.track, title) }
         end
         matching.map do |slot|
           ReleaseTracklist.candidate(slot.recording, tracklist.evidence)
@@ -38,7 +41,11 @@ module RecordingResolution
         []
       end
     end
-    private_class_method :release_candidates
+    def self.mastering_title_match?(observed, title)
+      interpretation = TitleInterpretation.call(observed)
+      TitleInterpretation.mastering_only?(interpretation) && DiscoveryTitle.match?(interpretation["base_title"], title)
+    end
+    private_class_method :release_candidates, :mastering_title_match?
 
     def self.catalog_identity(surface)
       artist = stored_artist(surface.artist)

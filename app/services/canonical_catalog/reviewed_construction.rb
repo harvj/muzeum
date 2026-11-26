@@ -6,6 +6,7 @@ module CanonicalCatalog
       history = assessment&.evidence&.fetch("recording_publications", nil)
       compilations = source_ids.filter_map { |id| history&.dig(id, "first_publication_compilation_group") }.to_set
       editions = Array(assessment&.evidence&.fetch("construction_editions", nil)).filter_map do |data|
+        next if Edition.mispressing?(data)
         next unless Edition.collection_context?(data, compilation: compilations.include?(data.dig("release-group", "id")))
 
         Edition.new(data, Store.mbid!(data["id"]))

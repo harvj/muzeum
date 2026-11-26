@@ -2,7 +2,7 @@ module RecordingResolution
   class ReleaseProvenance
     Appearance = Data.define(:edition, :medium, :track, :comparison)
 
-    attr_reader :established, :editions, :appearances
+    attr_reader :established, :editions, :appearances, :other_recording_appearances
 
     def self.possible_counterparts(evidence, mbid)
       editions = self.editions(evidence)
@@ -23,7 +23,7 @@ module RecordingResolution
       end
     end
 
-    def initialize(evidence, contexts:, releases:)
+    def initialize(evidence, contexts:, releases:, recording_mbid: nil)
       @established = (releases + contexts.filter_map(&:existing)).uniq(&:id).filter_map do |release|
         ReleaseTracklist.new(release)
       rescue ArgumentError
@@ -32,7 +32,15 @@ module RecordingResolution
       groups = (established.map { |tracklist| tracklist.release.release_group_mbid } +
         contexts.map { |proposal| proposal.construction.base.data.dig("release-group", "id") }).compact.uniq
       evidence_editions = self.class.editions(evidence)
-      @editions = evidence_editions.select { |edition| groups.include?(edition.data.dig("release-group", "id")) }
+      @other_recording_appearances = evidence_editions.reject do |edition|
+        groups.include?(edition.data.dig("release-group", "id")) && !CanonicalCatalog::Edition.mispressing?(edition.data)
+      end.filter_map do |edition|
+        next unless recording_mbid
+
+        slots = edition.slots.select { |slot| slot[:source_recording_mbid] == recording_mbid }
+        [ edition.data, slots ] if slots.any?
+      end
+      @editions = evidence_editions.select { |edition| groups.include?(edition.data.dig("release-group", "id")) && !CanonicalCatalog::Edition.mispressing?(edition.data) }
       admitted_editions = established.map { |tracklist| tracklist.evidence.fetch("edition_mbid") }
       bases = established.to_h do |tracklist|
         edition = editions.find { |item| item.data["id"] == tracklist.evidence.fetch("edition_mbid") }

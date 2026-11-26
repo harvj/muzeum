@@ -13,12 +13,16 @@
     end %>
 <% end %>
 <% searches = (adaptive + Array(searches)).uniq { |search| search["query"] } %>
-<% if searches.present? || search_failure&.dig("parameters", "query").present? %>
+<% failed_searches = Array(evidence["recording_search_failures"]) %>
+<% if searches.present? || failed_searches.any? || search_failure&.dig("parameters", "query").present? %>
   <details>
     <summary>MusicBrainz recording searches</summary>
     <ul class="catalog-list">
       <% Array(searches).each do |search| %>
         <li><code><%= search.fetch("query") %></code><% if search.key?("count") %> · <%= pluralize(search.fetch("returned"), "result") %> returned<%= " of #{search.fetch('count')}" if search.fetch("returned") != search.fetch("count") %><% end %></li>
+      <% end %>
+      <% failed_searches.each do |failure| %>
+        <li><code><%= failure["query"] %></code> · <%= failure["message"] %><%= " (HTTP #{failure['http_status']})" if failure["http_status"] %></li>
       <% end %>
       <% if search_failure&.dig("parameters", "query").present? %>
         <li><code><%= search_failure.dig("parameters", "query") %></code> · <%= search_failure.fetch("message", "Provider unavailable") %><%= " (HTTP #{search_failure['http_status']})" if search_failure["http_status"] %></li>
