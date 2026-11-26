@@ -31,3 +31,13 @@ crawl or cross-release import cascade is performed.
 bundle exec rspec spec/requests/release_configurations_spec.rb spec/requests/short_track_inference_spec.rb spec/services/recording_resolution/recording_provenance_spec.rb
 BROWSER_TESTS=1 bundle exec rspec spec/system/canonical_library_spec.rb -e 'switches verified Leisure configurations' -e 'reviews a Queen of the Clouds interlude'
 ```
+
+## Exact candidate
+
+- Source `a804261093b2647f28405a02994c22d56280e426`.
+- [Exact-SHA CI](https://github.com/harvj/muzeum/actions/runs/45887988509).
+- [Disposable Linux staging, migration and systemd runtime](https://github.com/harvj/muzeum/actions/runs/45888043206).
+- [Sealed inventory identity](artifact.json). Disposable authenticated routes passed and the seal matched after web and Solid Queue boot, HTTP traffic and the same-process test footer transition.
+- [Shared Playwright report](shared-browser/evidence.json) and [environment binding](shared-browser/environment.json). The exact artifact passed disposable native password, TOTP and OIDC, Archive and responsive Shell checks, and logout with cookie removal and private-route denial. [Desktop](shared-browser/desktop.png) · [Mobile](shared-browser/mobile.png).
+- The Queen screenshots capture the same tested Rails workflow as full pages, with the confirmation or rejection and observed totals in the same image.
+- [Application Shell v2.0.0 candidate review](shell/application-shell-review.json) and [executable SH-08 evidence](shell/sh08-executable.json). All ten checks and signed preflight passed. Review SHA-256 `18fcd4de10554e6d15c721d039dbb66d9e2eefc4dcb6f3e923460d828815c44f`.
