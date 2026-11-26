@@ -156,7 +156,7 @@ module Clients
     def provenance_recording(session, mbid)
       return unless MBID.match?(mbid.to_s)
 
-      inc = "artist-credits+isrcs+recording-rels+work-rels+artist-rels+place-rels+annotation+release-groups+releases"
+      inc = "artist-credits+isrcs+recording-rels+work-rels+artist-rels+place-rels+annotation+release-groups+releases+url-rels"
       session.get(:musicbrainz, "/ws/2/recording/#{mbid}", params: { fmt: "json", inc: }) do |data|
         relationships = Array(data["relations"]).filter_map do |relation|
           target = relation["target-type"]
@@ -165,7 +165,16 @@ module Clients
           relation.slice("type", "type-id", "direction", "attributes", "begin", "end").merge(
             "target_type" => target, "target" => relation.fetch(target).slice("id", "name", "title"))
         end
-        project_recording(data).merge("relationships" => relationships, "annotation" => data["annotation"])
+        project_recording(data).merge("relationships" => relationships, "annotation" => data["annotation"],
+          "wikidata_ids" => wikidata_ids(data))
+      end["data"]
+    end
+
+    def provenance_release_group(session, mbid)
+      return unless MBID.match?(mbid.to_s)
+
+      session.get(:musicbrainz, "/ws/2/release-group/#{mbid}", params: { fmt: "json", inc: "url-rels" }) do |data|
+        data.slice("id", "title", "first-release-date").merge("wikidata_ids" => wikidata_ids(data)) if data["id"] == mbid
       end["data"]
     end
 
@@ -187,6 +196,14 @@ module Clients
     # --- Private ----------------------------------------------------
 
     private
+
+    def wikidata_ids(data)
+      Array(data["relations"]).filter_map do |relation|
+        next unless relation["type"] == "wikidata"
+
+        relation.dig("url", "resource").to_s[%r{\Ahttps://www\.wikidata\.org/wiki/(Q[1-9][0-9]{0,11})\z}, 1]
+      end.uniq.first(4)
+    end
 
     def browse_releases(session, relationship, limit:)
       releases = []

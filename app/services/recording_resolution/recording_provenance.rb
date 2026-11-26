@@ -60,13 +60,36 @@ module RecordingResolution
       earliest = dated.reject { |row| dated.any? { |other| other["date"].start_with?("#{row['date']}-") } }
         .min_by { |row| row.values_at("date", "id") }
 
+      context = recording ? cross_source_context(recording, releases, gaps) : {}
       { "checked_at" => Time.current.utc.iso8601, "exact_recording" => recording, "releases" => releases,
         "related_recordings" => related, "counterpart_mbids" => counterparts, "browse_complete" => browse_complete,
         "incomplete" => gaps.any?, "limitations" => gaps, "earliest_publication" => earliest&.slice("id", "title", "date"),
-        "classification" => classification(recording, related, counterparts) }.compact
+        "classification" => classification(recording, related, counterparts),
+        "supplementary_context" => context }.compact
     end
 
     private
+
+    def cross_source_context(recording, releases, gaps)
+      groups = releases.select { |release| release["status"] == "Official" && release["slots"].present? }
+        .filter_map { |release| release.dig("release-group", "id") }.tally
+      groups = groups.sort_by { |id, count| [ -count, id ] }.first(2).filter_map do |id, _|
+        @client.provenance_release_group(@session, id)
+      end
+      wikimedia = Clients::Wikimedia.new(@session)
+      ids = (Array(recording["wikidata_ids"]) | groups.flat_map { |group| Array(group["wikidata_ids"]) }).first(6)
+      entities = wikimedia.entities(ids, properties: %w[P31 P175 P264 P291 P577 P629], editorial: true)
+      notes = groups.filter_map do |group|
+        article = Array(group["wikidata_ids"]).filter_map { |id| entities.dig(id, "english_article") }.first
+        [ group.fetch("id"), wikimedia.edition_notes(article, recording["title"]) ] if article
+      end.to_h
+      { "release_groups" => groups, "wikidata" => entities, "editorial_edition_notes" => notes }
+    rescue ProviderError => error
+      raise if error.deferred
+
+      gaps << "Supplementary Wikidata or Wikipedia context could not be checked."
+      {}
+    end
 
     def checked_recording(id, gaps)
       data = @client.provenance_recording(@session, id)

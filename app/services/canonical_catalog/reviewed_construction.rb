@@ -64,13 +64,11 @@ module CanonicalCatalog
       expected_additions = proposal.construction.additional_slots.map do |slot|
         [ *slot.values_at(:edition_mbid, :appearance_date, :medium, :position), slot.dig(:recording, "id") ]
       end
-      preferred_ids = ReleaseTrackListeningDecision.where(release:).distinct.pluck(:recording_id).to_set
       actual_additions = release.catalog_track_slots.additional_appearances.where(edition_mbid: edition_ids)
-        .includes(:recording).filter_map do |slot|
-          position = [ slot.edition_mbid, slot.appearance_date, slot.medium, slot.position, slot.evidence_recording_mbid ]
-          position if !preferred_ids.include?(slot.recording_id) || expected_additions.include?(position)
+        .includes(:recording).map do |slot|
+          [ slot.edition_mbid, slot.appearance_date, slot.medium, slot.position, slot.evidence_recording_mbid ]
         end
-      actual_additions.sort != expected_additions.sort || recording.nil? || !release.catalog_track_slots.exists?(recording_id: recording.id)
+      (expected_additions - actual_additions).any? || recording.nil? || !release.catalog_track_slots.exists?(recording_id: recording.id)
     end
 
     def self.current_edition(release)
@@ -92,22 +90,9 @@ module CanonicalCatalog
       construction = proposal.construction
       requests = Array(assessment.evidence["requests"]) + Array(assessment.evidence["reused_publication_requests"])
       provenance = Struct.new(:provenance).new(requests.uniq)
-      additional = construction.additional_slots
-      if corrected_release
-        preferred = ReleaseTrackListeningDecision.where(release: corrected_release).select(:recording_id)
-        mbids = Recording.where(id: preferred).pluck(:mbid).to_set
-        present = additional.map { |slot| slot.fetch(:source_recording_mbid) }.to_set
-        additional += construction.additional_tracks.flatten.filter_map do |track|
-          mbid = track.fetch("recording_mbid")
-          next unless mbids.include?(mbid) && present.add?(mbid)
-
-          track.fetch("source_track").symbolize_keys.merge(
-            edition_mbid: track.fetch("edition_mbid"), appearance_date: track.fetch("edition_appearance_date"))
-        end
-      end
       Store.new(request, provenance).release(construction.base.data, construction.base.slots,
         strict_collection: true, checked_editions: construction.appearances,
-        additional_slots: additional, corrected_release:, first_publication_compilation: construction.first_publication_compilation)
+        additional_slots: construction.additional_slots, corrected_release:, first_publication_compilation: construction.first_publication_compilation)
     end
   end
 end

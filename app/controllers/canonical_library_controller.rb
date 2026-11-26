@@ -72,10 +72,8 @@ class CanonicalLibraryController < ApplicationController
       end
       @counted_tracks = ReleaseTrackListeningDecision.included_memberships(listening_user, [ @entry.id ])
         .pluck(:recording_id).to_set
-      @additional_recordings = Recording.where(mbid: @additional_edition_evidence.pluck("recording_mbid")).index_by(&:mbid)
       base_recording_ids = base_slots.distinct.pluck(:recording_id)
-      track_recording_ids = base_recording_ids | @additional_appearances.map(&:recording_id) |
-        @additional_recordings.values.map(&:id)
+      track_recording_ids = base_recording_ids | @additional_appearances.map(&:recording_id)
       @track_counts = recording_plays(track_recording_ids)
         .group("effective_resolution.recording_id").count(:id)
       @base_track_max = @track_counts.values_at(*base_recording_ids).compact.max.to_i
@@ -143,13 +141,7 @@ class CanonicalLibraryController < ApplicationController
     updated_recording = current_user.with_lock do
       RecordingSourceDecision.lock!
       release.lock!
-      recording = if params[:recording_id].present?
-        release.catalog_track_slots.additional_appearances.find_by!(recording_id: params[:recording_id]).recording
-      elsif included
-        include_edition_recording!(release, params[:source_recording_mbid])
-      else
-        raise ActiveRecord::RecordNotFound
-      end
+      recording = release.catalog_track_slots.additional_appearances.find_by!(recording_id: params[:recording_id]).recording
 
       raise ActiveRecord::RecordNotFound if release.catalog_track_slots.base_sequence.exists?(recording:)
 
@@ -160,6 +152,20 @@ class CanonicalLibraryController < ApplicationController
     redirect_to release_path(release, edition_tracks: "1", anchor: "edition-track-#{updated_recording.id}"), status: :see_other
   rescue CanonicalCatalog::Store::Unverified
     redirect_to release_path(release), alert: "Edition evidence changed. Review the release before including the track.", status: :see_other
+  end
+
+  def admit_edition_track
+    return head :forbidden unless current_user.managed_archive_grants.exists?
+
+    release = Release.find(params[:id])
+    current_user.with_lock do
+      RecordingSourceDecision.lock!
+      release.lock!
+      admit_edition_recording!(release, params[:source_recording_mbid], params[:edition_mbid], params[:release_revision_id])
+    end
+    redirect_to release_path(release, edition_tracks: "1"), notice: "Additional recording admitted.", status: :see_other
+  rescue ArgumentError, CanonicalCatalog::Store::Unverified
+    redirect_to release_path(release), alert: "Edition evidence changed. Review the source before admitting the recording.", status: :see_other
   end
 
   def musical_identity
@@ -211,28 +217,35 @@ class CanonicalLibraryController < ApplicationController
 
   private
 
-  def include_edition_recording!(release, source_mbid)
+  def admit_edition_recording!(release, source_mbid, edition_mbid, revision_id)
     appearances = additional_edition_evidence(release)
-    selected = appearances.find { |track| track["recording_mbid"] == source_mbid && track["source_track"].present? }
+    selected = appearances.find { |track| track["recording_mbid"] == source_mbid && track["edition_mbid"] == edition_mbid && track["source_track"].present? }
     raise ActiveRecord::RecordNotFound unless selected
 
     verified_revision = RecordingResolution::ReleaseTracklist.new(release).revision
+    raise CanonicalCatalog::Store::Unverified unless verified_revision.id.to_s == revision_id.to_s
+
     group = appearances.select { |track| track["comparison_group"] == selected["comparison_group"] }
     admitted = release.catalog_track_slots.additional_appearances.includes(:recording).find do |slot|
       group.any? { |track| track["recording_mbid"] == slot.evidence_recording_mbid }
     end
     return admitted.recording if admitted
 
-    request = CatalogImport.create!(kind: "release_track_inclusion", state: "imported", entity_id: release.id,
-      due_at: Time.current, context: { reviewer_id: current_user.id, release_revision_id: verified_revision.id })
+    request = CatalogImport.create!(kind: "release_track_admission", state: "imported", entity_id: release.id,
+      due_at: Time.current, context: { reviewer_id: current_user.id, release_revision_id: verified_revision.id,
+        source_recording_mbid: source_mbid, edition_mbid: })
     provenance = Struct.new(:provenance).new(Array(verified_revision.evidence["requests"]))
     slot = selected.fetch("source_track").symbolize_keys.merge(
       edition_mbid: selected.fetch("edition_mbid"), appearance_date: selected["edition_appearance_date"])
-    CanonicalCatalog::Store.new(request, provenance).track_slot(release, slot).recording
+    track = CanonicalCatalog::Store.new(request, provenance).track_slot(release, slot)
+    raise CanonicalCatalog::Store::Unverified if release.catalog_track_slots.base_sequence.exists?(recording_id: track.recording_id)
+
+    track.recording
   end
 
   def additional_edition_evidence(release = @entry)
     tracklist = RecordingResolution::ReleaseTracklist.new(release)
+    @edition_evidence_revision_id = tracklist.revision.id
     Array(tracklist.revision.evidence["checked_recording_appearances"]).flat_map do |edition|
       next [] unless Clients::Musicbrainz::MBID.match?(edition["id"].to_s)
 

@@ -22,6 +22,8 @@ module DiscoveryReplay
         else
           { "releases" => @fixture.fetch("searches").fetch(@example.fetch("release_search"), []) }
         end
+      when %r{\A/ws/2/release-group/}
+        @fixture.fetch("release_groups", {})[path.split("/").last]
       when %r{\A/ws/2/release/}
         @fixture.fetch("releases")[path.split("/").last]
       when %r{\A/ws/2/recording/}

@@ -8,10 +8,10 @@ module RecordingResolution
     MAX_CACHE_ROWS = 1_000
     MAX_WIKIMEDIA_CACHE_ROWS = 200
     LIMITS = { musicbrainz: 300, discogs: 150 }.freeze
-    WIKIMEDIA = %i[wikidata commons].freeze
-    SPACING = { musicbrainz: 1.second, discogs: 3.seconds, wikidata: 1.second, commons: 1.second }.freeze
+    WIKIMEDIA = %i[wikidata commons wikipedia].freeze
+    SPACING = { musicbrainz: 1.second, discogs: 3.seconds, wikidata: 1.second, wikipedia: 1.second, commons: 1.second }.freeze
     ORIGINS = { musicbrainz: "https://musicbrainz.org", discogs: "https://api.discogs.com",
-      wikidata: "https://www.wikidata.org", commons: "https://commons.wikimedia.org" }.freeze
+      wikidata: "https://www.wikidata.org", wikipedia: "https://en.wikipedia.org", commons: "https://commons.wikimedia.org" }.freeze
 
     attr_reader :provenance, :current_request
 

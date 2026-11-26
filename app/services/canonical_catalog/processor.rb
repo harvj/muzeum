@@ -166,12 +166,12 @@ module CanonicalCatalog
             edition.data.dig("release-group", "id") == group && Edition.original_context?(edition.data)
           end
         end
-        construction = Construction.new(matches, recording_mbid: mbid)
+        construction = Construction.new(matches)
         edition = construction.base
-        pending ||= (edition.slots + construction.additional_slots).none? { |slot| slot.dig(:recording, "id") == mbid }
+        pending ||= edition.slots.none? { |slot| slot.dig(:recording, "id") == mbid }
         locked do
           @store.release(edition.data, edition.slots, strict_collection: true,
-            checked_editions: construction.appearances, additional_slots: construction.additional_slots)
+            checked_editions: construction.appearances)
         end
       rescue Store::Unverified
         pending = true

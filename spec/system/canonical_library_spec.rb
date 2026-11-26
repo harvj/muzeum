@@ -4,11 +4,13 @@ require_relative "../support/catalog_fixtures"
 require_relative "../support/guilt_show_fixture"
 require_relative "../support/narrow_stairs_fixture"
 require_relative "../support/lady_wood_fixture"
+require_relative "../support/interpol_membership_fixture"
 
 RSpec.describe "Canonical library resolution workflow", type: :system do
   include CatalogFixtures
   include GuiltShowFixture
   include NarrowStairsFixture
+  include InterpolMembershipFixture
 
   before do
     skip "Run with BROWSER_TESTS=1 for canonical workspace browser verification" unless ENV["BROWSER_TESTS"] == "1"
@@ -20,6 +22,30 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     driven_by :selenium, using: :headless_chrome do |options|
       options.binary = ENV["CHROME_BINARY"] if ENV["CHROME_BINARY"]
     end
+  end
+
+  it "shows only admitted Interpol tracks as listening choices on desktop and mobile" do
+    user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "interpol-membership", lastfm_username: "interpol-membership")
+    play, = interpol_membership_fixture(user)
+    sign_in(user)
+    visit resolution_surface_path(play)
+    click_button "Resolve this observation"
+    expect(page).to have_text("Recording decision saved.")
+    release = Release.sole
+    browser = page.driver.browser
+    [ [ 1440, 960 ], [ 390, 844 ] ].each do |width, height|
+      browser.execute_cdp("Emulation.setDeviceMetricsOverride", width:, height:, deviceScaleFactor: 1, mobile: width == 390)
+      visit release_path(release, edition_tracks: "1")
+      expect(page).to have_css(".release-tracks:not(.additional-track-table) tbody tr", count: 11)
+      expect(page).to have_css(".additional-track-table tbody tr", text: "Mind Over Time", count: 1)
+      expect(page).to have_css(".additional-track-table input[type=checkbox]", count: 1)
+      expect(page).to have_css("details:not([open]) > summary", text: "Alternative edition evidence")
+      expect(page).to have_no_button("Admit additional recording")
+      expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
+      capture_resolution("interpol-membership-#{width == 390 ? 'mobile' : 'desktop'}", full: true)
+    end
+  ensure
+    browser&.execute_cdp("Emulation.clearDeviceMetricsOverride")
   end
 
   it "keeps the three production-derived release cases separate from canonical admission" do
@@ -827,13 +853,17 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     expect(RecordingResolution::ReleaseTracklist.new(release).evidence.fetch("tracklist_digest"))
       .to eq(Digest::SHA256.hexdigest(source_signature.to_json))
     visit release_path(release)
-    find("summary", text: /Additional edition tracks.*7 tracks/).click
-    expect(page).to have_css(".additional-track-table tbody tr", count: 7)
+    find("summary", text: /Alternative edition evidence.*7 recordings/).click
+    expect(page).to have_no_css(".additional-track-table")
     expect(release.catalog_track_slots.additional_appearances).to be_empty
+    click_link "Love Ballad"
+    first(:button, "Admit additional recording").click
+    expect(page).to have_text("Additional recording admitted.")
+    expect(ReleaseTrackListeningDecision.count).to eq(0)
+    expect(release.catalog_track_slots.additional_appearances.count).to eq(1)
     find('input[aria-label="Count Love Ballad in release listening totals"]').send_keys(:space)
     expect(page).to have_css('input[aria-label="Count Love Ballad in release listening totals"]:checked')
     expect(ReleaseTrackListeningDecision.sole).to have_attributes(user:, release:, included: true)
-    expect(release.catalog_track_slots.additional_appearances.count).to eq(1)
     expect(Release.count).to eq(1)
     preference = ReleaseTrackListeningDecision.sole
     love_ballad = preference.recording

@@ -93,8 +93,6 @@ module CanonicalCatalog
         if recording_mbid
           admitted = additions.select { |slot| Array(recording_mbid).include?(slot.dig(:recording, "id")) }
           @additional_slots.concat(admitted.map { |slot| slot.merge(edition_mbid: edition.data.fetch("id"), appearance_date: date) })
-        elsif originals.none? { |original| original != @base && TrackComparison.equivalent_sequence?(original.slots, edition.slots) }
-          @additional_slots.concat(additions.map { |slot| slot.merge(edition_mbid: edition.data.fetch("id"), appearance_date: date) })
         end
         edition.data.slice("id", "title", "date", "country", "status", "packaging", "disambiguation", "edition_relationships", "genres", "tags").merge(
           "track_count" => edition.slots.size,

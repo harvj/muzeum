@@ -23,6 +23,7 @@ Rails.application.routes.draw do
       if section == :releases
         patch :ranking, on: :member
         patch :track_listening, on: :member
+        post :admit_edition_track, on: :member
       end
       patch :chronology, on: :member if section == :recordings
     end

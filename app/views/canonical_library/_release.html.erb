@@ -41,14 +41,13 @@
 </section>
 
 <% groups_by_mbid = @additional_edition_evidence.to_h { |track| track.values_at("recording_mbid", "comparison_group") } %>
-<% admitted = @additional_appearances.group_by { |slot| groups_by_mbid.fetch(slot.evidence_recording_mbid, slot.evidence_recording_mbid) } %>
+<% admitted = @additional_appearances.group_by(&:recording_id) %>
 <% evidence = @additional_edition_evidence.group_by { |track| track.fetch("comparison_group") } %>
-<% additional_mbids = admitted.keys | evidence.keys %>
-<% if additional_mbids.any? %>
+<% if admitted.any? %>
   <section class="card library-card music-sheet">
     <details class="additional-edition-tracks"<%= " open" if params[:edition_tracks] == "1" %>>
-      <summary><strong>Additional edition tracks</strong> <span class="muted"><%= pluralize(additional_mbids.size, "track") %></span></summary>
-      <% if @archive_available && !@public_profile %><p class="muted">Checked tracks count toward your release totals.</p><% end %>
+      <summary><strong>Additional edition tracks</strong> <span class="muted"><%= pluralize(admitted.size, "track") %></span></summary>
+      <% if @archive_available && !@public_profile %><p class="muted">These recordings have been admitted to the release. Check a recording to count it in your listening totals.</p><% end %>
       <%= dense_table("Additional edition tracks", classes: "release-tracks additional-track-table") do %>
         <thead><tr>
           <th scope="col" class="track-number"><span class="visually-hidden">Include</span></th>
@@ -56,30 +55,27 @@
           <th scope="col" class="table-number">Length</th><th scope="col" class="table-number">Resolved plays</th>
         </tr></thead>
         <tbody>
-          <% additional_mbids.each do |mbid| %>
-            <% slots = admitted.fetch(mbid, []) %>
-            <% entries = evidence.fetch(mbid, []) %>
-            <% sources = (entries + slots.map { |slot| { "edition_mbid" => slot.edition_mbid, "edition_appearance_date" => slot.appearance_date } }).uniq { |row| row.fetch("edition_mbid") } %>
+          <% admitted.each do |recording_id, slots| %>
+            <% entries = slots.flat_map { |slot| evidence.fetch(groups_by_mbid[slot.evidence_recording_mbid], []) }.uniq %>
+            <% admitted_sources = slots.map do |slot|
+              entries.find { |entry| entry["edition_mbid"] == slot.edition_mbid } ||
+                { "edition_mbid" => slot.edition_mbid, "edition_appearance_date" => slot.appearance_date }
+            end %>
+            <% sources = (admitted_sources + entries).uniq { |row| row.fetch("edition_mbid") } %>
             <% primary, *others = sources %>
-            <% title = slots.first&.title || entries.first.fetch("title") %>
+            <% title = slots.first.title %>
             <% version = entries.filter_map { |entry| entry["version"].presence }.first %>
-            <% recording = slots.first&.recording || entries.filter_map { |entry| @additional_recordings[entry["recording_mbid"]] }.first %>
-            <% recording_ids = slots.map(&:recording_id) | entries.filter_map { |entry| @additional_recordings[entry["recording_mbid"]]&.id } %>
+            <% recording = slots.first.recording %>
             <% duration = slots.first&.duration_ms || primary.dig("source_track", "duration_ms") || recording&.duration_ms || primary.dig("source_track", "recording", "length") %>
             <tr id="<%= "edition-track-#{slots.first.recording_id}" if slots.any? %>">
               <td class="track-number additional-track-check">
-                <% source = entries.find { |track| track["source_track"].present? } %>
-                <% if (slots.any? || source) && @archive_available && !@public_profile %>
+                <% if @archive_available && !@public_profile %>
                   <% checked = slots.any? && @counted_tracks.include?(slots.first.recording_id) %>
                   <%= form_with url: track_listening_release_path(@entry), method: :patch, class: "edition-track-choice",
                     data: { controller: "edition-track" } do %>
-                    <% if slots.any? %>
-                      <%= hidden_field_tag :recording_id, slots.first.recording_id, id: nil %>
-                    <% else %>
-                      <%= hidden_field_tag :source_recording_mbid, source.fetch("recording_mbid"), id: nil %>
-                    <% end %>
+                    <%= hidden_field_tag :recording_id, slots.first.recording_id, id: nil %>
                     <%= hidden_field_tag :decision, "exclude", id: nil %>
-                    <%= check_box_tag :decision, "include", checked, id: "edition-track-choice-#{mbid}",
+                    <%= check_box_tag :decision, "include", checked, id: "edition-track-choice-#{recording_id}",
                       aria: { label: "Count #{title} in release listening totals" }, data: { action: "change->edition-track#save" } %>
                     <noscript><%= submit_tag "Save", name: nil %></noscript>
                   <% end %>
@@ -100,11 +96,43 @@
                 <% end %>
               </td>
               <td class="table-number"><%= recording_duration(duration) %></td>
-              <td class="table-number"><%= @archive_available ? number_with_delimiter(recording_ids.sum { |id| @track_counts.fetch(id, 0) }) : "Unavailable" %></td>
+              <td class="table-number"><%= @archive_available ? number_with_delimiter(@track_counts.fetch(recording_id, 0)) : "Unavailable" %></td>
             </tr>
           <% end %>
         </tbody>
       <% end %>
     </details>
+  </section>
+<% end %>
+
+<% pending_evidence = evidence.except(*@additional_appearances.filter_map { |slot| groups_by_mbid[slot.evidence_recording_mbid] }) %>
+<% if pending_evidence.any? %>
+  <section class="card library-card">
+    <%= tag.details open: params[:edition_evidence].present? do %>
+      <summary>Alternative edition evidence · <%= pluralize(pending_evidence.size, "recording") %></summary>
+      <p class="muted">Source appearances are evidence. Admitting a recording requires choosing its verified source below.</p>
+      <ul>
+        <% pending_evidence.each do |mbid, entries| %>
+          <li>
+            <%= link_to entries.first.fetch("title"), catalog_entry_path(@entry, edition_evidence: mbid, anchor: "edition-evidence") %>
+            <% if params[:edition_evidence] == mbid %>
+              <ul id="edition-evidence">
+                <% entries.each do |source| %>
+                  <li>
+                    <%= [source["edition_name"], source["edition_country"], source["edition_appearance_date"]].compact.join(" · ") %>
+                    · <%= render "edition_source_link", source: %> · Medium <%= source["medium"] %> · Track <%= source["position"] %>
+                    <% if !@public_profile && @archive_available && source["source_track"].present? %>
+                      <%= button_to "Admit additional recording", admit_edition_track_release_path(@entry),
+                        params: { source_recording_mbid: source.fetch("recording_mbid"), edition_mbid: source.fetch("edition_mbid"),
+                          release_revision_id: @edition_evidence_revision_id } %>
+                    <% end %>
+                  </li>
+                <% end %>
+              </ul>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
   </section>
 <% end %>

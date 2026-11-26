@@ -161,11 +161,8 @@ RSpec.describe CanonicalCatalog::Processor do
     end
     original_request = request
     request = process(CatalogImport.request!("recording", bonus_recording.id))
-    expect(request.state).to eq("imported")
-    addition = Release.sole.catalog_track_slots.additional_appearances.sole
-    expect(addition.recording.mbid).to eq(bonus.dig("recording", "id"))
-    expect(addition.appearance_date).to eq("2020-08-21")
-    expect(addition.recording.admitted_releases).to contain_exactly(Release.sole)
+    expect(request.state).to eq("incomplete")
+    expect(Release.sole.catalog_track_slots.additional_appearances).to be_empty
     evidence = CatalogRevision.find_by!(catalog_import: request, entity_type: "Release").evidence
     expect(evidence.fetch("checked_recording_appearances").last.fetch("additional_tracks")).to contain_exactly(
       include("recording_mbid" => bonus.dig("recording", "id"), "edition_appearance_date" => "2020-08-21")

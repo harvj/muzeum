@@ -4,14 +4,55 @@ require_relative "../support/catalog_fixtures"
 require_relative "../support/discovery_replay"
 require_relative "../support/guilt_show_fixture"
 require_relative "../support/narrow_stairs_fixture"
+require_relative "../support/interpol_membership_fixture"
 
 RSpec.describe "Canonical library and resolution workspace", type: :request do
   include OidcFlow
   include CatalogFixtures
   include GuiltShowFixture
   include NarrowStairsFixture
+  include InterpolMembershipFixture
   before { prepare_oidc }
   after { restore_oidc }
+
+  it "admits only the reviewed Mind Over Time identity and keeps other Interpol editions out of totals" do
+    finish_oidc
+    user = User.find_by!(oidc_subject: @subject)
+    LastfmAccount.associate!(user, "interpol-membership")
+    play, assessment = interpol_membership_fixture(user)
+    retained = assessment.evidence
+    post decide_resolution_surface_path(play), params: { scope: "surface", recording_mbid: InterpolMembershipFixture::BONUS,
+      assessment_id: assessment.id, construct_release: InterpolMembershipFixture::BASE }
+    expect(flash[:notice]).to eq("Recording decision saved.")
+    release = Release.sole
+    expect(release.catalog_track_slots.base_sequence.count).to eq(11)
+    slots = release.catalog_track_slots.additional_appearances
+    expect(slots.pluck(:title).uniq).to eq([ "Mind Over Time" ])
+    expect(slots.pluck(:edition_mbid)).to include(InterpolMembershipFixture::JAPAN)
+    expect(slots.count).to eq(3)
+    expect(Recording.count).to eq(12)
+
+    get release_path(release, edition_tracks: "1")
+    document = Nokogiri::HTML(response.body)
+    expect(document.css(".additional-track-table tbody tr").size).to eq(1)
+    expect(document.css(".additional-track-table tbody").text).to include("Mind Over Time")
+    expect(document.css(".additional-track-table tbody").text).not_to match(/instrumental|Astoria/i)
+    expect(document.css("details").map(&:text).join).to include("Alternative edition evidence", "Pace Is the Trick (instrumental)")
+    expect(response.body).to include("0 distinct resolved observations")
+
+    patch track_listening_release_path(release), params: { decision: "include", recording_id: slots.first.recording_id }
+    expect(response).to have_http_status(:see_other)
+    get release_path(release)
+    expect(response.body).to include("1 distinct resolved observation", "5 min")
+    instrumental = "d0be890e-d883-42eb-8022-e14afee093e1"
+    patch track_listening_release_path(release), params: { decision: "include", source_recording_mbid: instrumental }
+    expect(response).to have_http_status(:not_found)
+    expect(slots.count).to eq(3)
+    expect(Recording.exists?(mbid: instrumental)).to be(false)
+    expect(assessment.reload.evidence).to eq(retained)
+    expect(RecordingResolution::Decision.count).to eq(1)
+    expect(Scrobble.count).to eq(1)
+  end
 
   it "investigates Greenbrier asynchronously without changing the selected recording or the catalog" do
     finish_oidc

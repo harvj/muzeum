@@ -8,7 +8,7 @@ Status: **Authoritative accounting semantics.** See [principles](principles.md) 
 
 **STAT-002 — Recording totals.** A recording's play count is the number of accepted, currently resolved plays of that recording in the listener's authorized archive. Recording listening time derives from those plays under a consistent documented duration policy. Release credit never changes these totals.
 
-**STAT-003 — Release listening uses counted memberships.** A release counts the distinct effective observations of its included recordings, regardless of the source album string. Base-track recordings always count. Additional-only recordings count when the latest listener preference includes them for that release; without a preference they are excluded. Retain all decision revisions, including decisions recorded before a track became part of the base sequence. If a recording appears in both, it is counted once as a base recording.
+**STAT-003 — Release listening uses counted memberships.** A release counts the distinct effective observations of its included recordings, regardless of the source album string. Base-track recordings always count. Explicitly admitted additional-only recordings count when the latest listener preference includes them for that release. A listening preference cannot admit a recording, and a source-edition appearance never counts. Retain all decision revisions, including decisions recorded before a track became part of the base sequence. If a recording appears in both, it is counted once as a base recording.
 
 **STAT-004 — Union for combined contexts.** Use the union of distinct observations across selected releases for combined counts and estimated listening time.
 
