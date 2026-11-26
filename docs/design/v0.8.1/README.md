@@ -50,3 +50,10 @@ timestamps and listener identities in the replay are disposable.
 bundle exec rspec spec/requests/resolution_release_review_spec.rb spec/requests/observation_order_spec.rb
 BROWSER_TESTS=1 bundle exec rspec spec/system/birthday_release_review_spec.rb
 ```
+
+## Exact candidate qualification
+
+- Candidate `6b558456bd3778407e102973a30aa326a36865f1`.
+- 418 Rails and Chrome examples passed locally. [Exact-SHA CI](https://github.com/harvj/muzeum/actions/runs/45898317597).
+- [Disposable Linux rehearsal](https://github.com/harvj/muzeum/actions/runs/45898384086) and [sealed identity](qualification/artifact.json). The seal matched after runtime startup, authenticated route checks and the same-process test footer transition.
+- [Signed Application Shell review](qualification/application-shell-review.json) and [executable SH-08](qualification/sh08-executable.json). All ten checks and signed preflight passed.
