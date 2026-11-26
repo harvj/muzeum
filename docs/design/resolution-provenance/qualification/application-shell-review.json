@@ -1,0 +1,51 @@
+{
+  "application": "muzeum",
+  "revision": "9a5e658f5ebfdf2d37077a60c4c2a445935535db",
+  "selected_version": "2.0.0",
+  "behavior_baseline": "shell-v2",
+  "registry_schema": 1,
+  "fixtures_sha256": "8efa16791c0af1f3a96047d7d4180ac3607b333ba34bef2acc1dfcebd8bfb944",
+  "exception_policy_sha256": "40b654b708b48da0e1eb36735e15b32f883b0bac4b8e06757748b4721d5a6cad",
+  "checks": {
+    "SH-01": {
+      "evidence": "Chrome layout, disclosure and grant transitions, and session-bound username request regressions",
+      "status": "pass"
+    },
+    "SH-02": {
+      "evidence": "Chrome public landing, local sign-in and public profile journeys",
+      "status": "pass"
+    },
+    "SH-03": {
+      "evidence": "Chrome layout, disclosure and grant transitions, and session-bound username request regressions",
+      "status": "pass"
+    },
+    "SH-04": {
+      "evidence": "Chrome layout, disclosure and grant transitions, and session-bound username request regressions",
+      "status": "pass"
+    },
+    "SH-05": {
+      "evidence": "Chrome layout, disclosure and grant transitions, and session-bound username request regressions",
+      "status": "pass"
+    },
+    "SH-06": {
+      "evidence": "Signed appearance fixtures, paired and missing artwork, keyboard and mobile touch, presentation and fallback",
+      "status": "pass"
+    },
+    "SH-07": {
+      "evidence": "Packaged RC identity, exact publication evidence, same-process rendering and retained identity Disposable Capistrano sealed v0.7.5-rc.1 as 479bb46261a9741295ae2abab8ab789799e15e9f545570621e63d297cefb30d7 before and after Puma and Solid Queue boot: https://github.com/harvj/muzeum/actions/runs/45731794085.",
+      "status": "pass"
+    },
+    "SH-09": {
+      "evidence": "Signed registry refresh and withdrawal on shell-v2, persisted replay high-water mark and outage fallback",
+      "status": "pass"
+    },
+    "SH-10": {
+      "evidence": "Infrastructure signed selection, invalidation and outage fixtures, plus Muzeum exact-review refusal before any protected phase",
+      "status": "pass"
+    },
+    "SH-08": {
+      "status": "pass",
+      "evidence": "Exact-source Chrome coverage maps the muzeum.fm route classes: anonymous landing and local login (sign_in_spec), authenticated Archive and catalog indexes/details and Resolution (canonical_library_spec, music_table_fidelity_spec and listening_history_acceptance_spec), and public profile Archive and scoped catalog browsing (public_profiles_spec). The signed muzeum-public-profiles exception remains scoped to additional public Archive and catalog links on public profiles. Muzeum-only operator configuration remains unchanged from the independently verified #36 installation (https://github.com/harvj/muzeum/issues/36#issuecomment-7176090204). Prior and candidate artifacts booted under disposable systemd with independent Muzeum services (https://github.com/harvj/muzeum/actions/runs/45731794085)."
+    }
+  }
+}
