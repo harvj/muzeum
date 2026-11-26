@@ -84,6 +84,18 @@
       "risk": "additive",
       "quiesce": true,
       "review": "Adds an empty source identity decision history with a recording foreign key and a source and revision lookup index. No mappings or existing row changes are performed by this migration. Quiesce for the foreign key setup and keep the journal during roll-forward repair."
-    }
+    },
+      "db/migrate/20261126170000_create_release_configurations.rb": {
+        "sha256": "500080f5572e0682321403a3448e02038595239067e6c35fdd7a2be59979e5a9",
+        "risk": "additive",
+        "quiesce": true,
+        "review": "Adds empty release configuration snapshots and listener selection history with foreign keys and indexes. No backfill, slot rewrite, or changes to existing listening decisions. Retain the tables during recovery."
+      },
+      "db/migrate/20261126173000_create_short_track_inference_decisions.rb": {
+        "sha256": "fdc9236c176313c318bcf1a468b6998093f6a939f02d5e44d506b1b208c3557d",
+        "risk": "additive",
+        "quiesce": true,
+        "review": "Adds an empty short-track inference decision history with foreign keys, indexes, and a decision constraint. No writes to existing observations, catalog memberships, or recording decisions. Retain the journal during recovery."
+      }
   }
 }
