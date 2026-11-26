@@ -3710,7 +3710,177 @@ ALTER TABLE ONLY public.resolution_work
 
 SET search_path TO "$user", public;
 
+--
+-- Name: release_configuration_decisions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.release_configuration_decisions (
+    id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    release_id bigint NOT NULL,
+    release_configuration_id bigint,
+    created_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: release_configuration_decisions_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.release_configuration_decisions_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: release_configuration_decisions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.release_configuration_decisions_id_seq OWNED BY public.release_configuration_decisions.id;
+
+
+--
+-- Name: release_configurations; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.release_configurations (
+    id bigint NOT NULL,
+    release_id bigint NOT NULL,
+    edition_mbid character varying NOT NULL,
+    source_date character varying,
+    source_country character varying,
+    digest character varying NOT NULL,
+    tracks jsonb NOT NULL,
+    provenance jsonb NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: release_configurations_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.release_configurations_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: release_configurations_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.release_configurations_id_seq OWNED BY public.release_configurations.id;
+
+
+--
+-- Name: release_configuration_decisions id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.release_configuration_decisions ALTER COLUMN id SET DEFAULT nextval('public.release_configuration_decisions_id_seq'::regclass);
+
+
+--
+-- Name: release_configurations id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.release_configurations ALTER COLUMN id SET DEFAULT nextval('public.release_configurations_id_seq'::regclass);
+
+
+--
+-- Name: release_configuration_decisions release_configuration_decisions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.release_configuration_decisions
+    ADD CONSTRAINT release_configuration_decisions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: release_configurations release_configurations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.release_configurations
+    ADD CONSTRAINT release_configurations_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: idx_on_release_configuration_id_ee97a5f926; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_on_release_configuration_id_ee97a5f926 ON public.release_configuration_decisions USING btree (release_configuration_id);
+
+
+--
+-- Name: index_release_configuration_decisions_on_release_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_release_configuration_decisions_on_release_id ON public.release_configuration_decisions USING btree (release_id);
+
+
+--
+-- Name: index_release_configuration_decisions_on_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_release_configuration_decisions_on_user_id ON public.release_configuration_decisions USING btree (user_id);
+
+
+--
+-- Name: index_release_configurations_on_release_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_release_configurations_on_release_id ON public.release_configurations USING btree (release_id);
+
+
+--
+-- Name: index_release_configurations_on_release_id_and_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_release_configurations_on_release_id_and_id ON public.release_configurations USING btree (release_id, id);
+
+
+--
+-- Name: release_configuration_decisions fk_rails_0f4dd73cbe; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.release_configuration_decisions
+    ADD CONSTRAINT fk_rails_0f4dd73cbe FOREIGN KEY (release_id, release_configuration_id) REFERENCES public.release_configurations(release_id, id);
+
+
+--
+-- Name: release_configurations fk_rails_521e1b02d2; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.release_configurations
+    ADD CONSTRAINT fk_rails_521e1b02d2 FOREIGN KEY (release_id) REFERENCES public.releases(id);
+
+
+--
+-- Name: release_configuration_decisions fk_rails_6238d6fd28; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.release_configuration_decisions
+    ADD CONSTRAINT fk_rails_6238d6fd28 FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
+-- Name: release_configuration_decisions fk_rails_783c803ed3; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.release_configuration_decisions
+    ADD CONSTRAINT fk_rails_783c803ed3 FOREIGN KEY (release_id) REFERENCES public.releases(id);
+
+
+CREATE UNIQUE INDEX index_release_configuration_snapshots ON public.release_configurations USING btree (release_id, edition_mbid, digest);
+
+CREATE INDEX index_release_configuration_decision_history ON public.release_configuration_decisions USING btree (user_id, release_id, id);
+
 INSERT INTO "schema_migrations" (version) VALUES
+('20261126170000'),
 ('20261124162000'),
 ('20261124030000'),
 ('20261123231500'),

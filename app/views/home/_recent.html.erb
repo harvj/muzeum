@@ -19,7 +19,7 @@
         <tr role="row">
           <th scope="col" role="columnheader">Played at</th><th scope="col" role="columnheader">Artist</th><th scope="col" role="columnheader" class="table-number">Length</th>
           <% if archive %><th scope="col" role="columnheader" class="play-badge"><span class="visually-hidden">Musical color</span></th><% end %>
-          <th scope="col" role="columnheader">Recording</th><th scope="col" role="columnheader">Release</th><th scope="col" role="columnheader" class="table-number">Year</th>
+          <th scope="col" role="columnheader">Recording</th><th scope="col" role="columnheader">Release</th><th scope="col" role="columnheader" class="table-number">Release date</th>
         </tr>
       </thead>
       <tbody id="recent-plays" role="rowgroup" data-controller="listening-days">
@@ -51,7 +51,7 @@
               <%= observed_text(play.payload["track_name"], "Track") %><span class="visually-hidden">, <%= status %></span>
             <% end %></span></span></th>
             <td role="cell" class="play-release<%= " source-release" if releases.empty? %>"><span class="play-name" data-overflow-name><%= releases.any? ? safe_join(releases.map { |release| catalog_link(release) }, " · ") : observed_text(play.payload["album_name"], "Album") %></span><% if releases.empty? %><span class="visually-hidden"> (Reported by Last.fm)</span><% end %></td>
-            <td role="cell" class="play-year table-number"><%= releases.filter_map(&:release_year).uniq.join(" · ") %></td>
+            <td role="cell" class="play-year table-number"><%= releases.filter_map { |release| @release_selection.date(release).iso }.uniq.join(" · ") %></td>
           </tr>
         <% end %>
       </tbody>

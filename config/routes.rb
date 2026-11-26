@@ -21,6 +21,7 @@ Rails.application.routes.draw do
       post :import, on: :member
       patch :musical_identity, on: :member
       if section == :releases
+        patch :configuration, on: :member
         patch :ranking, on: :member
         patch :track_listening, on: :member
         post :admit_edition_track, on: :member
@@ -30,6 +31,8 @@ Rails.application.routes.draw do
   end
   resources :resolution_surfaces, path: "resolution", controller: "resolution_workspace", only: %i[index show] do
     post :investigate, on: :member
+    post :retain_configuration, on: :member
+    post :admit_adjacent_release, on: :member
     post :defer, on: :member
     post :decide, on: :member
     get :release_batch, on: :member

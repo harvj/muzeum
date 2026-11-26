@@ -6,12 +6,18 @@
 <section class="card library-card">
   <%= form_with url: catalog_index_path(@section), method: :get, class: "catalog-filter" do |form| %>
     <div><%= form.label :q, "Search #{@section}" %><%= form.search_field :q, value: @query %></div>
-    <%= form.submit "Search", class: "catalog-submit" %>
-    <%= link_to "Clear search", catalog_index_path(@section), class: "utility-link clear-search" if @query.present? %>
+    <% if @section == "releases" %>
+      <div><%= form.label :release_month, "Release month" %><%= form.month_field :release_month, value: @release_month.iso %></div>
+      <div><%= form.label :sort, "Sort" %><%= form.select :sort, [["Listening time", ""], ["Release date, newest first", "release_date"]], selected: params[:sort] %></div>
+    <% end %>
+    <div class="catalog-filter-actions">
+      <%= form.submit "Search", class: "catalog-submit" %>
+      <%= link_to "Clear search", catalog_index_path(@section), class: "utility-link clear-search" if @query.present? || @release_month&.iso || params[:sort].present? %>
+    </div>
   <% end %>
   <% if @entries.any? %>
     <%= render "entries", title: @section.capitalize, items: @entries, listening: @index_listening, maximum: @index_time_max %>
-  <% elsif @query.present? %>
+  <% elsif @query.present? || @release_month&.iso %>
     <p>No <%= @section %> match this search.</p>
   <% elsif @public_profile %>
     <p>No canonical <%= @section %> in this public profile yet.</p>
@@ -19,5 +25,5 @@
     <p>No canonical <%= @section %> yet. Resolve a recording to start building the library.</p>
     <p><%= link_to "Review Last.fm recordings", resolution_surfaces_path %></p>
   <% end %>
-  <% if @next_page %><p><%= link_to "Next page", catalog_index_path(@section, before: @next_page, q: @query) %></p><% end %>
+  <% if @next_page %><p><%= link_to "Next page", catalog_index_path(@section, before: @next_page, q: @query, release_month: params[:release_month], sort: params[:sort]) %></p><% end %>
 </section>

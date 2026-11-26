@@ -15,6 +15,7 @@ html[data-appearance=dark]{color-scheme:dark;--card:#232625;--ink:#f1f2ed;--mute
   gap: 10px;
   flex-wrap: wrap;
 }
+.catalog-filter-actions { display: flex; align-items: center; gap: 10px; }
 .catalog-filter:has(.clear-search) input[type="search"] { max-width: min(11rem, 38vw); }
 .clear-search { display: inline-flex; align-items: center; min-block-size: 36px; }
 .catalog-submit { width: auto; cursor: pointer; }

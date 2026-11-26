@@ -20,3 +20,16 @@ The separately indexed [August 26 US CD](https://musicbrainz.org/release/dc2c22e
 - The exact “High Cool” dub browse finds the 2012 Japanese package and box-set context. An earlier independent release has not been established. “Won’t Do It” is present on the verified anniversary disc; its exact-recording browse returned HTTP 503 during the sampled attempts.
 
 Sixteen of 17 exact bonus recording browses returned all entries in the provider's reported first page. That is coverage of the current index, not a claim of exhaustive discography. Only linked complete source editions in the tracklist projection have verified exact slots. Work/recording relationship traversal, unverified single variants and the provider outage case remain open for implementation and acceptance.
+
+## Implementation acceptance
+
+- [Desktop, September US configuration](leisure-desktop.png)
+- [Mobile, September Japan configuration](leisure-mobile.png)
+- The request specs replay the checked UK, September US, Japanese and anniversary source sequences. They exercise the September 1991 filter, selection history, restored totals after switching back, duplicate recording slots, listener isolation and explicit admission of the checked UK “She’s So High” single.
+- The Chrome example uses a disposable listener and catalog, selects source configurations through the disclosure, and checks the resulting tracklists and September filter at desktop and mobile widths.
+- The August US date and recording-relationship gaps remain source uncertainty. “Won’t Do It” still has no completed browse in the research sample. Selection does not assert the edition heard. Same-group siblings remain pending unless a distinct program is demonstrated.
+
+```sh
+bundle exec rspec spec/requests/release_configurations_spec.rb
+BROWSER_TESTS=1 bundle exec rspec spec/system/canonical_library_spec.rb -e 'switches verified Leisure configurations'
+```

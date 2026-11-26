@@ -72,21 +72,17 @@ module CanonicalLibraryHelper
     safe_join(links, ", ")
   end
 
-  def catalog_release_date(release)
-    return unless release.release_year
+  def catalog_release_date(release, selection: @release_selection)
+    date = selection ? selection.date(release) : EffectiveReleaseDate.for(release)
+    return "Date unknown" unless date.iso
 
-    year, month, day = release.release_year, release.release_month, release.release_day
-    timestamp = format("%04d", year)
-    label = year.to_s
-    if month.in?(1..12)
-      timestamp += format("-%02d", month)
-      label = "#{Date::MONTHNAMES.fetch(month)} #{year}"
-      if day && Date.valid_date?(year, month, day)
-        timestamp += format("-%02d", day)
-        label = "#{Date::MONTHNAMES.fetch(month)} #{day}, #{year}"
-      end
+    day = date.first_day
+    label = case date.iso.length
+    when 4 then date.iso
+    when 7 then day.strftime("%B %Y")
+    else day.strftime("%B %-d, %Y")
     end
-    tag.time(label, datetime: timestamp, class: "catalog-release-date")
+    tag.time(label, datetime: date.iso, class: "catalog-release-date")
   end
 
   def import_status(request, verified: false)

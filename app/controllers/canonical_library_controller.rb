@@ -20,6 +20,14 @@ class CanonicalLibraryController < ApplicationController
       end
       records = matches
     end
+    if @model == Release
+      @release_selection = ReleaseConfigurationSelection.new(listening_user, records.select(:id))
+      @release_month = EffectiveReleaseDate.new(params[:release_month])
+      if @release_month.iso&.length == 7
+        ids = @release_selection.released_within(records, from: @release_month.first_day, through: @release_month.last_day).map(&:id)
+        records = records.where(id: ids)
+      end
+    end
     cursor = params[:before].to_i
     @entries = if @model == Recording
       records = records.where("id < ?", cursor) if cursor.positive?
@@ -48,6 +56,10 @@ class CanonicalLibraryController < ApplicationController
         .order(id: :desc).first
       load_artist_listening
     when Release
+      @release_selection = ReleaseConfigurationSelection.new(listening_user, [ @entry.id ])
+      @preferred_configuration = @release_selection.configuration(@entry)
+      @configurations = @entry.release_configurations.order(:source_date, :edition_mbid, id: :desc).to_a
+      @configuration_tracks = @preferred_configuration&.ordered_tracks
       @ranked_release = ReleaseRanking.new(current_user, [ @entry ]).include?(@entry) unless @public_profile
       base_slots = @entry.catalog_track_slots.base_sequence
       slots = base_slots.order(:medium, :position)
@@ -73,13 +85,14 @@ class CanonicalLibraryController < ApplicationController
       @counted_tracks = ReleaseTrackListeningDecision.included_memberships(listening_user, [ @entry.id ])
         .pluck(:recording_id).to_set
       base_recording_ids = base_slots.distinct.pluck(:recording_id)
-      track_recording_ids = base_recording_ids | @additional_appearances.map(&:recording_id)
+      displayed_ids = @configuration_tracks ? @configuration_tracks.filter_map(&:recording_id) : base_recording_ids
+      track_recording_ids = displayed_ids | @additional_appearances.map(&:recording_id)
       @track_counts = recording_plays(track_recording_ids)
         .group("effective_resolution.recording_id").count(:id)
-      @base_track_max = @track_counts.values_at(*base_recording_ids).compact.max.to_i
+      @base_track_max = @track_counts.values_at(*displayed_ids).compact.max.to_i
       other_ids = Array(params[:with_release]).first(PAGE).map { |id| Integer(id, exception: false) }.compact
       @activity_releases = catalog_scope.where(id: [ @entry.id, *other_ids ]).order(:id).to_a
-      member_ids = ReleaseTrackListeningDecision.included_memberships(listening_user, @activity_releases.map(&:id)).pluck(:recording_id)
+      member_ids = ReleaseConfigurationSelection.new(listening_user, @activity_releases.map(&:id)).memberships.map(&:last).uniq
       release_plays = recording_plays(member_ids)
       listening = CatalogListening.new(release_plays)
       @listening_total = listening.total
@@ -121,6 +134,13 @@ class CanonicalLibraryController < ApplicationController
     related = [ *@recording_rows&.map(&:first), *@release_rows&.map(&:first), *@slots&.map(&:recording), *@additional_appearances&.map(&:recording), *@releases ]
     @musical_identities, @inherited_musical_identities = MusicalIdentityDecision.presentation_for([ @entry, *related ])
     @may_edit_identity = @may_import && (@entry.is_a?(Release) ? @entry.catalog_verified_at.present? : Clients::Musicbrainz::MBID.match?(@entry.mbid.to_s))
+  end
+
+  def configuration
+    release = catalog_scope.find(params[:id])
+    snapshot = release.release_configurations.find(params[:configuration_id]) if params[:configuration_id].present?
+    ReleaseConfigurationDecision.select!(current_user, release, snapshot)
+    redirect_to release_path(release), status: :see_other
   end
 
   def ranking
@@ -262,21 +282,24 @@ class CanonicalLibraryController < ApplicationController
   end
 
   def listening_index_page(records, field, cursor)
-    memberships, entity_key = if @model == Artist
-      [ RecordingArtist.where(artist_id: records.select(:id)), :artist_id ]
+    pairs = if @model == Artist
+      RecordingArtist.where(artist_id: records.select(:id)).distinct.pluck(:artist_id, :recording_id)
     else
-      [ ReleaseTrackListeningDecision.included_memberships(listening_user, records.select(:id)), :release_id ]
+      ReleaseConfigurationSelection.new(listening_user, records.select(:id)).memberships
     end
-    pairs = memberships.distinct.pluck(entity_key, :recording_id)
     by_recording = CatalogListening.new(recording_plays(pairs.map(&:last).uniq)).by_recording
     @index_listening = Hash.new(CatalogListening::EMPTY)
     pairs.each do |entity_id, recording_id|
       @index_listening[entity_id] += by_recording.fetch(recording_id, CatalogListening::EMPTY)
     end
 
-    ordered = records.pluck(:id, field).sort_by do |id, name|
-      [ -@index_listening[id].milliseconds, name.downcase, id ]
-    end.map(&:first)
+    ordered = if @model == Release && params[:sort] == "release_date"
+      @release_selection.newest_first(records).map(&:id)
+    else
+      records.pluck(:id, field).sort_by do |id, name|
+        [ -@index_listening[id].milliseconds, name.downcase, id ]
+      end.map(&:first)
+    end
     @index_time_max = @index_listening[ordered.first].milliseconds
     offset = ordered.index(cursor)
     ids = ordered.slice(offset ? offset + 1 : 0, PAGE + 1)
@@ -293,7 +316,8 @@ class CanonicalLibraryController < ApplicationController
     releases = releases.to_a
     ranking = ReleaseRanking.new(@public_profile&.owner || current_user, releases)
     releases.select! { |release| ranking.include?(release) }
-    memberships = ReleaseTrackListeningDecision.included_memberships(listening_user, releases.map(&:id)).pluck(:release_id, :recording_id)
+    @release_selection = ReleaseConfigurationSelection.new(listening_user, releases.map(&:id))
+    memberships = @release_selection.memberships
       .group_by(&:first)
     records = recordings.to_a
     artist_listening = CatalogListening.new(recording_plays(records.map(&:id)))

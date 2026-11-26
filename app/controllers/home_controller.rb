@@ -64,6 +64,7 @@ class HomeController < ApplicationController
     @recent, @next_page = ListeningPage.fetch(observations, before:)
     @first_page = before.blank?
     @recent_recordings, @recent_releases = ListeningPage.catalog(@recent, RecordingResolution::Ledger.effective(current_user))
+    @release_selection = ReleaseConfigurationSelection.new(current_user, @recent_releases.values.flatten.map(&:id).uniq)
     @musical_identities, @inherited_musical_identities = MusicalIdentityDecision.presentation_for(@recent_recordings.values.compact.uniq)
     @can_manage_account = @account && current_user.managed_archive_grants.exists?(lastfm_account_id: @account.id)
     @ownership = ListeningProfile.find_by(lastfm_account: @account, owner: current_user) if @account

@@ -1,12 +1,11 @@
   <h3 class="section-heading">Canonical in Muzeum</h3>
+  <% release_selection = ReleaseConfigurationSelection.new(current_user, rows.flat_map { |_, entries, _| entries.grep(Release).map(&:id) }) %>
   <dl>
     <% rows.each do |label, entries, status| %>
       <div>
         <dt><span class="review-catalog-mark<%= " present" if entries.any? %>" aria-hidden="true"><%= entries.any? ? "✓" : "—" %></span><%= label %></dt>
         <dd><% if entries.any? %><%= safe_join(entries.map { |entry|
-        date = if entry.is_a?(Release) && entry.release_year
-          [entry.release_year, entry.release_month, entry.release_day].compact.map { |part| part.to_s.rjust(2, "0") }.join("-")
-        end
+        date = release_selection.date(entry).iso if entry.is_a?(Release)
         safe_join([catalog_link(entry), (tag.span(" · #{date}", class: "compact-meta") if date)].compact)
       }, ", ") %><% else %><%= status || "No verified catalog match" %><% end %></dd>
       </div>

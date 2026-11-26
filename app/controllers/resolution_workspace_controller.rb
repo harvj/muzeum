@@ -1,7 +1,7 @@
 class ResolutionWorkspaceController < ApplicationController
   before_action :workspace
   before_action :observation, except: :index
-  before_action :authorize_management, only: %i[investigate decide defer release_batch confirm_release_batch]
+  before_action :authorize_management, only: %i[investigate decide defer release_batch confirm_release_batch retain_configuration admit_adjacent_release]
 
   def index
     @filter = params[:filter].presence_in(RecordingResolution::Workspace::FILTERS)
@@ -62,6 +62,10 @@ class ResolutionWorkspaceController < ApplicationController
         @ranking = ranking
         @listener_ranking_token = review.token(@ranking)
       end
+    end
+    if params[:section] == "evidence" && @may_manage_observation && @assessment && @assessment_matches_claims
+      @release_configurations = configurations_for(@assessment)
+      @adjacent_programs = adjacent_programs_for(@assessment)
     end
     display_evidence = @assessment&.evidence || {}
     display_evidence = display_evidence.except("verified_recording") if @ranking.first&.fetch("version") == RecordingResolution::Ranking::SOURCE_HINTS_VERSION
@@ -243,6 +247,49 @@ class ResolutionWorkspaceController < ApplicationController
     redirect_to resolution_surface_path(@observation), alert: "This assignment changed. Review the current decision and submit again.", status: :see_other
   end
 
+  def retain_configuration
+    assessment = @workspace.assessments(@workspace.surface(@observation)).find(params[:assessment_id])
+    raise ActiveRecord::RecordNotFound unless assessment_matches_claims?(assessment, @observation)
+
+    release, edition = configurations_for(assessment).find do |_, data|
+      data["id"] == params[:edition_mbid]
+    end || raise(ActiveRecord::RecordNotFound)
+    release.with_lock do
+      ReleaseConfiguration.retain!(release, edition, provenance: {
+        "assessment_id" => assessment.id, "assessment_digest" => assessment.digest
+      })
+    end
+    redirect_to release_path(release), notice: "Verified source configuration retained.", status: :see_other
+  rescue CanonicalCatalog::Store::Unverified => error
+    redirect_to resolution_surface_path(@observation, section: "evidence"), alert: error.message, status: :see_other
+  end
+
+  def admit_adjacent_release
+    assessments = @workspace.assessments(@workspace.surface(@observation))
+    assessment = assessments.find(params[:assessment_id])
+    raise ActiveRecord::RecordNotFound unless assessment_matches_claims?(assessment, @observation)
+
+    release = Release.transaction do
+      RecordingSourceDecision.lock!
+      latest = assessments.where(group_id: assessment.group_id).reorder(id: :desc).first
+      raise CanonicalCatalog::Store::Unverified, "Investigation changed. Review the latest evidence." if latest != assessment
+
+      source, edition = adjacent_programs_for(assessment).find do |mbid, data|
+        mbid == params[:recording_mbid] && data["id"] == params[:edition_mbid]
+      end || raise(ActiveRecord::RecordNotFound)
+      verified = CanonicalCatalog::Edition.new(edition, edition.fetch("id"), recording_mbid: source)
+      history = assessment.evidence.fetch("additional_recording_publications").fetch(source)
+      review = CatalogImport.create!(kind: "adjacent_release_admission", state: "imported", entity_id: assessment.id,
+        due_at: Time.current, context: { reviewer_id: current_user.id, assessment_id: assessment.id,
+          assessment_digest: assessment.digest, source_recording_mbid: source, edition_mbid: edition.fetch("id") })
+      provenance = Struct.new(:provenance).new(Array(history["requests"]))
+      CanonicalCatalog::Store.new(review, provenance).release(edition, verified.slots, strict_collection: true)
+    end
+    redirect_to release_path(release), notice: "Adjacent release admitted.", status: :see_other
+  rescue CanonicalCatalog::Store::Unverified => error
+    redirect_to resolution_surface_path(@observation, section: "evidence"), alert: error.message, status: :see_other
+  end
+
   def release_batch
     @batch = build_release_batch
     @proposals = @batch.proposals
@@ -264,6 +311,38 @@ class ResolutionWorkspaceController < ApplicationController
   end
 
   private
+
+  def adjacent_programs_for(assessment)
+    histories = assessment.evidence.fetch("additional_recording_publications", {})
+    retained_groups = Array(assessment.evidence["construction_editions"]).filter_map { |data| data.dig("release-group", "id") }
+    programs = histories.flat_map do |mbid, history|
+      Array(history["adjacent_programs"]).filter_map do |edition|
+        group = edition.dig("release-group", "id")
+        next if retained_groups.include?(group) || history.dig("exact_recording", "id") != mbid
+        next unless CanonicalCatalog::Edition.original_context?(edition) && !CanonicalCatalog::Edition.mispressing?(edition)
+        next unless Array(history["releases"]).any? { |row| row["id"] == edition["id"] && row["slots"].present? }
+
+        [ mbid, edition ]
+      end
+    end
+    known = Release.where(release_group_mbid: programs.map { |_, edition| edition.dig("release-group", "id") }).pluck(:release_group_mbid).to_set
+    programs.reject { |_, edition| known.include?(edition.dig("release-group", "id")) }
+  end
+
+  def configurations_for(assessment)
+    editions = Array(assessment.evidence["construction_editions"])
+    groups = editions.filter_map { |data| data.dig("release-group", "id") }.uniq
+    releases = Release.where(release_group_mbid: groups).where.not(catalog_verified_at: nil).group_by(&:release_group_mbid)
+    editions.filter_map do |data|
+      matching = releases.fetch(data.dig("release-group", "id"), [])
+      next unless matching.one? && data["status"] == "Official" && !CanonicalCatalog::Edition.mispressing?(data)
+
+      CanonicalCatalog::Edition.new(data, CanonicalCatalog::Store.mbid!(data["id"]))
+      [ matching.first, data ]
+    rescue CanonicalCatalog::Store::Unverified
+      nil
+    end
+  end
 
   def build_release_batch
     anchor = params[:play].present? ? @workspace.matching(@observation).find(params[:play]) : @observation

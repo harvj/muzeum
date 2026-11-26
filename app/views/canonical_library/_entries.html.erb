@@ -4,7 +4,7 @@
     <tr>
       <th scope="col"><%= title.singularize %></th>
       <% if title != "Artists" %><th scope="col">Artist credits</th><% end %>
-      <% if title == "Releases" %><th scope="col" class="table-number">Year</th>
+      <% if title == "Releases" %><th scope="col" class="table-number">Release date</th>
       <% elsif title == "Recordings" %><th scope="col" class="table-number">Length</th>
       <% end %>
       <% if listening %><th scope="col" class="catalog-listening-time">Estimated listening time</th><% end %>
@@ -16,7 +16,7 @@
         <th scope="row"><%= catalog_link(item) %></th>
         <% unless item.is_a?(Artist) %><td><%= catalog_artists(item).presence || "Pending" %></td><% end %>
         <% case item
-           when Release %><td class="table-number"><%= item.release_year || "Unknown" %></td>
+           when Release %><td class="table-number"><%= catalog_release_date(item) %></td>
         <% when Recording %><td class="table-number"><%= recording_duration(item.duration_ms) %></td>
         <% end %>
         <% if listening %>

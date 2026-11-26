@@ -2,23 +2,27 @@
     data-action="pointerover->play-titles#preview pointerout->play-titles#leave focusin->play-titles#preview focusout->play-titles#leave keydown.esc@window->play-titles#hide scroll@window->play-titles#hide">
   <div class="plays-tooltip" popover="manual" aria-hidden="true" data-play-titles-target="tooltip"></div>
   <h2 class="section-heading">Track listing</h2>
-  <p><%= [@entry.release_year, @entry.release_month&.to_s&.rjust(2, "0"), @entry.release_day&.to_s&.rjust(2, "0")].compact.join("-").presence || "Date unknown" %>
-    · <%= render "shared/geographic_place", country: @entry.catalog_country %></p>
-  <% if @slots.any? %>
+  <p><%= catalog_release_date(@entry) %>
+    · <%= render "shared/geographic_place", country: @preferred_configuration ? @preferred_configuration.source_country : @entry.catalog_country %></p>
+  <%= render "release_configurations" if @configurations.any? %>
+  <% tracks = @configuration_tracks || @slots %>
+  <% if tracks.any? %>
     <% colors = musical_identity_attributes(@entry) %>
     <%= dense_table("Track listing", classes: "release-tracks") do %>
       <thead><tr><th scope="col" class="track-number" aria-label="Track number">#</th><th scope="col">Recording</th><th scope="col" class="table-number">Length</th><th scope="col" class="track-play-count">Resolved plays</th></tr></thead>
       <tbody>
-        <% @slots.each.with_index(@track_offset.to_i + 1) do |slot, number| %>
+        <% tracks.each.with_index(@configuration_tracks ? 1 : @track_offset.to_i + 1) do |slot, number| %>
           <tr><td class="track-number"><%= number %></td>
-            <th scope="row"><span class="play-name" data-overflow-name><%= catalog_link(slot.recording, title: slot.title) %></span></th>
-            <td class="table-number"><%= recording_duration(slot.duration_ms || slot.recording.duration_ms) %></td>
+            <th scope="row"><span class="play-name" data-overflow-name><%= slot.recording ? catalog_link(slot.recording, title: slot.title) : slot.title %></span></th>
+            <td class="table-number"><%= recording_duration(slot.duration_ms || slot.recording&.duration_ms) %></td>
             <td class="track-play-count">
-              <% if @archive_available %>
+              <% if @archive_available && slot.recording %>
                 <% count = @track_counts.fetch(slot.recording_id, 0) %>
                 <%= render "listening_bar", value: count, maximum: @base_track_max, label: number_with_delimiter(count),
                   accessible_label: pluralize(count, "resolved play"), colors:,
                   path: catalog_entry_path(slot.recording, anchor: "listening-activity") %>
+              <% elsif !slot.recording %>
+                <span aria-label="No verified catalog recording">—</span>
               <% else %>
                 Unavailable
               <% end %>
@@ -26,7 +30,7 @@
         <% end %>
       </tbody>
     <% end %>
-    <% if @next_track %><p><%= link_to "More tracks", catalog_entry_path(@entry, after_track: @next_track) %></p><% end %>
+    <% if @next_track && !@configuration_tracks %><p><%= link_to "More tracks", catalog_entry_path(@entry, after_track: @next_track) %></p><% end %>
   <% elsif @legacy_slots.present? %>
     <p>Earlier catalog listing. Verify the full edition with Import.</p>
     <% first = @legacy_slots.first %>
@@ -47,7 +51,7 @@
   <section class="card library-card music-sheet">
     <details class="additional-edition-tracks"<%= " open" if params[:edition_tracks] == "1" %>>
       <summary><strong>Additional edition tracks</strong> <span class="muted"><%= pluralize(admitted.size, "track") %></span></summary>
-      <% if @archive_available && !@public_profile %><p class="muted">These recordings have been admitted to the release. Check a recording to count it in your listening totals.</p><% end %>
+      <% if @archive_available && !@public_profile && !@preferred_configuration %><p class="muted">These recordings have been admitted to the release. Check a recording to count it in your listening totals.</p><% end %>
       <%= dense_table("Additional edition tracks", classes: "release-tracks additional-track-table") do %>
         <thead><tr>
           <th scope="col" class="track-number"><span class="visually-hidden">Include</span></th>
@@ -69,7 +73,7 @@
             <% duration = slots.first&.duration_ms || primary.dig("source_track", "duration_ms") || recording&.duration_ms || primary.dig("source_track", "recording", "length") %>
             <tr id="<%= "edition-track-#{slots.first.recording_id}" if slots.any? %>">
               <td class="track-number additional-track-check">
-                <% if @archive_available && !@public_profile %>
+                <% if @archive_available && !@public_profile && !@preferred_configuration %>
                   <% checked = slots.any? && @counted_tracks.include?(slots.first.recording_id) %>
                   <%= form_with url: track_listening_release_path(@entry), method: :patch, class: "edition-track-choice",
                     data: { controller: "edition-track" } do %>

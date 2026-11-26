@@ -5,12 +5,14 @@ require_relative "../support/guilt_show_fixture"
 require_relative "../support/narrow_stairs_fixture"
 require_relative "../support/lady_wood_fixture"
 require_relative "../support/interpol_membership_fixture"
+require_relative "../support/leisure_configurations_fixture"
 
 RSpec.describe "Canonical library resolution workflow", type: :system do
   include CatalogFixtures
   include GuiltShowFixture
   include NarrowStairsFixture
   include InterpolMembershipFixture
+  include LeisureConfigurationsFixture
 
   before do
     skip "Run with BROWSER_TESTS=1 for canonical workspace browser verification" unless ENV["BROWSER_TESTS"] == "1"
@@ -22,6 +24,51 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     driven_by :selenium, using: :headless_chrome do |options|
       options.binary = ENV["CHROME_BINARY"] if ENV["CHROME_BINARY"]
     end
+  end
+
+  it "switches verified Leisure configurations and uses their dates in catalog filters" do
+    user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "leisure-review", lastfm_username: "leisure-review")
+    data = JSON.parse(Rails.root.join("docs/design/release-configurations/tracklists.json").read)
+    editions = data.fetch("leisure_editions").index_by { |edition| edition.fetch("date") }
+    release = Release.create!(title: "Leisure", release_group_mbid: editions.fetch("1991-08-27").fetch("release_group"),
+      release_year: 1991, release_month: 8, release_day: 27, catalog_verified_at: Time.current)
+    %w[1991-08-27 1991-09-24 1991-09-20].each do |date|
+      ReleaseConfiguration.retain!(release, source_edition(editions.fetch(date)), provenance: { "fixture" => "Leisure" })
+    end
+    us_track = editions.fetch("1991-09-24").dig("media", 0, "tracks", 3)
+    artist = Artist.create!(name: "Blur", mbid: "ba853904-ae25-4ebb-89d6-c44cfbd71bd2")
+    release.artists << artist
+    recording = Recording.create!(title: us_track.fetch("title"), mbid: us_track.fetch("recording_mbid"), duration_ms: us_track.fetch("length"))
+    observation = Scrobble.create!(user:, lastfm_account: user.source_account, played_at: 2.days.ago,
+      payload: { artist_name: "Blur", track_name: recording.title, album_name: "Leisure" })
+    RecordingResolution::Ledger.record!(listener: user, scrobble: observation, scope: :surface, mode: "resolved",
+      reason: "Disposable configuration acceptance", recording:)
+    sign_in(user)
+    browser = page.driver.browser
+    [ [ 1440, 960, "desktop", "1991-09-24", "September 24, 1991" ],
+      [ 390, 844, "mobile", "1991-09-20", "September 20, 1991" ] ].each do |width, height, size, date, label|
+      browser.execute_cdp("Emulation.setDeviceMetricsOverride", width:, height:, deviceScaleFactor: 1, mobile: size == "mobile")
+      visit release_path(release)
+      find("summary", text: "Compare release configurations").send_keys(:enter)
+      find("summary", text: date).click
+      within(find("summary", text: date).find(:xpath, "..")) { click_button "Prefer this configuration" }
+      expect(page).to have_css("h1 time", text: label)
+      expect(page).to have_css(".release-tracks tbody tr", count: editions.fetch(date).dig("media", 0, "tracks").size)
+      expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
+      if ENV["LEISURE_CAPTURES"]
+        page.save_screenshot(File.join(ENV.fetch("LEISURE_CAPTURES"), "leisure-#{size}.png"))
+      end
+      visit releases_path(release_month: "1991-09", sort: "release_date")
+      expect(page).to have_link("Leisure")
+    end
+    visit release_path(release)
+    find("summary", text: "Compare release configurations").click
+    click_button "Use admitted base"
+    expect(page).to have_css("h1 time", text: "August 27, 1991")
+    visit releases_path(release_month: "1991-09")
+    expect(page).to have_no_link("Leisure")
+  ensure
+    browser&.execute_cdp("Emulation.clearDeviceMetricsOverride")
   end
 
   it "shows only admitted Interpol tracks as listening choices on desktop and mobile" do

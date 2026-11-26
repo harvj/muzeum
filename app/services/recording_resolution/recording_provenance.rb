@@ -35,6 +35,8 @@ module RecordingResolution
       if browse_complete && references.any? { |row| appearances.none? { |appearance| appearance["id"] == row["id"] } }
         gaps << "Retained appearances disagree with the current release browse."
       end
+      programs = []
+      retained_groups = retained_references.filter_map { |row| row.dig("release-group", "id") }.to_set
       lookups = 0
       releases = references.map do |row|
         data = known[row["id"]]
@@ -42,7 +44,13 @@ module RecordingResolution
           lookups += 1
           data = @client.edition(@session, row["id"], catalog: true)
         end
-        appearance(row, data, mbid)
+        verified = appearance(row, data, mbid)
+        if verified["slots"].present? && CanonicalCatalog::Edition.original_context?(data) &&
+            !CanonicalCatalog::Edition.mispressing?(data) && !retained_groups.include?(data.dig("release-group", "id")) &&
+            data.dig("release-group", "primary-type").in?(%w[Single EP Album])
+          programs << data
+        end
+        verified
       rescue CanonicalCatalog::Store::Unverified, ProviderError => error
         raise if error.is_a?(ProviderError) && error.deferred
 
@@ -65,7 +73,7 @@ module RecordingResolution
         "related_recordings" => related, "counterpart_mbids" => counterparts, "browse_complete" => browse_complete,
         "incomplete" => gaps.any?, "limitations" => gaps, "earliest_publication" => earliest&.slice("id", "title", "date"),
         "classification" => classification(recording, related, counterparts),
-        "supplementary_context" => context }.compact
+        "adjacent_programs" => programs, "supplementary_context" => context }.compact
     end
 
     private

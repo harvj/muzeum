@@ -67,6 +67,39 @@
 <section id="review-evidence">
   <%= render "investigation_status", contexts:, compact: section == "candidates" %>
   <%= render "investigation", selected:, review_state: %>
+  <% if @adjacent_programs.present? %>
+    <details>
+      <summary>Review independently issued releases</summary>
+      <p>These official programs contain an exact checked recording. Their earliest supported appearance may change as more evidence becomes available. Leave them here to retain them as evidence.</p>
+      <% @adjacent_programs.each do |mbid, edition| %>
+        <details>
+          <summary><%= [edition["title"], edition.dig("release-group", "primary-type"), edition["country"], edition["date"]].compact.join(" · ") %></summary>
+          <p><%= link_to "MusicBrainz source release", "https://musicbrainz.org/release/#{edition.fetch("id")}" %></p>
+          <% edition.fetch("media").sort_by { |medium| medium.fetch("position") }.each do |medium| %>
+            <p>Medium <%= medium.fetch("position") %></p>
+            <ol>
+              <% medium.fetch("tracks").sort_by { |track| track.fetch("position") }.each do |track| %>
+                <li value="<%= track.fetch("position") %>"><%= track.fetch("title") %></li>
+              <% end %>
+            </ol>
+          <% end %>
+          <%= button_to "Admit this release", admit_adjacent_release_resolution_surface_path(@observation),
+            params: { assessment_id: @assessment.id, recording_mbid: mbid, edition_mbid: edition.fetch("id") } %>
+        </details>
+      <% end %>
+    </details>
+  <% end %>
+  <% if @release_configurations.present? %>
+    <details>
+      <summary>Retain verified release configurations</summary>
+      <p>Retaining a source tracklist preserves evidence. It does not admit recordings or change a listener’s preference.</p>
+      <% @release_configurations.each do |release, edition| %>
+        <%= button_to ["Retain", release.title, edition["country"], edition["date"], edition["id"]].compact.join(" · "),
+          retain_configuration_resolution_surface_path(@observation),
+          params: { assessment_id: @assessment.id, edition_mbid: edition["id"] } %>
+      <% end %>
+    </details>
+  <% end %>
 </section>
 <% end %>
 
