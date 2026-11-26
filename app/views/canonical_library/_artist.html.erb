@@ -6,7 +6,7 @@
       <thead><tr>
         <% { "title" => "Title", "length" => "Length", "recent" => "Last listened", "plays" => "Play count" }.each do |sort, label| %>
           <th scope="col" aria-sort="<%= (@recording_sort == sort ? (sort == "title" ? "ascending" : "descending") : "none") %>">
-            <%= link_to label, catalog_entry_path(@entry, **@history_window.query, recording_sort: sort, anchor: "artist-recordings"), data: { turbo_frame: "_top" } %>
+            <%= link_to label, catalog_entry_path(@entry, **@history_window.query, recording_sort: sort, anchor: "artist-recordings"), data: { turbo: false } %>
           </th>
         <% end %>
       </tr></thead>
@@ -22,10 +22,10 @@
       </tbody>
     </table>
     <% if @recording_page.positive? %>
-      <%= link_to "Previous recordings", catalog_entry_path(@entry, **@history_window.query, recording_sort: @recording_sort, recording_page: @recording_page - 1, anchor: "artist-recordings"), data: { turbo_frame: "_top" } %>
+      <%= link_to "Previous recordings", catalog_entry_path(@entry, **@history_window.query, recording_sort: @recording_sort, recording_page: @recording_page - 1, anchor: "artist-recordings"), data: { turbo: false } %>
     <% end %>
     <% if (@recording_page + 1) * 10 < @recording_count %>
-      <%= link_to "More recordings", catalog_entry_path(@entry, **@history_window.query, recording_sort: @recording_sort, recording_page: @recording_page + 1, anchor: "artist-recordings"), data: { turbo_frame: "_top" } %>
+      <%= link_to "More recordings", catalog_entry_path(@entry, **@history_window.query, recording_sort: @recording_sort, recording_page: @recording_page + 1, anchor: "artist-recordings"), data: { turbo: false } %>
     <% end %>
   <% else %>
     <p>No canonical recordings are available.</p>
