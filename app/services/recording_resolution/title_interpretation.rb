@@ -29,8 +29,9 @@ module RecordingResolution
 
       context = text[/\Alive\s+(?:at|from|in|on)\s+(.+)\z/i, 1] if version == "live"
       date = context&.[](/\b(?:19|20)\d{2}(?:-\d{2}-\d{2})?\b/)
+      place = context&.delete_suffix(date.to_s)&.sub(/[,;\s]+\z/, "")
       { "kind" => "version", "name" => version, "text" => text,
-        "performance_context" => context, "reported_date" => date }.compact
+        "performance_context" => context, "reported_place" => place.presence, "reported_date" => date }.compact
     end
 
     def initialize(title)
@@ -58,7 +59,7 @@ module RecordingResolution
         part = Regexp.escape(item.fetch("text"))
         residual = residual.sub(/\s*\(#{part}\)|\s*\[#{part}\]|\A\s*#{part}\s*(?:[-–—:]\s*)?|\s+[-–—]\s+#{part}(?=\s|\z)|:\s+#{part}(?=\s|\z)/i, "")
       end
-      residual = residual.strip
+      residual = residual.strip.sub(/\A[-–—:]\s+/, "")
       return if residual.blank? || residual == @title
 
       descriptors = classified.compact

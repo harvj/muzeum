@@ -20,7 +20,9 @@ RSpec.describe RecordingResolution::Evaluator do
     expect(evidence.fetch("source_claims")).to eq({})
     expect(surface.track).to eq("ACT I: Sea Borne (live)")
     expect(evidence.fetch("adaptive_searches").length).to be <= 3
-    expect(paths.uniq).to eq(paths.drop(1))
+    expect(paths.first).to end_with('recording:"ACT I: Sea Borne (live)"')
+    expect(paths).to include('artist:"Dead Can Dance" AND recording:"ACT I: Sea Borne live"')
+    expect(paths).to include('artist:"Dead Can Dance" AND recording:"ACT I: Sea Borne"')
   end
 
   it "retains the real recording from a stripped qualifier as a review choice only" do
@@ -34,10 +36,12 @@ RSpec.describe RecordingResolution::Evaluator do
       { "data" => project.call("recordings" => rows, "count" => rows.size, "offset" => 0) }
     end
     evidence = described_class.new(session, discogs: nil, workspace: true, adaptive: true).call(surface, {})
-    expect(evidence.fetch("adaptive_searches").length).to eq(2)
+    expect(evidence.fetch("recording_searches").length).to eq(3)
     rank = RecordingResolution::Ranking.call(surface, evidence, source_hints: true).sole
     expect(rank.fetch("recording_mbid")).to eq(solo.fetch("id"))
-    expect(rank.dig("inputs", "title", "state")).to eq("contradictory")
+    expect(rank.dig("inputs", "title", "state")).to eq("positive")
+    expect(rank.dig("inputs", "version", "state")).to eq("unavailable")
+    expect(rank.dig("inputs", "reported_version_unconfirmed", "state")).to eq("contradictory")
     expect(RecordingResolution::Ranking.recommended?([ rank ])).to be(false)
   end
 end

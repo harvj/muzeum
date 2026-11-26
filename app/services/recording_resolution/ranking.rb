@@ -100,6 +100,9 @@ module RecordingResolution
         candidate_descriptors << TitleInterpretation.descriptor(@candidate["disambiguation"].to_s)
         candidate_versions = candidate_descriptors.compact.select { |item| item["kind"] == "version" }
         version_match = structured_version_match(interpretation, observed_versions, candidate_versions)
+        if observed_versions.any? && version_match.nil?
+          factor("reported_version_unconfirmed", false, 0, 0, nil, "Catalog evidence does not confirm the reported version")
+        end
       end
       factor("version", version_match, 2, -4, "Version markers agree", "Catalog marks a distinct or video version that the source does not confirm")
       factor("duration", nil, 0, 0, nil, nil)

@@ -7,7 +7,8 @@ RSpec.describe RecordingResolution::TitleInterpretation do
       "Wear Me Down [2012 remastered version]",
       "Wear Me Down (Remastered 2012)",
       "2012 Remaster: Wear Me Down",
-      "[2012 Remaster] Wear Me Down"
+      "[2012 Remaster] Wear Me Down",
+      "[2012 Remaster] - Wear Me Down"
     ].each do |title|
       interpretation = described_class.call(title)
       expect(interpretation).to include("original_title" => title, "base_title" => "Wear Me Down", "unclassified" => [])
@@ -21,7 +22,7 @@ RSpec.describe RecordingResolution::TitleInterpretation do
     expect(interpretation).to include("base_title" => "Song (Blue)", "unclassified" => [ "Blue" ],
       "confidence" => "ambiguous_title_boundary", "alternatives" => [ title, "Song (Blue)", "Song" ])
     expect(interpretation.fetch("descriptors").first).to include("name" => "live",
-      "performance_context" => "the Astoria, London 2007-07-02", "reported_date" => "2007-07-02")
+      "performance_context" => "the Astoria, London 2007-07-02", "reported_place" => "the Astoria, London", "reported_date" => "2007-07-02")
     expect(interpretation.fetch("descriptors").pluck("name")).to eq([ "live", "instrumental", "remaster" ])
     expect(described_class.call("Song (Club Remix)").fetch("descriptors").sole).to include("name" => "remix")
     expect(described_class.recording_title_match?(interpretation, "Song")).to be(false)

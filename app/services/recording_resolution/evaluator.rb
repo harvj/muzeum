@@ -151,13 +151,15 @@ module RecordingResolution
     end
 
     def broaden_recording_search(surface)
+      interpretation = evidence["title_interpretation"]
+      reported_version = interpretation && !TitleInterpretation.mastering_only?(interpretation)
       credible = Ranking.call(surface, evidence, source_hints: true).any? do |rank|
+        version = rank.dig("inputs", "version", "state")
         rank.dig("inputs", "title", "state") == "positive" && rank.dig("inputs", "artist_name", "state") == "positive" &&
-          rank.dig("inputs", "version", "state") != "contradictory"
+          (reported_version ? version == "positive" : version != "contradictory")
       end
       return if credible
 
-      interpretation = evidence["title_interpretation"]
       alternatives = interpretation ? interpretation.fetch("alternatives").drop(2) : DiscoveryTitle.alternate_titles(surface.track).first(2)
       scoped = alternatives.map { |title| [ title, { artist: surface.artist } ] }
       # The album can recover different credit arrangements; require the credited
