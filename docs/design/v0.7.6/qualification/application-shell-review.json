@@ -1,0 +1,51 @@
+{
+  "application": "muzeum",
+  "behavior_baseline": "shell-v2",
+  "checks": {
+    "SH-01": {
+      "evidence": "Chrome layout, disclosure and grant transitions, and session-bound username request regressions",
+      "status": "pass"
+    },
+    "SH-02": {
+      "evidence": "Chrome public landing, local sign-in and public profile journeys",
+      "status": "pass"
+    },
+    "SH-03": {
+      "evidence": "Chrome layout, disclosure and grant transitions, and session-bound username request regressions",
+      "status": "pass"
+    },
+    "SH-04": {
+      "evidence": "Chrome layout, disclosure and grant transitions, and session-bound username request regressions",
+      "status": "pass"
+    },
+    "SH-05": {
+      "evidence": "Chrome layout, disclosure and grant transitions, and session-bound username request regressions",
+      "status": "pass"
+    },
+    "SH-06": {
+      "evidence": "Signed appearance fixtures, paired and missing artwork, keyboard and mobile touch, presentation and fallback",
+      "status": "pass"
+    },
+    "SH-07": {
+      "evidence": "Packaged RC identity, exact publication evidence, same-process rendering and retained identity",
+      "status": "pass"
+    },
+    "SH-08": {
+      "evidence": "Executable SH-08 verified signed public-profile exception, exact release-branch browser tests, app-scoped isolation and recovery, and sealed disposable artifact 53f0702749451dbc12b53d23006621493b29faee3feb87d726cfc5760fc65e5d.",
+      "status": "pass"
+    },
+    "SH-09": {
+      "evidence": "Signed registry refresh and withdrawal on shell-v2, persisted replay high-water mark and outage fallback",
+      "status": "pass"
+    },
+    "SH-10": {
+      "evidence": "Infrastructure signed selection, invalidation and outage fixtures, plus Muzeum exact-review refusal before any protected phase",
+      "status": "pass"
+    }
+  },
+  "exception_policy_sha256": "40b654b708b48da0e1eb36735e15b32f883b0bac4b8e06757748b4721d5a6cad",
+  "fixtures_sha256": "8efa16791c0af1f3a96047d7d4180ac3607b333ba34bef2acc1dfcebd8bfb944",
+  "registry_schema": 1,
+  "revision": "5f4a6e83303e724904dd9a273b1809d35983c4b6",
+  "selected_version": "2.0.0"
+}
