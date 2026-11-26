@@ -1,12 +1,11 @@
-<% context = request.query_parameters.slice("recording_sort", "recording_page", "after_appearance", "after_track", "after_legacy_track", "with_release", "edition_tracks").symbolize_keys.merge(anchor:) %>
+<% context = request.query_parameters.slice("recording_sort", "recording_page", "after_appearance", "after_track", "after_legacy_track", "with_release", "edition_tracks").symbolize_keys %>
 <div class="listening-controls">
   <div class="listening-control">
     <span class="muted">Period</span>
     <nav aria-label="Listening history period" class="artist-ranges">
       <% CatalogListening::Window::PERIODS.each do |period, (label, _)| %>
-        <% selected = period == window.period %>
-        <% destination = selected ? window : CatalogListening::Window.new(period:, grouping: window.grouping, now: window.now) %>
-        <%= link_to label, catalog_entry_path(@entry, **context.merge(destination.query)), aria: { current: ("true" if selected) } %>
+        <% destination = CatalogListening::Window.new(period:, grouping: window.grouping, now: window.now) unless period == window.period %>
+        <%= listening_history_option(label, destination && context.merge(destination.query)) %>
       <% end %>
     </nav>
   </div>
@@ -15,7 +14,7 @@
       <span class="muted">Group by</span>
       <nav aria-label="Listening history grouping" class="artist-ranges">
         <% window.groupings.each do |grouping| %>
-          <%= link_to grouping.capitalize, catalog_entry_path(@entry, **context.merge(window.query).merge(grouping:)), aria: { current: ("true" if grouping == window.grouping) } %>
+          <%= listening_history_option(grouping.capitalize, (context.merge(window.query).merge(grouping:) unless grouping == window.grouping)) %>
         <% end %>
       </nav>
     </div>

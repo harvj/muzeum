@@ -1,7 +1,7 @@
 require "rails_helper"
 require_relative "../support/site_art_pair"
 
-RSpec.describe "Muzeum v0.7.4 listening history visual acceptance", type: :system do
+RSpec.describe "Listening history visual acceptance", type: :system do
   include ActiveSupport::Testing::TimeHelpers
 
   around { |example| travel_to(Time.utc(2026, 11, 25, 20)) { example.run } }
@@ -16,7 +16,7 @@ RSpec.describe "Muzeum v0.7.4 listening history visual acceptance", type: :syste
     end
   end
 
-  it "checks both orientations and records all requested calendar ranges on the frozen candidate" do
+  it "checks calendar ranges, viewport position, and controls in both orientations" do
     user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "timeline-acceptance", lastfm_username: "timeline-acceptance")
     artist = Artist.create!(name: "Charli xcx", mbid: SecureRandom.uuid)
     release = Release.create!(title: "Charli", release_year: 2019, catalog_verified_at: Time.current)
@@ -163,6 +163,14 @@ RSpec.describe "Muzeum v0.7.4 listening history visual acceptance", type: :syste
           end
           expect(text).to eq(Date.iso8601(date).strftime(format))
         end
+        if grouping == "months"
+          quarterly = dates.filter_map do |date|
+            month = Date.iso8601(date)
+            [ date, { 1 => month.year.to_s, 4 => "Apr", 7 => "Jul", 10 => "Oct" }.fetch(month.month) ] if
+              [ 1, 4, 7, 10 ].include?(month.month)
+          end
+          expect(layout.fetch("labels")).to eq(mobile ? quarterly.reverse : quarterly)
+        end
         peak = counts.values.max
         if entity == recording
           expect(page).to have_css(".listening-axis-peak", exact_text: peak.to_s)
@@ -217,8 +225,12 @@ RSpec.describe "Muzeum v0.7.4 listening history visual acceptance", type: :syste
       expect(page).to have_css(".listening-axis-peak", exact_text: "8") if range == "year"
       page.refresh
       expect(page).to have_css(".listening-window time:first-child[datetime='#{previous}']")
+      page.execute_script(<<~JS)
+        document.addEventListener("turbo:load", () => { document.documentElement.dataset.windowVisitComplete = "true" }, { once: true })
+      JS
       find('a[aria-label="Next window"]').click
       expect(page).to have_css(".listening-window time:first-child[datetime='#{current}']")
+      expect(page).to have_css("html[data-window-visit-complete]", visible: :all)
       page.go_back
       expect(page).to have_css(".listening-window time:first-child[datetime='#{previous}']")
     end
@@ -240,6 +252,48 @@ RSpec.describe "Muzeum v0.7.4 listening history visual acceptance", type: :syste
     expect(page).to have_no_css(".artist-timeline-fill, .listening-axis-peak", visible: :all)
     expect(page).to have_css(".listening-axis-zero", exact_text: "0")
     expect(page).to have_text("No resolved plays in this period.")
+    [ artist, release, recording ].each do |entry|
+      [ [ 1440, 900, false ], [ 390, 844, true ] ].product(%w[light dark]).each do |(width, height, mobile), theme|
+        browser.execute_cdp("Emulation.setDeviceMetricsOverride", width:, height:, deviceScaleFactor: 1, mobile:)
+        browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "prefers-color-scheme", value: theme } ])
+        visit polymorphic_path(entry, range: "3y", grouping: "years")
+        page.execute_script(<<~JS)
+          document.querySelector("main").style.paddingBlock = "850px"
+          window.scrollTo(0, document.querySelector(".entity-history").getBoundingClientRect().top + scrollY - 120)
+        JS
+        viewport = page.evaluate_script("window.scrollY")
+        expect(viewport).to be > 700
+        expect(page.evaluate_script("document.querySelector('.entity-history').getBoundingClientRect().top")).to be_within(2).of(120)
+        click_link "Year"
+        expect(page).to have_css(".artist-ranges span[aria-current]", exact_text: "Year")
+        expect(page.evaluate_script("window.scrollY")).to be_within(2).of(viewport)
+        find(".artist-ranges a", exact_text: "Days").send_keys(:enter)
+        expect(page).to have_css(".artist-ranges span[aria-current]", exact_text: "Days")
+        expect(page.evaluate_script("window.scrollY")).to be_within(2).of(viewport)
+        find('a[aria-label="Previous window"]').click
+        expect(page).to have_css(".listening-window time:first-child[datetime='2025-01-01']")
+        expect(page.evaluate_script("window.scrollY")).to be_within(2).of(viewport)
+        find('a[aria-label="Next window"]').click
+        expect(page).to have_css(".listening-window time:first-child[datetime='2026-01-01']")
+        expect(page.evaluate_script("window.scrollY")).to be_within(2).of(viewport)
+        expect(URI.parse(page.current_url).fragment).to be_nil
+        expect(page).to have_no_css(".artist-ranges a[aria-current]")
+        selected = find(".artist-ranges span[aria-current]", exact_text: "Days")
+        css = lambda do
+          page.evaluate_script(<<~JS, selected)
+            ((element) => {
+              const style = getComputedStyle(element)
+              return [style.color, style.backgroundColor, style.textDecorationLine, element.tabIndex]
+            })(arguments[0])
+          JS
+        end
+        before_hover = css.call
+        selected.hover unless mobile
+        expect(css.call).to eq(before_hover)
+        expect(before_hover[2..]).to eq([ "none", -1 ])
+      end
+    end
+    browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
     expect(observations.map { |observation| observation.reload.payload }).to all(eq(payload.stringify_keys))
     if ENV["LISTENING_REVIEW_DIR"]
       File.write(File.join(ENV.fetch("LISTENING_REVIEW_DIR"), "calendar-checks.json"), JSON.pretty_generate(evidence) + "\n")
@@ -248,6 +302,7 @@ RSpec.describe "Muzeum v0.7.4 listening history visual acceptance", type: :syste
 
   def screenshot(browser, name)
     return unless ENV["LISTENING_REVIEW_DIR"]
+    return if ENV["LISTENING_REVIEW_FILTER"] && !Regexp.new(ENV.fetch("LISTENING_REVIEW_FILTER")).match?(name)
 
     page.evaluate_script("window.scrollTo(0, 0)")
     page.evaluate_async_script("const done = arguments[0]; requestAnimationFrame(() => requestAnimationFrame(() => done(true)))")

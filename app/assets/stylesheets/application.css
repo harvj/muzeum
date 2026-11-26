@@ -382,13 +382,13 @@ body > :is(header, main, footer) {
 a:hover { text-decoration: none; }
 
 @media (forced-colors: none) {
-  main[data-art-treatment] > .intro,
+  :is(main[data-art-treatment], main[data-art-treatment] > .catalog-entity-frame) > .intro,
   main[data-art-treatment] .archive-heading {
     background-color: var(--reading-surface, var(--surface));
   }
 
   header[data-art-treatment] :where(.harvj-wordmark, .entity-link, .account-nav > .controls > label),
-  main[data-art-treatment] > .intro > :is(h1, p),
+  :is(main[data-art-treatment], main[data-art-treatment] > .catalog-entity-frame) > .intro > :is(h1, p),
   main[data-art-treatment] .archive-heading,
   footer[data-art-treatment] > .footer-release {
     text-shadow: var(--art-text-shadow, none);
@@ -397,9 +397,9 @@ a:hover { text-decoration: none; }
   header[data-art-treatment] :is(.harvj-wordmark, .entity-link):not(:hover, :focus-visible, :active),
   header[data-art-treatment] .account-nav > .controls > label,
   main[data-art-treatment] :is(.intro > h1, .archive-heading) { color: var(--art-foreground, var(--ink)); }
-  main[data-art-treatment] > .intro > p,
+  :is(main[data-art-treatment], main[data-art-treatment] > .catalog-entity-frame) > .intro > p,
   footer[data-art-treatment] > .footer-release { color: var(--art-foreground, var(--muted)); }
-  main[data-art-treatment] > .intro a:not(:hover, :focus-visible, :active) { color: var(--art-foreground, var(--ink)); }
+  :is(main[data-art-treatment], main[data-art-treatment] > .catalog-entity-frame) > .intro a:not(:hover, :focus-visible, :active) { color: var(--art-foreground, var(--ink)); }
   body > header :is(.harvj-wordmark, .entity-link):is(:hover, :focus-visible, :active) {
     color: var(--card);
     background: var(--ink);
@@ -535,12 +535,13 @@ main .review-candidate.recommended { border-color: #378c48; }
 .catalog-heading > .entity-heading-label { margin-block: 0 .2rem; }
 .entity-heading-label > span { display: block; }
 .entity-history > p { margin-block: .25rem; }
+.catalog-entity-frame { display: block; overflow-anchor: none; }
 .listening-history-heading { display: flex; flex-wrap: wrap; align-items: baseline; gap: .4rem 1rem; }
 .listening-controls { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .35rem .9rem; margin-inline-start: auto; }
 .listening-control { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .35rem; align-items: center; }
 .artist-ranges { display: flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: .5rem; }
-.artist-ranges a { padding: .2rem .55rem; border-radius: .4rem; }
-.artist-ranges a[aria-current] { font-weight: 700; background: var(--surface-accent); }
+.artist-ranges :is(a, span) { padding: .2rem .55rem; border-radius: .4rem; }
+.artist-ranges span[aria-current] { font-weight: 700; background: var(--surface-accent); color: var(--ink); }
 .listening-window { display: flex; flex: 0 0 100%; justify-content: flex-end; align-items: center; gap: .4rem; font-size: .8rem; }
 .listening-window-dates { text-align: center; font-variant-numeric: tabular-nums; }
 .listening-window .listening-window-arrow {

@@ -3,7 +3,7 @@
   <div class="listening-history-heading">
     <h2 class="section-heading"><%= @activity_releases&.many? ? "Combined listening history" : "Listening history" %></h2>
     <% if @archive_available %>
-      <%= render "listening_controls", window: @history_window, anchor: %>
+      <%= render "listening_controls", window: @history_window %>
     <% end %>
   </div>
   <% if @archive_available %>

@@ -100,17 +100,35 @@ module CanonicalLibraryHelper
     end
   end
 
+  def listening_history_option(label, query)
+    return tag.span(label, aria: { current: "true" }) unless query
+
+    listening_history_link(label, query)
+  end
+
+  def listening_history_link(label, query, **options)
+    link_to label, catalog_entry_path(@entry, **query), **options,
+      data: { turbo_frame: "catalog-entity", turbo_action: "advance" }
+  end
+
   def listening_window_arrow(glyph, label, date, query)
     if date
-      link_to glyph, catalog_entry_path(@entry, **query.merge(start: date.iso8601)), class: "listening-window-arrow", aria: { label: }
+      listening_history_link glyph, query.merge(start: date.iso8601), class: "listening-window-arrow", aria: { label: }
     else
       tag.button glyph, type: "button", disabled: true, class: "listening-window-arrow", aria: { label: }
     end
   end
 
   def listening_calendar_labels(timeline, grouping, spacing:, from_newest: false)
+    if grouping == "months"
+      quarters = { 1 => "%Y", 4 => "%b", 7 => "%b", 10 => "%b" }
+      return timeline.each_with_index.filter_map do |(date, _), i|
+        [ i, date.strftime(quarters.fetch(date.month)) ] if quarters.key?(date.month)
+      end.to_h
+    end
+
     years = grouping == "years"
-    format = { "years" => "%Y", "months" => "%b", "days" => "%m-%d" }.fetch(grouping)
+    format = { "years" => "%Y", "days" => "%m-%d" }.fetch(grouping)
     transitions = timeline.each_index.select { |i| timeline[i].first.yday == 1 } unless years
     reserved = Set.new
     labels = {}
