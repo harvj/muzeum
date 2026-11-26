@@ -1,7 +1,7 @@
 name: Issue 36 disposable staging
 on:
   push:
-    branches: [release/v0.7.4-issue36-rehearsal]
+    branches: [release/v0.7.5-provenance-rehearsal]
 permissions:
   contents: read
 jobs:
@@ -50,7 +50,7 @@ jobs:
           ssh -o BatchMode=yes -o StrictHostKeyChecking=yes 127.0.0.1 true
           export BUNDLE_GEMFILE="$GITHUB_WORKSPACE/Gemfile"
           cd ops/capistrano
-          for revision in 3454a1f20ec4e908109e0509d69a27bc4cd19dfa f4e5aa959b2d5464a9a2c82508c8f514acddbe0b; do
+          for revision in f4e5aa959b2d5464a9a2c82508c8f514acddbe0b 9a5e658f5ebfdf2d37077a60c4c2a445935535db; do
             MUZEUM_DISPOSABLE_REVISION="$revision" bundle exec cap disposable muzeum:qualify_staging
             release=$(find "$app/releases" -mindepth 1 -maxdepth 1 -type d | sort | tail -1)
             ruby "$release/script/muzeum_release_identity.rb" verify "$revision"
