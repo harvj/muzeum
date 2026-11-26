@@ -22,6 +22,64 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     end
   end
 
+  it "keeps the three production-derived release cases separate from canonical admission" do
+    user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "release-provenance", lastfm_username: "release-provenance")
+    sign_in(user)
+    browser = page.driver.browser
+    cases = {
+      "queen" => [ "Tove Lo", "Thousand Miles", "Queen of the Clouds" ],
+      "interpol" => [ "Interpol", "Pace Is the Trick", "Our Love to Admire" ],
+      "songs-ohia" => [ "Songs: Ohia", "Tenskwatawa", "Songs: Ohia" ]
+    }
+    cases.each do |name, (artist, title, album)|
+      evidence = JSON.parse(Rails.root.join("spec/fixtures/musicbrainz/release_provenance/#{name}.json").read)
+      play = Scrobble.create!(user:, lastfm_account: user.source_account, played_at: Time.current,
+        payload: { artist_name: artist, track_name: title, album_name: album })
+      surface = RecordingResolution::Ledger.attach!(play)
+      group = RecordingResolution::Group.create!(surface_id: surface.id, version: RecordingResolution::Ledger::VERSION, claims: {})
+      RecordingResolution::Assessment.create!(group_id: group.id, version: "fixture", actor: "fixture",
+        digest: SecureRandom.hex(32), evidence:)
+      if name == "queen"
+        data = evidence.fetch("construction_editions").find { |edition| edition["id"].start_with?("9cd3b250") }
+        request = CatalogImport.create!(kind: "release_construction", state: "imported", entity_id: 0, due_at: Time.current)
+        store = CanonicalCatalog::Store.new(request, Struct.new(:provenance).new([]))
+        Release.transaction { store.release(data, CanonicalCatalog::Edition.new(data, data["id"]).slots) }
+      end
+      original = [ Release.count, Recording.count, RecordingSourceDecision.count, play.reload.payload ]
+      [ [ 1440, 960 ], [ 390, 844 ] ].each do |width, height|
+        browser.execute_cdp("Emulation.setDeviceMetricsOverride", width:, height:, deviceScaleFactor: 1, mobile: width == 390)
+        visit resolution_surface_path(play, candidate: evidence.fetch("candidates").sole.fetch("id"))
+        expect(page).to have_css(".release-provenance:not([open]) > summary")
+        if name == "queen"
+          expect(page).to have_css('section[aria-label="Established canonical release"]', count: 1)
+          within('section[aria-label="Established canonical release"]') do
+            expect(page).to have_text("September 24, 2014")
+            expect(page).to have_css(".review-tracks li", count: 16)
+            expect(page).to have_css(".review-track-match", text: "Thousand Miles")
+          end
+          expect(page).to have_no_css('section[aria-label="Original release"]')
+        else
+          find(".release-provenance > summary").click
+          if name == "interpol"
+            expect(page).to have_text("Distinct program for separate review")
+            find(".release-provenance a", text: /Pace Is the Trick.*instrumental/i).click
+            expect(page).to have_text("Medium 2 (CD-R) · Track 7")
+          else
+            expect(page).to have_no_text("Distinct program for separate review")
+            within(".release-provenance") { click_link "Greenbrier" }
+            expect(page).to have_text("Original publication is unverified")
+            expect(page).to have_button("Investigate track provenance")
+          end
+        end
+        expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
+        capture_resolution("#{name}-#{width == 390 ? 'mobile' : 'desktop'}", full: true)
+      end
+      expect([ Release.count, Recording.count, RecordingSourceDecision.count, play.reload.payload ]).to eq(original)
+    end
+  ensure
+    browser&.execute_cdp("Emulation.clearDeviceMetricsOverride")
+  end
+
   it "aligns neutral and inherited badges and presents release dates at verified precision" do
     user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "entity-headings")
     artist = Artist.create!(name: "Tove Lo", country: "SE", mbid: SecureRandom.uuid)
@@ -716,7 +774,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
 
     choose "construct_release_#{canadian}"
     preview = '[aria-label="Resolution preview"]'
-    expect(page).to have_css(preview, text: "7 additional edition tracks")
+    find("#{preview} summary", text: "7 additional edition tracks").click
     [ "Love Ballad", "Over", "Out Of Mind - Bonus Track", "Paradise" ].each do |title|
       expect(page).to have_css("#{preview} details li", text: /\A#{Regexp.escape(title)} · Edition evidence\z/, count: 1)
     end
@@ -728,6 +786,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     choose "construct_release_#{worldwide}"
     expect(page).to have_css("#{preview} summary", text: "3 additional edition tracks")
     within(preview) do
+      find("summary", text: "3 additional edition tracks").click
       within("details", text: "3 additional edition tracks") do
         expect(page).to have_no_css("li", text: /Hippie Sabotage/i)
       end

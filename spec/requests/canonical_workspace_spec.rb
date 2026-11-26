@@ -13,6 +13,51 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
   before { prepare_oidc }
   after { restore_oidc }
 
+  it "investigates Greenbrier asynchronously without changing the selected recording or the catalog" do
+    finish_oidc
+    user = User.find_by!(oidc_subject: @subject)
+    LastfmAccount.associate!(user, "provenance-review")
+    observation = Scrobble.create!(user:, lastfm_account: user.source_account, played_at: Time.current,
+      payload: { artist_name: "Songs: Ohia", track_name: "Tenskwatawa", album_name: "Songs: Ohia" })
+    surface = RecordingResolution::Ledger.attach!(observation)
+    group = RecordingResolution::Group.create!(surface_id: surface.id, version: RecordingResolution::Ledger::VERSION, claims: {})
+    evidence = JSON.parse(Rails.root.join("spec/fixtures/musicbrainz/release_provenance/songs-ohia.json").read)
+    assessment = RecordingResolution::Assessment.create!(group_id: group.id, version: "fixture", actor: "fixture",
+      digest: SecureRandom.hex(32), evidence:)
+    editions = evidence.fetch("construction_editions")
+    vinyl = editions.find { |edition| edition["id"].start_with?("37969e2b") }
+    recording = vinyl.dig("media", 0, "tracks").find { |track| track["title"] == "Greenbrier" }.fetch("recording")
+    mbid = "37a4c6c0-a300-44d5-88fb-0dbc40c790f5"
+    expect(recording.fetch("id")).to eq(mbid)
+    group_mbid = vinyl.dig("release-group", "id")
+    references = editions.map { |edition| edition.except("media") }
+    session = DiscoveryReplay::Session.new(
+      { "recording_releases" => { mbid => [ vinyl.except("media") ] }, "collections" => { group_mbid => references },
+        "releases" => editions.index_by { |edition| edition.fetch("id") } },
+      { "verified_recording" => recording })
+    expect do
+      post investigate_resolution_surface_path(observation), params: { assessment_id: assessment.id, provenance_mbid: SecureRandom.uuid }
+    end.not_to change(CatalogImport, :count)
+    expect do
+      post investigate_resolution_surface_path(observation), params: { assessment_id: assessment.id, provenance_mbid: mbid }
+    end.to change(CatalogImport, :count).by(1)
+    expect(session.paths).to be_empty
+
+    request = CatalogImport.where(kind: RecordingResolution::Investigation::KIND).sole
+    expect do
+      CanonicalCatalog::Processor.new(request, session_factory: ->(*) { session }).call
+    end.not_to change { [ Release.count, Recording.count, RecordingResolution::Decision.count, observation.reload.payload ] }
+    expect(request.reload.state).to eq("imported")
+    latest = RecordingResolution::Assessment.where(group_id: group.id).order(:id).last!
+    history = latest.evidence.fetch("additional_recording_publications").fetch(mbid)
+    expect(history.fetch("earliest_publication")).to include("id" => vinyl.fetch("id"), "date" => "2004")
+    expect(history.fetch("distinct_original_contexts")).to be_empty
+    expect(latest.evidence.except("additional_recording_publications")).to eq(evidence)
+    expect(session.paths).to include("/ws/2/recording/#{mbid}")
+    get resolution_surface_path(observation, candidate: evidence.fetch("candidates").sole.fetch("id"), source_recording: mbid)
+    expect(response.body).to include("Earliest checked appearance")
+  end
+
   it "requires a specific retained edition when two complete original sequences conflict" do
     finish_oidc
     user = User.find_by!(oidc_subject: @subject)

@@ -202,6 +202,8 @@ module CanonicalCatalog
       if @group && (@group.claims != @claims || !RecordingResolution::Workspace.new(user).surface(observation)&.id.eql?(surface.id))
         return complete("incomplete", "Observation claims no longer match this investigation.")
       end
+      return assess_track_provenance if @request.context["provenance_mbid"]
+
       @local_candidates = RecordingResolution::LocalCandidates.call(surface)
       identity = RecordingResolution::LocalCandidates.catalog_identity(surface)
       unless @request.context["refresh"] == true
@@ -235,6 +237,43 @@ module CanonicalCatalog
       complete { write_assessment(evidence) }
     end
 
+    def assess_track_provenance
+      mbid, assessment_id = @request.context.values_at("provenance_mbid", "provenance_assessment_id")
+      prior = RecordingResolution::Assessment.where(group_id: @group.id)
+      source = prior.find_by(id: assessment_id)
+      unless source && RecordingResolution::ReleaseProvenance.checked_recording?(source.evidence, mbid)
+        return complete("incomplete", "The recording is no longer supported by checked edition evidence.")
+      end
+
+      retained = Array(source.evidence["construction_editions"])
+      result = RecordingResolution::RecordingOrigins.new(@musicbrainz, @session).call([ mbid ], retained:)
+      history = result.fetch("recording_publications").fetch(mbid).merge("requests" => @session.provenance)
+      parent_groups = retained.select do |data|
+        Array(data["media"]).any? { |medium| Array(medium["tracks"]).any? { |track| track.dig("recording", "id") == mbid } }
+      end.filter_map { |data| data.dig("release-group", "id") }
+      other_groups = Array(history["original_groups"]) - parent_groups
+      history["distinct_original_contexts"] = result.fetch("construction_editions").filter_map do |data|
+        group = data.dig("release-group", "id")
+        compilation = group == history["first_publication_compilation_group"]
+        next unless other_groups.include?(group) && Edition.original_context?(data, compilation:)
+
+        Edition.new(data, data["id"], recording_mbid: mbid)
+        data.slice("id", "title", "date", "country")
+      rescue Store::Unverified
+        nil
+      end
+      complete do
+        latest = prior.order(id: :desc).first!
+        publications = latest.evidence.fetch("additional_recording_publications", {})
+        evidence = latest.evidence.merge("additional_recording_publications" => publications.merge(mbid => history))
+        digest = Digest::SHA256.hexdigest(evidence.to_json)
+        prior.create_or_find_by!(version: latest.version, digest:) do |row|
+          row.actor = "catalog_workspace"
+          row.evidence = evidence
+        end
+      end
+    end
+
     def investigate_publication(surface, evidence)
       # Appearance evidence belongs to the investigation, but it cannot decide
       # which otherwise plausible identities get a publication lookup.
@@ -259,6 +298,7 @@ module CanonicalCatalog
 
       previous = RecordingResolution::Assessment.where(group_id: @group&.id, created_at: 1.day.ago..)
         .where("evidence ? 'recording_publications'").order(id: :desc).pick(:evidence) || {}
+      evidence["additional_recording_publications"] = previous["additional_recording_publications"] if previous.key?("additional_recording_publications")
       saved = previous.fetch("recording_publications", {}).slice(*ids).reject do |_, history|
         history["checked_at"].to_s < 1.day.ago.utc.iso8601 || !history.key?("verified_recording") || history["pending"] || history["appearance_browse_incomplete"] || Array(history["pending_groups"]).any? ||
           (Array(history["original_groups"]).any? && !history.key?("edition_coverage"))
@@ -275,6 +315,8 @@ module CanonicalCatalog
     end
 
     def persist_assessment_failure(error, stopped)
+      return if @request.context["provenance_mbid"]
+
       evidence = @evaluator&.evidence || { "source_claims" => @claims, "reasons" => [], "reason_details" => {} }
       code = error.terminal ? "provider_request_stopped" : "provider_temporarily_unavailable"
       evidence["reasons"] << code

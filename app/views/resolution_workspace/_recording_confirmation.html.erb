@@ -8,6 +8,8 @@ end %>
 <% plan = CanonicalCatalog::ResolutionPlan.new(@assessment, mbid, @affected_count) %>
 <% catalog_recording = plan.recording || catalog_rows[1][1].first %>
 <% proposals = plan.proposals %>
+<% provenance = RecordingResolution::ReleaseProvenance.new(@assessment.evidence, contexts:, releases: catalog_releases) %>
+<% established = provenance.established.any? %>
 <% requested_edition = params[:edition].presence %>
 <% selected_edition = requested_edition if params[:review_edition].blank? && proposals.any? { |proposal| plan.edition_id(proposal) == requested_edition } %>
 <% invalid_edition = requested_edition.present? && selected_edition.nil? %>
@@ -18,10 +20,18 @@ end %>
 <% if invalid_edition %>
   <p role="alert" data-release-proposal-target="warning">The selected edition is no longer in this review. Choose a current edition before confirming.</p>
 <% end %>
+<%= render "release_provenance", provenance:, mbid:, recording_ids: plan.identity.source_ids || [mbid] if established %>
 <% if choosing_release %>
-  <%= render "release_comparison", comparison:, selected_edition: %>
+  <% if established %>
+    <details><summary>Review a correction to the selected base edition</summary>
+      <%= render "release_comparison", comparison:, selected_edition: %>
+    </details>
+  <% else %>
+    <%= render "release_comparison", comparison:, selected_edition: %>
+  <% end %>
 <% end %>
 <% earliest = @assessment.evidence.dig("recording_publications", mbid, "earliest_publication", "date") %>
+<% unless established %>
 <section class="resolution-context" aria-label="Original release">
   <h2 class="section-heading">Original release</h2>
   <% if groups.any? %>
@@ -53,6 +63,8 @@ end %>
     </p>
   <% end %>
 </section>
+  <%= render "release_provenance", provenance:, mbid:, recording_ids: plan.identity.source_ids || [mbid] %>
+<% end %>
 <% if can_confirm && (!invalid_edition || proposals.any?) %>
   <%= form_with url: decide_resolution_surface_path(@observation), class: "resolution-confirmation", id: "recording-resolution-confirmation" do |form| %>
     <%= form.hidden_field :recording_mbid, value: mbid %>
@@ -100,7 +112,7 @@ end %>
                 </details>
               <% end %>
               <% uncertain = proposal.construction.appearances.select { |edition| edition["uncertain_tracks"].present? } %>
-              <% if uncertain.any? %>
+              <% if uncertain.any? && (choosing_release || provenance.editions.empty?) %>
                 <details>
                   <summary>Edition tracks with unverified recording identity</summary>
                   <ul>
@@ -112,11 +124,12 @@ end %>
                   </ul>
                 </details>
               <% end %>
-              <% if additions.any? %>
-                <details open>
-                  <summary><%= pluralize(additions.size, "additional edition track") %></summary>
+              <% if additions.any? && (choosing_release || provenance.editions.empty? || admitted_ids.any?) %>
+                <details>
+                  <summary><%= pluralize(choosing_release || provenance.editions.empty? ? additions.size : admitted_ids.size, "additional edition track") %></summary>
                   <ul>
                     <% additions.each do |appearances| %>
+                      <% next if !choosing_release && provenance.editions.any? && appearances.none? { |track| admitted_ids.include?(track.fetch("recording_mbid")) } %>
                       <% title = appearances.first.fetch("title") %>
                       <% admission = appearances.any? { |track| admitted_ids.include?(track.fetch("recording_mbid")) } %>
                       <li><%= title %> <span class="muted">· <%= admission ? "Admit selected recording" : "Edition evidence" %></span></li>

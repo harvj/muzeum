@@ -103,6 +103,14 @@ class ResolutionWorkspaceController < ApplicationController
     if manual && !Clients::Musicbrainz::MBID.match?(manual)
       return redirect_to resolution_surface_path(@observation), alert: "Enter a MusicBrainz recording identifier.", status: :see_other
     end
+    provenance_mbid = params[:provenance_mbid].presence
+    if provenance_mbid
+      assessment = @workspace.assessments(@workspace.surface(@observation)).find(params[:assessment_id])
+      unless assessment_matches_claims?(assessment, @observation) &&
+          RecordingResolution::ReleaseProvenance.checked_recording?(assessment.evidence, provenance_mbid)
+        return redirect_to resolution_surface_path(@observation), alert: "Select a recording from a checked edition.", status: :see_other
+      end
+    end
     release_mbid = params[:release_mbid].presence
     if release_mbid
       assessment = @workspace.assessments(@workspace.surface(@observation)).find(params[:assessment_id])
@@ -115,8 +123,9 @@ class ResolutionWorkspaceController < ApplicationController
         return redirect_to resolution_surface_path(@observation), alert: "Select a supporting release from this assessment.", status: :see_other
       end
     end
-    RecordingResolution::Investigation.new(current_user, @observation).request(refresh: true, manual_mbid: manual, release_mbid:)
-    redirect_to resolution_surface_path(@observation, play: params[:play].presence), status: :see_other
+    RecordingResolution::Investigation.new(current_user, @observation).request(refresh: true, manual_mbid: manual, release_mbid:, provenance_mbid:, provenance_assessment_id: assessment&.id)
+    redirect_to resolution_surface_path(@observation, play: params[:play].presence, candidate: params[:candidate].presence,
+      source_recording: provenance_mbid, anchor: ("release-provenance" if provenance_mbid)), status: :see_other
   end
 
   def decide

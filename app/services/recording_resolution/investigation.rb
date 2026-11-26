@@ -18,7 +18,7 @@ module RecordingResolution
       Group.find_by(surface_id: surface.id, version: VERSION, claims: @claims)
     end
 
-    def request(refresh: false, manual_mbid: nil, release_mbid: nil)
+    def request(refresh: false, manual_mbid: nil, release_mbid: nil, provenance_mbid: nil, provenance_assessment_id: nil)
       return unless self.class.enabled? || (refresh && CatalogImport.worker_enabled?)
       return if manual_mbid.nil? && @observation.payload.values_at("artist_name", "track_name").any?(&:blank?)
 
@@ -43,8 +43,12 @@ module RecordingResolution
           end
         end
 
-        created = CatalogImport.request!(KIND, group.id, "observation_id" => @observation.id,
-          "requester_id" => @listener.id, "refresh" => refresh, "manual_mbid" => manual_mbid, "release_mbid" => release_mbid)
+        context = { "observation_id" => @observation.id, "requester_id" => @listener.id, "refresh" => refresh,
+          "manual_mbid" => manual_mbid, "release_mbid" => release_mbid }
+        if provenance_mbid
+          context.merge!("provenance_mbid" => provenance_mbid, "provenance_assessment_id" => provenance_assessment_id)
+        end
+        created = CatalogImport.request!(KIND, group.id, context)
       end
       created&.dispatch
       request

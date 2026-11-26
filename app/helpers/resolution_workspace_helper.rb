@@ -50,8 +50,14 @@ module ResolutionWorkspaceHelper
     end
   end
 
+  def resolution_source_edition(source)
+    fields = [ source["title"], resolution_release_date(source["date"]), source["country"],
+      Array(source["media"]).pluck("format").compact.uniq.join(" / ").presence, source["disambiguation"] ].compact
+    link_to fields.join(" · "), "https://musicbrainz.org/release/#{source.fetch('id')}"
+  end
+
   def resolution_release_date(date)
-    date.match?(/\A\d{4}-\d{2}-\d{2}\z/) ? Date.iso8601(date).strftime("%B %-d, %Y") : date
+    date.to_s.match?(/\A\d{4}-\d{2}-\d{2}\z/) ? Date.iso8601(date).strftime("%B %-d, %Y") : date
   end
 
   def resolution_shared_candidate_labels(candidates)
