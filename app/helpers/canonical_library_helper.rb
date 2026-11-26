@@ -110,6 +110,7 @@ module CanonicalLibraryHelper
 
   def listening_calendar_labels(timeline, grouping, spacing:, from_newest: false)
     years = grouping == "years"
+    format = { "years" => "%Y", "months" => "%b", "days" => "%m-%d" }.fetch(grouping)
     transitions = timeline.each_index.select { |i| timeline[i].first.yday == 1 } unless years
     reserved = Set.new
     labels = {}
@@ -121,7 +122,7 @@ module CanonicalLibraryHelper
       offset = from_newest ? timeline.size - i - 1 : i
       next unless (offset % spacing).zero? && !reserved.include?(i)
 
-      labels[i] = date.strftime(years ? "%Y" : "%m-%d")
+      labels[i] = date.strftime(format)
     end
     labels
   end

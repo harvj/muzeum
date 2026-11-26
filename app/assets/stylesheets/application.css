@@ -561,21 +561,24 @@ main .review-candidate.recommended { border-color: #378c48; }
 .listening-summary { margin-block-start: .65rem; }
 .listening-summary p { margin-block: .2rem 0; }
 .artist-timeline {
-  --listening-slot: 10px;
   --listening-thickness: 8px;
+  --listening-slot: calc(var(--listening-thickness) + 2px);
+  --listening-height: 8rem;
   display: flex;
   gap: .5rem;
   margin: .7rem 0 0;
 }
-.artist-timeline-axis { display: flex; height: 8rem; flex: none; flex-direction: column; justify-content: space-between; font-size: .75rem; }
+.artist-timeline[data-grouping="years"] { --listening-thickness: 20px; }
+.artist-timeline[data-grouping="months"] { --listening-thickness: 10px; }
+.artist-timeline-axis { display: flex; height: var(--listening-height); flex: none; flex-direction: column; justify-content: space-between; font-size: .75rem; }
 .listening-axis-zero { margin-block-start: auto; }
 .listening-plot:focus-visible, .entity-details > summary:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .listening-plot { min-width: 0; overflow-x: auto; padding: 0 2.5rem 1.2rem 0; }
 .artist-timeline-bars {
   display: flex;
   width: max-content;
-  height: 8rem;
-  border-bottom: 1px solid currentColor;
+  height: var(--listening-height);
+  box-shadow: 0 1px currentColor;
   background: repeating-linear-gradient(to top, transparent 0 calc(50% - 1px), var(--line) calc(50% - 1px) 50%);
 }
 .artist-timeline-column { position: relative; display: flex; align-items: end; width: var(--listening-slot); height: 100%; }
@@ -586,9 +589,14 @@ main .review-candidate.recommended { border-color: #378c48; }
 
 @media (max-width: 700px) {
   .listening-controls { width: 100%; }
-  .artist-timeline { --listening-date-gutter: 2.5rem; display: block; }
+  .artist-timeline {
+    --listening-date-gutter: 2.5rem;
+    --listening-length: min(9rem, calc(100cqi - var(--listening-date-gutter) - 1rem));
+    display: block;
+    container-type: inline-size;
+  }
   .artist-timeline-axis {
-    width: min(9rem, calc(100% - var(--listening-date-gutter)));
+    width: var(--listening-length);
     height: auto;
     flex-direction: row;
     margin-inline-start: var(--listening-date-gutter);
@@ -596,7 +604,7 @@ main .review-candidate.recommended { border-color: #378c48; }
   }
   .listening-axis-zero { order: -1; }
   .listening-plot {
-    width: min(100%, calc(9rem + var(--listening-date-gutter) + 1rem));
+    width: calc(var(--listening-length) + var(--listening-date-gutter) + 1rem);
     max-height: 12rem;
     overflow: hidden auto;
     padding: 0 0 2px;
@@ -606,10 +614,10 @@ main .review-candidate.recommended { border-color: #378c48; }
     width: auto;
     height: auto;
     background: none;
-    border: 0;
+    box-shadow: none;
     padding-inline-start: var(--listening-date-gutter);
   }
-  .artist-timeline-column { align-items: start; width: min(100%, 9rem); height: var(--listening-slot); }
+  .artist-timeline-column { align-items: start; width: var(--listening-length); height: var(--listening-slot); }
   .artist-timeline-fill { width: var(--listening-scale, 0%); height: var(--listening-thickness); border-radius: 0 2px 2px 0; }
   .listening-label-desktop { display: none; }
   .listening-label-mobile { display: block; inset-inline-end: calc(100% + .4rem); inset-block-start: 0; line-height: var(--listening-slot); }

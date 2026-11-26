@@ -1,6 +1,6 @@
 {
   "artist-all-years-desktop": {
-    "path": "/artists/1523",
+    "path": "/artists/2533",
     "slots": 14,
     "empty": 3,
     "range": [
@@ -15,10 +15,13 @@
     ],
     "overflow": "none",
     "checked_bars": 11,
-    "peak": 235
+    "peak_plays": 235,
+    "axis_peak": "619 min",
+    "plot_length_px": 128,
+    "bar_thickness_px": 20
   },
   "artist-all-years-mobile": {
-    "path": "/artists/1523",
+    "path": "/artists/2533",
     "slots": 14,
     "empty": 3,
     "range": [
@@ -33,12 +36,15 @@
       "2017",
       "2014"
     ],
-    "overflow": "none",
+    "overflow": "vertical",
     "checked_bars": 11,
-    "peak": 235
+    "peak_plays": 235,
+    "axis_peak": "619 min",
+    "plot_length_px": 144,
+    "bar_thickness_px": 20
   },
   "release-all-months-desktop": {
-    "path": "/releases/30345",
+    "path": "/releases/50571",
     "slots": 162,
     "empty": 65,
     "range": [
@@ -63,11 +69,14 @@
     ],
     "overflow": "horizontal",
     "checked_bars": 97,
-    "peak": 71,
-    "scrolled_pixels": 422
+    "peak_plays": 71,
+    "axis_peak": "187 min",
+    "plot_length_px": 128,
+    "bar_thickness_px": 10,
+    "scrolled_pixels": 746
   },
   "release-all-months-mobile": {
-    "path": "/releases/30345",
+    "path": "/releases/50571",
     "slots": 162,
     "empty": 65,
     "range": [
@@ -92,11 +101,14 @@
     ],
     "overflow": "vertical",
     "checked_bars": 97,
-    "peak": 71,
-    "scrolled_pixels": 1430
+    "peak_plays": 71,
+    "axis_peak": "187 min",
+    "plot_length_px": 144,
+    "bar_thickness_px": 10,
+    "scrolled_pixels": 1754
   },
   "recording-3y-years-desktop": {
-    "path": "/recordings/61702",
+    "path": "/recordings/102834",
     "slots": 3,
     "empty": 0,
     "range": [
@@ -109,10 +121,13 @@
     ],
     "overflow": "none",
     "checked_bars": 3,
-    "peak": 235
+    "peak_plays": 235,
+    "axis_peak": "235",
+    "plot_length_px": 128,
+    "bar_thickness_px": 20
   },
   "recording-3y-years-mobile": {
-    "path": "/recordings/61702",
+    "path": "/recordings/102834",
     "slots": 3,
     "empty": 0,
     "range": [
@@ -125,10 +140,13 @@
     ],
     "overflow": "none",
     "checked_bars": 3,
-    "peak": 235
+    "peak_plays": 235,
+    "axis_peak": "235",
+    "plot_length_px": 144,
+    "bar_thickness_px": 20
   },
   "artist-3y-months-desktop": {
-    "path": "/artists/1523",
+    "path": "/artists/2533",
     "slots": 36,
     "empty": 7,
     "range": [
@@ -143,10 +161,13 @@
     ],
     "overflow": "none",
     "checked_bars": 29,
-    "peak": 71
+    "peak_plays": 71,
+    "axis_peak": "187 min",
+    "plot_length_px": 128,
+    "bar_thickness_px": 10
   },
   "artist-3y-months-mobile": {
-    "path": "/artists/1523",
+    "path": "/artists/2533",
     "slots": 36,
     "empty": 7,
     "range": [
@@ -161,10 +182,13 @@
     ],
     "overflow": "vertical",
     "checked_bars": 29,
-    "peak": 71
+    "peak_plays": 71,
+    "axis_peak": "187 min",
+    "plot_length_px": 144,
+    "bar_thickness_px": 10
   },
   "release-year-months-current-desktop": {
-    "path": "/releases/30345",
+    "path": "/releases/50571",
     "slots": 12,
     "empty": 2,
     "range": [
@@ -177,10 +201,13 @@
     ],
     "overflow": "none",
     "checked_bars": 10,
-    "peak": 71
+    "peak_plays": 71,
+    "axis_peak": "187 min",
+    "plot_length_px": 128,
+    "bar_thickness_px": 10
   },
   "release-year-months-current-mobile": {
-    "path": "/releases/30345",
+    "path": "/releases/50571",
     "slots": 12,
     "empty": 2,
     "range": [
@@ -193,10 +220,13 @@
     ],
     "overflow": "none",
     "checked_bars": 10,
-    "peak": 71
+    "peak_plays": 71,
+    "axis_peak": "187 min",
+    "plot_length_px": 144,
+    "bar_thickness_px": 10
   },
   "release-year-months-previous-desktop": {
-    "path": "/releases/30345",
+    "path": "/releases/50571",
     "slots": 12,
     "empty": 3,
     "range": [
@@ -209,10 +239,13 @@
     ],
     "overflow": "none",
     "checked_bars": 9,
-    "peak": 8
+    "peak_plays": 8,
+    "axis_peak": "21 min",
+    "plot_length_px": 128,
+    "bar_thickness_px": 10
   },
   "release-year-months-previous-mobile": {
-    "path": "/releases/30345",
+    "path": "/releases/50571",
     "slots": 12,
     "empty": 3,
     "range": [
@@ -225,10 +258,13 @@
     ],
     "overflow": "none",
     "checked_bars": 9,
-    "peak": 8
+    "peak_plays": 8,
+    "axis_peak": "21 min",
+    "plot_length_px": 144,
+    "bar_thickness_px": 10
   },
   "recording-year-days-leap-desktop": {
-    "path": "/recordings/61702",
+    "path": "/recordings/102834",
     "slots": 366,
     "empty": 353,
     "range": [
@@ -241,10 +277,13 @@
     ],
     "overflow": "horizontal",
     "checked_bars": 13,
-    "peak": 8
+    "peak_plays": 8,
+    "axis_peak": "8",
+    "plot_length_px": 128,
+    "bar_thickness_px": 8
   },
   "recording-year-days-leap-mobile": {
-    "path": "/recordings/61702",
+    "path": "/recordings/102834",
     "slots": 366,
     "empty": 353,
     "range": [
@@ -257,10 +296,13 @@
     ],
     "overflow": "vertical",
     "checked_bars": 13,
-    "peak": 8
+    "peak_plays": 8,
+    "axis_peak": "8",
+    "plot_length_px": 144,
+    "bar_thickness_px": 8
   },
   "artist-6m-months-desktop": {
-    "path": "/artists/1523",
+    "path": "/artists/2533",
     "slots": 6,
     "empty": 0,
     "range": [
@@ -271,10 +313,13 @@
     "year_markers": [],
     "overflow": "none",
     "checked_bars": 6,
-    "peak": 71
+    "peak_plays": 71,
+    "axis_peak": "187 min",
+    "plot_length_px": 128,
+    "bar_thickness_px": 10
   },
   "artist-6m-months-mobile": {
-    "path": "/artists/1523",
+    "path": "/artists/2533",
     "slots": 6,
     "empty": 0,
     "range": [
@@ -285,10 +330,13 @@
     "year_markers": [],
     "overflow": "none",
     "checked_bars": 6,
-    "peak": 71
+    "peak_plays": 71,
+    "axis_peak": "187 min",
+    "plot_length_px": 144,
+    "bar_thickness_px": 10
   },
   "release-6m-days-desktop": {
-    "path": "/releases/30345",
+    "path": "/releases/50571",
     "slots": 183,
     "empty": 112,
     "range": [
@@ -299,10 +347,13 @@
     "year_markers": [],
     "overflow": "horizontal",
     "checked_bars": 71,
-    "peak": 8
+    "peak_plays": 8,
+    "axis_peak": "21 min",
+    "plot_length_px": 128,
+    "bar_thickness_px": 8
   },
   "release-6m-days-mobile": {
-    "path": "/releases/30345",
+    "path": "/releases/50571",
     "slots": 183,
     "empty": 112,
     "range": [
@@ -313,10 +364,13 @@
     "year_markers": [],
     "overflow": "vertical",
     "checked_bars": 71,
-    "peak": 8
+    "peak_plays": 8,
+    "axis_peak": "21 min",
+    "plot_length_px": 144,
+    "bar_thickness_px": 8
   },
   "recording-90d-days-current-desktop": {
-    "path": "/recordings/61702",
+    "path": "/recordings/102834",
     "slots": 90,
     "empty": 21,
     "range": [
@@ -327,10 +381,13 @@
     "year_markers": [],
     "overflow": "none",
     "checked_bars": 69,
-    "peak": 5
+    "peak_plays": 5,
+    "axis_peak": "5",
+    "plot_length_px": 128,
+    "bar_thickness_px": 8
   },
   "recording-90d-days-current-mobile": {
-    "path": "/recordings/61702",
+    "path": "/recordings/102834",
     "slots": 90,
     "empty": 21,
     "range": [
@@ -341,10 +398,13 @@
     "year_markers": [],
     "overflow": "vertical",
     "checked_bars": 69,
-    "peak": 5
+    "peak_plays": 5,
+    "axis_peak": "5",
+    "plot_length_px": 144,
+    "bar_thickness_px": 8
   },
   "recording-90d-days-previous-desktop": {
-    "path": "/recordings/61702",
+    "path": "/recordings/102834",
     "slots": 90,
     "empty": 88,
     "range": [
@@ -355,10 +415,13 @@
     "year_markers": [],
     "overflow": "none",
     "checked_bars": 2,
-    "peak": 8
+    "peak_plays": 8,
+    "axis_peak": "8",
+    "plot_length_px": 128,
+    "bar_thickness_px": 8
   },
   "recording-90d-days-previous-mobile": {
-    "path": "/recordings/61702",
+    "path": "/recordings/102834",
     "slots": 90,
     "empty": 88,
     "range": [
@@ -369,10 +432,13 @@
     "year_markers": [],
     "overflow": "vertical",
     "checked_bars": 2,
-    "peak": 8
+    "peak_plays": 8,
+    "axis_peak": "8",
+    "plot_length_px": 144,
+    "bar_thickness_px": 8
   },
   "recording-30d-days-current-desktop": {
-    "path": "/recordings/61702",
+    "path": "/recordings/102834",
     "slots": 30,
     "empty": 7,
     "range": [
@@ -383,10 +449,13 @@
     "year_markers": [],
     "overflow": "none",
     "checked_bars": 23,
-    "peak": 5
+    "peak_plays": 5,
+    "axis_peak": "5",
+    "plot_length_px": 128,
+    "bar_thickness_px": 8
   },
   "recording-30d-days-current-mobile": {
-    "path": "/recordings/61702",
+    "path": "/recordings/102834",
     "slots": 30,
     "empty": 7,
     "range": [
@@ -397,10 +466,13 @@
     "year_markers": [],
     "overflow": "vertical",
     "checked_bars": 23,
-    "peak": 5
+    "peak_plays": 5,
+    "axis_peak": "5",
+    "plot_length_px": 144,
+    "bar_thickness_px": 8
   },
   "recording-30d-days-previous-desktop": {
-    "path": "/recordings/61702",
+    "path": "/recordings/102834",
     "slots": 30,
     "empty": 5,
     "range": [
@@ -411,10 +483,13 @@
     "year_markers": [],
     "overflow": "none",
     "checked_bars": 25,
-    "peak": 5
+    "peak_plays": 5,
+    "axis_peak": "5",
+    "plot_length_px": 128,
+    "bar_thickness_px": 8
   },
   "recording-30d-days-previous-mobile": {
-    "path": "/recordings/61702",
+    "path": "/recordings/102834",
     "slots": 30,
     "empty": 5,
     "range": [
@@ -425,6 +500,9 @@
     "year_markers": [],
     "overflow": "vertical",
     "checked_bars": 25,
-    "peak": 5
+    "peak_plays": 5,
+    "axis_peak": "5",
+    "plot_length_px": 144,
+    "bar_thickness_px": 8
   }
 }

@@ -127,10 +127,13 @@ RSpec.describe "Muzeum v0.7.4 listening history visual acceptance", type: :syste
             const overflow = mobile ? plot.scrollHeight > plot.clientHeight : plot.scrollWidth > plot.clientWidth
             const inactiveOverflow = mobile ? plot.scrollWidth > plot.clientWidth : plot.scrollHeight > plot.clientHeight
             const startsAtNewest = Math.abs(rects.at(-1).top - chartRect.top) < 1
+            const axis = plot.closest("figure").querySelector(".artist-timeline-axis").getBoundingClientRect()
             const headline = document.querySelector(".listening-history-heading h2").getBoundingClientRect()
             const controls = document.querySelector(".listening-controls").getBoundingClientRect()
             return {
               dates: slots.map(slot => slot.dataset.date), lengths, widths: [...new Set(widths)],
+              span: mobile ? rects[0].width : rects[0].height,
+              axisSpan: mobile ? axis.width : axis.height,
               stride: [...new Set(rects.slice(1).map((rect, i) => along(rect) - along(rects[i])))],
               labels: labels.map(([date, text]) => [date, text]),
               nonOverlap: labels.every((label, i) => !i || (mobile ? labels[i - 1][2].bottom <= label[2].top : labels[i - 1][2].right <= label[2].left)),
@@ -141,8 +144,9 @@ RSpec.describe "Muzeum v0.7.4 listening history visual acceptance", type: :syste
           })()
         JS
         expect(layout.fetch("dates")).to eq(dates)
-        expect(layout.fetch("widths")).to eq([ 8 ])
-        expect(layout.fetch("stride")).to eq([ mobile ? -10 : 10 ])
+        thickness = { "years" => 20, "months" => 10, "days" => 8 }.fetch(grouping)
+        expect(layout.fetch("widths")).to eq([ thickness ])
+        expect(layout.fetch("stride")).to eq([ (thickness + 2) * (mobile ? -1 : 1) ])
         expect(layout.values_at("nonOverlap", "viewportFits", "controlsFit")).to all(be(true))
         expect(layout.fetch("inactiveOverflow")).to be(false)
         expect(layout.fetch("startsAtNewest")).to be(true) if mobile
@@ -150,10 +154,27 @@ RSpec.describe "Muzeum v0.7.4 listening history visual acceptance", type: :syste
         if grouping != "years"
           transitions = dates.grep(/-01-01$/).map { |value| [ value, value[0, 4] ] }
           expect(layout.fetch("labels")).to include(*transitions) if transitions.any?
-          expect(layout.fetch("labels").reject { |date, _| date.end_with?("-01-01") }.map(&:last)).to all(match(/\A\d{2}-\d{2}\z/))
+        end
+        layout.fetch("labels").each do |date, text|
+          format = if grouping == "years" || date.end_with?("-01-01")
+            "%Y"
+          else
+            grouping == "months" ? "%b" : "%m-%d"
+          end
+          expect(text).to eq(Date.iso8601(date).strftime(format))
+        end
+        peak = counts.values.max
+        if entity == recording
+          expect(page).to have_css(".listening-axis-peak", exact_text: peak.to_s)
+          expect(page).to have_css(".listening-axis-zero", exact_text: "0")
+        else
+          minutes = (peak * recording.duration_ms / 60_000.0).round
+          expect(page).to have_css(".listening-axis-peak", exact_text: "#{minutes} min")
+          expect(page).to have_css(".listening-axis-zero", exact_text: "0 min")
         end
         maximum_length = layout.fetch("lengths").max
-        expect(maximum_length).to be <= 144 if mobile
+        expect(maximum_length).to be_within(0.1).of(layout.fetch("span"))
+        expect(maximum_length).to be_within(0.1).of(layout.fetch("axisSpan"))
         dates.zip(layout.fetch("lengths")).each do |date, length|
           ideal = maximum_length * counts[Date.iso8601(date)].fdiv(counts.values.max)
           expect(length).to be_within(1).of(ideal)
@@ -163,7 +184,8 @@ RSpec.describe "Muzeum v0.7.4 listening history visual acceptance", type: :syste
           path: URI.parse(page.current_url).path, slots: dates.size, empty: dates.size - counts.size, range: [ dates.first, dates.last ],
           labels: layout.fetch("labels").size, year_markers: layout.fetch("labels").filter_map { |date, text| text if date.end_with?("-01-01") && text.size == 4 },
           overflow: layout.fetch("overflow") ? (mobile ? "vertical" : "horizontal") : "none",
-          checked_bars: counts.size, peak: counts.values.max
+          checked_bars: counts.size, peak_plays: peak, axis_peak: find(".listening-axis-peak").text,
+          plot_length_px: maximum_length, bar_thickness_px: thickness
         }
         screenshot(browser, "#{name}-#{size}")
         next unless name == "release-all-months"
@@ -189,8 +211,10 @@ RSpec.describe "Muzeum v0.7.4 listening history visual acceptance", type: :syste
       "30d" => [ "2026-10-27", "2026-09-27" ] }.each do |range, (current, previous)|
       visit recording_path(recording, range:, start: current)
       expect(page).to have_css('button[aria-label="Next window"][disabled]')
+      expect(page).to have_css(".listening-axis-peak", exact_text: "71") if range == "year"
       find('a[aria-label="Previous window"]').send_keys(:enter)
       expect(page).to have_css(".listening-window time:first-child[datetime='#{previous}']")
+      expect(page).to have_css(".listening-axis-peak", exact_text: "8") if range == "year"
       page.refresh
       expect(page).to have_css(".listening-window time:first-child[datetime='#{previous}']")
       find('a[aria-label="Next window"]').click
@@ -207,8 +231,15 @@ RSpec.describe "Muzeum v0.7.4 listening history visual acceptance", type: :syste
     expect(page).to have_css("nav[aria-label='Listening history grouping'] [aria-current]", exact_text: "Months")
     click_link "Days"
     expect(page).to have_css("nav[aria-label='Listening history grouping'] [aria-current]", exact_text: "Days")
+    expect(page).to have_css(".listening-axis-peak", exact_text: "8")
     click_link "3y"
     expect(page).to have_css("nav[aria-label='Listening history grouping'] [aria-current]", exact_text: "Years")
+    expect(page).to have_css(".listening-axis-peak", exact_text: "235")
+    visit recording_path(recording, range: "year", start: "2015-01-01")
+    expect(page).to have_css(".artist-timeline-column", count: 12, visible: :all)
+    expect(page).to have_no_css(".artist-timeline-fill, .listening-axis-peak", visible: :all)
+    expect(page).to have_css(".listening-axis-zero", exact_text: "0")
+    expect(page).to have_text("No resolved plays in this period.")
     expect(observations.map { |observation| observation.reload.payload }).to all(eq(payload.stringify_keys))
     if ENV["LISTENING_REVIEW_DIR"]
       File.write(File.join(ENV.fetch("LISTENING_REVIEW_DIR"), "calendar-checks.json"), JSON.pretty_generate(evidence) + "\n")
