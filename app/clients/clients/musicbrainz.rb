@@ -153,6 +153,26 @@ module Clients
       browse_releases(session, { recording: mbid, inc: "release-groups+media" }, limit:)
     end
 
+    def provenance_recording(session, mbid)
+      return unless MBID.match?(mbid.to_s)
+
+      inc = "artist-credits+isrcs+recording-rels+work-rels+artist-rels+place-rels+annotation+release-groups+releases"
+      session.get(:musicbrainz, "/ws/2/recording/#{mbid}", params: { fmt: "json", inc: }) do |data|
+        relationships = Array(data["relations"]).filter_map do |relation|
+          target = relation["target-type"]
+          next unless target.in?(%w[recording work artist place]) && MBID.match?(relation.dig(target, "id").to_s)
+
+          relation.slice("type", "type-id", "direction", "attributes", "begin", "end").merge(
+            "target_type" => target, "target" => relation.fetch(target).slice("id", "name", "title"))
+        end
+        project_recording(data).merge("relationships" => relationships, "annotation" => data["annotation"])
+      end["data"]
+    end
+
+    def provenance_releases(session, mbid, &progress)
+      browse_releases(session, { recording: mbid, inc: "release-groups+media" }, limit: 25, &progress)
+    end
+
     def catalog_artist(session, mbid)
       return unless MBID.match?(mbid.to_s)
 
@@ -171,6 +191,7 @@ module Clients
     def browse_releases(session, relationship, limit:)
       releases = []
       count = nil
+      pages = 0
       loop do
         params = { fmt: "json" }.merge(relationship).merge(limit:)
         params[:offset] = releases.length if releases.any?
@@ -180,7 +201,7 @@ module Clients
         end["data"]
         rows = response&.fetch("releases", nil)
         total = response&.fetch("release-count", nil)
-        unless rows.is_a?(Array) && total.is_a?(Integer) && total.between?(0, 100) &&
+        unless rows.is_a?(Array) && total.is_a?(Integer) && total >= 0 && (block_given? || total <= 100) &&
             (count.nil? || count == total) && response.fetch("release-offset", releases.length) == releases.length &&
             releases.length + rows.length <= total && rows.all? { |row| MBID.match?(row["id"].to_s) } &&
             (rows.any? || releases.length == total)
@@ -191,7 +212,12 @@ module Clients
         if releases.pluck("id").uniq.size != releases.size
           raise CanonicalCatalog::Store::Unverified, "Release browse repeated an edition"
         end
+        pages += 1
+        yield releases.dup if block_given?
         return releases if releases.length == count
+        if block_given? && (count > 100 || pages >= 5)
+          raise CanonicalCatalog::Store::Unverified, "Release browse exceeds the evidence budget"
+        end
       end
     end
 

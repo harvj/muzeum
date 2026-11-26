@@ -246,22 +246,9 @@ module CanonicalCatalog
       end
 
       retained = Array(source.evidence["construction_editions"])
-      result = RecordingResolution::RecordingOrigins.new(@musicbrainz, @session).call([ mbid ], retained:)
-      history = result.fetch("recording_publications").fetch(mbid).merge("requests" => @session.provenance)
-      parent_groups = retained.select do |data|
-        Array(data["media"]).any? { |medium| Array(medium["tracks"]).any? { |track| track.dig("recording", "id") == mbid } }
-      end.filter_map { |data| data.dig("release-group", "id") }
-      other_groups = Array(history["original_groups"]) - parent_groups
-      history["distinct_original_contexts"] = result.fetch("construction_editions").filter_map do |data|
-        group = data.dig("release-group", "id")
-        compilation = group == history["first_publication_compilation_group"]
-        next unless other_groups.include?(group) && Edition.original_context?(data, compilation:)
-
-        Edition.new(data, data["id"], recording_mbid: mbid)
-        data.slice("id", "title", "date", "country")
-      rescue Store::Unverified
-        nil
-      end
+      counterparts = RecordingResolution::ReleaseProvenance.possible_counterparts(source.evidence, mbid)
+      history = RecordingResolution::RecordingProvenance.new(@musicbrainz, @session).call(mbid, retained:, counterparts:)
+      history["requests"] = @session.provenance
       complete do
         latest = prior.order(id: :desc).first!
         publications = latest.evidence.fetch("additional_recording_publications", {})

@@ -61,7 +61,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
         else
           find(".release-provenance > summary").click
           if name == "interpol"
-            expect(page).to have_text("Distinct program for separate review")
+            expect(page).to have_text("Unclassified additional material")
             find(".release-provenance a", text: /Pace Is the Trick.*instrumental/i).click
             expect(page).to have_text("Medium 2 (CD-R) · Track 7")
           else

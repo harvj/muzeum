@@ -1,11 +1,27 @@
 module RecordingResolution
   class ReleaseProvenance
-    VERSIONED_TRACK = /\b(?:instrumental|live|remix|alternate take|orchestral)\b/i
-    AUDIO_BONUS_FORMAT = /\A(?:CD(?:-R)?|Digital Media|Cassette|(?:\d+" )?Vinyl)\z/i
     Appearance = Data.define(:edition, :medium, :track, :comparison)
-    Program = Data.define(:edition, :medium, :tracks)
 
-    attr_reader :established, :editions, :appearances, :programs
+    attr_reader :established, :editions, :appearances
+
+    def self.possible_counterparts(evidence, mbid)
+      editions = self.editions(evidence)
+      source_editions = editions.select { |edition| edition.slots.any? { |slot| slot[:source_recording_mbid] == mbid } }
+      groups = source_editions.filter_map { |edition| edition.data.dig("release-group", "id") }.to_set
+      titles = source_editions.flat_map(&:slots).select { |slot| slot[:source_recording_mbid] == mbid }
+        .flat_map { |slot| titles_for(slot) }.uniq
+      editions.select do |edition|
+        groups.include?(edition.data.dig("release-group", "id")) && CanonicalCatalog::Edition.original_context?(edition.data)
+      end.flat_map(&:slots).filter_map do |slot|
+          slot[:source_recording_mbid] if (titles_for(slot) & titles).any?
+        end.uniq - [ mbid ]
+    end
+
+    def self.titles_for(slot)
+      [ slot[:title], slot.dig(:recording, "title") ].compact.map do |title|
+        DiscoveryTitle.key(title.sub(/\s*\((?:instrumental|orchestral|live|demo|remix|edit)\b[^)]*\)\s*\z/i, ""))
+      end
+    end
 
     def initialize(evidence, contexts:, releases:)
       @established = (releases + contexts.filter_map(&:existing)).uniq(&:id).filter_map do |release|
@@ -34,7 +50,6 @@ module RecordingResolution
           .uniq { |slot| slot[:track_mbid] }
       end
       @appearances = []
-      @programs = []
       primary_editions = contexts.map { |proposal| proposal.construction.base.data["id"] }
       @editions = editions.reject do |edition|
         id = edition.data["id"]
@@ -65,7 +80,6 @@ module RecordingResolution
       base_ids = base.pluck(:source_recording_mbid).to_set
       Array(edition.data["media"]).each do |medium|
         tracks = edition.slots.select { |slot| slot[:medium] == medium["position"] }
-        distinct = []
         tracks.each do |track|
           next if base_ids.include?(track[:source_recording_mbid])
 
@@ -74,16 +88,7 @@ module RecordingResolution
 
           result = comparison.all?(:different) ? :different : :uncertain
           appearances << Appearance.new(edition.data, medium, track, result)
-          distinct << track if result == :different
         end
-        next unless CanonicalCatalog::Edition.collection_context?(edition.data) && medium["position"] > 1 &&
-          AUDIO_BONUS_FORMAT.match?(medium["format"].to_s) && distinct.size >= 2 && distinct.size == tracks.size &&
-          distinct.all? do |track|
-            !track.dig(:recording, "video") &&
-              (track[:title].match?(VERSIONED_TRACK) || track.dig(:recording, "disambiguation").to_s.match?(VERSIONED_TRACK))
-          end
-
-        programs << Program.new(edition.data, medium, tracks)
       end
     end
   end

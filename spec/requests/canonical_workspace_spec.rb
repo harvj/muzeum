@@ -51,11 +51,13 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     latest = RecordingResolution::Assessment.where(group_id: group.id).order(:id).last!
     history = latest.evidence.fetch("additional_recording_publications").fetch(mbid)
     expect(history.fetch("earliest_publication")).to include("id" => vinyl.fetch("id"), "date" => "2004")
-    expect(history.fetch("distinct_original_contexts")).to be_empty
+    expect(history.fetch("classification")).to eq("unclassified")
+    expect(history).to include("browse_complete" => true, "incomplete" => false)
+    expect(history.fetch("releases").sole.fetch("slots").sole).to include("medium" => 1, "position" => 11, "number" => "B4")
     expect(latest.evidence.except("additional_recording_publications")).to eq(evidence)
     expect(session.paths).to include("/ws/2/recording/#{mbid}")
     get resolution_surface_path(observation, candidate: evidence.fetch("candidates").sole.fetch("id"), source_recording: mbid)
-    expect(response.body).to include("Earliest checked appearance")
+    expect(response.body).to include("Earliest verified appearance in checked sources")
   end
 
   it "requires a specific retained edition when two complete original sequences conflict" do

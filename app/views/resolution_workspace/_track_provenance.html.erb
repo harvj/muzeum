@@ -1,0 +1,78 @@
+<p><%= link_to "MusicBrainz recording", "https://musicbrainz.org/recording/#{source_id}" %></p>
+<% if history&.key?("exact_recording") || history&.key?("browse_complete") %>
+  <% recording = history["exact_recording"] || {} %>
+  <% if history["incomplete"] %>
+    <p><strong>Investigation incomplete.</strong> <%= Array(history["limitations"]).to_sentence %></p>
+  <% elsif history["browse_complete"] %>
+    <p>MusicBrainz release browse completed for this exact recording ID.</p>
+  <% end %>
+  <p><%= {
+    "alternate" => "A provider relationship or a documented version of the same work links this recording to a base recording. Shared session or source audio remains unverified.",
+    "independent" => "This recording has a documented performance date and venue. No corresponding base recording was identified.",
+    "unclassified" => "The checked evidence does not establish the musical relationship to the base program."
+  }[history["classification"]] %></p>
+  <% if recording["disambiguation"].present? || recording["isrcs"].present? %>
+    <p><%= [recording["disambiguation"].presence, ("ISRC #{recording["isrcs"].join(', ')}" if recording["isrcs"].present?)].compact.join(" · ") %></p>
+  <% end %>
+  <% if (earliest = history["earliest_publication"]) %>
+    <p>Earliest verified appearance in checked sources · <%= resolution_source_edition(earliest) %>. Original publication remains unverified.</p>
+  <% else %>
+    <p>Original publication remains unverified.</p>
+  <% end %>
+  <% relationships = Array(recording["relationships"]) %>
+  <% if relationships.any? %>
+    <ul>
+      <% relationships.each do |relation| %>
+        <% target = relation.fetch("target") %>
+        <li><%= [relation["type"], *Array(relation["attributes"]), relation["begin"].presence, relation["end"].presence].compact.join(" · ") %> ·
+          <%= link_to target["name"] || target["title"] || target["id"], "https://musicbrainz.org/#{relation.fetch('target_type')}/#{target.fetch('id')}" %></li>
+      <% end %>
+    </ul>
+  <% end %>
+  <% if history["related_recordings"].present? %>
+    <details><summary>Recordings checked for a relationship</summary>
+      <ul>
+        <% history["related_recordings"].each do |related| %>
+          <li><%= link_to related["title"], "https://musicbrainz.org/recording/#{related.fetch('id')}" %>
+            · <%= related["length"] ? recording_duration(related["length"]) : "Duration unavailable" %>
+            <%= " · ISRC #{related["isrcs"].join(', ')}" if related["isrcs"].present? %></li>
+        <% end %>
+      </ul>
+    </details>
+  <% end %>
+  <% if history["releases"].present? %>
+    <details><summary><%= pluralize(history["releases"].size, "source edition") %></summary>
+      <% history["releases"].group_by { |source| [source.dig("release-group", "id"), source["sequence_digest"] || source["id"]] }.each_value do |sources| %>
+        <% if sources.many? %><p><%= pluralize(sources.size, "edition") %> with identical ordered recording IDs</p><% end %>
+        <ul>
+          <% sources.each do |source| %>
+            <li><%= resolution_source_edition(source) %> · <%= source["status"].presence || "Status unavailable" %>
+              <% if source["slots"].present? %>
+                <% source["slots"].each do |slot| %>
+                  <% format = Array(source["media"]).find { |medium| medium["position"] == slot["medium"] }&.fetch("format", nil) %>
+                  · Medium <%= slot["medium"] %> <%= "(#{format})" if format.present? %>
+                  · Track <%= slot["number"].presence || slot["position"] %>
+                <% end %>
+              <% else %>
+                · Exact track position unverified
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+      <% end %>
+    </details>
+  <% end %>
+<% else %>
+  <p>Original publication is unverified. Check the recording’s release history and relationships.</p>
+  <ul>
+    <% appearances.each do |appearance| %>
+      <li><%= resolution_source_edition(appearance.edition) %>
+        · Medium <%= appearance.medium["position"] %> (<%= appearance.medium["format"].presence || "Format unavailable" %>)
+        · Track <%= appearance.track[:position] %></li>
+    <% end %>
+  </ul>
+<% end %>
+<% if @may_manage_observation && @assessment_matches_claims && !@assessment_request&.active? %>
+  <%= button_to "Investigate track provenance", investigate_resolution_surface_path(@observation),
+    params: { provenance_mbid: source_id, assessment_id: @assessment.id, candidate: mbid, play: params[:play].presence } %>
+<% end %>

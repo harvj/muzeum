@@ -19,59 +19,43 @@
   <%= tag.details open: selected_recording.present? || provenance.editions.any? { |edition| edition.data["id"] == params[:source_edition] }, class: "release-provenance", id: "release-provenance" do %>
     <summary>Alternative editions and track provenance</summary>
     <p class="muted"><%= pluralize(provenance.editions.size, "checked edition") %> · The edition played is unverified.</p>
-    <ul>
-      <% provenance.editions.each do |edition| %>
-        <% source = edition.data %>
-        <li><%= resolution_source_edition(source) %> ·
-          <%= link_to "Inspect tracklist", resolution_surface_path(@observation, navigation.merge(source_edition: source["id"], anchor: "release-provenance")) %>
-          <% if params[:source_edition] == source["id"] %>
-            <% RecordingResolution::ReviewRelease.project(source).fetch("media").each do |medium| %>
-              <p class="compact-meta">Medium <%= medium["position"] %> · <%= medium["format"] %></p>
-              <%= render "ordered_tracks", tracks: medium.fetch("tracks"), mbid:, recording_ids: %>
+    <% histories = @assessment.evidence.fetch("additional_recording_publications", {}) %>
+    <% groups = provenance.appearances.group_by { |appearance| appearance.track[:source_recording_mbid] }.group_by do |source_id, _|
+      histories.dig(source_id, "classification") || "unclassified"
+    end %>
+    <% { "alternate" => "Verified alternate versions of base recordings",
+         "independent" => "Verified independent recordings",
+         "unclassified" => "Unclassified additional material" }.each do |classification, heading| %>
+      <% next if groups[classification].blank? %>
+      <h3><%= heading %></h3>
+      <ul>
+        <% groups.fetch(classification).each do |source_id, appearances| %>
+          <li>
+            <%= link_to appearances.first.track[:title], resolution_surface_path(@observation,
+              navigation.merge(source_recording: source_id, anchor: "release-provenance")) %>
+            <% if selected_recording == source_id %>
+              <%= render "track_provenance", source_id:, appearances:, history: histories[source_id], mbid: %>
             <% end %>
-          <% end %>
-        </li>
-      <% end %>
-    </ul>
-    <% provenance.programs.uniq { |program| program.tracks.pluck(:source_recording_mbid) }.each do |program| %>
-      <p><strong>Distinct program for separate review</strong> · <%= resolution_source_edition(program.edition) %>
-        · Medium <%= program.medium["position"] %> · <%= program.medium["format"] %> · <%= pluralize(program.tracks.size, "track") %>.
-        <%= link_to "Review complete source edition", resolution_surface_path(@observation, navigation.merge(source_edition: program.edition.fetch("id"), anchor: "release-provenance")) %>.</p>
+          </li>
+        <% end %>
+      </ul>
     <% end %>
-    <ul>
-    <% provenance.appearances.group_by { |appearance| appearance.track[:source_recording_mbid] }.each do |source_id, appearances| %>
-      <% track = appearances.first.track %>
-      <li>
-        <%= link_to track[:title], resolution_surface_path(@observation, navigation.merge(source_recording: source_id, anchor: "release-provenance")) %>
-        <%= " · Recording identity needs review" if appearances.all? { |appearance| appearance.comparison == :uncertain } %>
-      <% if selected_recording == source_id %>
-      <% history = @assessment.evidence.dig("additional_recording_publications", source_id) ||
-          @assessment.evidence.dig("recording_publications", source_id) %>
-        <p><%= link_to "MusicBrainz recording", "https://musicbrainz.org/recording/#{source_id}" %>
-          <%= " · #{track.dig(:recording, 'disambiguation')}" if track.dig(:recording, "disambiguation").present? %></p>
-        <ul>
-          <% appearances.each do |appearance| %>
-            <li><%= resolution_source_edition(appearance.edition) %>
-              · Medium <%= appearance.medium["position"] %> (<%= appearance.medium["format"].presence || "Format unavailable" %>)
-              · Track <%= appearance.track[:position] %><%= " · Identity unverified" if appearance.comparison == :uncertain %></li>
-          <% end %>
-        </ul>
-        <% if (earliest = history&.dig("earliest_publication")) %>
-          <p>Earliest checked appearance · <%= resolution_release_date(earliest["date"]) %> ·
-            <%= link_to earliest["title"], "https://musicbrainz.org/release/#{earliest['id']}" %>. Original publication may still be uncertain.</p>
-        <% else %>
-          <p>Original publication is unverified. Check the recording’s release history and relationships.</p>
+    <%= tag.details open: provenance.editions.any? { |edition| edition.data["id"] == params[:source_edition] } do %>
+      <summary>Source editions and tracklists</summary>
+      <ul>
+        <% provenance.editions.each do |edition| %>
+          <% source = edition.data %>
+          <li><%= resolution_source_edition(source) %> ·
+            <%= link_to "Inspect tracklist", resolution_surface_path(@observation, navigation.merge(source_edition: source["id"], anchor: "release-provenance")) %>
+            <% if params[:source_edition] == source["id"] %>
+              <% RecordingResolution::ReviewRelease.project(source).fetch("media").each do |medium| %>
+                <p class="compact-meta">Medium <%= medium["position"] %> · <%= medium["format"] %></p>
+                <%= render "ordered_tracks", tracks: medium.fetch("tracks"), mbid:, recording_ids: %>
+              <% end %>
+            <% end %>
+          </li>
         <% end %>
-        <% Array(history&.dig("distinct_original_contexts")).each do |source| %>
-          <p>Separate original context for catalog review · <%= resolution_source_edition(source) %></p>
-        <% end %>
-        <% if @may_manage_observation && @assessment_matches_claims && !@assessment_request&.active? %>
-          <%= button_to "Investigate track provenance", investigate_resolution_surface_path(@observation),
-            params: { provenance_mbid: source_id, assessment_id: @assessment.id, candidate: mbid, play: params[:play].presence } %>
-        <% end %>
-      <% end %>
-      </li>
+      </ul>
     <% end %>
-    </ul>
   <% end %>
 <% end %>
