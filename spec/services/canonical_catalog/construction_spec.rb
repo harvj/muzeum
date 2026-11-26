@@ -70,7 +70,12 @@ RSpec.describe CanonicalCatalog::Construction do
     expect(construction.base.slots.size).to eq(11)
     expect(construction.base.slots.fetch(2).dig(:recording, "id")).to eq(NarrowStairsFixture::RECORDING)
     later_bonus = later.dig("media", 0, "tracks", 12, "recording", "id")
-    expect(construction.additional_slots).to include(include(edition_mbid: NarrowStairsFixture::LATER,
+    expect(construction.additional_slots).to be_empty
+    expect(construction.additional_tracks.flatten).to include(
+      include("recording_mbid" => later_bonus, "edition_mbid" => NarrowStairsFixture::LATER,
+        "edition_appearance_date" => "2015-02-24"))
+    reviewed = described_class.new(editions.reverse, recording_mbid: later_bonus)
+    expect(reviewed.additional_slots).to include(include(edition_mbid: NarrowStairsFixture::LATER,
       appearance_date: "2015-02-24", recording: include("id" => later_bonus)))
   end
 
