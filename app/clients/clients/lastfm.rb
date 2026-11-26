@@ -80,7 +80,7 @@ module Clients
           when 29
             ::Lastfm::RequestBudget.cooldown!(60)
             raise Clients::RateLimited.new(60, raw_body: body)
-          when 11, 16
+          when 8, 11, 16
             raise Clients::NetworkError.new(raw_body: body)
           when 4, 9, 10, 13, 26
             raise Clients::Unauthorized.new(raw_body: body)

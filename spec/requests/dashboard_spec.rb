@@ -10,6 +10,30 @@ RSpec.describe "Listening archive", type: :request do
   before { prepare_oidc; finish_oidc }
   after { restore_oidc }
 
+  it "distinguishes a Last.fm service error from connectivity and shows the scheduled retry once" do
+    stub_const("ENV", ENV.to_h.merge("LASTFM_SYNC_ENABLED" => "1"))
+    user = User.find_by!(oidc_subject: @subject)
+    account = LastfmAccount.associate!(user, "source-status")
+    retry_at = 5.minutes.from_now
+    message = "Source synchronization paused; retry and source evidence retained."
+    account.update!(sync_enabled: true, next_poll_at: retry_at, last_error: message)
+    run = account.import_runs.create!(user:, source_username: account.username, upper_bound: Time.current.to_i,
+      status: :paused, retry_at:, failure_kind: "Clients::NetworkError", last_error: message)
+    fields = { import_run: run, lastfm_account: account, page_number: 1, upper_bound: run.upper_bound,
+      requested_at: Time.current, error_class: "Clients::NetworkError" }
+    SourceFetch.create!(**fields, outcome: "provider_error")
+
+    get archive_path
+    expect(response.body).to include("Last.fm service error", "Next automatic retry", retry_at.utc.iso8601)
+    expect(response.body).not_to include(message)
+
+    SourceFetch.create!(**fields, outcome: "transport_error")
+    account.update!(sync_enabled: false)
+    get archive_path
+    expect(response.body).to include("Muzeum could not reach Last.fm")
+    expect(response.body).not_to include("Last.fm service error", "Next automatic retry")
+  end
+
   it "associates only the authenticated user after public username validation" do
     stub_request(:get, /ws.audioscrobbler.com/).to_return(body: '<lfm status="ok"><user><name>Listener</name></user></lfm>')
     stub_const("ENV", ENV.to_h.merge("LASTFM_API_KEY" => "test-key"))

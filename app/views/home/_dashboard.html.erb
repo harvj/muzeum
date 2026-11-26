@@ -33,7 +33,7 @@
       <% if @run.total_pages.to_i.positive? %><progress aria-label="Import pages saved" value="<%= @run.next_page - 1 %>" max="<%= @run.total_pages %>"></progress><% end %>
       <p class="muted">Last successful update: <%= @run.last_success_at&.utc&.strftime("%Y-%m-%d %H:%M UTC") || "Not yet" %></p>
       <p class="muted">Delivered: <%= number_with_delimiter(@run.received_count) %> · repeated: <%= number_with_delimiter(@run.repeated_count) %> · excluded from listening events: <%= number_with_delimiter(@run.excluded_count) %></p>
-      <% if @run.last_error %><p class="error" role="alert"><%= @run.last_error %></p><% end %>
+      <% if @run.last_error %><p class="error" role="alert"><%= lastfm_import_error(@run) %></p><% end %>
     <% else %><p class="muted">No import started. Progress will be saved after each page.</p><% end %>
     <% if @account&.state == "active" && (!@run || @run.paused? || @run.failed?) %>
       <%= button_to "Retry synchronization", imports_path %>
@@ -43,9 +43,13 @@
     <% end %>
     <% if @account %>
       <p class="muted">Automatic synchronization: <%= @account.sync_enabled? ? @account.state : "disabled" %></p>
+      <% if @run&.paused? && @account.state == "active" && @account.sync_enabled? &&
+          ENV["LASTFM_SYNC_ENABLED"] == "1" && @account.next_poll_at.future? %>
+        <p class="muted">Next automatic retry: <%= browser_time(@account.next_poll_at, clock: true) %></p>
+      <% end %>
       <p class="muted">Last successful poll: <%= @account.last_successful_poll_at&.utc&.strftime("%Y-%m-%d %H:%M:%S UTC") || "Not yet" %></p>
       <p class="muted">Coverage lag: <%= @account.synced_through ? "#{[Time.current.to_i - @account.synced_through, 0].max} seconds" : "Historical coverage pending" %> · failures: <%= @account.failure_count %></p>
-      <% if @account.last_error %><p class="error" role="alert"><%= @account.last_error %></p><% end %>
+      <% if @account.last_error.present? && @account.last_error != @run&.last_error %><p class="error" role="alert"><%= @account.last_error %></p><% end %>
     <% end %>
     <% if @first_page %><p class="muted">Committed updates appear automatically while this page is open.</p><% end %>
   </section>

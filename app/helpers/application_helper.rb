@@ -1,4 +1,18 @@
 module ApplicationHelper
+  def lastfm_import_error(run)
+    return run.last_error unless run.paused? && run.failure_kind == "Clients::NetworkError"
+
+    outcome = SourceFetch.where(import_run: run).order(id: :desc).pick(:outcome)
+    case outcome
+    when "provider_error"
+      "Last.fm service error. Your saved listening history is still available."
+    when "transport_error"
+      "Muzeum could not reach Last.fm. Your saved listening history is still available."
+    else
+      run.last_error
+    end
+  end
+
   def shell_navigation_item(label, path, descendants: true)
     current = request.path == path || (descendants && request.path.start_with?("#{path}/"))
     if current && descendants

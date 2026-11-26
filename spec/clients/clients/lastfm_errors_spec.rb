@@ -4,7 +4,7 @@ RSpec.describe "Last.fm failure evidence" do
   before { stub_const("ENV", ENV.to_h.merge("LASTFM_API_KEY" => "synthetic-only-key")) }
   let(:client) { Clients::Lastfm.new(username: "synthetic") }
 
-  { 11 => Clients::NetworkError, 16 => Clients::NetworkError, 29 => Clients::RateLimited, 10 => Clients::Unauthorized }.each do |code, type|
+  { 8 => Clients::NetworkError, 11 => Clients::NetworkError, 16 => Clients::NetworkError, 29 => Clients::RateLimited, 10 => Clients::Unauthorized }.each do |code, type|
     it "classifies envelope #{code} without losing the raw error evidence" do
       raw = "<lfm status='failed'><error code='#{code}'>provider error</error></lfm>"
       stub_request(:get, /ws.audioscrobbler.com/).to_return(body: raw)
