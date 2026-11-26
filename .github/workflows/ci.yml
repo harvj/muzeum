@@ -23,6 +23,8 @@ jobs:
       BROWSER_TESTS: '1'
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
@@ -55,7 +57,7 @@ jobs:
       - name: Validate Capistrano configuration without contacting the server
         run: bundle exec cap production -T
       - name: Fetch the reviewed Infrastructure verifier
-        if: github.event_name == 'push' && (github.ref_name == 'codex/v072-shell-adoption' || github.ref_name == 'release/v0.7.2')
+        if: github.event_name == 'push' && (github.ref_name == 'codex/v072-shell-adoption' || startsWith(github.ref_name, 'release/v'))
         env:
           INFRASTRUCTURE_READ_KEY: ${{ secrets.INFRASTRUCTURE_STANDARDS_SSH_KEY }}
           GH_TOKEN: ${{ github.token }}
@@ -72,8 +74,9 @@ jobs:
           git -C "$verifier" fetch --depth 1 git@github.com:harvj/infrastructure.git a1a4fb8ca40869f77e60bbe8d830e256fde3acfd
           git -C "$verifier" checkout --detach FETCH_HEAD
       - name: Collect signed Shell v2 evidence for this commit
-        if: github.event_name == 'push' && (github.ref_name == 'codex/v072-shell-adoption' || github.ref_name == 'release/v0.7.2')
+        if: github.event_name == 'push' && (github.ref_name == 'codex/v072-shell-adoption' || startsWith(github.ref_name, 'release/v'))
         env:
+          GH_TOKEN: ${{ github.token }}
           SHELL_SELECTED: ${{ vars.MUZEUM_SHELL_SELECTED_VERSION }}
           SHELL_ADOPTED: ${{ vars.MUZEUM_SHELL_ADOPTED_VERSION }}
         run: |
@@ -85,10 +88,12 @@ jobs:
             --adapter "$GITHUB_WORKSPACE/config/application_shell/ci-adapter.json" \
             --output "$RUNNER_TEMP/muzeum-shell-evidence" --mode audit
       - uses: actions/upload-artifact@v4
-        if: always() && github.event_name == 'push' && (github.ref_name == 'codex/v072-shell-adoption' || github.ref_name == 'release/v0.7.2')
+        if: always() && github.event_name == 'push' && (github.ref_name == 'codex/v072-shell-adoption' || startsWith(github.ref_name, 'release/v'))
         with:
           name: muzeum-shell-${{ github.sha }}
-          path: "${{ runner.temp }}/muzeum-shell-evidence/*.json"
+          path: |
+            ${{ runner.temp }}/muzeum-shell-evidence/*.json
+            tmp/application-shell-sh08-source.json
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
