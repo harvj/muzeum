@@ -52,7 +52,7 @@ RSpec.describe "Release configurations", type: :request do
       patch configuration_release_path(release), params: { configuration_id: anniversary_config.id }
     end.not_to change { [ Scrobble.count, RecordingResolution::Decision.count, CatalogTrackSlot.count, Recording.count ] }
 
-    expect(ReleaseConfigurationSelection.new(other, [release.id]).date(release).iso).to eq("1991-09-20")
+    expect(ReleaseConfigurationSelection.new(other, [ release.id ]).date(release).iso).to eq("1991-09-20")
     expect(EffectiveReleaseDate.for(release.reload).iso).to eq("1991-08-27")
     repeated = source_edition(us)
     medium = repeated.fetch("media").first
@@ -61,7 +61,7 @@ RSpec.describe "Release configurations", type: :request do
     medium["track-count"] = medium.fetch("tracks").size
     repeated_config = ReleaseConfiguration.retain!(release, repeated, provenance: { "fixture" => "Repeated slot" })
     ReleaseConfigurationDecision.select!(user, release, repeated_config)
-    expect(ReleaseConfigurationSelection.new(user, [release.id]).memberships).to eq([[release.id, recording.id]])
+    expect(ReleaseConfigurationSelection.new(user, [ release.id ]).memberships).to eq([ [ release.id, recording.id ] ])
     expect(ReleaseConfigurationDecision.where(user:, release:).count).to eq(5)
     get recording_path(recording)
     expect(response.body).to include("1 resolved listening observation")
