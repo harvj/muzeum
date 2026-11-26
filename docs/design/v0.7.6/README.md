@@ -12,3 +12,7 @@ The Chrome regression exercises Recording, Release and Artist pages in desktop/m
     BROWSER_TESTS=1 bundle exec rspec spec/system/listening_history_acceptance_spec.rb
 
 [Release membership and provenance acceptance](../release-membership/README.md)
+
+## Resolution
+
+[Structured title interpretation review](title-interpretation/README.md)

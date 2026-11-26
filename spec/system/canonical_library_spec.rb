@@ -671,6 +671,35 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     expect(Scrobble.count).to eq(1)
   end
 
+  it "keeps the reported Blur title visible alongside the interpreted search and catalog evidence" do
+    album = JSON.parse(Rails.root.join("spec/fixtures/musicbrainz/discovery/blur-leisure-us.json").read)
+    slot = album.dig("media", 0, "tracks", 11)
+    user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "structured-titles", lastfm_username: "structured-titles")
+    payload = { artist_name: "Blur", album_name: "Leisure", track_name: "Wear Me Down - 2012 Remaster" }
+    play = Scrobble.create!(user:, lastfm_account: user.source_account, played_at: Time.current, payload:)
+    surface = RecordingResolution::Ledger.attach!(play)
+    group = RecordingResolution::Group.create!(surface_id: surface.id, version: RecordingResolution::Ledger::VERSION, claims: {})
+    recording = slot.fetch("recording")
+    RecordingResolution::Assessment.create!(group_id: group.id, version: "structured-title-fixture", actor: "fixture",
+      digest: SecureRandom.hex(32), evidence: {
+        "title_interpretation" => RecordingResolution::TitleInterpretation.call(surface.track),
+        "candidates" => [ recording ], "construction_editions" => [ album ],
+        "recording_publications" => { recording.fetch("id") => { "original_groups" => [ album.dig("release-group", "id") ] } }
+      })
+
+    sign_in(user)
+    visit resolution_surface_path(play)
+    expect(page).to have_css("h1", exact_text: payload.fetch(:track_name))
+    find("summary", exact_text: "Wear Me Down — 2012 remaster").click
+    expect(page).to have_text("Search interpretation from the reported title.")
+    expect(page).to have_css(".resolution-choices", text: "Wear Me Down")
+    capture_resolution("wear-me-down-interpretation-desktop", full: true)
+    page.driver.browser.manage.window.resize_to(390, 844)
+    capture_resolution("wear-me-down-interpretation-mobile", full: true)
+    expect(play.reload.payload.fetch("track_name")).to eq(payload.fetch(:track_name))
+    expect(RecordingResolution::Decision.count).to eq(0)
+  end
+
   it "keeps independent ordered Charli artist lists in review, catalog pages, and credited-artist searches" do
     editions = JSON.parse(Rails.root.join("spec/fixtures/musicbrainz/construction/charli_featured_credit.json").read)
     album = editions.first
@@ -1065,6 +1094,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     find("#listening-history a", text: "30d").click
     expect(page).to have_text("No resolved plays in this period.")
     find("#listening-history a", text: "All").click
+    expect(page).to have_css("#listening-history [aria-current]", exact_text: "All")
     expect(page).to have_css("#artist-recordings tbody tr:first-child .listening-bar[data-listening-scale-percent-value='100.0']", text: "1")
     find("#artist-recordings a", exact_text: "Title").send_keys(:enter)
     expect(page).to have_css("#artist-recordings th[aria-sort='ascending']", text: "Title")

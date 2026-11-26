@@ -1,0 +1,634 @@
+{
+  "artist-credit": [
+    {
+      "artist": {
+        "country": "GB",
+        "disambiguation": "UK alternative rock band",
+        "id": "ba853904-ae25-4ebb-89d6-c44cfbd71bd2",
+        "name": "Blur",
+        "sort-name": "Blur",
+        "type": "Group",
+        "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b"
+      },
+      "joinphrase": "",
+      "name": "Blur"
+    }
+  ],
+  "asin": "B000008TWS",
+  "barcode": "077779788026",
+  "country": "US",
+  "cover-art-archive": {
+    "artwork": true,
+    "back": false,
+    "count": 1,
+    "darkened": false,
+    "front": true
+  },
+  "date": "1991-09-24",
+  "disambiguation": "",
+  "id": "d81bfb74-5d2e-4dcf-956f-550cfde5eed5",
+  "media": [
+    {
+      "format": "CD",
+      "format-id": "9712d52a-4509-3d4b-a1a2-67c88c643e31",
+      "id": "fac1c6d1-858a-305b-b8c9-d6918a93122f",
+      "position": 1,
+      "title": "",
+      "track-count": 12,
+      "track-offset": 0,
+      "tracks": [
+        {
+          "artist-credit": [
+            {
+              "artist": {
+                "country": "GB",
+                "disambiguation": "UK alternative rock band",
+                "id": "ba853904-ae25-4ebb-89d6-c44cfbd71bd2",
+                "name": "Blur",
+                "sort-name": "Blur",
+                "type": "Group",
+                "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b"
+              },
+              "joinphrase": "",
+              "name": "Blur"
+            }
+          ],
+          "id": "008dbc04-88ab-3d5f-b981-0d84473b5d3c",
+          "length": 286200,
+          "number": "1",
+          "position": 1,
+          "recording": {
+            "artist-credit": [
+              {
+                "artist": {
+                  "country": "GB",
+                  "disambiguation": "UK alternative rock band",
+                  "id": "ba853904-ae25-4ebb-89d6-c44cfbd71bd2",
+                  "name": "Blur",
+                  "sort-name": "Blur",
+                  "type": "Group",
+                  "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b"
+                },
+                "joinphrase": "",
+                "name": "Blur"
+              }
+            ],
+            "disambiguation": "",
+            "first-release-date": "1991-08-27",
+            "id": "1c14202a-2ea7-4aff-bc41-6c97eb8a45e8",
+            "length": 286173,
+            "title": "She’s So High",
+            "video": false
+          },
+          "title": "She’s So High"
+        },
+        {
+          "artist-credit": [
+            {
+              "artist": {
+                "country": "GB",
+                "disambiguation": "UK alternative rock band",
+                "id": "ba853904-ae25-4ebb-89d6-c44cfbd71bd2",
+                "name": "Blur",
+                "sort-name": "Blur",
+                "type": "Group",
+                "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b"
+              },
+              "joinphrase": "",
+              "name": "Blur"
+            }
+          ],
+          "id": "ecc5fef1-6316-3567-bf42-4e6c8301d431",
+          "length": 203933,
+          "number": "2",
+          "position": 2,
+          "recording": {
+            "artist-credit": [
+              {
+                "artist": {
+                  "country": "GB",
+                  "disambiguation": "UK alternative rock band",
+                  "id": "ba853904-ae25-4ebb-89d6-c44cfbd71bd2",
+                  "name": "Blur",
+                  "sort-name": "Blur",
+                  "type": "Group",
+                  "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b"
+                },
+                "joinphrase": "",
+                "name": "Blur"
+              }
+            ],
+            "disambiguation": "",
+            "first-release-date": "1991-04-15",
+            "id": "f2903d45-03c8-4631-a1e1-3d0d33c57cbe",
+            "length": 203933,
+            "title": "There’s No Other Way",
+            "video": false
+          },
+          "title": "There’s No Other Way"
+        },
+        {
+          "artist-credit": [
+            {
+              "artist": {
+                "country": "GB",
+                "disambiguation": "UK alternative rock band",
+                "id": "ba853904-ae25-4ebb-89d6-c44cfbd71bd2",
+                "name": "Blur",
+                "sort-name": "Blur",
+                "type": "Group",
+                "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b"
+              },
+              "joinphrase": "",
+              "name": "Blur"
+            }
+          ],
+          "id": "f69ebcdd-8758-3194-8db4-1d9bd5a04294",
+          "length": 217293,
+          "number": "3",
+          "position": 3,
+          "recording": {
+            "artist-credit": [
+              {
+                "artist": {
+                  "country": "GB",
+                  "disambiguation": "UK alternative rock band",
+                  "id": "ba853904-ae25-4ebb-89d6-c44cfbd71bd2",
+                  "name": "Blur",
+                  "sort-name": "Blur",
+                  "type": "Group",
+                  "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b"
+                },
+                "joinphrase": "",
+                "name": "Blur"
+              }
+            ],
+            "disambiguation": "",
+            "first-release-date": "1991-07-29",
+            "id": "2460e0f7-17c3-4a9f-a555-e20fea6b17a0",
+            "length": 217253,
+            "title": "Bang",
+            "video": false
+          },
+          "title": "Bang"
+        },
+        {
+          "artist-credit": [
+            {
+              "artist": {
+                "country": "GB",
+                "disambiguation": "UK alternative rock band",
+                "id": "ba853904-ae25-4ebb-89d6-c44cfbd71bd2",
+                "name": "Blur",
+                "sort-name": "Blur",
+                "type": "Group",
+                "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b"
+              },
+              "joinphrase": "",
+              "name": "Blur"
+            }
+          ],
+          "id": "51dacdac-6932-3a28-95b0-4dc798ebaa20",
+          "length": 212706,
+          "number": "4",
+          "position": 4,
+          "recording": {
+            "artist-credit": [
+              {
+                "artist": {
+                  "country": "GB",
+                  "disambiguation": "UK alternative rock band",
+                  "id": "ba853904-ae25-4ebb-89d6-c44cfbd71bd2",
+                  "name": "Blur",
+                  "sort-name": "Blur",
+                  "type": "Group",
+                  "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b"
+                },
+                "joinphrase": "",
+                "name": "Blur"
+              }
+            ],
+            "disambiguation": "",
+            "first-release-date": "1991-09-20",
+            "id": "56c868df-84df-4895-bb96-d3f97b7dc709",
+            "length": 212600,
+            "title": "I Know",
+            "video": false
+          },
+          "title": "I Know"
+        },
+        {
+          "artist-credit": [
+            {
+              "artist": {
+                "country": "GB",
+                "disambiguation": "UK alternative rock band",
+                "id": "ba853904-ae25-4ebb-89d6-c44cfbd71bd2",
+                "name": "Blur",
+                "sort-name": "Blur",
+                "type": "Group",
+                "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b"
+              },
+              "joinphrase": "",
+              "name": "Blur"
+            }
+          ],
+          "id": "6b73d95b-6e0b-353d-8f42-943dba04607b",
+          "length": 191200,
+          "number": "5",
+          "position": 5,
+          "recording": {
+            "artist-credit": [
+              {
+                "artist": {
+                  "country": "GB",
+                  "disambiguation": "UK alternative rock band",
+                  "id": "ba853904-ae25-4ebb-89d6-c44cfbd71bd2",
+                  "name": "Blur",
+                  "sort-name": "Blur",
+                  "type": "Group",
+                  "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b"
+                },
+                "joinphrase": "",
+                "name": "Blur"
+              }
+            ],
+            "disambiguation": "",
+            "first-release-date": "1991-08-27",
+            "id": "31e589f5-4ed0-45d0-ac00-ef16b612f4a7",
+            "length": 191106,
+            "title": "Slow Down",
+            "video": false
+          },
+          "title": "Slow Down"
+        },
+        {
+          "artist-credit": [
+            {
+              "artist": {
+                "country": "GB",
+                "disambiguation": "UK alternative rock band",
+                "id": "ba853904-ae25-4ebb-89d6-c44cfbd71bd2",
+                "name": "Blur",
+                "sort-name": "Blur",
+                "type": "Group",
+                "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b"
+              },
+              "joinphrase": "",
+              "name": "Blur"
+            }
+          ],
+          "id": "2c18d643-15cd-369d-a95a-17facffbab66",
+          "length": 325626,
+          "number": "6",
+          "position": 6,
+          "recording": {
+            "artist-credit": [
+              {
+                "artist": {
+                  "country": "GB",
+                  "disambiguation": "UK alternative rock band",
+                  "id": "ba853904-ae25-4ebb-89d6-c44cfbd71bd2",
+                  "name": "Blur",
+                  "sort-name": "Blur",
+                  "type": "Group",
+                  "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b"
+                },
+                "joinphrase": "",
+                "name": "Blur"
+              }
+            ],
+            "disambiguation": "",
+            "first-release-date": "1991-08-27",
+            "id": "ca5c9d27-0e32-4b4b-9068-cfffb926c4bd",
+            "length": 325560,
+            "title": "Repetition",
+            "video": false
+          },
+          "title": "Repetition"
+        },
+        {
+          "artist-credit": [
+            {
+              "artist": {
+                "country": "GB",
+                "disambiguation": "UK alternative rock band",
+                "id": "ba853904-ae25-4ebb-89d6-c44cfbd71bd2",
+                "name": "Blur",
+                "sort-name": "Blur",
+                "type": "Group",
+                "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b"
+              },
+              "joinphrase": "",
+              "name": "Blur"
+            }
+          ],
+          "id": "f364de3d-5757-30ec-8301-6767b01052eb",
+          "length": 264466,
+          "number": "7",
+          "position": 7,
+          "recording": {
+            "artist-credit": [
+              {
+                "artist": {
+                  "country": "GB",
+                  "disambiguation": "UK alternative rock band",
+                  "id": "ba853904-ae25-4ebb-89d6-c44cfbd71bd2",
+                  "name": "Blur",
+                  "sort-name": "Blur",
+                  "type": "Group",
+                  "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b"
+                },
+                "joinphrase": "",
+                "name": "Blur"
+              }
+            ],
+            "disambiguation": "",
+            "first-release-date": "1991-08-27",
+            "id": "a0238504-59f9-44a9-915b-f81f6afa98af",
+            "length": 264466,
+            "title": "Bad Day",
+            "video": false
+          },
+          "title": "Bad Day"
+        },
+        {
+          "artist-credit": [
+            {
+              "artist": {
+                "country": "GB",
+                "disambiguation": "UK alternative rock band",
+                "id": "ba853904-ae25-4ebb-89d6-c44cfbd71bd2",
+                "name": "Blur",
+                "sort-name": "Blur",
+                "type": "Group",
+                "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b"
+              },
+              "joinphrase": "",
+              "name": "Blur"
+            }
+          ],
+          "id": "42c607a0-b54c-3e2b-b8d6-65ffba450dad",
+          "length": 218333,
+          "number": "8",
+          "position": 8,
+          "recording": {
+            "artist-credit": [
+              {
+                "artist": {
+                  "country": "GB",
+                  "disambiguation": "UK alternative rock band",
+                  "id": "ba853904-ae25-4ebb-89d6-c44cfbd71bd2",
+                  "name": "Blur",
+                  "sort-name": "Blur",
+                  "type": "Group",
+                  "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b"
+                },
+                "joinphrase": "",
+                "name": "Blur"
+              }
+            ],
+            "disambiguation": "",
+            "first-release-date": "1991-08-27",
+            "id": "c3820526-1b1d-4852-b8ee-9fb909ddafb0",
+            "length": 217866,
+            "title": "High Cool",
+            "video": false
+          },
+          "title": "High Cool"
+        },
+        {
+          "artist-credit": [
+            {
+              "artist": {
+                "country": "GB",
+                "disambiguation": "UK alternative rock band",
+                "id": "ba853904-ae25-4ebb-89d6-c44cfbd71bd2",
+                "name": "Blur",
+                "sort-name": "Blur",
+                "type": "Group",
+                "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b"
+              },
+              "joinphrase": "",
+              "name": "Blur"
+            }
+          ],
+          "id": "8af5869c-115b-3d29-a45b-79cb2dc7b343",
+          "length": 232933,
+          "number": "9",
+          "position": 9,
+          "recording": {
+            "artist-credit": [
+              {
+                "artist": {
+                  "country": "GB",
+                  "disambiguation": "UK alternative rock band",
+                  "id": "ba853904-ae25-4ebb-89d6-c44cfbd71bd2",
+                  "name": "Blur",
+                  "sort-name": "Blur",
+                  "type": "Group",
+                  "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b"
+                },
+                "joinphrase": "",
+                "name": "Blur"
+              }
+            ],
+            "disambiguation": "",
+            "first-release-date": "1991-08-26",
+            "id": "27090003-009c-4337-a648-7483c36bbfff",
+            "length": 232400,
+            "title": "Come Together",
+            "video": false
+          },
+          "title": "Come Together"
+        },
+        {
+          "artist-credit": [
+            {
+              "artist": {
+                "country": "GB",
+                "disambiguation": "UK alternative rock band",
+                "id": "ba853904-ae25-4ebb-89d6-c44cfbd71bd2",
+                "name": "Blur",
+                "sort-name": "Blur",
+                "type": "Group",
+                "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b"
+              },
+              "joinphrase": "",
+              "name": "Blur"
+            }
+          ],
+          "id": "96f30f25-c836-3789-bbfc-e4e7d3e118d6",
+          "length": 196533,
+          "number": "10",
+          "position": 10,
+          "recording": {
+            "artist-credit": [
+              {
+                "artist": {
+                  "country": "GB",
+                  "disambiguation": "UK alternative rock band",
+                  "id": "ba853904-ae25-4ebb-89d6-c44cfbd71bd2",
+                  "name": "Blur",
+                  "sort-name": "Blur",
+                  "type": "Group",
+                  "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b"
+                },
+                "joinphrase": "",
+                "name": "Blur"
+              }
+            ],
+            "disambiguation": "",
+            "first-release-date": "1991-08-27",
+            "id": "5234f29d-777c-480b-bb47-d42c922a80ac",
+            "length": 194106,
+            "title": "Fool",
+            "video": false
+          },
+          "title": "Fool"
+        },
+        {
+          "artist-credit": [
+            {
+              "artist": {
+                "country": "GB",
+                "disambiguation": "UK alternative rock band",
+                "id": "ba853904-ae25-4ebb-89d6-c44cfbd71bd2",
+                "name": "Blur",
+                "sort-name": "Blur",
+                "type": "Group",
+                "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b"
+              },
+              "joinphrase": "",
+              "name": "Blur"
+            }
+          ],
+          "id": "972a43cf-1bdb-3493-9a88-9e6277003ab7",
+          "length": 230400,
+          "number": "11",
+          "position": 11,
+          "recording": {
+            "artist-credit": [
+              {
+                "artist": {
+                  "country": "GB",
+                  "disambiguation": "UK alternative rock band",
+                  "id": "ba853904-ae25-4ebb-89d6-c44cfbd71bd2",
+                  "name": "Blur",
+                  "sort-name": "Blur",
+                  "type": "Group",
+                  "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b"
+                },
+                "joinphrase": "",
+                "name": "Blur"
+              }
+            ],
+            "disambiguation": "",
+            "first-release-date": "1991-08-26",
+            "id": "0b9b5669-eef0-420a-b695-350b36219c62",
+            "length": 229920,
+            "title": "Birthday",
+            "video": false
+          },
+          "title": "Birthday"
+        },
+        {
+          "artist-credit": [
+            {
+              "artist": {
+                "country": "GB",
+                "disambiguation": "UK alternative rock band",
+                "id": "ba853904-ae25-4ebb-89d6-c44cfbd71bd2",
+                "name": "Blur",
+                "sort-name": "Blur",
+                "type": "Group",
+                "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b"
+              },
+              "joinphrase": "",
+              "name": "Blur"
+            }
+          ],
+          "id": "6c9de7ad-5a10-3a00-8d99-a5bca7c7f801",
+          "length": 289733,
+          "number": "12",
+          "position": 12,
+          "recording": {
+            "artist-credit": [
+              {
+                "artist": {
+                  "country": "GB",
+                  "disambiguation": "UK alternative rock band",
+                  "id": "ba853904-ae25-4ebb-89d6-c44cfbd71bd2",
+                  "name": "Blur",
+                  "sort-name": "Blur",
+                  "type": "Group",
+                  "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b"
+                },
+                "joinphrase": "",
+                "name": "Blur"
+              }
+            ],
+            "disambiguation": "",
+            "first-release-date": "1991-08-26",
+            "id": "a4f6872f-ff57-476c-8897-3ddc52d2169b",
+            "length": 289334,
+            "title": "Wear Me Down",
+            "video": false
+          },
+          "title": "Wear Me Down"
+        }
+      ]
+    }
+  ],
+  "packaging": "Jewel Case",
+  "packaging-id": "ec27701a-4a22-37f4-bfac-6616e0f9750a",
+  "quality": "normal",
+  "release-events": [
+    {
+      "area": {
+        "disambiguation": "",
+        "id": "489ce91b-6658-3307-9877-795b68554c98",
+        "iso-3166-1-codes": [
+          "US"
+        ],
+        "name": "United States",
+        "sort-name": "United States",
+        "type": null,
+        "type-id": null
+      },
+      "date": "1991-09-24"
+    }
+  ],
+  "release-group": {
+    "artist-credit": [
+      {
+        "artist": {
+          "country": "GB",
+          "disambiguation": "UK alternative rock band",
+          "id": "ba853904-ae25-4ebb-89d6-c44cfbd71bd2",
+          "name": "Blur",
+          "sort-name": "Blur",
+          "type": "Group",
+          "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b"
+        },
+        "joinphrase": "",
+        "name": "Blur"
+      }
+    ],
+    "disambiguation": "",
+    "first-release-date": "1991-08-26",
+    "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+    "primary-type": "Album",
+    "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+    "secondary-type-ids": [],
+    "secondary-types": [],
+    "title": "Leisure"
+  },
+  "status": "Official",
+  "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+  "text-representation": {
+    "language": "eng",
+    "script": "Latn"
+  },
+  "title": "Leisure"
+}

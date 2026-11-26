@@ -24,6 +24,13 @@
   <p class="review-back"><%= link_to "Recording resolution", resolution_surfaces_path %> / Observation <%= source.id %></p>
   <h1><%= observed_text(source.payload["track_name"], "Track") %></h1>
   <p class="review-string-label">Recording string</p>
+  <% if (interpretation = @assessment&.evidence&.fetch("title_interpretation", nil)) && interpretation["original_title"] == source.payload["track_name"] %>
+    <details class="review-observation-meta">
+      <summary><%= interpretation["base_title"] %> — <%= interpretation["descriptors"].map { |descriptor| descriptor["kind"] == "mastering" ? [ descriptor["year"], descriptor["name"] ].compact.join(" ") : descriptor["text"] }.join(", ") %></summary>
+      <p>Search interpretation from the reported title. Recording identity still requires catalog evidence.</p>
+      <% if interpretation["unclassified"].present? %><p>Unclassified title text: <%= interpretation["unclassified"].join(", ") %>.</p><% end %>
+    </details>
+  <% end %>
   <dl class="review-source-claims">
     <% %w[Artist Album].each do |label| %>
       <div><dt><%= label %> string</dt><dd><%= observed_text(source.payload["#{label.downcase}_name"], label) %></dd></div>

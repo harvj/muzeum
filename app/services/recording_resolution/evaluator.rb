@@ -26,6 +26,7 @@ module RecordingResolution
       end
 
       evidence["canonical_artist_mbid"] = @catalog_identity[:artist_mbid] if @catalog_identity[:artist_mbid]
+      evidence["title_interpretation"] = TitleInterpretation.call(surface.track) if @workspace
       page = recording_page(surface)
       candidates = page.fetch("recordings")
       evidence["search"] = page.slice("count", "offset").merge("returned" => candidates.size) unless evidence["recording_searches"]
@@ -105,7 +106,8 @@ module RecordingResolution
 
     def recording_page(surface)
       feature = DiscoveryTitle.featured_credit(surface.track) if @workspace
-      if !feature && (id = @catalog_identity[:recording_mbid])
+      interpretation = evidence["title_interpretation"]
+      if !feature && !interpretation && (id = @catalog_identity[:recording_mbid])
         data = @musicbrainz.verify_recording(@session, id, catalog: true)["data"]
         if data&.fetch("id", nil) == id
           return { "count" => 1, "offset" => 0, "recordings" => [ data ] }
@@ -113,13 +115,21 @@ module RecordingResolution
       end
 
       scope = @catalog_identity.slice(:artist_mbid)
-      return search_surface(surface, surface.track, scope) unless feature
+      return search_surface(surface, surface.track, scope) unless feature || interpretation
 
       evidence["recording_searches"] = []
-      original = search_surface(surface, surface.track, scope)
-      title, guest = feature
-      credit = search_surface(surface, title, scope, featured_artist: guest)
-      recordings = (original.fetch("recordings") + credit.fetch("recordings")).uniq { |row| row.fetch("id") }
+      pages = [ search_surface(surface, surface.track, scope) ]
+      if feature
+        title, guest = feature
+        pages << search_surface(surface, title, scope, featured_artist: guest)
+      end
+      if interpretation
+        base = interpretation.fetch("base_title")
+        versioned = interpretation.fetch("descriptors").select { |descriptor| descriptor["kind"] == "version" }
+        titles = [ ([ base ] + versioned.pluck("text")).join(" "), base ].uniq - [ surface.track, feature&.first ]
+        titles.each { |title| pages << search_surface(surface, title, scope) }
+      end
+      recordings = pages.flat_map { |page| page.fetch("recordings") }.uniq { |row| row.fetch("id") }
       incomplete = evidence["recording_searches"].any? { |search| search.fetch("count") != search.fetch("returned") }
       { "count" => recordings.size, "offset" => 0, "recordings" => recordings, "incomplete" => incomplete }
     end
@@ -147,7 +157,9 @@ module RecordingResolution
       end
       return if credible
 
-      scoped = DiscoveryTitle.alternate_titles(surface.track).first(2).map { |title| [ title, { artist: surface.artist } ] }
+      interpretation = evidence["title_interpretation"]
+      alternatives = interpretation ? interpretation.fetch("alternatives").drop(2) : DiscoveryTitle.alternate_titles(surface.track).first(2)
+      scoped = alternatives.map { |title| [ title, { artist: surface.artist } ] }
       # The album can recover different credit arrangements; require the credited
       # artist before retaining any of these hits.
       scoped << [ surface.track, { artist: nil, release: surface.album } ] if surface.album.present?

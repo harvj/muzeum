@@ -13,6 +13,7 @@ module RecordingResolution
     end
 
     def call(surface, candidates, checked:, attempted:, search:, review_alternative: false, preferred: nil, origins: true)
+      @interpretation = TitleInterpretation.call(surface.track)
       @pending_original_group = nil
       @tracklists = {}
       @construction_editions = {}
@@ -136,7 +137,11 @@ module RecordingResolution
       end
       refs = refs.reject { |row| row["id"] == attempted } if attempted
       remaining = attempted ? MAX_LOOKUPS - 1 : MAX_LOOKUPS
-      refs.sort_by { |row| [ DiscoveryTitle.displayed_edition?(surface.album, row) ? 0 : 1, row["id"].to_s ] }
+      mastering_year = TitleInterpretation.mastering_year(@interpretation)
+      refs.sort_by do |row|
+        [ DiscoveryTitle.displayed_edition?(surface.album, row) ? 0 : 1,
+          mastering_year && row["date"].to_s.start_with?(mastering_year.to_s) ? 0 : 1, row["id"].to_s ]
+      end
         .filter_map { |row| row["id"] if Clients::Musicbrainz::MBID.match?(row["id"].to_s) }.uniq.first(remaining).filter_map do |id|
         edition = @musicbrainz.edition(@session, id, catalog: true)
         edition if edition && edition["id"] == id && DiscoveryTitle.release_context?(surface.album, edition)
@@ -159,7 +164,7 @@ module RecordingResolution
         tracks.filter_map do |slot|
           recording = slot["recording"]
           next unless recording && Clients::Musicbrainz::MBID.match?(recording["id"].to_s) &&
-            DiscoveryTitle.recording_match?(surface.track, slot["title"], slot["artist-credit"].presence || recording["artist-credit"]) && artist_matches?(surface, recording)
+            caption_matches?(surface, slot, recording) && artist_matches?(surface, recording)
 
           appearance = edition.slice("id", "title", "disambiguation", "date", "country", "release-group").merge(
             "relationship" => (DiscoveryTitle.displayed_edition?(surface.album, edition) ? "matching_catalog_caption" : "related_catalog_title"),
@@ -168,6 +173,12 @@ module RecordingResolution
           recording.merge("release_discovery" => appearance, "releases" => [ edition.slice("id", "title", "date", "country") ])
         end
       end
+    end
+
+    def caption_matches?(surface, slot, recording)
+      DiscoveryTitle.recording_match?(surface.track, slot["title"], slot["artist-credit"].presence || recording["artist-credit"]) ||
+        (TitleInterpretation.mastering_only?(@interpretation) &&
+          DiscoveryTitle.match?(@interpretation["base_title"], slot["title"]))
     end
 
     def artist_matches?(surface, recording)

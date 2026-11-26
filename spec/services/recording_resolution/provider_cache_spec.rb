@@ -100,6 +100,32 @@ RSpec.describe RecordingResolution::ProviderSession do
     end
   end
 
+  it "discovers the Blur recording through its interpreted title and retains the authentic Leisure slot" do
+    album = JSON.parse(Rails.root.join("spec/fixtures/musicbrainz/discovery/blur-leisure-us.json").read)
+    recording = album.dig("media", 0, "tracks", 11, "recording").merge("releases" => [ album.except("media") ])
+    surface = Struct.new(:artist, :track, :album).new("Blur", "Wear Me Down - 2012 Remaster", "Leisure")
+    params = { fmt: "json", limit: 25, offset: 0 }
+    exact = %(artist:"Blur" AND recording:"Wear Me Down - 2012 Remaster")
+    fallback = %(artist:"Blur" AND recording:"Wear Me Down")
+    original_request = stub_json("/recording", params.merge(query: exact), { count: 0, offset: 0, recordings: [] })
+    fallback_request = stub_json("/recording", params.merge(query: fallback), { count: 1, offset: 0, recordings: [ recording ] })
+    stub_json("/release/#{album.fetch('id')}", { fmt: "json", inc: "recordings+artist-credits+release-groups+url-rels+release-rels+genres+tags+isrcs" }, album)
+
+    freeze_time do
+      evidence = RecordingResolution::Evaluator.new(session, discogs: nil, workspace: true, origins: false).call(surface, {})
+      expect(evidence.fetch("recording_searches").pluck("query")).to eq([ exact, fallback ])
+      expect(evidence.dig("title_interpretation", "original_title")).to eq(surface.track)
+      expect(evidence.dig("slots", 11)).to include("recording_mbid" => "a4f6872f-ff57-476c-8897-3ddc52d2169b", "position" => 12)
+      ranking = RecordingResolution::Ranking.call(surface, evidence, source_hints: true)
+      expect(ranking.sole.dig("inputs", "title", "state")).to eq("positive")
+      expect(ranking.sole.dig("inputs", "version", "state")).to eq("unavailable")
+      expect(ranking.sole.dig("inputs", "catalog_release_appearance", "state")).to eq("positive")
+      expect(evidence).not_to have_key("suggested_mbid")
+      expect(original_request).to have_been_requested.once
+      expect(fallback_request).to have_been_requested.once
+    end
+  end
+
   it "interprets explicit feature markers while preserving other parenthetical title text" do
     title = RecordingResolution::DiscoveryTitle
     credits = [ { "name" => "Charli xcx" }, { "name" => "Sky Ferreira" } ]

@@ -206,7 +206,7 @@ module CanonicalCatalog
 
       @local_candidates = RecordingResolution::LocalCandidates.call(surface)
       identity = RecordingResolution::LocalCandidates.catalog_identity(surface)
-      unless @request.context["refresh"] == true
+      unless @request.context["refresh"] == true || RecordingResolution::TitleInterpretation.call(surface.track)
         local_evidence = { "source_claims" => @claims, "candidates" => @local_candidates, "reasons" => [] }
         local_evidence["canonical_artist_mbid"] = identity[:artist_mbid] if identity[:artist_mbid]
         local_evidence.merge!(RecordingResolution::LocalCandidates.checked_edition(surface, @local_candidates))
