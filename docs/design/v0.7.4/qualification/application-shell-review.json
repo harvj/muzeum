@@ -1,6 +1,6 @@
 {
   "application": "muzeum",
-  "revision": "9d52918453b3e04f4559b2a671bbadbe401a9625",
+  "revision": "f4e5aa959b2d5464a9a2c82508c8f514acddbe0b",
   "selected_version": "2.0.0",
   "behavior_baseline": "shell-v2",
   "registry_schema": 1,
@@ -32,7 +32,7 @@
       "status": "pass"
     },
     "SH-07": {
-      "evidence": "Packaged RC identity, exact publication evidence, same-process rendering and retained identity. Disposable Capistrano staged and verified v0.7.4-rc.1 seal 0db8b18460d9d727ede79b95e0715a9d22fb8a476d1820ae8a9a63bbfa12baae before and after Puma and Solid Queue startup: https://github.com/harvj/muzeum/actions/runs/45723934586.",
+      "evidence": "Packaged RC identity, exact publication evidence, same-process rendering and retained identity. Disposable Capistrano staged and verified v0.7.4-rc.1 seal 0fcaaf6f8b5193be1dfa54a53eb4f1b86d02b5242f211118057a9dfc79cf3649 before and after Puma and Solid Queue startup: https://github.com/harvj/muzeum/actions/runs/45725696679.",
       "status": "pass"
     },
     "SH-09": {
@@ -45,7 +45,7 @@
     },
     "SH-08": {
       "status": "pass",
-      "evidence": "Candidate-bound browser coverage maps the muzeum.fm route classes: anonymous landing and local login (sign_in_spec); authenticated Archive, indexes, Recording/Release/Artist details, and Resolution (canonical_library_spec and listening_history_acceptance_spec); public profile Archive and scoped catalog browsing (public_profiles_spec and request specs). The signed muzeum-public-profiles exception remains limited to additional public Archive and catalog links on public profiles. Muzeum-only operator configuration and recovery safeguards are unchanged from the independently verified #36 installation (https://github.com/harvj/muzeum/issues/36#issuecomment-7176090204). The exact sealed candidate and prior release booted in disposable systemd with neighbor isolation (https://github.com/harvj/muzeum/actions/runs/45723934586). No live rollback."
+      "evidence": "Candidate-bound browser coverage maps the muzeum.fm route classes: anonymous landing and local login (sign_in_spec); authenticated Archive, indexes, Recording/Release/Artist details, and Resolution (canonical_library_spec and listening_history_acceptance_spec); public profile Archive and scoped catalog browsing (public_profiles_spec and request specs). The signed muzeum-public-profiles exception remains limited to additional public Archive and catalog links on public profiles. Muzeum-only operator configuration and recovery safeguards are unchanged from the independently verified #36 installation (https://github.com/harvj/muzeum/issues/36#issuecomment-7176090204). The exact sealed candidate and prior release booted in disposable systemd with neighbor isolation (https://github.com/harvj/muzeum/actions/runs/45725696679). No live rollback."
     }
   }
 }
