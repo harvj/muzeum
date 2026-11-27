@@ -799,6 +799,9 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
       visit resolution_surface_path(play)
       expect(page).to have_css("h1", exact_text: title)
       expect(page).to have_no_css('[aria-label="Original release"]')
+      find(".recording-choice-form input[type=checkbox]").click
+      expect(page).to have_css("#recording-resolution-confirmation button", text: /Resolve/)
+      find("summary", text: "Release configurations and adjacent programs").click
       within('[aria-label="Verified album configurations"]') do
         expect(page).to have_css("summary", text: "Disputed source", count: 1)
         expect(page).to have_no_text("Modern Life Is Rubbish")
