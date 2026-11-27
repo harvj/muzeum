@@ -1,0 +1,1 @@
+Application Shell preflight passed for muzeum at 931c234323e57a06be8102f730846af4b86c9f20 against v2.0.0.
