@@ -95,7 +95,7 @@ await runCandidate({ chromium: chrome, artifact: 'candidate.tar.gz', binding, ou
         await page.goto(origin + '/resolution/293137');
         const release = date => page.getByRole('region', { name: 'Verified album configurations' }).locator('details').filter({
           has: page.locator('summary').filter({ hasText: date }),
-        }).filter({ has: page.getByRole('checkbox', { name: 'Select configuration' }) });
+        });
         const us = release('September 24, 1991');
         const japan = release('September 20, 1991');
         const single = page.getByRole('region', { name: 'Adjacent recording programs' }).locator('details').filter({
@@ -119,8 +119,10 @@ await runCandidate({ chromium: chrome, artifact: 'candidate.tar.gz', binding, ou
         await us.getByRole('radio', { name: /Use as the admitted base/ }).check();
         await single.getByRole('checkbox', { name: 'Select independent release' }).check();
         assert.equal(await preview.locator('li').count(), 3);
-        assert.match(await us.innerText(), /September US album appearance/);
+        assert.match(await us.innerText(), /Album appearance/);
         assert.match(await single.innerText(), /Edit \(Source labeled\)/);
+        const labels = await preview.locator('li').allTextContents();
+        assert.ok(labels.every(label => !label.includes('<a')));
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
         await selected.scrollIntoViewIfNeeded();
         await screenshot(name + '-resolution-selected', [trigger]);
