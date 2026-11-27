@@ -1,0 +1,43 @@
+{
+  "application": "muzeum",
+  "artifact": {
+    "application": "muzeum",
+    "artifact_sha256": "f07a3d545287d997ff1a38f0dd718a2c18919d09d14496190199570d7162ad4d",
+    "candidate_number": 1,
+    "kind": "candidate",
+    "schema_version": 1,
+    "source_sha": "eff96e297537e112699c9584cf4410e341780708",
+    "target_version": "0.8.3"
+  },
+  "authenticated_routes": [
+    "/archive",
+    "/artists",
+    "/recordings",
+    "/releases",
+    "/resolution"
+  ],
+  "controls_source": "2c2ed7fd8ef413cffce3e444e1e81a4f6ff9e32c",
+  "disposable_runtime_sha256": "1ab947d7c29da0cc96a256a2710991081ff8797ccb3485ae7742cbc14983527e",
+  "exception": {
+    "application": "muzeum",
+    "id": "muzeum-public-profiles",
+    "scope": "Additional public Archive and catalog links on public profiles"
+  },
+  "exception_policy_sha256": "40b654b708b48da0e1eb36735e15b32f883b0bac4b8e06757748b4721d5a6cad",
+  "isolation": "https://github.com/harvj/muzeum/actions/runs/45709546534",
+  "recovery": "https://github.com/harvj/muzeum/issues/36#issuecomment-7176090204",
+  "release_ci": "https://github.com/harvj/muzeum/actions/runs/46068180742",
+  "reviewed_additive_migrations": [
+    {
+      "database": "primary",
+      "path": "db/migrate/20261126170000_create_release_configurations.rb",
+      "sha256": "500080f5572e0682321403a3448e02038595239067e6c35fdd7a2be59979e5a9"
+    },
+    {
+      "database": "primary",
+      "path": "db/migrate/20261126173000_create_short_track_inference_decisions.rb",
+      "sha256": "fdc9236c176313c318bcf1a468b6998093f6a939f02d5e44d506b1b208c3557d"
+    }
+  ],
+  "revision": "eff96e297537e112699c9584cf4410e341780708"
+}

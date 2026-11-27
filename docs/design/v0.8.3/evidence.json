@@ -1,0 +1,116 @@
+{
+  "format_version": 1,
+  "application": "muzeum",
+  "revision": "eff96e297537e112699c9584cf4410e341780708",
+  "tree": "2caaafdbc5237b5c3b3dedc81815d3eb08167a1a",
+  "artifact_sha256": "8e37adc5bbf46c66e08863c0b88c08d297eb3bc951f9ccb9e95daa98b6a310fa",
+  "environment_sha256": "0ccab0e24702760977ed9918ccc3780eed9d43b7e8d2f66ef93026af74e60976",
+  "viewports": [
+    {
+      "name": "desktop",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "name": "mobile",
+      "width": 390,
+      "height": 844
+    }
+  ],
+  "started_at": "2026-11-27T21:09:21.151Z",
+  "steps": [
+    {
+      "name": "anonymous-landing",
+      "result": "pass",
+      "milliseconds": 146
+    },
+    {
+      "name": "native-password-totp-oidc",
+      "result": "pass",
+      "milliseconds": 799
+    },
+    {
+      "name": "desktop-archive-shell",
+      "result": "pass",
+      "milliseconds": 1151
+    },
+    {
+      "name": "mobile-archive-shell",
+      "result": "pass",
+      "milliseconds": 229
+    },
+    {
+      "name": "desktop-birthday-evidence-route",
+      "result": "pass",
+      "milliseconds": 1473
+    },
+    {
+      "name": "mobile-birthday-evidence-route",
+      "result": "pass",
+      "milliseconds": 702
+    },
+    {
+      "name": "apply-birthday-recording-only",
+      "result": "pass",
+      "milliseconds": 348
+    },
+    {
+      "name": "same-title-observation-remains-ambiguous",
+      "result": "pass",
+      "milliseconds": 309
+    },
+    {
+      "name": "logout-and-private-boundary",
+      "result": "pass",
+      "milliseconds": 381
+    }
+  ],
+  "screenshots": [
+    {
+      "name": "desktop",
+      "sha256": "b7f9dde238aef19e7ba7486c5c21907d57e03db8ddf6df8f05864b076c728223"
+    },
+    {
+      "name": "mobile",
+      "sha256": "4d4a47b17dbbfdaa6a71f50b769afe804f3ee942a70aed740ec4845ef722021a"
+    },
+    {
+      "name": "desktop-recording-unselected",
+      "sha256": "78c187b71c29d2fed2d25b79b58faf29e4e468ece47c9c79488b6dfadc57d609"
+    },
+    {
+      "name": "desktop-recording-selected",
+      "sha256": "ff91b95af9ef78ccacf7c506d1d3e1977d006baae160c926a55fbab8fa020858"
+    },
+    {
+      "name": "desktop-confirmation-preview",
+      "sha256": "ff91b95af9ef78ccacf7c506d1d3e1977d006baae160c926a55fbab8fa020858"
+    },
+    {
+      "name": "desktop-release-evidence-expanded",
+      "sha256": "7e292f0c58ea84c5a30a9c26fcc78283ddd012d1f358cf9df56cfd2646bd1679"
+    },
+    {
+      "name": "mobile-recording-unselected",
+      "sha256": "4e5595425e5c004a8dd813ae7bf294e6357ccd0eabcfd669a827306b06a968a6"
+    },
+    {
+      "name": "mobile-recording-selected",
+      "sha256": "96abaa1525d12e2594c27724a33270cd5dc3e786178466f5965637d0a8263829"
+    },
+    {
+      "name": "mobile-confirmation-preview",
+      "sha256": "eb9638052fd94c5b76829185bb016ec30c22ac2b48e30a94aaff71d3ac72e0fc"
+    },
+    {
+      "name": "mobile-release-evidence-expanded",
+      "sha256": "883800a54f82fa3032832fed8275b398fe1d9f9ab18e21e26e46626b306ec9b8"
+    },
+    {
+      "name": "mobile-ambiguous-recordings",
+      "sha256": "0d27380b3abc5748ce33be673a0950b98b5c9ec8252d4e51521665518224c448"
+    }
+  ],
+  "result": "pass",
+  "finished_at": "2026-11-27T21:09:27.453Z"
+}
