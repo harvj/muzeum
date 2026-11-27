@@ -141,6 +141,7 @@ await runCandidate({ chromium: chrome, artifact: 'candidate.tar.gz', binding, ou
     await step('admit-album-with-configurations-and-singles', async () => {
       await page.goto(origin + '/resolution/293137?section=evidence');
       await page.getByRole('checkbox', { name: /^Birthday/ }).check();
+      await page.getByRole('button', { name: 'Resolve all 8 observations', exact: true }).waitFor();
       const release = page.locator('.resolution-release-evidence');
       await release.locator(':scope > summary').click();
       for (const date of ['August 27, 1991', 'September 24, 1991']) {
@@ -148,7 +149,8 @@ await runCandidate({ chromium: chrome, artifact: 'candidate.tar.gz', binding, ou
         await summary.click();
         await summary.locator('..').getByRole('checkbox', { name: 'Select configuration' }).check();
       }
-      await release.getByRole('radio', { name: 'Use as the admitted base and my preferred configuration' }).first().check();
+      const uk = release.locator('summary').filter({ hasText: 'Leisure · August 27, 1991' }).locator('..');
+      await uk.getByRole('radio', { name: 'Use as the admitted base and my preferred configuration' }).check();
       for (const program of [/She.s So High · October/, /There.s No Other Way · April/, /Bang · July/]) {
         const summary = release.locator('summary').filter({ hasText: program });
         await summary.click();
@@ -175,8 +177,8 @@ await runCandidate({ chromium: chrome, artifact: 'candidate.tar.gz', binding, ou
       await other.getByRole('link', { name: 'Leisure', exact: true }).click();
       await page.getByText('8 distinct resolved observations', { exact: false }).first().waitFor();
       await page.locator('summary').filter({ hasText: 'Compare release configurations' }).click();
-      await page.getByText(/GB · 1991-08-27.*preferred/).waitFor();
-      await page.getByText(/US · 1991-09-24/).waitFor();
+      await page.locator('summary').filter({ hasText: 'GB · 1991-08-27' }).filter({ hasText: '(preferred)' }).waitFor();
+      await page.locator('summary').filter({ hasText: 'US · 1991-09-24' }).waitFor();
     });
     await step('same-title-observation-remains-ambiguous', async () => {
       await page.goto(origin + '/resolution/293200?section=evidence');
