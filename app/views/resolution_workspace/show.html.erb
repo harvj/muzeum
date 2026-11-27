@@ -80,6 +80,11 @@
   <% if @release_review&.policy %>
     <details class="resolution-release-evidence">
       <summary>Release configurations and adjacent programs</summary>
+      <% if selected %>
+        <% provenance = RecordingResolution::ReleaseProvenance.new(@assessment.evidence, contexts: contexts.fetch(selected),
+          releases: catalog_rows[2][1], recording_mbid: selected.fetch("id")) %>
+        <%= render "other_recording_appearances", provenance: %>
+      <% end %>
       <%= render "reviewed_release_programs", review: @release_review,
         allow_selection: selected.present? && @may_manage_observation && @assessment_matches_claims %>
     </details>
