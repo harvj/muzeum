@@ -53,3 +53,14 @@
     <p>No releases qualify for these rankings.</p>
   <% end %>
 </section>
+
+<% if @unranked_releases.any? %>
+  <section class="card library-card" id="artist-unranked-releases">
+    <h2 class="section-heading">Other canonical releases (<%= @unranked_releases.size %>)</h2>
+    <ul class="catalog-list">
+      <% @unranked_releases.each do |release| %>
+        <li><%= catalog_link(release) %> · <%= catalog_release_date(release) %></li>
+      <% end %>
+    </ul>
+  </section>
+<% end %>

@@ -5,6 +5,9 @@
   <% album = Release.find_by(release_group_mbid: review.group) %>
   <% if album %><p>Canonical album · <%= link_to album.title, release_path(album) %></p><% end %>
   <p>These source configurations describe one album. The edition played remains unverified.</p>
+  <% if allow_selection && !album %>
+    <p>Checking a configuration prepares an album admission. Choose the preferred edition to set the base of one canonical album. Other checked editions are retained as source configurations.</p>
+  <% end %>
   <% baseline = review.configurations.first&.slots || [] %>
   <% review.configurations.each do |edition| %>
     <% label = [edition.data["title"], resolution_release_date(edition.data["date"]), edition.data["country"]].compact.join(" · ") %>
@@ -23,7 +26,7 @@
         <label class="pending-release-choice">
           <%= check_box_tag "pending_release_review[configuration_ids][]", edition.data["id"], false,
             id: "configuration-#{edition.data['id']}", form: "recording-resolution-confirmation",
-            data: { review_edition: "configuration", review_existing_album: album.present?, review_new_recordings: (edition.slots.pluck(:source_recording_mbid).uniq - known_recordings.keys).join(","), review_label: "Keep configuration · #{label}" } %>
+            data: { review_edition: "configuration", review_existing_album: album.present?, review_new_recordings: (edition.slots.pluck(:source_recording_mbid).uniq - known_recordings.keys).join(","), review_label: "Retain configuration · #{label}" } %>
           Select configuration
         </label>
         <label class="pending-release-choice">

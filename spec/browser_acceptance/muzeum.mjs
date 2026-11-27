@@ -138,6 +138,46 @@ await runCandidate({ chromium: chrome, artifact: 'candidate.tar.gz', binding, ou
       assert.equal(await table.locator('tbody tr').count(), 8);
       assert.equal(await table.getByRole('link', { name: 'Birthday', exact: true }).count(), 8);
     });
+    await step('admit-album-with-configurations-and-singles', async () => {
+      await page.goto(origin + '/resolution/293137?section=evidence');
+      await page.getByRole('checkbox', { name: /^Birthday/ }).check();
+      const release = page.locator('.resolution-release-evidence');
+      await release.locator(':scope > summary').click();
+      for (const date of ['August 27, 1991', 'September 24, 1991']) {
+        const summary = release.locator('summary').filter({ hasText: 'Leisure · ' + date });
+        await summary.click();
+        await summary.locator('..').getByRole('checkbox', { name: 'Select configuration' }).check();
+      }
+      await release.getByRole('radio', { name: 'Use as the admitted base and my preferred configuration' }).first().check();
+      for (const program of [/She.s So High · October/, /There.s No Other Way · April/, /Bang · July/]) {
+        const summary = release.locator('summary').filter({ hasText: program });
+        await summary.click();
+        await summary.locator('..').getByRole('checkbox', { name: 'Select independent release' }).check();
+      }
+      await page.getByText(/Admit one canonical album using the preferred configuration as its base/).waitFor();
+      const response = page.waitForResponse(item => item.url() === origin + '/resolution/293137/decide' &&
+        item.request().method() === 'POST' && item.status() === 303);
+      await page.getByRole('button', { name: 'Resolve all 8 observations', exact: true }).click();
+      await response;
+      await page.getByText('Recording and release decisions saved.', { exact: true }).waitFor();
+      await page.goto(origin + '/artists');
+      await page.getByRole('link', { name: 'Blur', exact: true }).click();
+      const ranked = page.locator('#artist-releases');
+      const other = page.locator('#artist-unranked-releases');
+      await other.getByRole('link', { name: 'Leisure', exact: true }).waitFor();
+      assert.equal(await ranked.getByRole('link', { name: 'Leisure', exact: true }).count(), 0);
+      assert.equal(await ranked.locator('tbody tr').count(), 3);
+      for (const { name, width, height } of viewports) {
+        await page.setViewportSize({ width, height });
+        await other.scrollIntoViewIfNeeded();
+        await screenshot(name + '-artist-canonical-leisure', [trigger]);
+      }
+      await other.getByRole('link', { name: 'Leisure', exact: true }).click();
+      await page.getByText('8 distinct resolved observations', { exact: false }).first().waitFor();
+      await page.locator('summary').filter({ hasText: 'Compare release configurations' }).click();
+      await page.getByText(/GB · 1991-08-27.*preferred/).waitFor();
+      await page.getByText(/US · 1991-09-24/).waitFor();
+    });
     await step('same-title-observation-remains-ambiguous', async () => {
       await page.goto(origin + '/resolution/293200?section=evidence');
       await page.getByText('Competing recording identities are possible.', { exact: false }).waitFor();

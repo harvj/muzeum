@@ -130,7 +130,7 @@ class CanonicalLibraryController < ApplicationController
       @plays = ListeningPage.chronological(plays, before: params[:before]).limit(PAGE + 1).to_a
       @next_page = @plays.pop && @plays.last.id if @plays.size > PAGE
     end
-    related = [ *@recording_rows&.map(&:first), *@release_rows&.map(&:first), *@slots&.map(&:recording), *@additional_appearances&.map(&:recording), *@releases ]
+    related = [ *@recording_rows&.map(&:first), *@release_rows&.map(&:first), *@unranked_releases, *@slots&.map(&:recording), *@additional_appearances&.map(&:recording), *@releases ]
     @musical_identities, @inherited_musical_identities = MusicalIdentityDecision.presentation_for([ @entry, *related ])
     @may_edit_identity = @may_import && (@entry.is_a?(Release) ? @entry.catalog_verified_at.present? : Clients::Musicbrainz::MBID.match?(@entry.mbid.to_s))
   end
@@ -324,10 +324,10 @@ class CanonicalLibraryController < ApplicationController
     releases = releases.merge(@profile_catalog.releases) if @public_profile
     releases = releases.to_a
     ranking = ReleaseRanking.new(@public_profile&.owner || current_user, releases)
-    releases.select! { |release| ranking.include?(release) }
+    ranked_releases, other_releases = releases.partition { |release| ranking.include?(release) }
     @release_selection = ReleaseConfigurationSelection.new(listening_user, releases.map(&:id))
-    memberships = @release_selection.memberships
-      .group_by(&:first)
+    @unranked_releases = other_releases.select(&:catalog_verified_at).sort_by { |release| [ release.title.downcase, release.id ] }
+    memberships = @release_selection.memberships(release_ids: ranked_releases.map(&:id)).group_by(&:first)
     records = recordings.to_a
     artist_listening = CatalogListening.new(recording_plays(records.map(&:id)))
     stats = artist_listening.by_recording
@@ -351,7 +351,7 @@ class CanonicalLibraryController < ApplicationController
 
     external_ids = memberships.values.flatten(1).map(&:last).uniq - records.map(&:id)
     stats.merge!(CatalogListening.new(recording_plays(external_ids)).by_recording) if external_ids.any?
-    @release_rows = releases.map do |release|
+    @release_rows = ranked_releases.map do |release|
       totals = memberships.fetch(release.id, []).map { |_, id| stats.fetch(id, CatalogListening::EMPTY) }
       [ release, totals.reduce(CatalogListening::EMPTY, :+) ]
     end.sort_by { |release, totals| [ -totals.milliseconds, release.title.downcase, release.id ] }

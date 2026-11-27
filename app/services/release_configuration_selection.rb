@@ -25,9 +25,9 @@ class ReleaseConfigurationSelection
     end
   end
 
-  def memberships
-    selected = @configurations.transform_values(&:release_configuration).compact
-    fallback = ReleaseTrackListeningDecision.included_memberships(@listener, @release_ids)
+  def memberships(release_ids: @release_ids)
+    selected = @configurations.slice(*release_ids).transform_values(&:release_configuration).compact
+    fallback = ReleaseTrackListeningDecision.included_memberships(@listener, release_ids)
       .where.not(release_id: selected.keys).distinct.pluck(:release_id, :recording_id)
     recordings = ReleaseConfiguration.recordings_by_source(selected.values.flat_map { |snapshot| snapshot.tracks.pluck("source_recording_mbid") }.uniq)
     selected.each do |release_id, snapshot|

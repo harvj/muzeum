@@ -51,6 +51,59 @@ RSpec.describe "Birthday configuration review", type: :system do
     expect(page).to have_text("Recording decision saved.")
     expect(Release.count).to eq(0)
     expect(RecordingResolution::Ledger.effective(user).where(id: plays.map(&:id)).map(&:effective_recording_id).uniq).to match([ kind_of(Integer) ])
+
+    visit "/resolution/293137"
+    check "Birthday"
+    expect(page).to have_button("Resolve all 8 observations")
+    find("summary", text: "Release configurations and adjacent programs").click
+    find("summary", text: "September 24, 1991").click
+    check "Select configuration"
+    find("summary", text: "August 27, 1991").click
+    within(find("summary", text: "August 27, 1991").find(:xpath, "..")) do
+      check "Select configuration"
+      choose "Use as the admitted base and my preferred configuration"
+    end
+    expect(page).to have_text("Admit one canonical album using the preferred configuration as its base.")
+    [ /She.s So High · October/, /There.s No Other Way · April/, /Bang · July/ ].each do |caption|
+      summary = find("summary", text: caption)
+      summary.click
+      within(summary.find(:xpath, "..")) { check "Select independent release" }
+    end
+    click_button "Resolve all 8 observations"
+    expect(page).to have_text("Recording and release decisions saved.")
+    album = Release.find_by!(title: "Leisure")
+    configurations = album.release_configurations.index_by(&:source_country)
+    expect(configurations.keys).to contain_exactly("GB", "US")
+    expect(ReleaseConfigurationDecision.latest_for(user, [ album.id ]).sole.release_configuration).to eq(configurations.fetch("GB"))
+    artist = Artist.find_by!(name: "Blur")
+    visit artist_path(artist)
+    within("#artist-releases") do
+      expect(page).to have_link("Bang")
+      expect(page).to have_link("She’s So High")
+      expect(page).to have_link("There’s No Other Way")
+      expect(page).to have_no_link("Leisure")
+    end
+    expect(page).to have_link("Leisure", href: release_path(album), count: 1)
+    within("#artist-unranked-releases") { expect(page).to have_text("August 27, 1991") }
+
+    uk_tracks = configurations.fetch("GB").ordered_tracks
+    us_ids = configurations.fetch("US").tracks.pluck("source_recording_mbid")
+    uk_only = uk_tracks.find { |track| track.recording && us_ids.exclude?(track.source_recording_mbid) }.recording
+    extra = Scrobble.create!(user:, lastfm_account: user.source_account, played_at: Time.current,
+      payload: { "artist_name" => "Blur", "album_name" => "Leisure", "track_name" => uk_only.title })
+    RecordingResolution::Ledger.record!(listener: user, scrobble: extra, scope: :scrobble,
+      mode: "resolved", reason: "Disposable configuration comparison", recording: uk_only)
+    visit release_path(album)
+    expect(page).to have_text("9 distinct resolved observations")
+    find("summary", text: "Compare release configurations").click
+    us = find("summary", text: "1991-09-24")
+    us.click
+    within(us.find(:xpath, "..")) { click_button "Prefer this configuration" }
+    expect(page).to have_text("8 distinct resolved observations")
+    expect(page).to have_text("September 24, 1991")
+    expect(Release.where(release_group_mbid: album.release_group_mbid).count).to eq(1)
+    expect(RecordingResolution::Ledger.effective(user).where(id: plays.map(&:id)).map(&:effective_recording_id).uniq)
+      .to eq([ Recording.find_by!(title: "Birthday").id ])
   ensure
     browser&.execute_cdp("Emulation.clearDeviceMetricsOverride")
   end

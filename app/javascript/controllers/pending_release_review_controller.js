@@ -16,14 +16,18 @@ export default class extends Controller {
       primary.required = checked && configurations.length > 1
       if (!checked) primary.checked = false
     }
+    const primary = configurations.length === 1 ? configurations[0] :
+      configurations.find((input) => this.primaryTargets.some((radio) => radio.checked && radio.value === input.value))
     if (this.hasEffectTarget) {
-      const primary = configurations.length === 1 ? configurations[0] :
-        configurations.find((input) => this.primaryTargets.some((radio) => radio.checked && radio.value === input.value))
       const admissions = editions.filter((input) => input.dataset.reviewEdition === "program")
       if (primary && primary.dataset.reviewExistingAlbum === "false") admissions.push(primary)
       const recordings = new Set(admissions.flatMap((input) => input.dataset.reviewNewRecordings.split(",")).filter(Boolean))
+      const album = primary ? (primary.dataset.reviewExistingAlbum === "false" ?
+        "Admit one canonical album using the preferred configuration as its base. " :
+        "Update the preferred configuration of the existing album. ") :
+        (configurations.length ? "Choose a preferred configuration to apply these album choices. " : "")
       this.effectTarget.textContent = editions.length ?
-        `New releases: ${admissions.length}. Release tracks with no current recording match: ${recordings.size}.` : ""
+        `${album}New releases: ${admissions.length}. Release tracks with no current recording match: ${recordings.size}.` : ""
     }
     if (this.hasSummaryTarget) {
       this.summaryTarget.replaceChildren()
