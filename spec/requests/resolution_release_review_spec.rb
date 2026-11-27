@@ -71,22 +71,22 @@ RSpec.describe "Birthday production-derived release review", type: :request do
     latest = RecordingResolution::Assessment.where(group_id: group.id).order(id: :desc).first
     review = RecordingResolution::ReleaseReview.new(latest.evidence)
     uk, us = review.configurations.first(2)
-    selection = { configuration_ids: [uk.data["id"], us.data["id"]], preferred_id: us.data["id"] }
-    invalid = selection.merge(program_ids: [review.disputed.first.first.data.fetch("id")])
+    selection = { configuration_ids: [ uk.data["id"], us.data["id"] ], preferred_id: us.data["id"] }
+    invalid = selection.merge(program_ids: [ review.disputed.first.first.data.fetch("id") ])
     counts = -> { [ Release.count, Recording.count, ReleaseConfiguration.count, RecordingResolution::Decision.count ] }
     expect do
       post decide_resolution_surface_path(anchor), params: fields.merge(pending_release_review: invalid)
     end.not_to change(&counts)
     expect(flash[:alert]).to include("no longer in the verified review")
-    expect(RecordingResolution::Ledger.effective(user).where(id: observations).map(&:effective_recording_id).uniq).to eq([nil])
+    expect(RecordingResolution::Ledger.effective(user).where(id: observations).map(&:effective_recording_id).uniq).to eq([ nil ])
 
     post decide_resolution_surface_path(anchor), params: fields.merge(pending_release_review: selection)
     expect(flash[:notice]).to eq("Recording and release decisions saved.")
-    expect(RecordingResolution::Ledger.effective(user).where(id: observations).map(&:effective_recording_id).uniq).to match([kind_of(Integer)])
+    expect(RecordingResolution::Ledger.effective(user).where(id: observations).map(&:effective_recording_id).uniq).to match([ kind_of(Integer) ])
     album = Release.sole
     expect(album.ingested_from_release_mbid).to eq(us.data["id"])
     expect(album.release_configurations.pluck(:edition_mbid)).to contain_exactly(uk.data["id"], us.data["id"])
-    expect(ReleaseConfigurationSelection.new(user, [album.id]).date(album).iso).to eq("1991-09-24")
+    expect(ReleaseConfigurationSelection.new(user, [ album.id ]).date(album).iso).to eq("1991-09-24")
     expect(RecordingResolution::Decision.count).to eq(1)
     expect(prior.reload.evidence).to eq(base_evidence)
     expect do
