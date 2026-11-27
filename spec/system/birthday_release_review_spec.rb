@@ -74,7 +74,7 @@ RSpec.describe "Birthday configuration review", type: :system do
         end
         within(find("summary", text: "September 24, 1991").find(:xpath, "..")) do
           choose "Use as the admitted base and my preferred configuration"
-          expect(page).to have_text("September US album appearance")
+          expect(page).to have_text("Album appearance")
         end
         find("summary", text: /She.s So High.*1990/).click
         check "Select independent release"

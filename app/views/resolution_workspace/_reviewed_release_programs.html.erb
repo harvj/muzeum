@@ -7,8 +7,9 @@
   <p>These source configurations describe one album. The edition played remains unverified.</p>
   <% baseline = review.configurations.first&.slots || [] %>
   <% review.configurations.each do |edition| %>
+    <% label = [edition.data["title"], resolution_release_date(edition.data["date"]), edition.data["country"]].compact.join(" · ") %>
     <details>
-      <summary><%= [edition.data["title"], resolution_release_date(edition.data["date"]), edition.data["country"]].compact.join(" · ") %> · <%= pluralize(edition.slots.size, "track") %></summary>
+      <summary><%= label %> · <%= pluralize(edition.slots.size, "track") %></summary>
       <p><%= resolution_source_edition(edition.data) %></p>
       <% slots = edition.slots.map do |slot|
         { "title" => slot[:title], "recording_mbid" => slot[:source_recording_mbid], "track_mbid" => slot[:track_mbid], "length" => slot[:duration_ms] }
@@ -22,7 +23,7 @@
         <label class="pending-release-choice">
           <%= check_box_tag "pending_release_review[configuration_ids][]", edition.data["id"], false,
             id: "configuration-#{edition.data['id']}", form: "recording-resolution-confirmation",
-            data: { review_edition: "configuration", review_existing_album: album.present?, review_new_recordings: (edition.slots.pluck(:source_recording_mbid).uniq - known_recordings.keys).join(","), review_label: "Keep configuration · #{resolution_source_edition(edition.data)}" } %>
+            data: { review_edition: "configuration", review_existing_album: album.present?, review_new_recordings: (edition.slots.pluck(:source_recording_mbid).uniq - known_recordings.keys).join(","), review_label: "Keep configuration · #{label}" } %>
           Select configuration
         </label>
         <label class="pending-release-choice">
