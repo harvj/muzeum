@@ -1,3 +1,22 @@
+<% if (variant = CanonicalCatalog::RecordingVariant.for(@entry.mbid)) %>
+  <section class="card library-card">
+    <h2 class="section-heading">Recording variant</h2>
+    <p><%= variant.values_at("label", "status").join(" · ") %></p>
+    <p><%= variant.fetch("note") %> <%= link_to "Source release", "https://musicbrainz.org/release/#{variant.fetch('release')}" %></p>
+    <% if variant["edit_of"] %>
+      <p><%= link_to "Recording identified as the source of this edit", "https://musicbrainz.org/recording/#{variant.fetch('edit_of')}" %></p>
+    <% end %>
+    <% related = CanonicalCatalog::RecordingVariant.related(@entry.mbid) %>
+    <% if related.any? %>
+      <% recordings = Recording.where(mbid: related.keys).index_by(&:mbid) %>
+      <ul>
+        <% related.each do |mbid, evidence| %>
+          <li><%= recordings[mbid] ? catalog_link(recordings.fetch(mbid)) : link_to(evidence.fetch("label"), "https://musicbrainz.org/recording/#{mbid}") %></li>
+        <% end %>
+      </ul>
+    <% end %>
+  </section>
+<% end %>
 <% unless Clients::Musicbrainz::MBID.match?(@entry.mbid.to_s) %>
   <p class="muted">Partially resolved · The provider identity is unverified.</p>
 <% end %>

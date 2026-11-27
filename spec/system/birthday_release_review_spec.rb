@@ -16,11 +16,16 @@ RSpec.describe "Birthday configuration review", type: :system do
     before = ENV["BIRTHDAY_CAPTURE_BEFORE"] == "1"
     evidence = fixture.fetch("evidence")
     unless before
+      credits = JSON.parse(Rails.root.join("spec/fixtures/musicbrainz/discovery/blur-checked-editions.json").read).first.fetch("artist-credit")
       research = JSON.parse(Rails.root.join("docs/design/release-configurations/tracklists.json").read)
       evidence["reviewed_adjacent_programs"] = research.fetch("adjacent_program_editions")
         .select { |item| %w[b11e ea3d 7916].any? { |prefix| item.fetch("id").start_with?(prefix) } }
         .map do |item|
           source_edition(item).tap do |edition|
+            edition["artist-credit"] = credits
+            edition["media"].each do |medium|
+              medium["tracks"].each { |track| track.fetch("recording")["artist-credit"] = credits }
+            end
             edition["release-group"].merge!("primary-type" => "Single", "first-release-date" => edition["date"])
           end
         end
@@ -55,7 +60,26 @@ RSpec.describe "Birthday configuration review", type: :system do
         expect(page).to have_text("Verified album configurations")
         expect(page).to have_text("Adjacent recording programs")
         find("summary", text: "September 24, 1991").click
-        expect(page).to have_button("Admit album using this configuration")
+        expect(page).to have_unchecked_field("Select configuration")
+        check "Select configuration"
+        expect(page).to have_checked_field("Select configuration")
+        expect(page).to have_text("Keep configuration ·")
+        expect(Release.count).to eq(0)
+        uncheck "Select configuration"
+        expect(page).to have_text("No pending release selections.")
+        check "Select configuration"
+        find("summary", text: "September 20, 1991").click
+        within(find("summary", text: "September 20, 1991").find(:xpath, "..")) do
+          check "Select configuration"
+        end
+        within(find("summary", text: "September 24, 1991").find(:xpath, "..")) do
+          choose "Use as the admitted base and my preferred configuration"
+          expect(page).to have_text("September US album appearance")
+        end
+        find("summary", text: /She.s So High.*1990/).click
+        check "Select independent release"
+        expect(page).to have_text("Edit (Source labeled)")
+        expect(Release.count).to eq(0)
         expect(page).to have_button("Resolve all 8 observations")
         expect(page).to have_text("Bang")
       end
@@ -68,6 +92,14 @@ RSpec.describe "Birthday configuration review", type: :system do
         stage = before ? "before" : "after"
         File.binwrite(File.join(ENV.fetch("BIRTHDAY_CAPTURES"), "birthday-#{stage}-#{size}.png"), Base64.strict_decode64(capture.fetch("data")))
       end
+    end
+    unless before
+      find("#confirm_recording").check if page.has_css?("#confirm_recording")
+      click_button "Resolve all 8 observations"
+      expect(page).to have_text("Recording and release decisions saved.")
+      expect(Release.count).to eq(2)
+      expect(ReleaseConfiguration.count).to eq(2)
+      expect(RecordingResolution::Ledger.effective(user).where(id: plays.map(&:id)).map(&:effective_recording_id).uniq).to match([ kind_of(Integer) ])
     end
   ensure
     browser&.execute_cdp("Emulation.clearDeviceMetricsOverride")

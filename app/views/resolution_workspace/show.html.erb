@@ -69,12 +69,13 @@
   <% end %>
 <% end %>
 <% if section == "candidates" %>
-<section id="review-candidates" class="resolution-decision" tabindex="-1">
+<section id="review-candidates" class="resolution-decision" tabindex="-1"
+  <% if @release_review&.policy %>data-controller="pending-release-review" data-action="change->pending-release-review#update"<% end %>>
   <% candidate_badge = nil %>
   <% position_badge = ->(badge) { candidate_badge = badge } if selected %>
   <%= render "investigation_status", contexts:, compact: true, position_badge: %>
   <%= render "recording_choices", selected:, contexts:, navigation:, catalog_rows:, candidate_badge: %>
-  <%= render "reviewed_release_programs", review: @release_review if @release_review&.policy %>
+  <%= render "reviewed_release_programs", review: @release_review, allow_selection: false if @release_review&.policy && !selected %>
   <% if @batch_releases.present? %>
     <details><summary>Review other tracks</summary>
       <ul><% @batch_releases.each do |release| %>
@@ -87,7 +88,7 @@
 <section id="review-evidence">
   <%= render "investigation_status", contexts:, compact: section == "candidates" %>
   <%= render "investigation", selected:, review_state: %>
-  <% if @adjacent_programs.present? %>
+  <% if @adjacent_programs.present? && !@release_review&.policy %>
     <details>
       <summary>Review independently issued releases</summary>
       <p>These official programs contain an exact checked recording. Their earliest supported appearance may change as more evidence becomes available. Leave them here to retain them as evidence.</p>
@@ -115,7 +116,7 @@
       <% end %>
     </details>
   <% end %>
-  <% if @release_configurations.present? %>
+  <% if @release_configurations.present? && !@release_review&.policy %>
     <details>
       <summary>Retain verified release configurations</summary>
       <p>Retaining a source tracklist preserves evidence. It does not admit recordings or change a listener’s preference.</p>

@@ -4,7 +4,15 @@ module CanonicalLibraryHelper
   end
 
   def catalog_link(entry, title: catalog_title(entry))
-    safe_join([ musical_identity_badge(entry), entity_link(title, catalog_entry_path(entry)) ])
+    safe_join([ musical_identity_badge(entry), entity_link(title, catalog_entry_path(entry)),
+      (recording_variant_label(entry.mbid) if entry.is_a?(Recording)) ])
+  end
+
+  def recording_variant_label(mbid)
+    variant = CanonicalCatalog::RecordingVariant.for(mbid)
+    return unless variant
+
+    tag.span(" · #{variant.fetch('label')} (#{variant.fetch('status')})", class: "muted")
   end
 
   def musical_identity(entry)

@@ -1046,3 +1046,45 @@ h3.resolution-release-title {
 .additional-track-table tbody td.additional-track-check { vertical-align: middle; }
 .additional-track-table .additional-track-sources { display: inline-block; margin: 0 .3rem; font-size: .8rem; }
 .additional-track-table :is(th, td), .additional-track-table .table-number { white-space: nowrap; }
+
+.pending-release-choice {
+  display: flex;
+  gap: .55rem;
+  align-items: baseline;
+  margin-block: .65rem;
+}
+.pending-release-choice input {
+  inline-size: 1.05rem;
+  block-size: 1.05rem;
+  min-height: 0;
+  flex: none;
+  padding: 0;
+  margin: 0;
+  accent-color: #252624;
+  color-scheme: light;
+}
+
+.pending-release-choice input[type="checkbox"] {
+  appearance: none;
+  display: inline-grid;
+  place-content: center;
+  border: 1px solid #686967;
+  border-radius: 3px;
+  background: #fff;
+}
+.pending-release-choice input[type="checkbox"]:checked::before {
+  content: "";
+  inline-size: .62rem;
+  block-size: .34rem;
+  border: solid #171817;
+  border-width: 0 0 2px 2px;
+  transform: translateY(-1px) rotate(-45deg);
+}
+.pending-release-choice input[type="checkbox"]:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+@media (forced-colors: active) {
+  .pending-release-choice input[type="checkbox"] { appearance: auto; }
+  .pending-release-choice input[type="checkbox"]:checked::before { content: none; }
+}

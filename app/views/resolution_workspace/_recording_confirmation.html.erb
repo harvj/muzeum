@@ -66,11 +66,13 @@ end %>
   <%= render "release_provenance", provenance:, mbid:, recording_ids: plan.identity.source_ids || [mbid] %>
 <% end %>
 <%= render("other_recording_appearances", provenance:) if @release_review&.policy %>
-<% if can_confirm && (!invalid_edition || proposals.any?) %>
+<% confirmable = can_confirm && (!invalid_edition || proposals.any?) %>
+<%= render "reviewed_release_programs", review: @release_review, allow_selection: confirmable if @release_review&.policy %>
+<% if confirmable %>
   <%= form_with url: decide_resolution_surface_path(@observation), class: "resolution-confirmation", id: "recording-resolution-confirmation" do |form| %>
     <%= form.hidden_field :recording_mbid, value: mbid %>
     <%= form.hidden_field :assessment_id, value: @assessment.id %>
-    <%= hidden_field_tag :latest_release_review, "1" if proposals.any? && params[:assessment].blank? %>
+    <%= hidden_field_tag :latest_release_review, "1" if @release_review&.policy || (proposals.any? && params[:assessment].blank?) %>
     <%= form.hidden_field :resolution_plan, value: plan.fingerprint %>
     <%= form.hidden_field :scope, value: "surface" %>
     <%= form.hidden_field :mode, value: "resolved" %>
@@ -82,13 +84,22 @@ end %>
     <% if proposals.one? && !choosing_release %>
       <%= hidden_field_tag :construct_release, proposals.first.construction.base.data["id"] %>
     <% end %>
+    <% if @release_review&.policy && resolution_distinct_recording_count(@assessment, RecordingResolution::Workspace.candidates(@assessment)) > 1 %>
+      <p>Competing recording identities are possible. Confirm the intended recording using the checked evidence before assigning the matching observations.</p>
+      <label class="pending-release-choice">
+        <%= check_box_tag :confirm_recording, "1", false, required: true %>
+        Assign the matching observations to <%= selected.fetch("title") %> · <%= mbid %>
+      </label>
+    <% end %>
     <section aria-label="Resolution preview">
       <h2 class="section-heading">Resolution preview</h2>
       <ul class="catalog-list">
-        <li><strong>Recording</strong> · <%= selected.fetch("title") %> · <%= resolution_candidate_credit(selected) %><%= " · Reuse existing" if catalog_recording %>
+        <li><strong>Recording</strong> · <%= selected.fetch("title") %> · <%= resolution_candidate_credit(selected) %><%= recording_variant_label(mbid) %><%= " · Reuse existing" if catalog_recording %>
           <% if plan.identity.aliases&.any? %> · <%= pluralize(plan.identity.aliases.size, "equivalent source ID") %> will be linked<% end %>
         </li>
-        <% if proposals.empty? %>
+        <% if @release_review&.policy %>
+          <li><strong>Release</strong> · only the checked releases and configurations above</li>
+        <% elsif proposals.empty? %>
           <li><strong>Release</strong> · 0 new releases<%= " · #{catalog_releases.map(&:title).to_sentence}" if catalog_releases.any? %></li>
         <% else %>
           <% proposals.each do |proposal| %>

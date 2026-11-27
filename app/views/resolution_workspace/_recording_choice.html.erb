@@ -5,7 +5,7 @@
       class: "resolution-choice", aria: { current: ("true" if current) } do %>
     <span>
       <strong><%= candidate.fetch("title") %></strong>
-      <span class="muted"><%= resolution_candidate_credit(candidate) %><% if candidate["length"] %> · <%= recording_duration(candidate["length"]) %><% end %><% if candidate["disambiguation"].present? %> · <%= candidate["disambiguation"] %><% end %></span>
+      <span class="muted"><%= resolution_candidate_credit(candidate) %><% if candidate["length"] %> · <%= recording_duration(candidate["length"]) %><% end %><%= recording_variant_label(mbid) %><% if candidate["disambiguation"].present? %> · <%= candidate["disambiguation"] %><% end %></span>
     </span>
     <% if association %><span class="resolution-association muted"><%= association %></span><% end %>
     <% if current %><span class="resolution-selected"><span aria-hidden="true">✓</span> Selected</span><% end %>

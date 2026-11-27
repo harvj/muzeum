@@ -184,6 +184,10 @@ class ResolutionWorkspaceController < ApplicationController
             raise ActiveRecord::StaleObjectError.new(target, "confirm resolution preview")
           end
         end
+        if assessment && RecordingResolution::ReleaseReview.new(assessment.evidence).policy &&
+            plan && resolution_distinct_recording_count_for(assessment) > 1 && params[:confirm_recording] != "1"
+          raise CanonicalCatalog::Store::Unverified, "Confirm the intended recording before applying this surface assignment."
+        end
         identity = plan&.identity
         if params[:identity_signature].present?
           identity ||= CanonicalCatalog::RecordingIdentity.new(assessment, params[:recording_mbid])
@@ -211,6 +215,16 @@ class ResolutionWorkspaceController < ApplicationController
           candidate_mbid: (params[:recording_mbid] if recording), affected_count: affected_count(target, surface, scope)) }.compact
       RecordingResolution::Ledger.record!(listener: current_user, scrobble: target, scope:, mode:, reason:, recording:,
         assessment:, metadata:, expected_head: params[:head].presence&.then { |value| Integer(value) })
+      if params[:pending_release_review].present?
+        unless scope == :surface && recording && plan && params[:latest_release_review] == "1"
+          raise CanonicalCatalog::Store::Unverified, "Pending releases require the current surface review."
+        end
+
+        choices = params.expect(pending_release_review: [ :preferred_id, configuration_ids: [], program_ids: [] ])
+        CanonicalCatalog::UnifiedReleaseSelection.new(assessment, current_user).apply!(
+          configuration_ids: choices[:configuration_ids], preferred_id: choices[:preferred_id],
+          program_ids: choices[:program_ids])
+      end
       if recording
         request = CatalogImport.request!(CatalogImport::RECORDING_METADATA, recording.id, context)
         if scope == :surface && params[:construct_release].present?
@@ -219,11 +233,13 @@ class ResolutionWorkspaceController < ApplicationController
       end
     end
     request&.dispatch
-    notice = "Recording decision saved."
+    notice = params[:pending_release_review].present? ? "Recording and release decisions saved." : "Recording decision saved."
     redirect_to resolution_surface_path(target), notice:, status: :see_other
   rescue ActiveRecord::StaleObjectError
     redirect_to resolution_surface_path(@observation), alert: "This assignment changed. Review the current decision and submit again.", status: :see_other
-  rescue ArgumentError, CanonicalCatalog::Store::Unverified
+  rescue CanonicalCatalog::Store::Unverified => error
+    redirect_to resolution_surface_path(@observation), alert: error.message.presence || "The selected evidence could not be verified.", status: :see_other
+  rescue ArgumentError
     redirect_to resolution_surface_path(@observation), alert: "Check the candidate and scope. Optional comments are limited to 500 characters.", status: :see_other
   end
 
@@ -362,6 +378,11 @@ class ResolutionWorkspaceController < ApplicationController
   end
 
   private
+
+  def resolution_distinct_recording_count_for(assessment)
+    candidates = RecordingResolution::Workspace.candidates(assessment)
+    view_context.resolution_distinct_recording_count(assessment, candidates)
+  end
 
   def adjacent_programs_for(assessment)
     histories = assessment.evidence.fetch("additional_recording_publications", {})

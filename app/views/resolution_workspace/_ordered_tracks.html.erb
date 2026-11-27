@@ -4,7 +4,13 @@
       <% match = local_assigns.fetch(:recording_ids, [mbid]).include?(track["recording_mbid"]) %>
       <li class="<%= "review-track-match" if match %>">
         <span aria-hidden="true"><%= number %></span>
-        <span><%= track["title"].presence || "Track title unavailable" %><% if match %><span class="visually-hidden"> (candidate recording)</span><% end %></span>
+        <span><%= track["title"].presence || "Track title unavailable" %><%= recording_variant_label(track["recording_mbid"]) %>
+          <% if track["track_mbid"] && (variant = CanonicalCatalog::RecordingVariant.for(track["recording_mbid"])) %>
+            <small class="muted"><%= variant.fetch("note") %>
+              <%= link_to "Track", "https://musicbrainz.org/track/#{track.fetch('track_mbid')}" %> ·
+              <%= link_to "Recording", "https://musicbrainz.org/recording/#{track.fetch('recording_mbid')}" %>
+            </small>
+          <% end %><% if match %><span class="visually-hidden"> (candidate recording)</span><% end %></span>
         <span><%= track["length"] ? recording_duration(track["length"]) : "—" %></span>
       </li>
     <% end %>

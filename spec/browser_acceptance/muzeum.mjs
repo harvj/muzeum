@@ -28,7 +28,7 @@ function permits(method, raw) {
   if (url.username || url.password || ![origin, issuer].includes(url.origin)) return false;
   if (['GET', 'HEAD'].includes(method)) return true;
   if (url.search || url.hash || method !== 'POST') return false;
-  return url.origin === issuer ? ['/login', '/otp-auth', '/authorize'].includes(url.pathname) : url.pathname === '/session';
+  return url.origin === issuer ? ['/login', '/otp-auth', '/authorize'].includes(url.pathname) : ['/session', '/resolution/293137/decide'].includes(url.pathname);
 }
 
 await runCandidate({ chromium: chrome, artifact: 'candidate.tar.gz', binding, output: 'evidence', permits,
@@ -66,7 +66,7 @@ await runCandidate({ chromium: chrome, artifact: 'candidate.tar.gz', binding, ou
         await summaryLink.click();
         await page.waitForURL(origin + '/archive/summary');
         await page.getByRole('heading', { name: 'Archive summary', exact: true }).waitFor();
-        assert.equal(await page.locator('.archive-summary .stat').filter({ hasText: 'Imported scrobbles' }).locator('strong').textContent(), '2');
+        assert.equal(await page.locator('.archive-summary .stat').filter({ hasText: 'Imported scrobbles' }).locator('strong').textContent(), '10');
         await trigger.getByText(identity.username, { exact: true }).waitFor();
         const geometry = await page.evaluate(() => {
           const wordmark = document.querySelector('.harvj-wordmark').getBoundingClientRect();
@@ -89,6 +89,52 @@ await runCandidate({ chromium: chrome, artifact: 'candidate.tar.gz', binding, ou
         assert.equal(await trigger.evaluate(el => document.activeElement === el), true);
       });
     }
+    for (const { name, width, height } of viewports) {
+      await step(name + '-birthday-resolution', async () => {
+        await page.setViewportSize({ width, height });
+        await page.goto(origin + '/resolution/293137');
+        const release = date => page.locator('details').filter({
+          has: page.locator('summary').filter({ hasText: date }),
+        }).filter({ has: page.getByRole('checkbox', { name: 'Select configuration' }) });
+        const us = release('September 24, 1991');
+        const japan = release('September 20, 1991');
+        const single = page.locator('details').filter({
+          has: page.locator('summary').filter({ hasText: /She.s So High.*1990/ }),
+        });
+        const selected = us.getByRole('checkbox', { name: 'Select configuration' });
+        const preview = page.getByRole('region', { name: 'Pending release decisions' });
+        await us.locator('summary').click();
+        await single.locator('summary').click();
+        assert.equal(await selected.isChecked(), false);
+        await screenshot(name + '-resolution-unselected', [us, single, preview]);
+        await selected.focus();
+        await selected.press('Space');
+        assert.equal(await selected.isChecked(), true);
+        await selected.press('Space');
+        assert.equal(await selected.isChecked(), false);
+        await selected.check();
+        await japan.locator('summary').click();
+        await japan.getByRole('checkbox', { name: 'Select configuration' }).check();
+        await us.getByRole('radio', { name: /Use as the admitted base/ }).check();
+        await single.getByRole('checkbox', { name: 'Select independent release' }).check();
+        assert.equal(await preview.locator('li').count(), 3);
+        assert.match(await us.innerText(), /September US album appearance/);
+        assert.match(await single.innerText(), /Edit \(Source labeled\)/);
+        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+        await screenshot(name + '-resolution-selected', [us, japan, single, preview]);
+      });
+    }
+    await step('apply-birthday-resolution', async () => {
+      const confirm = page.locator('#confirm_recording');
+      if (await confirm.count()) await confirm.check();
+      const response = page.waitForResponse(item => item.url() === origin + '/resolution/293137/decide' &&
+        item.request().method() === 'POST' && item.status() === 303);
+      await page.getByRole('button', { name: 'Resolve all 8 observations', exact: true }).click();
+      await response;
+      await page.getByText('Recording and release decisions saved.', { exact: true }).waitFor();
+      await page.getByText('Already in the canonical catalog', { exact: true }).first().waitFor({ state: 'attached' });
+      await page.goto(origin + '/archive');
+    });
     await step('logout-and-private-boundary', async () => {
       await trigger.press('Enter');
       const response = page.waitForResponse(item => item.url() === origin + '/session' &&

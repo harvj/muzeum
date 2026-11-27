@@ -13,7 +13,7 @@
       <tbody>
         <% tracks.each.with_index(@configuration_tracks ? 1 : @track_offset.to_i + 1) do |slot, number| %>
           <tr><td class="track-number"><%= number %></td>
-            <th scope="row"><span class="play-name" data-overflow-name><%= slot.recording ? catalog_link(slot.recording, title: slot.title) : slot.title %></span></th>
+            <th scope="row"><span class="play-name" data-overflow-name><%= slot.recording ? catalog_link(slot.recording, title: slot.title) : safe_join([slot.title, recording_variant_label(slot.source_recording_mbid)]) %></span></th>
             <td class="table-number"><%= recording_duration(slot.duration_ms || slot.recording&.duration_ms) %></td>
             <td class="track-play-count">
               <% if @archive_available && slot.recording %>

@@ -1,0 +1,35 @@
+{
+  "f2903d45-03c8-4631-a1e1-3d0d33c57cbe": {
+    "label": "September US album appearance",
+    "status": "Source verified",
+    "work": "There's No Other Way",
+    "note": "The US track reports 203933 ms. Its relationship to the UK single and the disputed August track remains unresolved.",
+    "release": "d81bfb74-5d2e-4dcf-956f-550cfde5eed5",
+    "work_mbid": "c8d95c0f-981c-3649-b492-f254209d6f39"
+  },
+  "6eb416f2-5649-497a-b36e-2e47c92f366b": {
+    "label": "Single version",
+    "status": "Source labeled",
+    "work": "There's No Other Way",
+    "note": "MusicBrainz labels this recording “single version”. The single track reports 194560 ms and the recording reports 193960 ms. A specific edit or mix is unverified.",
+    "release": "ea3df91a-d85f-435c-8c75-c0a5494e662c",
+    "work_mbid": "c8d95c0f-981c-3649-b492-f254209d6f39"
+  },
+  "35b0f752-a764-46dd-a596-a9fb84b1ac96": {
+    "label": "Variant unresolved",
+    "status": "Disputed edition",
+    "work": "There's No Other Way",
+    "note": "The disputed August US track reports 220000 ms. Its recording claim is retained for comparison.",
+    "release": "dc2c22eb-9e48-4caa-8263-87c4cfe40a1a",
+    "work_mbid": "c8d95c0f-981c-3649-b492-f254209d6f39"
+  },
+  "b9168df7-5d1d-48e8-9b6a-4762c379569d": {
+    "label": "Edit",
+    "status": "Source labeled",
+    "work": "She's So High",
+    "note": "The October UK single reports 230960 ms. MusicBrainz identifies this recording as an edit of a separately indexed 286173 ms recording.",
+    "release": "b11e8000-f0c2-4277-befb-b125a5edece7",
+    "work_mbid": "eca46b7d-2a31-4f6c-899d-aa5a567fe19e",
+    "edit_of": "1c14202a-2ea7-4aff-bc41-6c97eb8a45e8"
+  }
+}
