@@ -93,12 +93,12 @@ await runCandidate({ chromium: chrome, artifact: 'candidate.tar.gz', binding, ou
       await step(name + '-birthday-resolution', async () => {
         await page.setViewportSize({ width, height });
         await page.goto(origin + '/resolution/293137');
-        const release = date => page.locator('details').filter({
+        const release = date => page.getByRole('region', { name: 'Verified album configurations' }).locator('details').filter({
           has: page.locator('summary').filter({ hasText: date }),
         }).filter({ has: page.getByRole('checkbox', { name: 'Select configuration' }) });
         const us = release('September 24, 1991');
         const japan = release('September 20, 1991');
-        const single = page.locator('details').filter({
+        const single = page.getByRole('region', { name: 'Adjacent recording programs' }).locator('details').filter({
           has: page.locator('summary').filter({ hasText: /She.s So High.*1990/ }),
         });
         const selected = us.getByRole('checkbox', { name: 'Select configuration' });
@@ -106,7 +106,8 @@ await runCandidate({ chromium: chrome, artifact: 'candidate.tar.gz', binding, ou
         await us.locator('summary').click();
         await single.locator('summary').click();
         assert.equal(await selected.isChecked(), false);
-        await screenshot(name + '-resolution-unselected', [us, single, preview]);
+        await selected.scrollIntoViewIfNeeded();
+        await screenshot(name + '-resolution-unselected', [trigger]);
         await selected.focus();
         await selected.press('Space');
         assert.equal(await selected.isChecked(), true);
@@ -121,7 +122,10 @@ await runCandidate({ chromium: chrome, artifact: 'candidate.tar.gz', binding, ou
         assert.match(await us.innerText(), /September US album appearance/);
         assert.match(await single.innerText(), /Edit \(Source labeled\)/);
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
-        await screenshot(name + '-resolution-selected', [us, japan, single, preview]);
+        await selected.scrollIntoViewIfNeeded();
+        await screenshot(name + '-resolution-selected', [trigger]);
+        await preview.scrollIntoViewIfNeeded();
+        await screenshot(name + '-resolution-preview', [trigger]);
       });
     }
     await step('apply-birthday-resolution', async () => {
