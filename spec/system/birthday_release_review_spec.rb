@@ -61,8 +61,12 @@ RSpec.describe "Birthday configuration review", type: :system do
         expect(page).to have_text("Adjacent recording programs")
         find("summary", text: "September 24, 1991").click
         expect(page).to have_unchecked_field("Select configuration")
-        check "Select configuration"
+        configuration = find_field("Select configuration")
+        expect(configuration.style("border-radius", "background-color")).to eq(
+          "border-radius" => "50%", "background-color" => "rgba(0, 0, 0, 0)")
+        configuration.send_keys(:space)
         expect(page).to have_checked_field("Select configuration")
+        expect(configuration.style("background-color")).to eq("background-color" => "rgba(23, 24, 23, 1)")
         expect(page).to have_text("Keep configuration ·")
         expect(Release.count).to eq(0)
         uncheck "Select configuration"
