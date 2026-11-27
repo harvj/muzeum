@@ -1,0 +1,112 @@
+{
+  "format_version": 1,
+  "application": "muzeum",
+  "revision": "bfeabafeae5267425bc3906a9639ba8bc2799779",
+  "tree": "4d024b56e21fad5efca737b51c97ba2ed1d2567a",
+  "artifact_sha256": "029141d3fb3e49102f15c2fc5ee14e123dd9f5bc762dea014e58d3c400574107",
+  "environment_sha256": "28bf53d7a786e79b33d6032727d0c3729382fc2ef75ab2b84a2cda75be7ce8fb",
+  "viewports": [
+    {
+      "name": "desktop",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "name": "mobile",
+      "width": 390,
+      "height": 844
+    }
+  ],
+  "started_at": "2026-11-27T18:43:11.314Z",
+  "steps": [
+    {
+      "name": "anonymous-landing",
+      "result": "pass",
+      "milliseconds": 101
+    },
+    {
+      "name": "native-password-totp-oidc",
+      "result": "pass",
+      "milliseconds": 731
+    },
+    {
+      "name": "desktop-archive-shell",
+      "result": "pass",
+      "milliseconds": 1107
+    },
+    {
+      "name": "mobile-archive-shell",
+      "result": "pass",
+      "milliseconds": 197
+    },
+    {
+      "name": "desktop-birthday-resolution",
+      "result": "pass",
+      "milliseconds": 1549
+    },
+    {
+      "name": "mobile-birthday-resolution",
+      "result": "pass",
+      "milliseconds": 689
+    },
+    {
+      "name": "apply-birthday-resolution",
+      "result": "pass",
+      "milliseconds": 395
+    },
+    {
+      "name": "same-title-observation-remains-ambiguous",
+      "result": "pass",
+      "milliseconds": 1669
+    },
+    {
+      "name": "logout-and-private-boundary",
+      "result": "pass",
+      "milliseconds": 414
+    }
+  ],
+  "screenshots": [
+    {
+      "name": "desktop",
+      "sha256": "0cbd8f93db59a5e335f40da31767da90ca10656962d659a20a0262e9d19ad16c"
+    },
+    {
+      "name": "mobile",
+      "sha256": "be878be4f16d274bc82b290f663434287d23379d46a3a0cd0040a640f2941a1e"
+    },
+    {
+      "name": "desktop-resolution-unselected",
+      "sha256": "001d3a95e0d7215d36cf69bfb35f84255908f2840e02b0de5146851f2f0c4821"
+    },
+    {
+      "name": "desktop-resolution-selected",
+      "sha256": "f8638554c3d575c88be871e8ab53dde76601cf11190665daf70a486e36113355"
+    },
+    {
+      "name": "desktop-resolution-preview",
+      "sha256": "1e005d1c5af16c2ec73d177f9389bbc9b49769b1f27d9b4cb2b933466283d91c"
+    },
+    {
+      "name": "mobile-resolution-unselected",
+      "sha256": "335414fd9cf3eb432494518167a8b5e3a6efda73d9cd191636236a55e1427c8e"
+    },
+    {
+      "name": "mobile-resolution-selected",
+      "sha256": "d3e4992a7f8a39f5d8ab1eddb1f2c8d3f0c0f5fef5bcf9807178bcf5e981849c"
+    },
+    {
+      "name": "mobile-resolution-preview",
+      "sha256": "80409c75e5723ad916855d3960ef7b1e208cbd73b3cdeb0c3be8d47e29111e7a"
+    },
+    {
+      "name": "mobile-ambiguous-recordings",
+      "sha256": "b47bd51a604aff04d9821b545efd08a5472a13bed11048560399421eaff3b47a"
+    },
+    {
+      "name": "mobile-disputed-track-evidence",
+      "sha256": "7a80c3a8b35a3779dc27fdd491851df0cca1d95ad1c445e02d178fd23a185ffb"
+    }
+  ],
+  "result": "pass",
+  "finished_at": "2026-11-27T18:43:18.527Z"
+}
