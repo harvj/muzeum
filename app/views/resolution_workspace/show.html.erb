@@ -1,6 +1,9 @@
 <% section = params[:section].presence_in(%w[evidence observations history]) || "candidates" %>
 <% contexts = resolution_release_contexts(@assessment, @candidates) %>
 <% selected = resolution_selected_candidate(@candidates, @ranking, contexts, params[:candidate], @current_recording&.mbid) %>
+<% competing_recordings = @release_review&.policy && resolution_distinct_recording_count(@assessment, @candidates) > 1 %>
+<% explicit_candidate = @candidates.any? { |candidate| candidate["id"] == params[:candidate] } %>
+<% selected = nil if competing_recordings && !explicit_candidate && !@current_recording %>
 <% navigation = { assessment: params[:assessment].presence, candidate: params[:candidate].presence }.compact %>
 <% if @assessment_request&.active? && params[:assessment].blank? && !@assessment_request.expired_investigation? %>
   <% check_at = @assessment_request.state == "refreshing" ? @assessment_request.lease_until : @assessment_request.due_at %>

@@ -1,6 +1,9 @@
-<% if selected %>
+<% if @candidates.any? %>
   <h2 class="section-heading">Choose a recording</h2>
-  <% visible = (@candidates.first(3) | [selected]) %>
+  <% unless selected %>
+    <p>Competing recording identities are possible. Choose a recording to preview the matching observations, or leave them unresolved.</p>
+  <% end %>
+  <% visible = (@candidates.first(3) | [selected].compact) %>
   <% shared_labels = resolution_shared_candidate_labels(@candidates) %>
   <% associations = contexts.to_h { |candidate, proposals| [candidate, resolution_candidate_association(candidate, proposals)] } %>
   <% associations.clear if associations.values.uniq.size == 1 %>
@@ -18,7 +21,7 @@
       </ul>
     </details>
   <% end %>
-  <%= render "recording_confirmation", selected:, contexts: contexts.fetch(selected), navigation:, catalog_rows: %>
+  <%= render "recording_confirmation", selected:, contexts: contexts.fetch(selected), navigation:, catalog_rows: if selected %>
 <% elsif @assessment && !@assessment_request&.active? %>
   <p>No recording choices are available.</p>
   <%= link_to "Review evidence", resolution_surface_path(@observation, **navigation.merge(section: "evidence")) %>
