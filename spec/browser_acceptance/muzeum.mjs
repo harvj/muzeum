@@ -191,7 +191,9 @@ await runCandidate({ chromium: chrome, artifact: 'candidate.tar.gz', binding, ou
       await page.goto(origin + '/archive');
     });
     await step('logout-and-private-boundary', async () => {
-      await trigger.press('Enter');
+      const disclosure = page.locator('.harvj-session');
+      if (!(await disclosure.evaluate(el => el.open))) await trigger.click();
+      await logout.waitFor();
       const response = page.waitForResponse(item => item.url() === origin + '/session' &&
         item.request().method() === 'POST' && item.status() === 303);
       await logout.click();
