@@ -912,7 +912,7 @@ main .plays-tools button[aria-pressed="true"] { background-color: var(--surface-
   background-image: linear-gradient(var(--lift), var(--lift));
   box-shadow: inset 0 0 0 1px var(--line);
 }
-.resolution-option:has(.resolution-choice[aria-current]) {
+.resolution-option:has(.resolution-choice[aria-current], .recording-choice-form) {
   border-inline-start-color: var(--selection-ink);
   background-color: color-mix(in srgb, var(--selection-ink) 8%, transparent);
 }

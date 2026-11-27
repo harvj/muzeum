@@ -19,18 +19,23 @@ RSpec.describe "Birthday configuration review", type: :system do
     jar.signed[:session_id] = session.id
     page.driver.browser.manage.add_cookie(name: "session_id", value: jar[:session_id], path: "/", http_only: true)
     browser = page.driver.browser
-    [ [ 1440, 960, "desktop" ], [ 390, 844, "mobile" ] ].each do |width, height, _size|
+    [ [ 1440, 960 ], [ 390, 844 ] ].product([ "", "?section=evidence" ]).each do |(width, height), query|
       browser.execute_cdp("Emulation.setDeviceMetricsOverride", width:, height:, deviceScaleFactor: 1, mobile: width == 390)
-      visit "/resolution/293137?section=evidence"
+      visit "/resolution/293137#{query}"
       expect(page).to have_text("8 matching observations")
       expect(page).to have_no_text("Proposed original release")
       checkbox = find_field("Birthday", type: "checkbox")
+      row = checkbox.find(:xpath, "ancestor::li")
+      highlight = row.style("background-color", "border-left-color")
+      expect(highlight.values).to all(satisfy { |color| color != "rgba(0, 0, 0, 0)" })
       expect(checkbox).not_to be_checked
       expect(checkbox.style("border-radius")).to eq("border-radius" => "50%")
       expect(page).to have_no_button("Resolve all 8 observations")
       expect(page).to have_css(".resolution-release-evidence:not([open])")
       checkbox.send_keys(:space)
       expect(page).to have_checked_field("Birthday")
+      expect(find_field("Birthday", type: "checkbox").find(:xpath, "ancestor::li")
+        .style("background-color", "border-left-color")).to eq(highlight)
       expect(find_field("Birthday", type: "checkbox").style("background-color")).to eq("background-color" => "rgba(23, 24, 23, 1)")
       expect(page).to have_button("Resolve all 8 observations")
       expect(page).to have_text("Recording confirmation can proceed without a release choice.")
