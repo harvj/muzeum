@@ -66,7 +66,7 @@ await runCandidate({ chromium: chrome, artifact: 'candidate.tar.gz', binding, ou
         await summaryLink.click();
         await page.waitForURL(origin + '/archive/summary');
         await page.getByRole('heading', { name: 'Archive summary', exact: true }).waitFor();
-        assert.equal(await page.locator('.archive-summary .stat').filter({ hasText: 'Imported scrobbles' }).locator('strong').textContent(), '10');
+        assert.equal(await page.locator('.archive-summary .stat').filter({ hasText: 'Imported scrobbles' }).locator('strong').textContent(), '11');
         await trigger.getByText(identity.username, { exact: true }).waitFor();
         const geometry = await page.evaluate(() => {
           const wordmark = document.querySelector('.harvj-wordmark').getBoundingClientRect();
@@ -139,6 +139,28 @@ await runCandidate({ chromium: chrome, artifact: 'candidate.tar.gz', binding, ou
       await response;
       await page.getByText('Recording and release decisions saved.', { exact: true }).waitFor();
       await page.getByText('Already in the canonical catalog', { exact: true }).first().waitFor({ state: 'attached' });
+      await page.goto(origin + '/archive');
+    });
+    await step('same-title-observation-remains-ambiguous', async () => {
+      await page.goto(origin + '/resolution/293200');
+      await page.getByText('Competing recording identities are possible.', { exact: false }).waitFor();
+      assert.equal(await page.locator('.resolution-choice[aria-current]').count(), 0);
+      assert.equal(await page.locator('#recording-resolution-confirmation').count(), 0);
+      const choices = page.locator('.resolution-choices').first();
+      await choices.scrollIntoViewIfNeeded();
+      await screenshot('mobile-ambiguous-recordings', [trigger]);
+      const disputed = page.locator('summary').filter({ hasText: 'Disputed source' });
+      await disputed.click();
+      const reported = disputed.locator('..').getByText('Variant unresolved', { exact: false });
+      await reported.scrollIntoViewIfNeeded();
+      await screenshot('mobile-disputed-track-evidence', [trigger]);
+      await page.getByRole('link', { name: 'Evidence', exact: true }).click();
+      await page.getByRole('region', { name: 'Candidate evidence' }).waitFor();
+      await page.getByRole('link', { name: 'Candidates', exact: true }).click();
+      await page.locator('.resolution-choice').filter({ hasText: 'Single version' }).click();
+      const confirm = page.locator('#confirm_recording');
+      assert.equal(await confirm.isChecked(), false);
+      assert.equal(await confirm.evaluate(input => input.form.checkValidity()), false);
       await page.goto(origin + '/archive');
     });
     await step('logout-and-private-boundary', async () => {

@@ -26,3 +26,25 @@ Variant descriptions are reviewed metadata keyed by exact source recording MBID.
 `BROWSER_TESTS=1 bundle exec rspec spec/system/birthday_release_review_spec.rb spec/requests/resolution_release_review_spec.rb`
 
 The native Auth review uses the established `spec/browser_acceptance/run-muzeum.sh` runner with a sealed disposable artifact and isolated four-database layout.
+
+## Scope
+
+The provisional controls are enabled for source programs with a checked release-review policy, beginning with *Leisure*. Existing unrelated manual catalog workflows remain available. Matching-surface assignment honors older per-observation overrides. A title-only surface with competing candidates requires an explicit recording choice and acknowledgment before submission. The August edition dispute stays visible as provenance.
+
+For a pending selection, the release count describes the expected new admissions and the unmatched track count describes distinct source IDs with no current canonical match. Final identity and duplicate checks run inside the transaction. The preview cannot establish the edition played.
+
+## Exact-candidate acceptance
+
+Source [`61c7a415dac50eebfacf0ccb51ae3efc2710efb6`](https://github.com/harvj/muzeum/commit/61c7a415dac50eebfacf0ccb51ae3efc2710efb6). [Exact-SHA CI](https://github.com/harvj/muzeum/actions/runs/46039717226) · [disposable Capistrano staging](https://github.com/harvj/muzeum/actions/runs/46039720636).
+
+Native Playwright passed all nine steps using disposable Auth password, TOTP and OIDC, with desktop and mobile viewports. It confirmed browser-only checkbox editing, two configurations and one adjacent single in the same preview, submission for all eight Birthday observations, a separate title-only surface with no preselected recording, Evidence navigation, and logout. The Rails request spec covers invalid-selection rollback and replay protection. The review-only fixture and scenario in this evidence branch bind to the sealed application revision through their recorded file digests.
+
+- [Browser result and screenshot hashes](evidence.json)
+- [Commit, tree, archive and environment binding](binding.json)
+- [Sealed file inventory identity](sealed-identity.json)
+- [Sanitized reproducibility manifest](environment.json)
+- Desktop · [unselected](desktop-resolution-unselected.png) · [selected](desktop-resolution-selected.png) · [preview](desktop-resolution-preview.png)
+- Mobile · [unselected](mobile-resolution-unselected.png) · [selected](mobile-resolution-selected.png) · [preview](mobile-resolution-preview.png)
+- Mobile recording comparison · [unselected candidates](mobile-ambiguous-recordings.png) · [disputed source track](mobile-disputed-track-evidence.png)
+
+The account badge is masked. The screenshots use disposable observations; the source research is real provider evidence. The candidate retains the v0.8.1 version file for visual review. No release number was assigned.
