@@ -7,7 +7,7 @@
   <% can_retry = @may_manage_observation && CatalogImport.worker_enabled? && !@assessment_request&.active? %>
   <% if @candidates.any? %>
     <p>Scores rank relative evidence strength for this shortlist.</p>
-    <% visible = @candidates.first(3) | [selected] %>
+    <% visible = @candidates.first(3) | [selected].compact %>
     <% ranks = @ranking.index_by { |rank| rank["recording_mbid"] } %>
     <% visible.each do |candidate| %>
       <% rank = ranks.fetch(candidate.fetch("id")) %>
