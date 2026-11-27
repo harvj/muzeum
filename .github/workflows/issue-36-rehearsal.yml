@@ -1,0 +1,75 @@
+name: Issue 36 disposable staging
+on:
+  push:
+    branches: [verify/v0.8.5-disposable]
+permissions:
+  contents: read
+jobs:
+  staging:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.4.13'
+          bundler: '4'
+          bundler-cache: true
+      - name: Stage and verify two exact revisions
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$RUNNER_ENVIRONMENT" = github-hosted
+          app=/var/www/muzeum
+          sudo install -d -o "$(id -un)" -m 0755 "$app" "$app/shared"
+          touch "$app/.muzeum-disposable"
+          install -m 0600 /dev/null "$app/shared/.env"
+          sudo install -d /opt/muzeum/ruby-3.4.13
+          sudo ln -s "$(dirname "$(command -v ruby)")" /opt/muzeum/ruby-3.4.13/bin
+          export MUZEUM_DISPOSABLE_ROOT="$app" MUZEUM_DISPOSABLE_REPO="$GITHUB_WORKSPACE"
+          bundle_config=$(bundle exec ruby -e 'puts Bundler.bundle_path')
+          mkdir -p "$app/shared/bundle/ruby-3.4.13"
+          cp -a "$bundle_config/../.."/. "$app/shared/bundle/ruby-3.4.13/"
+          mkdir -p -m 0700 ~/.ssh
+          ssh-keygen -q -t ed25519 -N "" -f ~/.ssh/id_ed25519
+          cp ~/.ssh/id_ed25519.pub ~/.ssh/authorized_keys
+          chmod 0600 ~/.ssh/authorized_keys
+          sudo ssh-keygen -A
+          printf '127.0.0.1 %s\n' "$(cat /etc/ssh/ssh_host_ed25519_key.pub)" > ~/.ssh/known_hosts
+          sudo systemctl start ssh
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes 127.0.0.1 true
+          export BUNDLE_GEMFILE="$GITHUB_WORKSPACE/Gemfile"
+          cd ops/capistrano
+          for revision in fe77dc21efb5196378cff6a78db69411c37d93d4 5c2c18b038edf3d92c4369f266050f16027f5892; do
+            MUZEUM_DISPOSABLE_REVISION="$revision" bundle exec cap disposable muzeum:qualify_staging
+            release=$(find "$app/releases" -mindepth 1 -maxdepth 1 -type d | sort | tail -1)
+            ruby "$release/script/muzeum_release_identity.rb" verify "$revision"
+          done
+
+      - name: Boot both sealed releases and rehearse compatible rollback
+        run: bash ops/capistrano/boot-disposable.sh
+      - name: Retain the sealed disposable candidate
+        run: |
+          set -eu
+          releases=/var/www/muzeum/releases
+          candidate=$(basename "$(readlink -f /var/www/muzeum/current)")
+          test "$(cat "$releases/$candidate/REVISION")" = 5c2c18b038edf3d92c4369f266050f16027f5892
+          test -L "$releases/$candidate/.env"
+          tar -C "$releases" -czf "$RUNNER_TEMP/muzeum-disposable-candidate.tar.gz" "$candidate"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: muzeum-disposable-candidate
+          path: ${{ runner.temp }}/muzeum-disposable-candidate.tar.gz
+      - name: Failure diagnostics
+        if: failure()
+        run: sudo journalctl -u muzeum-web -u muzeum-worker -n 60 --no-pager
