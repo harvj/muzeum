@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ $# != 2 || ! "$2" =~ ^(candidate|published)$ ]]; then
+  echo "Usage: $0 VERIFIED_PRODUCTION_ARTIFACT_JSON candidate|published" >&2
+  exit 2
+fi
+
+identity_library="$(cd "$(dirname "$0")/../lib" && pwd)/muzeum_artifact_identity"
+label=$(ruby -r "$identity_library" -r pathname -e '
+  candidate = MuzeumArtifactIdentity.read(Pathname(ARGV.fetch(0)))
+  abort "Invalid verified production identity" unless MuzeumArtifactIdentity.candidate?(candidate, candidate&.fetch("source_sha", nil))
+  version = "v#{candidate.fetch("target_version")}"
+  puts ARGV.fetch(1) == "published" ? version : "#{version}-rc.#{candidate.fetch("candidate_number")}"
+' "$@")
+
+origin=https://muzeum.fm
+request() { curl --disable --silent --show-error --max-time 10 "$@"; }
+
+health=$(request -o /dev/null -w '%{http_code}' "$origin/up")
+[[ "$health" == 200 ]] || { echo "/up returned HTTP $health" >&2; exit 1; }
+printf '/up HTTP 200\n'
+
+for route in /archive /archive/summary /resolution; do
+  response=$(request -o /dev/null -w '%{http_code} %{redirect_url}' "$origin$route")
+  case "$response" in
+    "302 $origin/"|"303 $origin/") printf '%s denies anonymous access\n' "$route" ;;
+    *) printf '%s did not redirect anonymous traffic to the landing page\n' "$route" >&2; exit 1 ;;
+  esac
+done
+
+landing=$(request --fail "$origin/")
+grep -Fq "Muzeum $label</span>" <<< "$landing" || { echo "Expected footer: Muzeum $label" >&2; exit 1; }
+printf 'Verified footer Muzeum %s\n' "$label"

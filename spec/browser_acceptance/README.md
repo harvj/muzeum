@@ -1,6 +1,6 @@
 # Disposable authenticated browser acceptance
 
-This pilot uses Infrastructure's shared `runCandidate` and `nativeLogin` from
+This is the default authenticated browser acceptance for Muzeum releases. It uses Infrastructure's shared `runCandidate` and `nativeLogin` from
 `21771e1d5690fef6509cd383933a8029b4834d77`. The scenario ports the relevant
 checks from `automatic_sign_in_spec.rb` and `application_shell_spec.rb`.
 It uses real Auth password, TOTP, consent and OIDC code/PKCE exchange, then
@@ -26,7 +26,7 @@ Chromium, PostgreSQL tools, OpenSSL, jq and Python 3. Supply absolute paths.
 | `CHROME_BINARY` | Local Chromium executable |
 | `MUZEUM_RUNTIME_GEMFILE` | Optional local bundle for testing on a different Ruby patch/platform |
 
-Run `spec/browser_acceptance/run-muzeum.sh` with the inputs above. Verify the
+Run `spec/browser_acceptance/run-muzeum.sh` from the exact candidate checkout with the inputs above. Verify the
 full command succeeds. It checks the shared report, database logout effects,
 and the seal after the browser run. The shared report binds the archive digest,
 source commit and tree, and the environment digest. The environment manifest
@@ -50,7 +50,7 @@ the launch wrapper shared by the CE and Muzeum scenarios. A shared loopback TLS
 proxy with an explicit authority allowlist would eliminate the per-app adapter.
 Ruby applications also need a process-scoped route for server-side OIDC HTTP
 clients. Net::HTTP uses `TCPSocket.open`, which is distinct from
-`TCPSocket.new`. The pilot uses the existing shared runner and login helper
+`TCPSocket.new`. Muzeum uses the existing shared runner and login helper
 without changes.
 
 For logout, wait for the actual session termination response and the landing

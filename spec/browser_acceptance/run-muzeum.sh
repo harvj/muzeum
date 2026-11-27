@@ -12,6 +12,11 @@ expected_digest="${MUZEUM_SEALED_DIGEST:?Supply the independently verified seale
 expected_archive_digest="${MUZEUM_ARCHIVE_DIGEST:?Supply the retained archive digest}"
 playwright="${PLAYWRIGHT_NODE_MODULES:?Supply the Playwright Core node_modules directory}"
 [[ "$revision" =~ ^[0-9a-f]{40}$ && "$expected_digest" =~ ^[0-9a-f]{64}$ && "$expected_archive_digest" =~ ^[0-9a-f]{64}$ ]]
+if [[ "$(git -C "$repo" rev-parse HEAD)" != "$revision" ]] ||
+  [[ -n "$(git -C "$repo" status --porcelain -- spec/browser_acceptance spec/support/public_profile_fixture.rb)" ]]; then
+  echo "Use the exact candidate checkout with unmodified browser acceptance inputs" >&2
+  exit 1
+fi
 test "$(shasum -a 256 "$archive" | cut -d' ' -f1)" = "$expected_archive_digest"
 mkdir -m 700 "$root"
 root="$(cd "$root" && pwd -P)"

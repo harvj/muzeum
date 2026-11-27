@@ -19,6 +19,19 @@ Standing operator convention: **`cap production deploy`** (equivalently `bundle 
 
 The helper uses the **installed existing** backup/recovery implementation and the same host lock, repository, protected credentials, escrow, monitoring and scoped databases. It does not provision infrastructure, rotate keys, change timers, or restart CE/Auth/shared Caddy. The infrastructure route interface validates the assembled Caddy configuration under the shared lock and gracefully reloads Caddy after changing the Muzeum site file. It compares the live configuration against a fresh transaction snapshot, so earlier changes to other sites do not invalidate eligibility. Old releases remain subject to Capistrano's five-release retention.
 
+## Release acceptance
+
+Use shared Chromium for authenticated acceptance before deployment. Stage the exact candidate with the existing disposable Capistrano workflow and run the [shared browser scenario](../../spec/browser_acceptance/README.md) with disposable native Auth. Retain the passing report, its source SHA, tree, sealed inventory and archive digest, and sanitized screenshots. Reuse that evidence for the exact candidate during deployment and publication. Verify signed Application Shell requirements through the existing preflight.
+
+Use the normal guarded completion receipt and independently verified **production** artifact identity for live verification. The disposable artifact digest cannot identify a separate production build. Run the public smoke against the verified production identity before publication, then again after publication sync:
+
+```sh
+script/smoke-muzeum-release /path/to/verified-production-artifact.json candidate
+script/smoke-muzeum-release /path/to/verified-production-artifact.json published
+```
+
+The guarded workflow verifies production service health and the running artifact. The HTTP smoke checks the public health endpoint, anonymous denial of private routes, and the appropriate footer. Carry forward the qualified login, MFA, authenticated navigation, and logout results from shared Chromium. The routine deployment needs no signed-in production browser. If a production incident requires authenticated diagnosis and no authorized noninteractive credentials are available, record that limitation and preserve the existing authentication boundary.
+
 ## Published version in the footer
 
 The running process pins its own full SHA from its release directory's `REVISION`.
