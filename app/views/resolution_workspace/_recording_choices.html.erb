@@ -1,6 +1,6 @@
 <% if @candidates.any? %>
   <h2 class="section-heading">Choose a recording</h2>
-  <% unless selected %>
+  <% if !selected && @candidates.many? %>
     <p>Competing recording identities are possible. Choose a recording to preview the matching observations, or leave them unresolved.</p>
   <% end %>
   <% visible = (@candidates.first(3) | [selected].compact) %>

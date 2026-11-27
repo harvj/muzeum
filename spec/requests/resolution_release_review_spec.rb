@@ -61,7 +61,7 @@ RSpec.describe "Birthday production-derived release review", type: :request do
         .dig("reviewed_recording_browses", won, "complete")).to eq(true)
     end.not_to change { [ Release.count, Recording.count, Scrobble.count, RecordingResolution::Decision.count ] }
 
-    get resolution_surface_path(anchor)
+    get resolution_surface_path(anchor, candidate: base_evidence.fetch("candidates").first.fetch("id"))
     document = Nokogiri::HTML(response.body)
     form = document.at_css("#recording-resolution-confirmation")
     expect(form).to be_present

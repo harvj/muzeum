@@ -1100,3 +1100,12 @@ input[type="checkbox"]:not(.visually-hidden):disabled {
   input[type="checkbox"]:not(.visually-hidden) { appearance: auto; }
   input[type="checkbox"]:not(.visually-hidden):checked::before { content: none; }
 }
+
+.card .recording-choice-form { margin: 0; }
+.recording-choice-form .pending-release-choice {
+  align-items: center;
+  padding-inline: .75rem;
+  cursor: pointer;
+}
+.recording-choice-form .muted { display: block; }
+.resolution-release-evidence { margin-block: 1rem; }

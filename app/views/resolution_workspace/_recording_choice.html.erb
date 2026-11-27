@@ -1,6 +1,21 @@
 <li class="resolution-option">
   <% current = candidate == selected %>
   <% mbid = candidate.fetch("id") %>
+  <% if @release_review&.policy %>
+    <%= form_with url: resolution_surface_path(@observation, anchor: "review-candidates"), method: :get,
+      data: { controller: "recording-choice" }, class: "recording-choice-form" do %>
+      <%= hidden_field_tag :section, params[:section], id: nil if params[:section].present? %>
+      <%= hidden_field_tag :assessment, navigation[:assessment], id: nil if navigation[:assessment] %>
+      <label class="pending-release-choice">
+        <%= check_box_tag :candidate, mbid, current, id: "recording-choice-#{mbid}",
+          data: { action: "change->recording-choice#preview" } %>
+        <span><strong><%= candidate.fetch("title") %></strong>
+          <span class="muted"><%= resolution_candidate_credit(candidate) %><%= " · #{recording_duration(candidate['length'])}" if candidate["length"] %><%= recording_variant_label(mbid) %></span>
+        </span>
+      </label>
+      <noscript><button type="submit">Update recording preview</button></noscript>
+    <% end %>
+  <% else %>
   <%= link_to resolution_surface_path(@observation, **navigation.merge(candidate: mbid, anchor: "review-candidates")),
       class: "resolution-choice", aria: { current: ("true" if current) } do %>
     <span>
@@ -9,6 +24,7 @@
     </span>
     <% if association %><span class="resolution-association muted"><%= association %></span><% end %>
     <% if current %><span class="resolution-selected"><span aria-hidden="true">✓</span> Selected</span><% end %>
+  <% end %>
   <% end %>
   <% if show_mbid && Clients::Musicbrainz::MBID.match?(mbid) %>
     <%= link_to mbid.first(8), "https://musicbrainz.org/recording/#{mbid}", class: "resolution-recording-mbid",

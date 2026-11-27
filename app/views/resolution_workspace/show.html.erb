@@ -1,9 +1,8 @@
 <% section = params[:section].presence_in(%w[evidence observations history]) || "candidates" %>
 <% contexts = resolution_release_contexts(@assessment, @candidates) %>
 <% selected = resolution_selected_candidate(@candidates, @ranking, contexts, params[:candidate], @current_recording&.mbid) %>
-<% competing_recordings = @release_review&.policy && resolution_distinct_recording_count(@assessment, @candidates) > 1 %>
 <% explicit_candidate = @candidates.any? { |candidate| candidate["id"] == params[:candidate] } %>
-<% selected = nil if competing_recordings && !explicit_candidate && !@current_recording %>
+<% selected = nil if @release_review&.policy && !explicit_candidate %>
 <% navigation = { assessment: params[:assessment].presence, candidate: params[:candidate].presence }.compact %>
 <% if @assessment_request&.active? && params[:assessment].blank? && !@assessment_request.expired_investigation? %>
   <% check_at = @assessment_request.state == "refreshing" ? @assessment_request.lease_until : @assessment_request.due_at %>
@@ -71,14 +70,20 @@
       params: { reassess: "1", assessment_id: @assessment.id } %>
   <% end %>
 <% end %>
-<% if section == "candidates" %>
+<% if section == "candidates" || (section == "evidence" && @release_review&.policy) %>
 <section id="review-candidates" class="resolution-decision" tabindex="-1"
   <% if @release_review&.policy %>data-controller="pending-release-review" data-action="change->pending-release-review#update"<% end %>>
   <% candidate_badge = nil %>
   <% position_badge = ->(badge) { candidate_badge = badge } if selected %>
   <%= render "investigation_status", contexts:, compact: true, position_badge: %>
   <%= render "recording_choices", selected:, contexts:, navigation:, catalog_rows:, candidate_badge: %>
-  <%= render "reviewed_release_programs", review: @release_review, allow_selection: false if @release_review&.policy && !selected %>
+  <% if @release_review&.policy %>
+    <details class="resolution-release-evidence">
+      <summary>Release configurations and adjacent programs</summary>
+      <%= render "reviewed_release_programs", review: @release_review,
+        allow_selection: selected.present? && @may_manage_observation && @assessment_matches_claims %>
+    </details>
+  <% end %>
   <% if @batch_releases.present? %>
     <details><summary>Review other tracks</summary>
       <ul><% @batch_releases.each do |release| %>
@@ -87,7 +92,8 @@
     </details>
   <% end %>
 </section>
-<% elsif section == "evidence" %>
+<% end %>
+<% if section == "evidence" %>
 <section id="review-evidence">
   <%= render "investigation_status", contexts:, compact: section == "candidates" %>
   <%= render "investigation", selected:, review_state: %>

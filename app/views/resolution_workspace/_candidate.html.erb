@@ -36,7 +36,7 @@ end %>
   </summary>
   <% catalog_rows = @catalog_context.rows(candidate) %>
   <% catalog_recording = catalog_rows[1][1].first %>
-  <% if @may_manage_observation && @assessment_matches_claims %>
+  <% if @may_manage_observation && @assessment_matches_claims && !@release_review&.policy %>
   <% original_groups = CanonicalCatalog::ReviewedConstruction.for(@assessment, mbid, source_ids: identity.source_ids || [ mbid ]).group_by { |item| item.construction.base.data.dig("release-group", "id") } %>
   <% proposals = CanonicalCatalog::ReviewedConstruction.resolution_choices(@assessment, mbid, identity.recording || catalog_recording, source_ids: identity.source_ids || [ mbid ]).flatten %>
   <%= form_with url: decide_resolution_surface_path(@observation) do |form| %>

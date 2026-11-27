@@ -11,7 +11,7 @@
     <% ranks = @ranking.index_by { |rank| rank["recording_mbid"] } %>
     <% visible.each do |candidate| %>
       <% rank = ranks.fetch(candidate.fetch("id")) %>
-      <%= render "candidate", candidate:, rank:, expanded: candidate == selected,
+      <%= render "candidate", candidate:, rank:, expanded: !@release_review&.policy && candidate == selected,
         recommended: rank == @ranking.first && rank["version"] == RecordingResolution::Ranking::SOURCE_HINTS_VERSION && RecordingResolution::Ranking.recommended?(@ranking) %>
     <% end %>
     <% if (remaining = @candidates - visible).any? %>

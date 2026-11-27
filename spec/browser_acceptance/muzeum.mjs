@@ -90,77 +90,62 @@ await runCandidate({ chromium: chrome, artifact: 'candidate.tar.gz', binding, ou
       });
     }
     for (const { name, width, height } of viewports) {
-      await step(name + '-birthday-resolution', async () => {
+      await step(name + '-birthday-evidence-route', async () => {
         await page.setViewportSize({ width, height });
-        await page.goto(origin + '/resolution/293137');
-        const release = date => page.getByRole('region', { name: 'Verified album configurations' }).locator('details').filter({
-          has: page.locator('summary').filter({ hasText: date }),
-        });
-        const us = release('September 24, 1991');
-        const japan = release('September 20, 1991');
-        const single = page.getByRole('region', { name: 'Adjacent recording programs' }).locator('details').filter({
-          has: page.locator('summary').filter({ hasText: /She.s So High.*1990/ }),
-        });
-        const selected = us.getByRole('checkbox', { name: 'Select configuration' });
-        const preview = page.getByRole('region', { name: 'Pending release decisions' });
-        await us.locator('summary').click();
-        await single.locator('summary').click();
-        assert.equal(await selected.isChecked(), false);
-        await selected.scrollIntoViewIfNeeded();
-        await screenshot(name + '-resolution-unselected', [trigger]);
-        await selected.focus();
-        await selected.press('Space');
-        assert.equal(await selected.isChecked(), true);
-        await selected.press('Space');
-        assert.equal(await selected.isChecked(), false);
-        await selected.check();
-        await japan.locator('summary').click();
-        await japan.getByRole('checkbox', { name: 'Select configuration' }).check();
-        await us.getByRole('radio', { name: /Use as the admitted base/ }).check();
-        await single.getByRole('checkbox', { name: 'Select independent release' }).check();
-        assert.equal(await preview.locator('li').count(), 3);
-        assert.match(await us.innerText(), /Album appearance/);
-        assert.match(await single.innerText(), /Edit \(Source labeled\)/);
-        const labels = await preview.locator('li').allTextContents();
-        assert.ok(labels.every(label => !label.includes('<a')));
+        await page.goto(origin + '/resolution/293137?section=evidence');
+        await page.getByText('8 matching observations', { exact: true }).waitFor();
+        const checkbox = page.getByRole('checkbox', { name: /^Birthday/ });
+        const release = page.locator('.resolution-release-evidence');
+        const action = page.getByRole('button', { name: 'Resolve all 8 observations', exact: true });
+        assert.equal(await checkbox.isChecked(), false);
+        assert.equal(await action.count(), 0);
+        assert.equal(await release.evaluate(el => el.open), false);
+        assert.equal(await page.getByText('Proposed original release', { exact: true }).count(), 0);
+        await checkbox.scrollIntoViewIfNeeded();
+        await screenshot(name + '-recording-unselected', [trigger]);
+        await checkbox.press('Space');
+        await page.waitForURL(url => url.searchParams.has('candidate'));
+        await action.waitFor();
+        assert.equal(await checkbox.isChecked(), true);
+        assert.equal(await checkbox.evaluate(el => getComputedStyle(el).backgroundColor), 'rgb(23, 24, 23)');
+        assert.equal(await release.evaluate(el => el.open), false);
+        assert.ok(await action.evaluate(el => el.getBoundingClientRect().top <
+          document.querySelector('.resolution-release-evidence').getBoundingClientRect().top));
+        await checkbox.scrollIntoViewIfNeeded();
+        await screenshot(name + '-recording-selected', [trigger]);
+        await action.scrollIntoViewIfNeeded();
+        await screenshot(name + '-confirmation-preview', [trigger]);
+        await release.locator(':scope > summary').click();
+        const uk = release.getByText(/Leisure · August 27, 1991/).first();
+        await uk.waitFor();
+        await release.getByText(/Leisure · September 24, 1991/).first().waitFor();
+        await release.getByText(/Leisure · September 20, 1991/).first().waitFor();
+        await release.getByText(/Disputed source · August 26, 1991/).waitFor();
+        await release.getByText(/She.s So High · October/).first().waitFor();
+        assert.equal(await release.locator('details[open]').count(), 0);
+        await screenshot(name + '-release-evidence-expanded', [trigger]);
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
-        await selected.scrollIntoViewIfNeeded();
-        await screenshot(name + '-resolution-selected', [trigger]);
-        await preview.scrollIntoViewIfNeeded();
-        await screenshot(name + '-resolution-preview', [trigger]);
       });
     }
-    await step('apply-birthday-resolution', async () => {
-      const confirm = page.locator('#confirm_recording');
-      if (await confirm.count()) await confirm.check();
+    await step('apply-birthday-recording-only', async () => {
       const response = page.waitForResponse(item => item.url() === origin + '/resolution/293137/decide' &&
         item.request().method() === 'POST' && item.status() === 303);
       await page.getByRole('button', { name: 'Resolve all 8 observations', exact: true }).click();
       await response;
-      await page.getByText('Recording and release decisions saved.', { exact: true }).waitFor();
-      await page.getByText('Already in the canonical catalog', { exact: true }).first().waitFor({ state: 'attached' });
-      await page.goto(origin + '/archive');
+      await page.getByText('Recording decision saved.', { exact: true }).waitFor();
+      await page.goto(origin + '/resolution/293137?section=observations');
+      const table = page.getByRole('table', { name: 'Matching observations' });
+      assert.equal(await table.locator('tbody tr').count(), 8);
+      assert.equal(await table.getByRole('link', { name: 'Birthday', exact: true }).count(), 8);
     });
     await step('same-title-observation-remains-ambiguous', async () => {
-      await page.goto(origin + '/resolution/293200');
+      await page.goto(origin + '/resolution/293200?section=evidence');
       await page.getByText('Competing recording identities are possible.', { exact: false }).waitFor();
-      assert.equal(await page.locator('.resolution-choice[aria-current]').count(), 0);
+      assert.equal(await page.locator('input[name=candidate]:checked').count(), 0);
       assert.equal(await page.locator('#recording-resolution-confirmation').count(), 0);
       const choices = page.locator('.resolution-choices').first();
       await choices.scrollIntoViewIfNeeded();
       await screenshot('mobile-ambiguous-recordings', [trigger]);
-      const disputed = page.locator('summary').filter({ hasText: 'Disputed source' });
-      await disputed.click();
-      const reported = disputed.locator('..').getByText('Variant unresolved', { exact: false });
-      await reported.scrollIntoViewIfNeeded();
-      await screenshot('mobile-disputed-track-evidence', [trigger]);
-      await page.getByRole('link', { name: 'Evidence', exact: true }).click();
-      await page.getByRole('region', { name: 'Candidate evidence' }).waitFor();
-      await page.getByRole('link', { name: 'Candidates', exact: true }).click();
-      await page.locator('.resolution-choice').filter({ hasText: 'Single version' }).click();
-      const confirm = page.locator('#confirm_recording');
-      assert.equal(await confirm.isChecked(), false);
-      assert.equal(await confirm.evaluate(input => input.form.checkValidity()), false);
       await page.goto(origin + '/archive');
     });
     await step('logout-and-private-boundary', async () => {
