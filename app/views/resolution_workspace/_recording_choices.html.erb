@@ -21,7 +21,7 @@
       </ul>
     </details>
   <% end %>
-  <%= render "recording_confirmation", selected:, contexts: contexts.fetch(selected), navigation:, catalog_rows: if selected %>
+  <%= render "recording_confirmation", selected:, contexts: contexts.fetch(selected), navigation:, catalog_rows: catalog_rows if selected %>
 <% elsif @assessment && !@assessment_request&.active? %>
   <p>No recording choices are available.</p>
   <%= link_to "Review evidence", resolution_surface_path(@observation, **navigation.merge(section: "evidence")) %>
