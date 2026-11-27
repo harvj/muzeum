@@ -50,7 +50,7 @@ jobs:
           ssh -o BatchMode=yes -o StrictHostKeyChecking=yes 127.0.0.1 true
           export BUNDLE_GEMFILE="$GITHUB_WORKSPACE/Gemfile"
           cd ops/capistrano
-          for revision in fe77dc21efb5196378cff6a78db69411c37d93d4 d7e745d8fef7e80c2b3839772dd2f2fcc79ce7f8; do
+          for revision in fe77dc21efb5196378cff6a78db69411c37d93d4 931c234323e57a06be8102f730846af4b86c9f20; do
             MUZEUM_DISPOSABLE_REVISION="$revision" bundle exec cap disposable muzeum:qualify_staging
             release=$(find "$app/releases" -mindepth 1 -maxdepth 1 -type d | sort | tail -1)
             ruby "$release/script/muzeum_release_identity.rb" verify "$revision"
@@ -63,7 +63,7 @@ jobs:
           set -eu
           releases=/var/www/muzeum/releases
           candidate=$(basename "$(readlink -f /var/www/muzeum/current)")
-          test "$(cat "$releases/$candidate/REVISION")" = d7e745d8fef7e80c2b3839772dd2f2fcc79ce7f8
+          test "$(cat "$releases/$candidate/REVISION")" = 931c234323e57a06be8102f730846af4b86c9f20
           test -L "$releases/$candidate/.env"
           tar -C "$releases" -czf "$RUNNER_TEMP/muzeum-disposable-candidate.tar.gz" "$candidate"
       - uses: actions/upload-artifact@v4
