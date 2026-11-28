@@ -177,8 +177,22 @@ class Host:
 
     @contextlib.contextmanager
     def backup_lock(self):
-        # Existing host lock also excludes scheduled capture/restore pauses during each phase.
-        with (BACKUPS.parent / 'backup.lock').open('a') as lock:
+        # Scheduled Muzeum backups and restores acquire this inode first.
+        with (BACKUPS / 'recovery.lock').open('r') as lock:
+            try:
+                fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except BlockingIOError:
+                raise RuntimeError('Muzeum backup or restore owns its recovery lock') from None
+            previous = self.protected_fds
+            self.protected_fds = (*previous, lock.fileno())
+            try:
+                yield
+            finally:
+                self.protected_fds = previous
+
+    @contextlib.contextmanager
+    def scratch_lock(self):
+        with (BACKUPS.parent / 'backup.lock').open('r') as lock:
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
             yield
 
@@ -433,7 +447,7 @@ class Deployment:
                 # Serialize against scheduled backups; never test health during an intentional pause.
                 force = record.get('force')
                 guard = self.host.force_backup_guard() if force else self.host.backup_lock()
-                with guard as overridden:
+                with guard as overridden, contextlib.ExitStack() as resources:
                     if force and overridden and overridden not in force['overrides']:
                         force['overrides'].append(overridden)
                         self.save(record)
@@ -458,6 +472,7 @@ class Deployment:
                             raise RuntimeError('Rollback artifact requires a migration')
                         record['migrations'] = before['pending']
                         if before['pending']:
+                            resources.enter_context(self.host.scratch_lock())
                             self.host.check_withdrawal(record['baseline']['revision'])
                             record['route_transition'] = 'withdrawing'
                             self.save(record)
@@ -496,6 +511,8 @@ class Deployment:
                         if record['phase'] != 'ready_to_publish' or not self.host.published(record['release'], sha):
                             raise RuntimeError('Publication did not select the exact candidate')
                         self.host.release(record['release'], sha)
+                        if record['migrating']:
+                            resources.enter_context(self.host.scratch_lock())
                         self.host.start()
                         self.host.health()
                         if record['migrating']:

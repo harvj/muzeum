@@ -21,7 +21,7 @@ class BackupLockTests(unittest.TestCase):
         self.backups = self.root / 'muzeum'
         self.backups.mkdir()
         (self.backups / 'recovery.lock').touch()
-        self.lock = self.root / 'backup.lock'
+        self.lock = self.backups / 'recovery.lock'
         self.lock.touch()
         self.patch = patch.object(deploy, 'BACKUPS', self.backups)
         self.patch.start()
@@ -43,7 +43,7 @@ class BackupLockTests(unittest.TestCase):
     def test_original_nested_cli_lock_is_refused(self):
         with self.host.backup_lock():
             with patch.object(sys, 'argv', ['muzeum-backup', 'monitor']):
-                with self.assertRaisesRegex(RuntimeError, 'Another backup'):
+                with self.assertRaises(BlockingIOError):
                     self.api['main']()
             self.assertNotEqual(self.nested_cli().returncode, 0)
         self.assertEqual(self.nested_cli().returncode, 0)
@@ -57,7 +57,7 @@ class BackupLockTests(unittest.TestCase):
     def test_external_contention_refuses_acquisition(self):
         with self.lock.open('a') as held:
             fcntl.flock(held, fcntl.LOCK_EX|fcntl.LOCK_NB)
-            with self.assertRaises(BlockingIOError):
+            with self.assertRaisesRegex(RuntimeError, 'recovery lock'):
                 with self.host.backup_lock():
                     self.fail('must not enter')
         with self.host.backup_lock():
