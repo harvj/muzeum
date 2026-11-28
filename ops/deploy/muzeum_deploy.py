@@ -605,8 +605,11 @@ def main():
         return
     if sys.argv[1:] == ['preflight']:
         host = Host()
-        with host.backup_lock():
-            print(json.dumps(host.preflight()))
+        with host.force_backup_guard() as coordination:
+            result = host.preflight()
+            if coordination:
+                result['coordination'] = coordination
+            print(json.dumps(result))
         return
     if len(sys.argv) == 4 and sys.argv[1] == 'receipt':
         sha, token = sys.argv[2:]
