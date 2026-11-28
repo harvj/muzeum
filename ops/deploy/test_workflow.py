@@ -59,6 +59,10 @@ class FixtureHost:
         self.event('preflight')
         return {'revision': self.sha, 'health': 'passed'}
 
+    def verify_release_integrity(self, release, sha):
+        self.event('release_integrity')
+        return {'source_sha': sha, 'result': 'pass'}
+
     def inspect(self, release):
         self.event('inspect')
         return {'pending': self.pending, 'databases': {'primary': {'tables': [], 'columns': [], 'indexes': [], 'constraints': [], 'triggers': ['immutable_source']}}}
@@ -192,6 +196,15 @@ class WorkflowTests(unittest.TestCase):
         self.assertLess(host.events.index('health'), host.events.index('activation'))
         self.assertEqual(receipt['pre_backup']['release_sha'], OLD)
         self.assertEqual(receipt['post_backup']['release_sha'], NEW)
+        self.assertTrue(host.public and host.running)
+
+    def test_rel01_refusal_preserves_running_application_before_migration(self):
+        host, flow = self.workflow(True, 'release_integrity')
+        flow.run('begin', NEW, self.token)
+        with self.assertRaises(RuntimeError):
+            flow.run('prepare', NEW, self.token, str(host.candidate))
+        self.assertIn('release_integrity', host.events)
+        self.assertFalse({'inspect', 'stop', 'withdraw', 'migration'} & set(host.events))
         self.assertTrue(host.public and host.running)
 
     def test_failed_route_check_preserves_running_application(self):

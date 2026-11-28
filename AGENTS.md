@@ -43,3 +43,10 @@ Follow [Infrastructure Simple Operations v1.2](https://github.com/harvj/infrastr
 ## Design review screenshots
 
 For visual UI changes, retain a concise, representative set of actual browser screenshots under `docs/design/` in the application repository, with a short README and relative image links for GitHub review. Include relevant desktop/mobile and light/dark states; use before/after captures when useful. Temporary `/tmp` screenshots are development artifacts, not final review evidence. Do not add a new CI gate or enforcement mechanism for this convention.
+
+## REL-01 release integrity
+
+Bring the exact qualified release commit into protected GitHub main before
+promotion. Preserve ancestry with a merge commit when needed. Muzeum's
+protected prepare operation records the ancestry check before withdrawal or
+migration. Follow [Infrastructure REL-01](https://github.com/harvj/infrastructure/blob/main/docs/standards/main-branch-release-integrity.md).
