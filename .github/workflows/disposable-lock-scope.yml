@@ -1,0 +1,12 @@
+name: Disposable Linux lock scope
+on:
+  push:
+    branches: [verify/muzeum-isolated-restore-scope]
+permissions:
+  contents: read
+jobs:
+  concurrent-operations:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - run: sudo env PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s ops/deploy -p test_force_deploy.py -v
