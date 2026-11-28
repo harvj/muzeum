@@ -42,3 +42,5 @@ Run `bundle exec rspec spec/requests/verified_recording_membership_spec.rb`. The
 | --- | --- | --- |
 | Crash, all 19 observations and 12-track album | [Desktop](desktop-release-backed-crash.png) | [Mobile](mobile-release-backed-crash.png) |
 | Heartland, all four observations and 11-track album | [Desktop](desktop-release-backed-heartland.png) | [Mobile](mobile-release-backed-heartland.png) |
+
+Exact-SHA hosted CI passed with 420 examples and zero failures, including migration replay and disposable recovery checks. [Signed Application Shell v2.0.0 preflight](shell/signed-preflight.txt) passed all ten checks, including [executable SH-08](shell/sh08-executable.json). The [review](shell/application-shell-review.json) SHA-256 is `d6f187497b5b11999822880104ba2eee0836d67b03e49f96a137509b187544a6`.
