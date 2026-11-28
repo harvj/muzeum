@@ -26,11 +26,15 @@ RSpec.describe ReleaseRanking do
       releases.select { |release| ranking.include?(release) }
     end
     expect(ranked.call(listener)).to contain_exactly(album, single, first_compilation)
+    ranking = described_class.new(listener, releases)
+    expect(ranking.include?(reissue, has_plays: true)).to be true
+    expect(ranking.include?(Release.new(title: "Unverified"), has_plays: true)).to be false
     expect(Release.member_recording_ids(releases)).to eq([ recording.id ])
 
     ReleaseRankingDecision.create!(user: listener, release: album, included: false)
     ReleaseRankingDecision.create!(user: listener, release: compilation, included: true)
     expect(ranked.call(listener)).to contain_exactly(single, compilation, first_compilation)
+    expect(described_class.new(listener, releases).include?(album, has_plays: true)).to be false
     expect(ranked.call(other)).to contain_exactly(album, single, first_compilation)
 
     ReleaseRankingDecision.create!(user: listener, release: album, included: true)

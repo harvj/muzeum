@@ -60,7 +60,6 @@ class CanonicalLibraryController < ApplicationController
       @preferred_configuration = @release_selection.configuration(@entry)
       @configurations = @entry.release_configurations.order(:source_date, :edition_mbid, id: :desc).to_a
       @configuration_tracks = @preferred_configuration&.ordered_tracks
-      @ranked_release = ReleaseRanking.new(current_user, [ @entry ]).include?(@entry) unless @public_profile
       base_slots = @entry.catalog_track_slots.base_sequence
       slots = base_slots.order(:medium, :position)
       cursor = slots.find_by(id: params[:after_track]) if params[:after_track].present?
@@ -92,11 +91,20 @@ class CanonicalLibraryController < ApplicationController
       @base_track_max = @track_counts.values_at(*displayed_ids).compact.max.to_i
       other_ids = Array(params[:with_release]).first(PAGE).map { |id| Integer(id, exception: false) }.compact
       @activity_releases = catalog_scope.where(id: [ @entry.id, *other_ids ]).order(:id).to_a
-      member_ids = ReleaseConfigurationSelection.new(listening_user, @activity_releases.map(&:id)).memberships.map(&:last).uniq
+      memberships = ReleaseConfigurationSelection.new(listening_user, @activity_releases.map(&:id)).memberships
+      member_ids = memberships.map(&:last).uniq
       release_plays = recording_plays(member_ids)
       listening = CatalogListening.new(release_plays)
       @listening_total = listening.total
       @observation_count = @listening_total.plays
+      unless @public_profile
+        has_plays = if @activity_releases.one?
+          @observation_count.positive?
+        else
+          recording_plays(memberships.select { |release_id, _| release_id == @entry.id }.map(&:last)).exists?
+        end
+        @ranked_release = ReleaseRanking.new(current_user, [ @entry ]).include?(@entry, has_plays:)
+      end
       @timeline = listening.timeline(@history_window) if @archive_available
       @plays = ListeningPage.chronological(release_plays, before: params[:before_play]).limit(PAGE + 1).to_a
       @next_release_play = @plays.pop && @plays.last.id if @plays.size > PAGE
@@ -324,10 +332,8 @@ class CanonicalLibraryController < ApplicationController
     releases = releases.merge(@profile_catalog.releases) if @public_profile
     releases = releases.to_a
     ranking = ReleaseRanking.new(@public_profile&.owner || current_user, releases)
-    ranked_releases, other_releases = releases.partition { |release| ranking.include?(release) }
     @release_selection = ReleaseConfigurationSelection.new(listening_user, releases.map(&:id))
-    @unranked_releases = other_releases.select(&:catalog_verified_at).sort_by { |release| [ release.title.downcase, release.id ] }
-    memberships = @release_selection.memberships(release_ids: ranked_releases.map(&:id)).group_by(&:first)
+    memberships = @release_selection.memberships.group_by(&:first)
     records = recordings.to_a
     artist_listening = CatalogListening.new(recording_plays(records.map(&:id)))
     stats = artist_listening.by_recording
@@ -351,10 +357,13 @@ class CanonicalLibraryController < ApplicationController
 
     external_ids = memberships.values.flatten(1).map(&:last).uniq - records.map(&:id)
     stats.merge!(CatalogListening.new(recording_plays(external_ids)).by_recording) if external_ids.any?
-    @release_rows = ranked_releases.map do |release|
+    rows = releases.map do |release|
       totals = memberships.fetch(release.id, []).map { |_, id| stats.fetch(id, CatalogListening::EMPTY) }
       [ release, totals.reduce(CatalogListening::EMPTY, :+) ]
-    end.sort_by { |release, totals| [ -totals.milliseconds, release.title.downcase, release.id ] }
+    end
+    ranked, other = rows.partition { |release, totals| ranking.include?(release, has_plays: totals.plays.positive?) }
+    @release_rows = ranked.sort_by { |release, totals| [ -totals.milliseconds, release.title.downcase, release.id ] }
+    @unranked_releases = other.map(&:first).select(&:catalog_verified_at).sort_by { |release| [ release.title.downcase, release.id ] }
     @time_bar_max = @release_rows.first&.last&.milliseconds.to_i
   end
 

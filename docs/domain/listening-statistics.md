@@ -52,9 +52,9 @@ The album and single each show 150 contributed observations. Their combined hist
 - 2026-11-23: Approved base-track defaults and revisable per-release track inclusion and exclusion.
 - 2026-11-23: Made base tracks mandatory in release listening totals. Only additional tracks have listener-scoped controls.
 
-## Default release rankings (v0.6.6)
+## Default release rankings (revised for v0.8.5)
 
-Rank eligible canonical releases by estimated listening time, breaking ties by title and canonical ID. Eligibility requires a verified original publication context or a verified first-publication appearance of a member recording; it does not follow from catalog membership alone. A listener’s latest explicit inclusion or exclusion supersedes the default. Keep preference history without changing catalog membership or observations. Release detail, catalog totals, artist release rankings, and combined histories use the applicable included memberships for the listener. Release-ranking eligibility stays independent of the track-level calculation. Count distinct effective observations within each result, and use the union of observations for combined totals.
+Rank eligible canonical releases by estimated listening time, breaking ties by title and canonical ID. A verified canonical release with qualifying resolved observations in the listener’s effective membership is eligible regardless of publication chronology. For a release with zero qualifying plays, retain the original-context or verified member first-publication default. Publication evidence and uncertainty remain separate from listening totals. A listener’s latest explicit inclusion or exclusion supersedes the default. Keep preference history without changing catalog membership or observations. Release detail, catalog totals, artist release rankings, and combined histories use the applicable included memberships for the listener. Release-ranking eligibility stays independent of the track-level calculation. Count distinct effective observations within each result, and use the union of observations for combined totals.
 
 **STAT-013 — Confirmed short-track inferences are separate.** Record confirmation
 or rejection in the listener’s inference decision history. An inference does

@@ -5,9 +5,11 @@ class ReleaseRanking
     @original_ids = original_ids
   end
 
-  def include?(release)
+  def include?(release, has_plays: false)
     decision = @decisions[release.id]
-    decision ? decision.included? : @original_ids.include?(release.id)
+    return decision.included? if decision
+
+    (release.catalog_verified_at.present? && has_plays) || @original_ids.include?(release.id)
   end
 
   private

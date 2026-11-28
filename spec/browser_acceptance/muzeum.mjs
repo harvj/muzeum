@@ -165,16 +165,18 @@ await runCandidate({ chromium: chrome, artifact: 'candidate.tar.gz', binding, ou
       await page.goto(origin + '/artists');
       await page.getByRole('link', { name: 'Blur', exact: true }).click();
       const ranked = page.locator('#artist-releases');
-      const other = page.locator('#artist-unranked-releases');
-      await other.getByRole('link', { name: 'Leisure', exact: true }).waitFor();
-      assert.equal(await ranked.getByRole('link', { name: 'Leisure', exact: true }).count(), 0);
-      assert.equal(await ranked.locator('tbody tr').count(), 3);
+      const album = ranked.getByRole('link', { name: 'Leisure', exact: true });
+      await album.waitFor();
+      const first = ranked.locator('tbody tr').first();
+      assert.match(await first.innerText(), /Leisure/);
+      assert.match(await first.innerText(), /8 plays/);
+      assert.equal(await ranked.locator('tbody tr').count(), 4);
       for (const { name, width, height } of viewports) {
         await page.setViewportSize({ width, height });
-        await other.scrollIntoViewIfNeeded();
-        await screenshot(name + '-artist-canonical-leisure', [trigger]);
+        await ranked.scrollIntoViewIfNeeded();
+        await screenshot(name + '-artist-ranked-leisure', [trigger]);
       }
-      await other.getByRole('link', { name: 'Leisure', exact: true }).click();
+      await album.click();
       await page.getByText('8 distinct resolved observations', { exact: false }).first().waitFor();
       await page.locator('summary').filter({ hasText: 'Compare release configurations' }).click();
       await page.locator('summary').filter({ hasText: 'GB · 1991-08-27' }).filter({ hasText: '(preferred)' }).waitFor();

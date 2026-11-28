@@ -81,10 +81,13 @@ RSpec.describe "Birthday configuration review", type: :system do
       expect(page).to have_link("Bang")
       expect(page).to have_link("She’s So High")
       expect(page).to have_link("There’s No Other Way")
-      expect(page).to have_no_link("Leisure")
+      expect(page).to have_link("Leisure")
+      expect(first("tbody tr")).to have_text("8 plays")
+      expect(first("tbody tr")).to have_text("August 27, 1991")
+      expect(page).to have_text("0 plays", count: 3)
     end
     expect(page).to have_link("Leisure", href: release_path(album), count: 1)
-    within("#artist-unranked-releases") { expect(page).to have_text("August 27, 1991") }
+    expect(page).to have_no_css("#artist-unranked-releases")
 
     uk_tracks = configurations.fetch("GB").ordered_tracks
     us_ids = configurations.fetch("US").tracks.pluck("source_recording_mbid")
@@ -95,12 +98,20 @@ RSpec.describe "Birthday configuration review", type: :system do
       mode: "resolved", reason: "Disposable configuration comparison", recording: uk_only)
     visit release_path(album)
     expect(page).to have_text("9 distinct resolved observations")
+    visit artist_path(artist)
+    within("#artist-releases") { expect(first("tbody tr")).to have_text("9 plays") }
+    visit release_path(album)
     find("summary", text: "Compare release configurations").click
     us = find("summary", text: "1991-09-24")
     us.click
     within(us.find(:xpath, "..")) { click_button "Prefer this configuration" }
     expect(page).to have_text("8 distinct resolved observations")
     expect(page).to have_text("September 24, 1991")
+    visit artist_path(artist)
+    within("#artist-releases") do
+      expect(first("tbody tr")).to have_text("8 plays")
+      expect(first("tbody tr")).to have_text("September 24, 1991")
+    end
     expect(Release.where(release_group_mbid: album.release_group_mbid).count).to eq(1)
     expect(RecordingResolution::Ledger.effective(user).where(id: plays.map(&:id)).map(&:effective_recording_id).uniq)
       .to eq([ Recording.find_by!(title: "Birthday").id ])
