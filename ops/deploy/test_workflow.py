@@ -40,6 +40,9 @@ class FixtureHost:
         if name == self.fail:
             raise RuntimeError('Injected ' + name + ' failure')
 
+    def scratch_lock(self):
+        return contextlib.nullcontext()
+
     @contextlib.contextmanager
     def backup_lock(self):
         yield
