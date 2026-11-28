@@ -1,0 +1,32 @@
+--- a/ops/capistrano/config/deploy.rb
++++ b/ops/capistrano/config/deploy.rb
+@@ -151 +151 @@
+-  def muzeum_run_release(rollback:)
++  def muzeum_run_release(rollback:, force: false)
+@@ -154,0 +155 @@
++    raise "Force requires a previously qualified staged release" if force && !timestamp
+@@ -165 +166,10 @@
+-    muzeum_phase(rollback ? "begin-rollback" : "begin-operator", revision, token, baseline)
++    if force
++      qualified = JSON.parse(File.read(ENV.fetch("MUZEUM_QUALIFIED_ARTIFACT")))
++      digest = qualified.fetch("artifact_sha256")
++      unless qualified.fetch("source_sha") == revision && /\A[0-9a-f]{64}\z/.match?(digest)
++        raise "Force requires the exact qualified artifact"
++      end
++      muzeum_phase("begin-force", revision, token, baseline, digest)
++    else
++      muzeum_phase(rollback ? "begin-rollback" : "begin-operator", revision, token, baseline)
++    end
+@@ -187,2 +197,4 @@
+-      invoke "deploy:publishing"
+-      invoke "deploy:published"
++      unless force
++        invoke "deploy:publishing"
++        invoke "deploy:published"
++      end
+@@ -212,0 +225,5 @@
++  desc "Force a qualified, code-only staged release as the operator"
++  task force_deploy: :pin do
++    muzeum_run_release(rollback: false, force: true)
++  end
++

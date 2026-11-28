@@ -16,8 +16,11 @@ import monitoring
 
 api = runpy.run_path('/usr/local/lib/harvj-backups/muzeum-backup')
 base = api['BASE']
+recovery = (base / 'recovery.lock').open('r')
+fcntl.flock(recovery, fcntl.LOCK_EX | fcntl.LOCK_NB)
 lock = (base.parent / 'backup.lock').open('a')
 fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+api['invoke'].__globals__['recovery_fds'] = (recovery.fileno(), lock.fileno())
 config_path = Path(sys.argv[1]) if len(sys.argv) == 2 else Path('/etc/harvj-backups/muzeum/config.json')
 config = api['load_config'](config_path)
 if config['mode'] == 'production':

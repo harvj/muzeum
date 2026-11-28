@@ -44,13 +44,16 @@ class CommandFailure(RuntimeError):
         super().__init__(f'{label} failed (exit {self.exit_code}); no success recorded')
 
 
+recovery_fds = ()
+
+
 def invoke(argv, *, env=None, output=None, timeout=7200, file_limit=None, label=None):
     def limit():
         resource.setrlimit(resource.RLIMIT_FSIZE, (file_limit, file_limit))
     result = subprocess.run(argv, stdin=subprocess.DEVNULL,
                             stdout=output if output is not None else subprocess.PIPE,
                             stderr=subprocess.PIPE, env=env, timeout=timeout,
-                            preexec_fn=limit if file_limit else None)
+                            preexec_fn=limit if file_limit else None, pass_fds=recovery_fds)
     if result.returncode:
         raise CommandFailure(label or Path(argv[0]).name, result.returncode)
     return result.stdout.decode() if output is None else ''
@@ -193,35 +196,42 @@ def do_action(config, action):
 
 
 def main():
+    global recovery_fds
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('action', choices=['init', 'backup', 'check', 'retention-plan', 'monitor'])
     parser.add_argument('--config', type=Path, default=Path('/etc/harvj-backups/muzeum/config.json'))
     args = parser.parse_args()
     os.umask(0o077)
     BASE.mkdir(exist_ok=True, mode=0o700)
-    with (BASE.parent / 'backup.lock').open('a') as lock:
+    with (BASE / 'recovery.lock').open('r') as recovery, (BASE.parent / 'backup.lock').open('a') as lock:
+        fcntl.flock(recovery, fcntl.LOCK_EX | fcntl.LOCK_NB)
         try:
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError:
             raise RuntimeError('Another backup/verification job holds the host backup lock')
-        config = load_config(args.config)
-        if config.get('credential_scope') != 'subaccount' and os.environ.get('ALLOW_BOOTSTRAP_TEST') != 'yes':
-            raise RuntimeError('Restricted subaccount required for unattended operation')
-        job = {'backup': 'backup', 'check': 'verification'}.get(args.action)
-        if args.action == 'backup' and 'monitoring_job' in config:
-            if config['monitoring_job'] != 'missed-run-test' or os.environ.get('ALLOW_NOTIFICATION_TEST') != 'yes':
-                raise RuntimeError('Notification-test profile requires explicit manual opt-in')
-            job = 'missed-run-test'
-        if job:
-            with monitoring.job_run(job):
-                do_action(config, args.action)
-        else:
-            try:
-                do_action(config, args.action)
-            except Exception:
-                if args.action == 'monitor':
-                    monitoring.safe_signal('backup', 'failure')
-                raise
+        recovery_fds = (recovery.fileno(), lock.fileno())
+        try:
+            config = load_config(args.config)
+            if config.get('credential_scope') != 'subaccount' and os.environ.get('ALLOW_BOOTSTRAP_TEST') != 'yes':
+                raise RuntimeError('Restricted subaccount required for unattended operation')
+            job = {'backup': 'backup', 'check': 'verification'}.get(args.action)
+            if args.action == 'backup' and 'monitoring_job' in config:
+                if config['monitoring_job'] != 'missed-run-test' or os.environ.get('ALLOW_NOTIFICATION_TEST') != 'yes':
+                    raise RuntimeError('Notification-test profile requires explicit manual opt-in')
+                job = 'missed-run-test'
+            if job:
+                with monitoring.job_run(job):
+                    do_action(config, args.action)
+            else:
+                try:
+                    do_action(config, args.action)
+                except Exception:
+                    if args.action == 'monitor':
+                        monitoring.safe_signal('backup', 'failure')
+                    raise
+        finally:
+            recovery_fds = ()
+
 
 
 if __name__ == '__main__':
