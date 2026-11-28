@@ -143,6 +143,25 @@ class Host:
         line = next(line for line in output.splitlines() if line.startswith('MUZEUM_DEPLOY_INSPECTION:'))
         return json.loads(line.split(':', 1)[1])
 
+    def verify_release_integrity(self, release, sha):
+        output = self.command(
+            ['/usr/sbin/runuser', '-u', 'muzeum', '--', str(RUBY_BIN / 'ruby'),
+             'script/muzeum_release_identity.rb', 'verify', sha],
+            cwd=release, env={'PATH': '/usr/bin:/bin', 'HOME': '/home/muzeum'})
+        candidate = json.loads(output)
+        digest = candidate.get('artifact_sha256')
+        if candidate.get('source_sha') != sha or not isinstance(digest, str) or not re.fullmatch(r'[a-f0-9]{64}', digest):
+            raise RuntimeError('REL-01 exact artifact verification failed')
+        checker = Path('/usr/local/libexec/harvj/release-integrity')
+        for path in (checker, *checker.parents):
+            info = path.lstat()
+            if info.st_uid != 0 or stat.S_ISLNK(info.st_mode) or info.st_mode & 0o022:
+                raise RuntimeError('Untrusted REL-01 checker path')
+        result = json.loads(self.command([str(checker), 'harvj/muzeum', sha, digest], timeout=850))
+        if (result.get('result'), result.get('source_sha'), result.get('artifact_sha256')) != ('pass', sha, digest):
+            raise RuntimeError('REL-01 could not verify protected main ancestry')
+        return result
+
     def backup_api(self):
         sys.path.insert(0, '/usr/local/lib/harvj-backups')
         import production_capture
@@ -325,6 +344,8 @@ class Deployment:
                             raise RuntimeError('Unexpected prepare transition')
                         release = self.host.release(path, sha)
                         record['release'] = str(release)
+                        if not record.get('rollback'):
+                            record['release_integrity'] = self.host.verify_release_integrity(release, sha)
                         before = self.host.inspect(release)
                         reviewed_migrations(release, before['pending'])
                         if record.get('rollback') and before['pending']:
@@ -439,7 +460,7 @@ def main():
         record = json.loads((STATE / (token + '.json')).read_text())
         if record['sha'] != sha or record['token'] != token:
             raise RuntimeError('Receipt identity mismatch')
-        print(json.dumps({key: record[key] for key in ('sha', 'token', 'phase', 'health') if key in record}))
+        print(json.dumps({key: record[key] for key in ('sha', 'token', 'phase', 'health', 'release_integrity') if key in record}))
         return
     if len(sys.argv) == 5 and sys.argv[1] in ('begin-operator', 'begin-rollback'):
         action, sha, token, baseline = sys.argv[1:]
