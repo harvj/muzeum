@@ -1,0 +1,150 @@
+{
+  "format_version": 1,
+  "application": "muzeum",
+  "revision": "41f963576fbf53146840cd137054c3060be5aa80",
+  "tree": "50b030feb57984f1737d926ea511ac188f4c1b70",
+  "artifact_sha256": "6af8b8774404c08eb1845e90542c174be69533020d3b5b5d4c1337b51feaac85",
+  "environment_sha256": "006518e54dea3af9a2f9682c56a472b93e68b54a2b03624db8df6884617f457c",
+  "viewports": [
+    {
+      "name": "desktop",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "name": "mobile",
+      "width": 390,
+      "height": 844
+    }
+  ],
+  "started_at": "2026-11-28T02:33:42.089Z",
+  "steps": [
+    {
+      "name": "anonymous-landing",
+      "result": "pass",
+      "milliseconds": 117
+    },
+    {
+      "name": "native-password-totp-oidc",
+      "result": "pass",
+      "milliseconds": 759
+    },
+    {
+      "name": "desktop-archive-shell",
+      "result": "pass",
+      "milliseconds": 1164
+    },
+    {
+      "name": "mobile-archive-shell",
+      "result": "pass",
+      "milliseconds": 200
+    },
+    {
+      "name": "desktop-birthday-evidence-route",
+      "result": "pass",
+      "milliseconds": 1436
+    },
+    {
+      "name": "mobile-birthday-evidence-route",
+      "result": "pass",
+      "milliseconds": 702
+    },
+    {
+      "name": "admit-album-with-configurations-and-singles",
+      "result": "pass",
+      "milliseconds": 1781
+    },
+    {
+      "name": "resolve-release-backed-crash",
+      "result": "pass",
+      "milliseconds": 807
+    },
+    {
+      "name": "resolve-release-backed-heartland",
+      "result": "pass",
+      "milliseconds": 784
+    },
+    {
+      "name": "same-title-observation-remains-ambiguous",
+      "result": "pass",
+      "milliseconds": 281
+    },
+    {
+      "name": "logout-and-private-boundary",
+      "result": "pass",
+      "milliseconds": 443
+    }
+  ],
+  "screenshots": [
+    {
+      "name": "desktop",
+      "sha256": "e6d8128c0a9b1cd6f6c4a481b07b03d50fdc6c89840f26fcd75ec86cc4692246"
+    },
+    {
+      "name": "mobile",
+      "sha256": "13a0fbcba5cfd278b9b3f38fa7214e1d1d6fd1b3070d54004ad26464a9d71186"
+    },
+    {
+      "name": "desktop-recording-unselected",
+      "sha256": "49a33703bf7b08597c02d466c22a9813483f7ebec15afb1466c424c1dfceb251"
+    },
+    {
+      "name": "desktop-recording-selected",
+      "sha256": "398d1ca8eb1a896795e7e42ce8f208f927518fcf3303f41a704ae4f8260aa373"
+    },
+    {
+      "name": "desktop-confirmation-preview",
+      "sha256": "398d1ca8eb1a896795e7e42ce8f208f927518fcf3303f41a704ae4f8260aa373"
+    },
+    {
+      "name": "desktop-release-evidence-expanded",
+      "sha256": "af883e9e43406e2f1cd0c73e1408f32220426cc85d84da6ea3ea5c848260fd83"
+    },
+    {
+      "name": "mobile-recording-unselected",
+      "sha256": "5092c1d0eec977ee377cf098f7b7e5635200a75b0cac1a48326fa40c17ef3110"
+    },
+    {
+      "name": "mobile-recording-selected",
+      "sha256": "4926436a5242326fb376045f88dc3b3af50f9adca408b2ee3834c05851644b90"
+    },
+    {
+      "name": "mobile-confirmation-preview",
+      "sha256": "0fa806bf291876b8c8ce862dad44930bfde1b6f73b986fa280e83c429a886a1a"
+    },
+    {
+      "name": "mobile-release-evidence-expanded",
+      "sha256": "e7493a79f38e7e0ccfd973f2218fec270103f110ce42be9c4ca0dbb98f6953a2"
+    },
+    {
+      "name": "desktop-artist-ranked-leisure",
+      "sha256": "b55d6eda0285dec28327bbc868ca39f89b12746493d7cd01220253289ea15300"
+    },
+    {
+      "name": "mobile-artist-ranked-leisure",
+      "sha256": "e8b0e58a29a73f2bebd5b438510b613b9b350d4c66f5418373976a4586b1fadf"
+    },
+    {
+      "name": "desktop-release-backed-crash",
+      "sha256": "24b91da308a06487151ecabcf8a459debafc68c05327db1a310627700387ab63"
+    },
+    {
+      "name": "mobile-release-backed-crash",
+      "sha256": "d5bca2db09a55b5719d499bb8bace143afc4fc38f0e1572892a3ea3f4e79a254"
+    },
+    {
+      "name": "desktop-release-backed-heartland",
+      "sha256": "f92a45215a8a3da6db0b4a5bc1c2158f571452edeb726a67cfb8fc6574b9322c"
+    },
+    {
+      "name": "mobile-release-backed-heartland",
+      "sha256": "69d4dd5a951f595deaf9fc615261fbfdbb1cb66df2f6bba4b50c57f34a5328ca"
+    },
+    {
+      "name": "mobile-ambiguous-recordings",
+      "sha256": "25b117b747d104907a08cfdeb7ddbc0125c6203e5fab5ca005c6848bec284ab7"
+    }
+  ],
+  "result": "pass",
+  "finished_at": "2026-11-28T02:33:50.943Z"
+}

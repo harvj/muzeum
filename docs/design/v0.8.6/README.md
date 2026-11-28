@@ -29,3 +29,16 @@ A read-only audit counted 196 production canonical recordings and found one with
 ## Reproduce
 
 Run `bundle exec rspec spec/requests/verified_recording_membership_spec.rb`. The fixture replays the retained provider candidate order, checked album tracklists, an outdated assessment, and the exact recording and release-group lookups. It checks the confirmation preview, assignment of 19 and 4 observations, source immutability, preserved evidence, and rejection of direct confirmation without membership. The shared browser scenario reuses the same replay in disposable Native Auth.
+
+## Candidate acceptance
+
+- Source SHA `41f963576fbf53146840cd137054c3060be5aa80` and tree `50b030feb57984f1737d926ea511ac188f4c1b70`.
+- [Shared Chromium report](shared-chromium.json) binds the native Auth and Resolution checks to the downloaded archive and the [browser environment](browser-environment.json), which records the sealed runtime identity. The four case screenshots below are retained from the report.
+- [Disposable seal](disposable-artifact.json) and [Linux staging, service boot, and rollback rehearsal](https://github.com/harvj/muzeum/actions/runs/46098532853).
+- No migrations. The rehearsal compared the two sealed releases and exercised compatible rollback. The artifact digest stayed unchanged through boot, authenticated smoke traffic, and a same-process footer transition.
+- [Exact-SHA CI](https://github.com/harvj/muzeum/actions/runs/46098512355).
+
+| Case | Desktop | Mobile |
+| --- | --- | --- |
+| Crash, all 19 observations and 12-track album | [Desktop](desktop-release-backed-crash.png) | [Mobile](mobile-release-backed-crash.png) |
+| Heartland, all four observations and 11-track album | [Desktop](desktop-release-backed-heartland.png) | [Mobile](mobile-release-backed-heartland.png) |
