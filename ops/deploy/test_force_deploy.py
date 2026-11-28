@@ -1,9 +1,11 @@
 """Exercise the protected force phases and real Linux lock ownership."""
 import contextlib
 import fcntl
+import hashlib
 import json
 import os
 from pathlib import Path
+from types import SimpleNamespace
 import subprocess
 import sys
 import tempfile
@@ -134,6 +136,58 @@ class KernelTests(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError, 'not a verified CE'):
                     with host.force_backup_guard():
                         self.fail('unrecognized scratch holder admitted')
+            self.assertIsNone(ce.poll())
+            ce.stdin.write(b'done\n')
+            ce.stdin.flush()
+            self.assertEqual(ce.wait(timeout=5), 0)
+
+
+    def test_verified_isolated_restore_preserves_capacity_and_scoped_locks(self):
+        with tempfile.TemporaryDirectory(dir='/root') as tmp, contextlib.ExitStack() as stack:
+            root = Path(tmp)
+            backups = root / 'muzeum'
+            backups.mkdir()
+            recovery = backups / 'recovery.lock'
+            migration = root / 'migration.lock'
+            ce_lock = root / 'ce.lock'
+            scratch = root / 'backup.lock'
+            for path in (recovery, migration, ce_lock, scratch):
+                path.touch()
+            script = root / 'reviewed-restore'
+            script.write_text(f'exec 8<{ce_lock}\nexec 9<{scratch}\nflock -n 8 && flock -n 9 || exit\necho locked\nread -r line\n')
+            ce = stack.enter_context(subprocess.Popen(['/bin/bash', str(script)],
+                                                      stdin=subprocess.PIPE, stdout=subprocess.PIPE))
+            stack.callback(lambda: ce.kill() if ce.poll() is None else None)
+            self.assertEqual(ce.stdout.readline(), b'locked\n')
+            host = deploy.Host()
+            for name, value in {
+                'BACKUPS': backups, 'APP': root, 'MIGRATION_LOCK': migration,
+                'CE_ISOLATED_RESTORE': script, 'CE_RELEASE_LOCK': ce_lock,
+                'CE_ISOLATED_RESTORE_SHA': hashlib.sha256(script.read_bytes()).hexdigest(),
+            }.items():
+                stack.enter_context(patch.object(deploy, name, value))
+            stack.enter_context(patch.object(host, 'command', side_effect=lambda args, **_: (
+                str(ce.pid) if args[-1] == deploy.CE_ISOLATED_RESTORE_UNIT else '0')))
+            free = stack.enter_context(patch.object(deploy.shutil, 'disk_usage',
+                                                   return_value=SimpleNamespace(free=110 * deploy.GIB)))
+            with host.force_backup_guard() as override:
+                self.assertIn('verified unrelated CE isolated restore', override)
+                self.assertIsNone(ce.poll())
+            for path in (recovery, migration):
+                with path.open('r') as held:
+                    fcntl.flock(held, fcntl.LOCK_EX)
+                    with self.assertRaisesRegex(RuntimeError, 'owns its lock'):
+                        with host.force_backup_guard():
+                            self.fail('same-app conflict admitted')
+            free.return_value = SimpleNamespace(free=90 * deploy.GIB)
+            with self.assertRaisesRegex(RuntimeError, 'Insufficient capacity'):
+                with host.force_backup_guard():
+                    self.fail('insufficient restore capacity admitted')
+            free.return_value = SimpleNamespace(free=110 * deploy.GIB)
+            with patch.object(deploy, 'CE_ISOLATED_RESTORE_SHA', '0' * 64):
+                with self.assertRaisesRegex(RuntimeError, 'not a verified CE'):
+                    with host.force_backup_guard():
+                        self.fail('unreviewed restore admitted')
             self.assertIsNone(ce.poll())
             ce.stdin.write(b'done\n')
             ce.stdin.flush()

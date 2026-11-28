@@ -21,6 +21,13 @@ STATE = Path('/var/lib/muzeum-deploy')
 BACKUPS = Path('/var/lib/harvj-backups/muzeum')
 MIGRATION_LOCK = Path('/etc/muzeum/migration.lock')
 CE_CAPTURE = b'/var/lib/harvj-backups/ce/capture-qualified-inputs'
+# Match the reviewed restore program, not a service name alone. Its destination
+# and PostgreSQL cluster are private to CE under /var/tmp.
+CE_ISOLATED_RESTORE_UNIT = 'ce-v0286-exact-snapshot-restore.service'
+CE_ISOLATED_RESTORE = Path('/var/lib/harvj-backups/ce/v0286-restore.kPhlgtiX')
+CE_ISOLATED_RESTORE_SHA = '12345d8ff92f87c9f021eef6ba93f3da25d1d9031a4ee5b16db74ffad7c85c02'
+CE_RELEASE_LOCK = Path('/var/www/self-funding-engine/shared/deployment.lock')
+GIB = 1024**3
 UNITS = ('muzeum-web.service', 'muzeum-worker.service')
 SHA = re.compile(r'[a-f0-9]{40}')
 TOKEN = re.compile(r'[a-f0-9]{32}')
@@ -182,6 +189,33 @@ class Host:
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
             yield
 
+    def process_holds_lock(self, process, fd, expected):
+        descriptor = (process / f'fd/{fd}').stat()
+        return ((descriptor.st_dev, descriptor.st_ino) == (expected.st_dev, expected.st_ino)
+                and any(re.search(r'FLOCK\s+ADVISORY\s+WRITE', line) for line in
+                        (process / f'fdinfo/{fd}').read_text().splitlines() if line.startswith('lock:')))
+
+    def ce_restore_holds_scratch(self, scratch):
+        try:
+            pid = int(self.command(['systemctl', 'show', '--property=MainPID', '--value',
+                                    CE_ISOLATED_RESTORE_UNIT], timeout=10))
+            if pid <= 1:
+                return False
+            process = Path('/proc') / str(pid)
+            argv = (process / 'cmdline').read_bytes().split(b'\0')
+            if process.stat().st_uid != 0 or argv != [b'/bin/bash', os.fsencode(CE_ISOLATED_RESTORE), b'']:
+                return False
+            for path in (CE_ISOLATED_RESTORE, *CE_ISOLATED_RESTORE.parents):
+                info = path.lstat()
+                if info.st_uid != 0 or stat.S_ISLNK(info.st_mode) or info.st_mode & 0o022:
+                    return False
+            if hashlib.sha256(CE_ISOLATED_RESTORE.read_bytes()).hexdigest() != CE_ISOLATED_RESTORE_SHA:
+                return False
+            return (self.process_holds_lock(process, 9, os.fstat(scratch.fileno()))
+                    and self.process_holds_lock(process, 8, CE_RELEASE_LOCK.stat()))
+        except (LookupError, OSError, RuntimeError, ValueError):
+            return False
+
     def ce_backup_holds_scratch(self, scratch):
         try:
             pid = int(self.command(['systemctl', 'show', '--property=MainPID', '--value',
@@ -193,11 +227,7 @@ class Host:
             if (process.stat().st_uid != 0 or argv[-3:-1] !=
                     [CE_CAPTURE, b'backup']):
                 return False
-            descriptor = (process / 'fd/9').stat()
-            held = os.fstat(scratch.fileno())
-            return ((descriptor.st_dev, descriptor.st_ino) == (held.st_dev, held.st_ino)
-                    and any(re.search(r'FLOCK\s+ADVISORY\s+WRITE', line) for line in
-                            (process / 'fdinfo/9').read_text().splitlines() if line.startswith('lock:')))
+            return self.process_holds_lock(process, 9, os.fstat(scratch.fileno()))
         except (LookupError, OSError, RuntimeError, ValueError):
             return False
 
@@ -219,11 +249,21 @@ class Host:
                 try:
                     fcntl.flock(scratch, fcntl.LOCK_EX | fcntl.LOCK_NB)
                 except BlockingIOError:
-                    if not self.ce_backup_holds_scratch(scratch):
-                        raise RuntimeError('Shared backup lock owner is not a verified CE-only capture') from None
-                    if shutil.disk_usage(APP).free < 8 * 1024**3:
-                        raise RuntimeError('Insufficient deployment/recovery headroom during CE backup')
-                    yield 'shared-backup-exclusivity: verified unrelated CE capture'
+                    if self.ce_backup_holds_scratch(scratch):
+                        operation = 'capture'
+                        reserve = 0
+                    elif self.ce_restore_holds_scratch(scratch):
+                        operation = 'isolated restore'
+                        reserve = 100 * GIB
+                    else:
+                        raise RuntimeError('Shared backup lock owner is not a verified CE-only operation') from None
+                    if shutil.disk_usage(APP).free < 8 * GIB:
+                        raise RuntimeError('Insufficient Muzeum deployment/recovery headroom')
+                    if reserve:
+                        shared_device = APP.stat().st_dev == Path('/var/tmp').stat().st_dev
+                        if shutil.disk_usage('/var/tmp').free < reserve + (8 * GIB if shared_device else 0):
+                            raise RuntimeError('Insufficient capacity to preserve CE isolated restore headroom')
+                    yield 'shared-backup-exclusivity: verified unrelated CE ' + operation
                 else:
                     self.protected_fds = (*self.protected_fds, scratch.fileno())
                     yield None
