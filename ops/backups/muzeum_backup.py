@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Isolated Muzeum backup readiness tooling; production capture is gated off."""
 import argparse
+from contextlib import ExitStack
+from production_capture import inherit_lock, worker_lock_fds
 import datetime as dt
 import fcntl
 import hashlib
@@ -50,7 +52,7 @@ def invoke(argv, *, env=None, output=None, timeout=7200, file_limit=None, label=
     result = subprocess.run(argv, stdin=subprocess.DEVNULL,
                             stdout=output if output is not None else subprocess.PIPE,
                             stderr=subprocess.PIPE, env=env, timeout=timeout,
-                            preexec_fn=limit if file_limit else None)
+                            preexec_fn=limit if file_limit else None, pass_fds=worker_lock_fds.get())
     if result.returncode:
         raise CommandFailure(label or Path(argv[0]).name, result.returncode)
     return result.stdout.decode() if output is None else ''
@@ -199,11 +201,17 @@ def main():
     args = parser.parse_args()
     os.umask(0o077)
     BASE.mkdir(exist_ok=True, mode=0o700)
-    with (BASE.parent / 'backup.lock').open('a') as lock:
-        try:
-            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except BlockingIOError:
-            raise RuntimeError('Another backup/verification job holds the host backup lock')
+    with ExitStack() as locks:
+        names = ['muzeum-recovery.lock']
+        if args.action == 'backup':
+            names.append('backup.lock')
+        for name in names:
+            lock = locks.enter_context((BASE.parent / name).open('r'))
+            try:
+                fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except BlockingIOError:
+                raise RuntimeError('Another backup/verification job holds ' + name) from None
+            locks.enter_context(inherit_lock(lock))
         config = load_config(args.config)
         if config.get('credential_scope') != 'subaccount' and os.environ.get('ALLOW_BOOTSTRAP_TEST') != 'yes':
             raise RuntimeError('Restricted subaccount required for unattended operation')

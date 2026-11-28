@@ -1,6 +1,20 @@
 """Muzeum-only production capture. No provisioning or timer activation is implicit."""
 import datetime,hashlib,json,os,re,shutil,stat,subprocess,time
+from contextlib import contextmanager
+from contextvars import ContextVar
 from pathlib import Path
+
+worker_lock_fds = ContextVar("worker_lock_fds", default=())
+
+
+@contextmanager
+def inherit_lock(lock):
+    token = worker_lock_fds.set((*worker_lock_fds.get(), lock.fileno()))
+    try:
+        yield
+    finally:
+        worker_lock_fds.reset(token)
+
 DATABASES=('muzeum_production','muzeum_production_cache','muzeum_production_queue','muzeum_production_cable')
 SOURCES=('/var/www/muzeum/shared/storage','/var/www/muzeum/shared/.env','/etc/muzeum/migrate.env','/etc/muzeum/database-credentials.json','/etc/muzeum/oidc.env','/etc/muzeum/lastfm.env','/etc/muzeum/backup.pgpass')
 UNITS=('muzeum-web.service','muzeum-worker.service')
@@ -24,7 +38,7 @@ def environment():
 
 def query(database,sql):
     result=subprocess.run(['psql','-XAt','-v','ON_ERROR_STOP=1','-h','127.0.0.1','-U','muzeum_backup','-d',database],
-                          input=sql.encode(),capture_output=True,env=environment(),timeout=130)
+                          input=sql.encode(),capture_output=True,env=environment(),timeout=130,pass_fds=worker_lock_fds.get())
     if result.returncode:raise RuntimeError('Scoped backup metadata query failed')
     return result.stdout.decode().strip()
 
@@ -37,14 +51,14 @@ def fingerprints(database,restored=False):
         prefix=['psql','-XAt','-v','ON_ERROR_STOP=1','-h','127.0.0.1','-U','muzeum_backup','-d',database]
         env=environment()
     sql="SELECT tablename FROM pg_tables WHERE schemaname='public' ORDER BY tablename"
-    result=subprocess.run(prefix,input=sql.encode(),capture_output=True,env=env,timeout=30)
+    result=subprocess.run(prefix,input=sql.encode(),capture_output=True,env=env,timeout=30,pass_fds=worker_lock_fds.get())
     if result.returncode:raise RuntimeError('Fingerprint table inventory failed')
     tables=result.stdout.decode().splitlines();values={}
     for table in tables:
         if not re.fullmatch('[a-z_][a-z0-9_]*',table):raise RuntimeError('Unexpected table identifier')
         # Stable row JSON ordering, streamed rather than retaining the archive in memory.
         sql='COPY (SELECT row_to_json(t)::text FROM public."'+table+'" t ORDER BY row_to_json(t)::text COLLATE "C") TO STDOUT'
-        with subprocess.Popen(prefix+['-c',sql],stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,env=env) as process:
+        with subprocess.Popen(prefix+['-c',sql],stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,env=env,pass_fds=worker_lock_fds.get()) as process:
             digest=hashlib.sha256();size=0
             for chunk in iter(lambda:process.stdout.read(65536),b''):digest.update(chunk);size+=len(chunk)
             if process.wait(timeout=120):raise RuntimeError('Streamed fingerprint failed')

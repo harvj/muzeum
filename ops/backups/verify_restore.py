@@ -13,11 +13,15 @@ import subprocess
 import sys
 import time
 import monitoring
+from production_capture import worker_lock_fds
 
 api = runpy.run_path('/usr/local/lib/harvj-backups/muzeum-backup')
 base = api['BASE']
-lock = (base.parent / 'backup.lock').open('a')
-fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+recovery_lock = (base.parent / 'muzeum-recovery.lock').open('r')
+fcntl.flock(recovery_lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+scratch_lock = (base.parent / 'backup.lock').open('r')
+fcntl.flock(scratch_lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+worker_lock_fds.set((recovery_lock.fileno(), scratch_lock.fileno()))
 config_path = Path(sys.argv[1]) if len(sys.argv) == 2 else Path('/etc/harvj-backups/muzeum/config.json')
 config = api['load_config'](config_path)
 if config['mode'] == 'production':
@@ -53,11 +57,11 @@ with monitoring.job_run('restoration'):
         raise SystemExit('Readiness verifier expects exactly one disposable fixture database')
     source = config['databases'][0]
     database = 'muzeum_backup_restore_' + secrets.token_hex(6)
-    subprocess.run(['/usr/sbin/runuser', '-u', 'postgres', '--', '/usr/bin/createdb', '--template=template0', database], check=True)
+    subprocess.run(['/usr/sbin/runuser', '-u', 'postgres', '--', '/usr/bin/createdb', '--template=template0', database], check=True, pass_fds=worker_lock_fds.get())
     with (restored / 'databases' / (source + '.dump')).open('rb') as archive:
         result = subprocess.run(['/usr/sbin/runuser', '-u', 'postgres', '--', '/usr/bin/pg_restore',
                                  '--no-owner', '--no-acl', '--exit-on-error', '--dbname', database],
-                                stdin=archive, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, timeout=300)
+                                stdin=archive, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, timeout=300, pass_fds=worker_lock_fds.get())
         if result.returncode:
             raise SystemExit('Disposable PostgreSQL restoration failed')
     sql = "SELECT count(*)::text || '|' || md5(string_agg(id::text || ':' || value, '|' ORDER BY id)) FROM backup_probe"
@@ -69,7 +73,7 @@ with monitoring.job_run('restoration'):
     if query(database, "SELECT count(*) FROM pg_indexes WHERE tablename='backup_probe'") != '2':
         raise SystemExit('Restored PostgreSQL indexes missing')
     row_checksum = query(database, sql).split('|')[1]
-    subprocess.run(['/usr/sbin/runuser', '-u', 'postgres', '--', '/usr/bin/dropdb', database], check=True)
+    subprocess.run(['/usr/sbin/runuser', '-u', 'postgres', '--', '/usr/bin/dropdb', database], check=True, pass_fds=worker_lock_fds.get())
     result = {'disposable_database_cleaned_after_verification': True, 'snapshot_id': record['snapshot_id'], 'restored_directory': str(target),
               'disposable_restored_database': database, 'files_verified': len(manifest),
               'database_rows_verified': 1000, 'row_checksum': row_checksum,

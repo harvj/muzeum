@@ -20,7 +20,7 @@ class BackupLockTests(unittest.TestCase):
         self.root = Path(self.temporary.name)
         self.backups = self.root / 'muzeum'
         self.backups.mkdir()
-        self.lock = self.root / 'backup.lock'
+        self.lock = self.root / 'muzeum-recovery.lock'
         self.lock.touch()
         self.patch = patch.object(deploy, 'BACKUPS', self.backups)
         self.patch.start()

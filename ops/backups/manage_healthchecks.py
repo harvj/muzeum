@@ -120,7 +120,7 @@ def main():
         info = directory.lstat()
         if not stat.S_ISDIR(info.st_mode) or info.st_uid != 0 or stat.S_IMODE(info.st_mode) != 0o700:
             raise RuntimeError('Unsafe configuration directory')
-    with Path('/var/lib/harvj-backups/backup.lock').open('a') as lock:
+    with Path('/var/lib/harvj-backups/muzeum-recovery.lock').open('r') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         original = secure_read(MONITORING)
         updated, created = reconcile(api_client(secure_read(KEY).strip()), json.loads(original))
