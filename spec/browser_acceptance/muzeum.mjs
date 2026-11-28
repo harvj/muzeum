@@ -183,6 +183,9 @@ await runCandidate({ chromium: chrome, artifact: 'candidate.tar.gz', binding, ou
           await page.setViewportSize({ width, height });
           await page.goto(origin + path + '?candidate=' + recordingId);
           await action.waitFor();
+          if (title === 'Heartland') {
+            await page.getByText('Retried release verification for 1 recording.', { exact: false }).waitFor();
+          }
           await page.getByText('Admit 1 new release', { exact: false }).first().waitFor();
           assert.equal(await page.locator('input[type="radio"][name="construct_release"]').count(), 0);
           const sources = page.locator('.release-configuration-sources').first();

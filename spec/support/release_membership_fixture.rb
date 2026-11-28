@@ -10,6 +10,9 @@ module ReleaseMembershipFixture
     fixture = Rails.root.join("spec/fixtures/musicbrainz/release_membership")
     edition = JSON.parse(fixture.join("#{example[:file]}.json").read)
     historical = JSON.parse(fixture.join("#{example[:assessment]}-assessment.json").read)
+    if example[:assessment] == "heartland"
+      historical.merge!(JSON.parse(fixture.join("heartland-refresh.json").read))
+    end
     claims = historical.fetch("source_claims")
     payload = claims.merge("artist_name" => example[:artist], "album_name" => example[:album], "track_name" => example[:track])
     plays = Array.new(example[:observations]) do |index|
@@ -18,7 +21,7 @@ module ReleaseMembershipFixture
     end
     surface = RecordingResolution::Ledger.attach!(plays.first)
     group = RecordingResolution::Group.create!(surface_id: surface.id, claims:, version: RecordingResolution::Ledger::VERSION)
-    previous = RecordingResolution::Assessment.create!(group_id: group.id, version: "workspace-evidence-v3",
+    previous = RecordingResolution::Assessment.create!(group_id: group.id, version: (example[:assessment] == "heartland" ? "workspace-evidence-v4" : "workspace-evidence-v3"),
       digest: Digest::SHA256.hexdigest(historical.to_json), actor: "fixture", evidence: historical)
 
     studio = edition.fetch("media").first.fetch("tracks").find { |slot| slot["position"] == example[:position] }.fetch("recording")
