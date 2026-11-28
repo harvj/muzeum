@@ -211,6 +211,7 @@ module CanonicalCatalog
           evidence = review.policy ? review.refresh(@musicbrainz, @session) : reassessment.evidence.dup
           evidence["reassessment"] = { "previous_id" => reassessment.id, "checked_at" => Time.current.utc.iso8601(6) }
           evidence["reused_publication_requests"] = (Array(evidence["reused_publication_requests"]) + Array(evidence["requests"])).uniq
+          retry_pending_publications(evidence) unless review.policy
           return complete { write_assessment(evidence) }
         end
       end
@@ -275,6 +276,22 @@ module CanonicalCatalog
       end
     end
 
+    def retry_pending_publications(evidence)
+      histories = evidence.fetch("recording_publications")
+      ids = histories.select { |_, history| publication_incomplete?(history) }.keys
+      return if ids.empty?
+
+      @reassessment_evidence = evidence
+      evidence["reassessment"]["pending_publication_retries"] = ids
+      result = RecordingResolution::RecordingOrigins.new(@musicbrainz, @session).call(ids,
+        retained: Array(evidence["construction_editions"]))
+      evidence.merge!(result.merge("recording_publications" => histories.merge(result.fetch("recording_publications"))))
+    end
+
+    def publication_incomplete?(history)
+      history["pending"] || history["appearance_browse_incomplete"] || Array(history["pending_groups"]).any?
+    end
+
     def investigate_publication(surface, evidence)
       # Appearance evidence belongs to the investigation, but it cannot decide
       # which otherwise plausible identities get a publication lookup.
@@ -301,7 +318,7 @@ module CanonicalCatalog
         .where("evidence ? 'recording_publications'").order(id: :desc).pick(:evidence) || {}
       evidence["additional_recording_publications"] = previous["additional_recording_publications"] if previous.key?("additional_recording_publications")
       saved = previous.fetch("recording_publications", {}).slice(*ids).reject do |_, history|
-        history["checked_at"].to_s < 1.day.ago.utc.iso8601 || !history.key?("verified_recording") || history["pending"] || history["appearance_browse_incomplete"] || Array(history["pending_groups"]).any? ||
+        history["checked_at"].to_s < 1.day.ago.utc.iso8601 || !history.key?("verified_recording") || publication_incomplete?(history) ||
           (Array(history["original_groups"]).any? && !history.key?("edition_coverage"))
       end
       # Only reuse completed, recent histories and their checked source editions.
@@ -318,7 +335,9 @@ module CanonicalCatalog
     def persist_assessment_failure(error, stopped)
       return if @request.context["provenance_mbid"]
 
-      evidence = @evaluator&.evidence || { "source_claims" => @claims, "reasons" => [], "reason_details" => {} }
+      evidence = @reassessment_evidence || @evaluator&.evidence || { "source_claims" => @claims }
+      evidence["reasons"] ||= []
+      evidence["reason_details"] ||= {}
       code = error.terminal ? "provider_request_stopped" : "provider_temporarily_unavailable"
       evidence["reasons"] << code
       evidence["reason_details"][code] = (@session.current_request || {}).merge(

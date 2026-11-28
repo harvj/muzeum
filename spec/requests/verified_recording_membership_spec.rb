@@ -27,7 +27,11 @@ RSpec.describe "Release-backed recording resolution", type: :request do
       end.not_to change { [ Recording.count, Release.count, RecordingResolution::Decision.count ] }
       expect(flash[:alert]).to include("Verify and admit a release")
 
-      get resolution_surface_path(target)
+      if example[:assessment] == "heartland"
+        post investigate_resolution_surface_path(target), params: { reassess: "1", assessment_id: previous.id }
+      else
+        get resolution_surface_path(target)
+      end
       request = CatalogImport.where(kind: RecordingResolution::Investigation::KIND).sole
       CanonicalCatalog::Processor.new(request, session_factory: ->(*) { provider }).call
       expect(request.reload.state).to eq("imported")
@@ -35,6 +39,11 @@ RSpec.describe "Release-backed recording resolution", type: :request do
       expect(assessment.evidence.dig("recording_publications", mbid, "original_groups")).to include(group_mbid)
       expect(assessment.evidence.fetch("candidates").pluck("id")).to include(example[:competing])
       expect(provider.paths).to include("/ws/2/recording/#{mbid}")
+      if example[:assessment] == "heartland"
+        expect(provider.paths.grep(%r{\A/ws/2/recording})).to eq([ "/ws/2/recording/#{mbid}" ])
+        expect(provider.paths).to include("/ws/2/release/#{edition.fetch("id")}")
+        expect(assessment.evidence.dig("reassessment", "pending_publication_retries")).to eq([ mbid ])
+      end
 
       get resolution_surface_path(target, candidate: mbid)
       expect(response.body).to include("Admit 1 new release", "Resolve all #{example[:observations]}")

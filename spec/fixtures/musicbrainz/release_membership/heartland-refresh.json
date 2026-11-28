@@ -1,0 +1,60 @@
+{
+  "reassessment": {
+    "checked_at": "2026-11-28T07:02:55.787351Z",
+    "previous_id": 323
+  },
+  "recording_publications": {
+    "06b2fc47-c2ac-4ad9-a213-f24fa6e1a49d": {
+      "checked_at": "2026-11-28T01:55:53Z",
+      "pending_groups": [],
+      "original_groups": [
+        "f1b14f1d-3688-4268-ac34-f061a78bbbf4"
+      ],
+      "edition_coverage": {
+        "f1b14f1d-3688-4268-ac34-f061a78bbbf4": {
+          "verified": [
+            "c1135185-0b10-4185-9391-93c65b7ba5a0"
+          ],
+          "unchecked": []
+        }
+      },
+      "earliest_publication": {
+        "id": "c1135185-0b10-4185-9391-93c65b7ba5a0",
+        "date": "2015-02-16",
+        "title": "Shock of Daylight / Heads and Hearts / In the Hothouse / Thunder Up / Propaganda"
+      },
+      "appearance_browse_incomplete": false,
+      "first_publication_compilation_group": "f1b14f1d-3688-4268-ac34-f061a78bbbf4"
+    },
+    "122af450-9e19-4e00-b309-8d129fa5b582": {
+      "checked_at": "2026-11-28T01:55:53Z",
+      "pending_groups": [],
+      "original_groups": [],
+      "earliest_publication": {
+        "id": "d13df18b-43f7-4a52-8294-fcc4fb6b7ba7",
+        "date": "2006-07-03",
+        "title": "Dutch Radio Recordings: 1. 08.03.81 Amsterdam, Paradiso"
+      },
+      "appearance_browse_incomplete": false
+    },
+    "a79f2c69-4372-4ac3-a357-8b52764a3373": {
+      "checked_at": "2026-11-28T07:00:44Z",
+      "group_errors": {
+        "ae0f7b78-3dce-3157-8dd5-a82251dcf8ef": {
+          "reason": "Provider unavailable",
+          "http_status": 503
+        }
+      },
+      "pending_groups": [
+        "ae0f7b78-3dce-3157-8dd5-a82251dcf8ef"
+      ],
+      "original_groups": [],
+      "earliest_publication": {
+        "id": "c619e486-4dca-4d5e-b6b8-e802a57eec40",
+        "date": "1980-11",
+        "title": "Jeopardy"
+      },
+      "appearance_browse_incomplete": false
+    }
+  }
+}

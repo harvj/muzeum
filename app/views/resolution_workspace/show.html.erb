@@ -56,6 +56,9 @@
     <% if @assessment.version != RecordingResolution::Assessment::INTERPRETATION_VERSION %>Earlier investigation logic.<% end %>
     <% if @assessment.evidence["reassessment"].present? %>
       Retained evidence was reassessed.
+      <% if (retries = @assessment.evidence.dig("reassessment", "pending_publication_retries")).present? %>
+        Retried release verification for <%= pluralize(retries.size, "recording") %>.
+      <% end %>
       <% if (lookup = @assessment.evidence["reviewed_release_lookup"]) %>
         <%= pluralize(Array(lookup["attempted"]).size, "reviewed edition lookup") %> attempted.
         <%= pluralize(Array(lookup["missing"]).size, "edition lookup") %> still missing.
