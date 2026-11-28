@@ -32,3 +32,14 @@ ambiguity = evidence.slice("construction_editions", "review_tracklists", "review
   .merge("candidates" => candidates, "source_claims" => ambiguous_claims)
 RecordingResolution::Assessment.create!(group_id: ambiguous_group.id, version: RecordingResolution::Assessment::INTERPRETATION_VERSION,
   digest: Digest::SHA256.hexdigest(ambiguity.to_json), actor: "fixture", evidence: ambiguity)
+
+
+require Rails.root.join("spec/support/discovery_replay")
+require Rails.root.join("spec/support/release_membership_fixture")
+membership_fixture = Object.new.extend(ReleaseMembershipFixture)
+ReleaseMembershipFixture::CASES.each do |entry|
+  plays, previous, _, _, provider = membership_fixture.seed_release_membership_case(owner, entry)
+  request = RecordingResolution::Investigation.new(owner, plays.first).request(refresh: true, reassessment: previous)
+  CanonicalCatalog::Processor.new(request, session_factory: ->(*) { provider }).call
+  abort "Expected completed membership investigation" unless request.reload.state == "imported"
+end

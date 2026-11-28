@@ -226,10 +226,14 @@ class ResolutionWorkspaceController < ApplicationController
           program_ids: choices[:program_ids])
       end
       if recording
-        request = CatalogImport.request!(CatalogImport::RECORDING_METADATA, recording.id, context)
         if scope == :surface && params[:construct_release].present?
           construct_reviewed_release!(assessment, recording, plan:, identity:)
         end
+        unless recording.verified_release_membership?
+          raise CanonicalCatalog::Store::Unverified, "Verify and admit a release containing this recording before resolving these observations."
+        end
+
+        request = CatalogImport.request!(CatalogImport::RECORDING_METADATA, recording.id, context)
       end
     end
     request&.dispatch

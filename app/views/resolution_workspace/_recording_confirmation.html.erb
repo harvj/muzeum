@@ -1,6 +1,5 @@
 <% mbid = selected.fetch("id") %>
 <% catalog_releases = catalog_rows[2][1] %>
-<% release_pending = contexts.empty? && catalog_releases.empty? %>
 <% groups = contexts.group_by { |item| item.construction.base.data.dig("release-group", "id") }.values.sort_by do |choices|
   release = choices.first.construction.base.data
   [release.dig("release-group", "primary-type") == "Album" ? 0 : 1, release.fetch("date"), release.fetch("id")]
@@ -8,6 +7,7 @@ end %>
 <% plan = CanonicalCatalog::ResolutionPlan.new(@assessment, mbid, @affected_count) %>
 <% catalog_recording = plan.recording || catalog_rows[1][1].first %>
 <% proposals = plan.proposals %>
+<% has_membership = plan.recording&.verified_release_membership? %>
 <% provenance = RecordingResolution::ReleaseProvenance.new(@assessment.evidence, contexts:, releases: catalog_releases, recording_mbid: mbid) %>
 <% established = provenance.established.any? %>
 <% requested_edition = params[:edition].presence %>
@@ -58,14 +58,16 @@ end %>
   <% elsif catalog_releases.any? %>
     <p class="muted">Verified catalog appearances are listed above. Original release evidence is unavailable here.</p>
   <% else %>
-    <p>The available evidence does not verify an original release and its tracklist.
-      <% if can_confirm && !invalid_edition %>You can resolve the recording without adding a release.<% end %>
-    </p>
+    <p>The available evidence does not verify an original release and its tracklist. Refresh the investigation to check missing release evidence.</p>
   <% end %>
 </section>
   <%= render "release_provenance", provenance:, mbid:, recording_ids: plan.identity.source_ids || [mbid] %>
 <% end %>
-<% confirmable = can_confirm && (!invalid_edition || proposals.any?) %>
+<% confirmable = can_confirm && (has_membership || proposals.any? || @release_review&.policy) && (!invalid_edition || proposals.any?) %>
+<% if can_confirm && !has_membership && proposals.empty? && !@release_review&.policy %>
+  <p role="status">Resolution requires a verified canonical release containing this recording.</p>
+  <%= link_to "Review evidence", resolution_surface_path(@observation, **navigation.merge(section: "evidence")) %>
+<% end %>
 <% if confirmable %>
   <%= form_with url: decide_resolution_surface_path(@observation), class: "resolution-confirmation", id: "recording-resolution-confirmation" do |form| %>
     <%= form.hidden_field :recording_mbid, value: mbid %>
@@ -90,7 +92,7 @@ end %>
           <% if plan.identity.aliases&.any? %> · <%= pluralize(plan.identity.aliases.size, "equivalent source ID") %> will be linked<% end %>
         </li>
         <% if @release_review&.policy %>
-          <li><strong>Release</strong> · Recording confirmation can proceed without a release choice. Checked releases and configurations will be applied together.</li>
+          <li><strong>Release</strong> · <%= has_membership ? "Reuse verified release membership. Checked releases and configurations will be applied together." : "Select a verified release containing this recording to confirm membership and resolve the observations together." %></li>
         <% elsif proposals.empty? %>
           <li><strong>Release</strong> · 0 new releases<%= " · #{catalog_releases.map(&:title).to_sentence}" if catalog_releases.any? %></li>
         <% else %>
@@ -102,7 +104,7 @@ end %>
             <% new_recordings, existing_recordings = plan.track_recordings(proposal) %>
             <%= tag.li hidden: choosing_release && selected_edition != base.data["id"], data: (choosing_release ? { release_proposal_target: "proposal", edition: base.data["id"] } : {}) do %>
               <strong>Release</strong> · <%= base.data.fetch("title") %> · <%= pluralize(base.slots.size, "track") %> ·
-              <%= proposal.existing ? "Reuse existing release · Rebuild base tracklist" : "1 new release" %>
+              <%= proposal.existing ? "Reuse existing release · Rebuild base tracklist" : "Admit 1 new release" %>
               <div class="muted"><%= resolution_candidate_credit(base.data) %></div>
               <div class="muted"><%= [("#{pluralize(new_recordings, 'new recording')}" if new_recordings.positive?),
                 ("Reuse #{pluralize(existing_recordings.map { |row| row[1] }.uniq.size, 'recording')}" if existing_recordings.any?)].compact.join(" · ") %></div>
@@ -153,12 +155,12 @@ end %>
       <% if @override_count.positive? %><%= pluralize(@override_count, "individual override") %> preserved.<% end %>
     </p>
     <div class="resolution-actions">
-      <%= form.button class: "resolution-primary" do %>
+      <%= form.button class: "resolution-primary", disabled: @release_review&.policy && !has_membership,
+        data: (@release_review&.policy && !has_membership ? { pending_release_review_target: "confirm",
+          required_recording_ids: (plan.identity.source_ids || [mbid]).join(",") } : {}) do %>
         <span class="resolution-confirmation-mark" aria-hidden="true">✓</span>
         <%= if @release_review&.policy && @affected_count.positive?
           "Resolve all #{@affected_count} observations"
-        elsif release_pending
-          "Resolve recording only"
         elsif @affected_count.zero?
           "Resolve future matches"
         elsif @override_count.positive?

@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["summary", "primary", "effect"]
+  static targets = ["summary", "primary", "effect", "confirm"]
 
   connect() {
     this.update()
@@ -18,9 +18,14 @@ export default class extends Controller {
     }
     const primary = configurations.length === 1 ? configurations[0] :
       configurations.find((input) => this.primaryTargets.some((radio) => radio.checked && radio.value === input.value))
+    const admissions = editions.filter((input) => input.dataset.reviewEdition === "program")
+    if (primary && primary.dataset.reviewExistingAlbum === "false") admissions.push(primary)
+    for (const button of this.confirmTargets) {
+      const requiredIds = button.dataset.requiredRecordingIds.split(",")
+      button.disabled = !admissions.some((choice) =>
+        choice.dataset.reviewRecordingIds.split(",").some((id) => requiredIds.includes(id)))
+    }
     if (this.hasEffectTarget) {
-      const admissions = editions.filter((input) => input.dataset.reviewEdition === "program")
-      if (primary && primary.dataset.reviewExistingAlbum === "false") admissions.push(primary)
       const recordings = new Set(admissions.flatMap((input) => input.dataset.reviewNewRecordings.split(",")).filter(Boolean))
       const album = primary ? (primary.dataset.reviewExistingAlbum === "false" ?
         "Admit one canonical album using the preferred configuration as its base. " :

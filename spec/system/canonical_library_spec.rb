@@ -1137,7 +1137,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
   it "reviews a candidate, applies it using the keyboard, and opens the admitted track listing" do
     user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "canonical-browser", lastfm_username: "canonical-browser")
     observation = catalog_observation(user, time: Time.utc(2024, 8, 20, 20, 15))
-    catalog_assessment(observation)
+    assessment = catalog_assessment(observation)
     sign_in(user)
     visit releases_path
     expect(page).to have_text("No canonical releases yet")
@@ -1151,22 +1151,21 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
     click_link "Review candidate evidence"
     expect(page).to have_current_path(resolution_surface_path(observation))
-    find_button("Resolve recording only").send_keys(:enter)
+    expect(page).to have_text("Resolution requires a verified canonical release")
+    expect(page).to have_no_button("Resolve recording only")
+    data = CatalogFixtures::Session.new.edition
+    evidence = assessment.evidence.merge("construction_editions" => [ data ])
+    proposal = RecordingResolution::Assessment.create!(group_id: assessment.group_id, version: "fixture",
+      actor: "fixture", digest: SecureRandom.hex(32), evidence:)
+    visit resolution_surface_path(observation, assessment: proposal.id)
+    find_button("Resolve this observation").send_keys(:enter)
     expect(page).to have_text("Recording decision saved.")
-
     request = CatalogImport.find_by!(kind: CatalogImport::RECORDING_METADATA)
     expect(request.state).to eq("pending")
-    expect(page).to have_css("turbo-cable-stream-source[connected]", visible: :all)
-    expect(page).to have_css(".review-catalog-context", text: "Checking recording metadata")
     session = CatalogFixtures::Session.new
     allow(RecordingResolution::ProviderSession).to receive(:new).and_return(session)
     CanonicalCatalogJob.perform_now(request.id)
     expect(request.reload.state).to eq("imported")
-    expect(Release.count).to eq(0)
-    expect(page).to have_css(".review-catalog-context", text: "Release verification pending")
-    explicit = CatalogImport.request!("recording", request.entity_id)
-    CanonicalCatalogJob.perform_now(explicit.id)
-    expect(page).to have_css(".review-catalog-context dl > div:last-child .review-catalog-mark.present")
     expect(page).to have_link("Night Drive", href: release_path(Release.find_by!(title: "Night Drive")))
     release = Release.find_by!(title: "Night Drive")
     visit resolution_surface_path(observation)
@@ -1344,8 +1343,8 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     page.execute_script("window.investigationConsumer.connect()")
     expect(page).to have_css(".resolution-choice", text: "Signals")
     expect(page).to have_no_css(".investigation-badge", exact_text: "Investigation complete")
-    expect(page).to have_css('[aria-label="Original release"]', text: "You can resolve the recording without adding a release.")
-    expect(page).to have_button("Resolve recording only")
+    expect(page).to have_css('[aria-label="Original release"]', text: "Refresh the investigation to check missing release evidence.")
+    expect(page).to have_no_button("Resolve recording only")
     expect(page).to have_no_css(".investigation-progress")
     expect(page).to have_no_link("Refresh status")
     browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 1280, height: 800, deviceScaleFactor: 1, mobile: false)
@@ -1356,26 +1355,17 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     browser&.execute_cdp("Emulation.setEmulatedMedia", features: [])
   end
 
-  it "automatically shows pending release verification when the saved recording has no complete release evidence" do
+  it "leaves an observation unresolved when there is no verified release membership" do
     user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "catalog-pending", lastfm_username: "catalog-pending")
     observation = catalog_observation(user)
     catalog_assessment(observation)
     sign_in(user)
     visit resolution_surface_path(observation)
-    click_button "Resolve recording only"
-    expect(page).to have_text("Recording decision saved.")
-    expect(page).to have_css("turbo-cable-stream-source[connected]", visible: :all)
-    expect(page).to have_css(".review-catalog-context", text: "Checking recording metadata")
-
-    provider = CatalogFixtures::Session.new
-    allow(provider).to receive(:edition).and_return(provider.edition.merge("media" => []))
-    allow(RecordingResolution::ProviderSession).to receive(:new).and_return(provider)
-    request = CatalogImport.find_by!(kind: CatalogImport::RECORDING_METADATA)
-    CanonicalCatalogJob.perform_now(request.id)
-    expect(request.reload.state).to eq("imported")
+    expect(page).to have_text("Resolution requires a verified canonical release")
+    expect(page).to have_no_button("Resolve recording only")
     expect(Release.count).to eq(0)
-    expect(page).to have_css(".review-catalog-context", text: "Release verification pending")
-    expect(page).to have_no_css(".review-catalog-context dl > div:last-child .review-catalog-mark.present")
+    expect(Recording.count).to eq(0)
+    expect(RecordingResolution::Decision.count).to eq(0)
   end
 
   it "shows pending, ranked, ambiguous and resolved identities across desktop and mobile" do
@@ -1434,8 +1424,9 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
     capture_resolution("ambiguous-mobile")
 
+    seed_verified_membership(first)
     visit resolution_surface_path(observation, assessment: assessment.id)
-    find_button("Resolve recording only").send_keys(:enter)
+    find_button("Resolve all 2").send_keys(:enter)
     expect(page).to have_css(".review-state", text: "Resolved")
     expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
     capture_resolution("resolved-mobile")
@@ -1497,11 +1488,12 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     RecordingResolution::Assessment.create!(group_id: group.id, version: "fixture", actor: "fixture",
       digest: SecureRandom.hex(32), evidence:)
 
+    seed_verified_membership(recording)
     browser = page.driver.browser
     sign_in(user)
     plays.each do |play|
       visit resolution_surface_path(play)
-      expect(page).to have_button("Resolve recording only")
+      expect(page).to have_button("Resolve all 3")
       expect(page).to have_text("Future exact matches inherit this decision")
       expect(page).to have_no_css(".review-tracks li")
     end
@@ -1516,7 +1508,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
       reason: "Existing exception", recording: alternate)
     visit resolution_surface_path(plays.second)
     expect(page).to have_text("1 individual override preserved")
-    click_button "Resolve recording only"
+    click_button "Resolve 2 matching"
     expect(page).to have_text("Recording decision saved.")
     expect(page).to have_css(".review-state", exact_text: "Resolved")
     click_link "Review evidence"

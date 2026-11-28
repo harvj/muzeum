@@ -206,7 +206,8 @@ module CanonicalCatalog
 
       if (reassessment = @group && RecordingResolution::Assessment.find_by(id: @request.context["reassessment_id"], group_id: @group.id))
         review = RecordingResolution::ReleaseReview.new(reassessment.evidence)
-        if review.policy || !reassessment.evidence["partial"]
+        if review.policy || (!reassessment.evidence["partial"] && reassessment.version == RecordingResolution::Assessment::INTERPRETATION_VERSION &&
+            reassessment.evidence.key?("recording_publications"))
           evidence = review.policy ? review.refresh(@musicbrainz, @session) : reassessment.evidence.dup
           evidence["reassessment"] = { "previous_id" => reassessment.id, "checked_at" => Time.current.utc.iso8601(6) }
           evidence["reused_publication_requests"] = (Array(evidence["reused_publication_requests"]) + Array(evidence["requests"])).uniq
@@ -282,7 +283,7 @@ module CanonicalCatalog
       ids = RecordingResolution::Ranking.call(surface, independent, source_hints: true).filter_map do |rank|
         inputs = rank.fetch("inputs")
         rank["recording_mbid"] if inputs.dig("title", "state") == "positive" && inputs.dig("artist_name", "state") == "positive"
-      end.first(RecordingResolution::Workspace::REVIEW_CANDIDATES)
+      end
       # A checked track caption can identify a split movement even when its
       # recording title omits the section prefix used in the source.
       caption_ids = RecordingResolution::Ranking.call(surface, evidence, source_hints: true).filter_map do |rank|
@@ -293,7 +294,7 @@ module CanonicalCatalog
           rank["recording_mbid"]
         end
       end
-      ids = (ids | caption_ids).first(RecordingResolution::Workspace::REVIEW_CANDIDATES)
+      ids = (caption_ids | ids).first(RecordingResolution::Workspace::REVIEW_CANDIDATES)
       ids |= Array(evidence["manually_verified_mbid"])
 
       previous = RecordingResolution::Assessment.where(group_id: @group&.id, created_at: 1.day.ago..)

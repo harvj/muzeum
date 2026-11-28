@@ -39,6 +39,8 @@ The sections below describe the deferred per-play credit proposal. It does not g
 
 ## Background interpretation and history
 
+Verified canonical release membership is required for recording confirmation. A checked source appearance supplies evidence for explicit admission. Retaining configuration evidence or setting a listener preference does not create canonical membership.
+
 **REL-009 — Confidence belongs to an assessment.** Every evaluation records the available evidence, competing release candidates, uncertainty/confidence, policy/algorithm version, actor and timestamp. New evidence can strengthen confidence without changing the credited release.
 
 **REL-010 — Reassess affected context.** A background worker may reconsider a bounded neighborhood when later completed scrobbles arrive, a recording is resolved, source/provider metadata improves, or the listener changes a relevant assignment. Reevaluate nearby plays rather than repeatedly rescanning the entire archive.

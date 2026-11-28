@@ -1,0 +1,578 @@
+{
+  "cover-art-archive": {
+    "front": true,
+    "count": 1,
+    "artwork": true,
+    "darkened": false,
+    "back": false
+  },
+  "quality": "normal",
+  "release-group": {
+    "disambiguation": "",
+    "title": "Jeopardy",
+    "id": "ae0f7b78-3dce-3157-8dd5-a82251dcf8ef",
+    "primary-type": "Album",
+    "first-release-date": "1980-11",
+    "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+    "secondary-type-ids": [],
+    "secondary-types": [],
+    "artist-credit": [
+      {
+        "name": "The Sound",
+        "joinphrase": "",
+        "artist": {
+          "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+          "sort-name": "Sound, The",
+          "disambiguation": "UK post‐punk band",
+          "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+          "country": "GB",
+          "type": "Group",
+          "name": "The Sound"
+        }
+      }
+    ]
+  },
+  "title": "Jeopardy",
+  "status": "Official",
+  "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+  "asin": null,
+  "id": "c619e486-4dca-4d5e-b6b8-e802a57eec40",
+  "text-representation": {
+    "script": "Latn",
+    "language": "eng"
+  },
+  "media": [
+    {
+      "title": "",
+      "position": 1,
+      "id": "ba790f5e-8468-3027-a333-bd6ac209e455",
+      "track-count": 11,
+      "track-offset": 0,
+      "format": "12\" Vinyl",
+      "format-id": "3e9080b0-5e6c-34ab-bd15-f526b6306a64",
+      "tracks": [
+        {
+          "id": "25ef3b8f-0536-3152-82ff-88de1cf7fb5e",
+          "length": 235813,
+          "position": 1,
+          "title": "I Can't Escape Myself",
+          "recording": {
+            "id": "557d171d-b787-43c0-91e2-0fa4086bb57c",
+            "length": 235813,
+            "title": "I Can’t Escape Myself",
+            "disambiguation": "",
+            "artist-credit": [
+              {
+                "name": "The Sound",
+                "artist": {
+                  "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                  "sort-name": "Sound, The",
+                  "disambiguation": "UK post‐punk band",
+                  "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                  "country": "GB",
+                  "type": "Group",
+                  "name": "The Sound"
+                },
+                "joinphrase": ""
+              }
+            ],
+            "first-release-date": "1980-11"
+          },
+          "artist-credit": [
+            {
+              "name": "The Sound",
+              "joinphrase": "",
+              "artist": {
+                "disambiguation": "UK post‐punk band",
+                "sort-name": "Sound, The",
+                "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                "type": "Group",
+                "name": "The Sound",
+                "country": "GB",
+                "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b"
+              }
+            }
+          ],
+          "number": "A1"
+        },
+        {
+          "title": "Heartland",
+          "position": 2,
+          "length": 216346,
+          "id": "1edcd4f3-5634-33dc-8461-ae6caae960d3",
+          "number": "A2",
+          "recording": {
+            "length": 215000,
+            "id": "a79f2c69-4372-4ac3-a357-8b52764a3373",
+            "title": "Heartland",
+            "disambiguation": "",
+            "artist-credit": [
+              {
+                "name": "The Sound",
+                "artist": {
+                  "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                  "sort-name": "Sound, The",
+                  "disambiguation": "UK post‐punk band",
+                  "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                  "country": "GB",
+                  "type": "Group",
+                  "name": "The Sound"
+                },
+                "joinphrase": ""
+              }
+            ],
+            "first-release-date": "1980-11"
+          },
+          "artist-credit": [
+            {
+              "name": "The Sound",
+              "joinphrase": "",
+              "artist": {
+                "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                "sort-name": "Sound, The",
+                "disambiguation": "UK post‐punk band",
+                "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                "country": "GB",
+                "name": "The Sound",
+                "type": "Group"
+              }
+            }
+          ]
+        },
+        {
+          "number": "A3",
+          "artist-credit": [
+            {
+              "artist": {
+                "name": "The Sound",
+                "type": "Group",
+                "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                "country": "GB",
+                "disambiguation": "UK post‐punk band",
+                "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                "sort-name": "Sound, The"
+              },
+              "joinphrase": "",
+              "name": "The Sound"
+            }
+          ],
+          "recording": {
+            "first-release-date": "1980-11",
+            "artist-credit": [
+              {
+                "joinphrase": "",
+                "artist": {
+                  "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                  "country": "GB",
+                  "name": "The Sound",
+                  "type": "Group",
+                  "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                  "sort-name": "Sound, The",
+                  "disambiguation": "UK post‐punk band"
+                },
+                "name": "The Sound"
+              }
+            ],
+            "disambiguation": "",
+            "title": "Hour of Need",
+            "id": "f29bbe85-6ce7-4935-afcd-9f1f03550704",
+            "length": 183266
+          },
+          "title": "Hour of Need",
+          "position": 3,
+          "id": "9fd2c1a5-d3f8-37b2-bd0e-d57e5d597022",
+          "length": 185360
+        },
+        {
+          "artist-credit": [
+            {
+              "artist": {
+                "disambiguation": "UK post‐punk band",
+                "sort-name": "Sound, The",
+                "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                "name": "The Sound",
+                "type": "Group",
+                "country": "GB",
+                "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b"
+              },
+              "joinphrase": "",
+              "name": "The Sound"
+            }
+          ],
+          "recording": {
+            "artist-credit": [
+              {
+                "joinphrase": "",
+                "artist": {
+                  "country": "GB",
+                  "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                  "type": "Group",
+                  "name": "The Sound",
+                  "sort-name": "Sound, The",
+                  "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                  "disambiguation": "UK post‐punk band"
+                },
+                "name": "The Sound"
+              }
+            ],
+            "first-release-date": "1980-11",
+            "length": 179026,
+            "id": "37670efc-d507-494e-8ea9-44f8b7c2db97",
+            "disambiguation": "",
+            "title": "Words Fail Me"
+          },
+          "number": "A4",
+          "id": "923a6e99-115e-3471-8414-a2e5bc53c894",
+          "length": 181493,
+          "position": 4,
+          "title": "Words Fail Me"
+        },
+        {
+          "recording": {
+            "first-release-date": "1980-11",
+            "artist-credit": [
+              {
+                "artist": {
+                  "disambiguation": "UK post‐punk band",
+                  "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                  "sort-name": "Sound, The",
+                  "type": "Group",
+                  "name": "The Sound",
+                  "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                  "country": "GB"
+                },
+                "joinphrase": "",
+                "name": "The Sound"
+              }
+            ],
+            "disambiguation": "",
+            "title": "Missiles",
+            "id": "790839bb-17ef-41a4-82c1-9ebcaa5b56cf",
+            "length": 328133
+          },
+          "artist-credit": [
+            {
+              "artist": {
+                "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                "country": "GB",
+                "type": "Group",
+                "name": "The Sound",
+                "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                "sort-name": "Sound, The",
+                "disambiguation": "UK post‐punk band"
+              },
+              "joinphrase": "",
+              "name": "The Sound"
+            }
+          ],
+          "number": "A5",
+          "title": "Missiles",
+          "length": 331346,
+          "id": "fa6a5159-0bfb-383c-8225-47a282c1c9dd",
+          "position": 5
+        },
+        {
+          "number": "B1",
+          "artist-credit": [
+            {
+              "name": "The Sound",
+              "artist": {
+                "type": "Group",
+                "name": "The Sound",
+                "country": "GB",
+                "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                "disambiguation": "UK post‐punk band",
+                "sort-name": "Sound, The",
+                "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff"
+              },
+              "joinphrase": ""
+            }
+          ],
+          "recording": {
+            "artist-credit": [
+              {
+                "name": "The Sound",
+                "joinphrase": "",
+                "artist": {
+                  "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                  "country": "GB",
+                  "name": "The Sound",
+                  "type": "Group",
+                  "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                  "sort-name": "Sound, The",
+                  "disambiguation": "UK post‐punk band"
+                }
+              }
+            ],
+            "first-release-date": "1980-11",
+            "id": "745508ee-3c0d-47ff-ac8c-de323bcbf111",
+            "length": 183173,
+            "disambiguation": "",
+            "title": "Heyday"
+          },
+          "position": 6,
+          "length": 185160,
+          "id": "ecccbb92-a53e-31db-880d-20ff783ec64d",
+          "title": "Heyday"
+        },
+        {
+          "title": "Jeopardy",
+          "position": 7,
+          "length": 221000,
+          "id": "d1d7fc9f-c839-3f7b-8dc5-31d4139a685a",
+          "number": "B2",
+          "recording": {
+            "disambiguation": "",
+            "title": "Jeopardy",
+            "id": "4454cb86-04f7-4394-8e70-8e41ced433ce",
+            "length": 219000,
+            "first-release-date": "1980-11",
+            "artist-credit": [
+              {
+                "name": "The Sound",
+                "joinphrase": "",
+                "artist": {
+                  "type": "Group",
+                  "name": "The Sound",
+                  "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                  "country": "GB",
+                  "disambiguation": "UK post‐punk band",
+                  "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                  "sort-name": "Sound, The"
+                }
+              }
+            ]
+          },
+          "artist-credit": [
+            {
+              "name": "The Sound",
+              "artist": {
+                "type": "Group",
+                "name": "The Sound",
+                "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                "country": "GB",
+                "disambiguation": "UK post‐punk band",
+                "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                "sort-name": "Sound, The"
+              },
+              "joinphrase": ""
+            }
+          ]
+        },
+        {
+          "recording": {
+            "id": "3bc863c4-57f0-4ede-9d46-fcb44c9061cc",
+            "length": 197946,
+            "disambiguation": "",
+            "title": "Night Versus Day",
+            "artist-credit": [
+              {
+                "name": "The Sound",
+                "joinphrase": "",
+                "artist": {
+                  "disambiguation": "UK post‐punk band",
+                  "sort-name": "Sound, The",
+                  "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                  "name": "The Sound",
+                  "type": "Group",
+                  "country": "GB",
+                  "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b"
+                }
+              }
+            ],
+            "first-release-date": "1980-11"
+          },
+          "artist-credit": [
+            {
+              "name": "The Sound",
+              "artist": {
+                "sort-name": "Sound, The",
+                "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                "disambiguation": "UK post‐punk band",
+                "country": "GB",
+                "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                "type": "Group",
+                "name": "The Sound"
+              },
+              "joinphrase": ""
+            }
+          ],
+          "number": "B3",
+          "title": "Night Versus Day",
+          "id": "d41951fb-65b5-3219-8083-fb141e9ed4a1",
+          "length": 197946,
+          "position": 8
+        },
+        {
+          "number": "B4",
+          "recording": {
+            "id": "472eb29b-4dd3-4e64-9053-6d349e58fcb3",
+            "length": 169000,
+            "disambiguation": "",
+            "title": "Resistance",
+            "artist-credit": [
+              {
+                "joinphrase": "",
+                "artist": {
+                  "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                  "country": "GB",
+                  "type": "Group",
+                  "name": "The Sound",
+                  "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                  "sort-name": "Sound, The",
+                  "disambiguation": "UK post‐punk band"
+                },
+                "name": "The Sound"
+              }
+            ],
+            "first-release-date": "1980-11"
+          },
+          "artist-credit": [
+            {
+              "name": "The Sound",
+              "joinphrase": "",
+              "artist": {
+                "disambiguation": "UK post‐punk band",
+                "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                "sort-name": "Sound, The",
+                "type": "Group",
+                "name": "The Sound",
+                "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                "country": "GB"
+              }
+            }
+          ],
+          "title": "Resistance",
+          "position": 9,
+          "length": 170240,
+          "id": "5183e82c-0c5b-35c3-8a99-d17cc28ba516"
+        },
+        {
+          "position": 10,
+          "length": 222466,
+          "id": "a60048fb-b40d-3141-ad6a-202da64002c7",
+          "title": "Unwritten Law",
+          "number": "B5",
+          "artist-credit": [
+            {
+              "artist": {
+                "sort-name": "Sound, The",
+                "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                "disambiguation": "UK post‐punk band",
+                "country": "GB",
+                "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                "name": "The Sound",
+                "type": "Group"
+              },
+              "joinphrase": "",
+              "name": "The Sound"
+            }
+          ],
+          "recording": {
+            "artist-credit": [
+              {
+                "artist": {
+                  "disambiguation": "UK post‐punk band",
+                  "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                  "sort-name": "Sound, The",
+                  "type": "Group",
+                  "name": "The Sound",
+                  "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                  "country": "GB"
+                },
+                "joinphrase": "",
+                "name": "The Sound"
+              }
+            ],
+            "first-release-date": "1980-11",
+            "id": "14babf46-4901-439b-b3f9-d86a43fdffa4",
+            "length": 221000,
+            "disambiguation": "",
+            "title": "Unwritten Law"
+          }
+        },
+        {
+          "recording": {
+            "artist-credit": [
+              {
+                "name": "The Sound",
+                "artist": {
+                  "sort-name": "Sound, The",
+                  "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                  "disambiguation": "UK post‐punk band",
+                  "country": "GB",
+                  "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                  "type": "Group",
+                  "name": "The Sound"
+                },
+                "joinphrase": ""
+              }
+            ],
+            "first-release-date": "1980-11",
+            "length": 195827,
+            "id": "d07bd200-b593-424b-856b-db6334154ca8",
+            "disambiguation": "",
+            "title": "Desire"
+          },
+          "artist-credit": [
+            {
+              "artist": {
+                "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                "country": "GB",
+                "type": "Group",
+                "name": "The Sound",
+                "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                "sort-name": "Sound, The",
+                "disambiguation": "UK post‐punk band"
+              },
+              "joinphrase": "",
+              "name": "The Sound"
+            }
+          ],
+          "number": "B6",
+          "length": 195827,
+          "id": "c2e83447-33a1-34e1-8f15-0dcdecfb06b8",
+          "position": 11,
+          "title": "Desire"
+        }
+      ]
+    }
+  ],
+  "packaging-id": "f7101ce3-0384-39ce-9fde-fbbd0044d35f",
+  "artist-credit": [
+    {
+      "name": "The Sound",
+      "joinphrase": "",
+      "artist": {
+        "sort-name": "Sound, The",
+        "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+        "disambiguation": "UK post‐punk band",
+        "country": "GB",
+        "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+        "type": "Group",
+        "name": "The Sound"
+      }
+    }
+  ],
+  "packaging": "Cardboard/Paper Sleeve",
+  "country": "GB",
+  "date": "1980-11",
+  "disambiguation": "",
+  "barcode": "",
+  "release-events": [
+    {
+      "date": "1980-11",
+      "area": {
+        "id": "8a754a16-0027-3a29-b6d7-2b40ea0481ed",
+        "sort-name": "United Kingdom",
+        "disambiguation": "",
+        "type-id": null,
+        "iso-3166-1-codes": [
+          "GB"
+        ],
+        "name": "United Kingdom",
+        "type": null
+      }
+    }
+  ]
+}

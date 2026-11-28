@@ -105,9 +105,11 @@ RSpec.describe RecordingResolution do
     work = select_work(event)
     RecordingResolution::Processor.new(work).call
     assessment = RecordingResolution::Assessment.find(work.reload.assessment_id)
-    # Simulate a previously accepted automatic decision. The worker cannot write it.
+    expect(assessment.suggested_recording_id).to be_nil
+    recording = Recording.create!(mbid: assessment.evidence.fetch("suggested_mbid"), title: event.payload.fetch("track_name"))
+    # Simulate a historic automatic decision. The worker cannot write it.
     auto = RecordingResolution::Decision.create!(surface_id: ledger.attach!(event).id, assessment_id: assessment.id,
-      recording_id: assessment.suggested_recording_id, mode: "resolved", version: "test",
+      recording_id: recording.id, mode: "resolved", version: "test",
       actor: "reviewed-automatic-policy", reason: "test precedence", evidence: {})
     expect(effective(event)).to eq(auto.recording_id)
     blocker = decide(event, :surface, "unresolved")
@@ -131,7 +133,9 @@ RSpec.describe RecordingResolution do
         expect(assessment.evidence.dig("reason_details", "competing_recordings", "candidate_mbids")).to eq([ ids[:other] ])
       end
       accepted = example["expected"] == "accept"
-      expect(assessment.suggested_recording_id.present?).to eq(accepted)
+      expect(assessment.evidence["suggested_mbid"].present?).to eq(accepted)
+      expect(assessment.suggested_recording_id).to be_nil
+      expect(Recording.count).to eq(0)
       expect(assessment.evidence.dig("discogs", "status")).to eq("contradicts") if example["discogs_track"]
       expect(assessment.evidence.dig("verification", "redirected_from")).to eq(ids[:redirect]) if example["claim"] == "redirect"
       expect { processor.call }.not_to change(RecordingResolution::Assessment, :count)

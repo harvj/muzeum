@@ -62,7 +62,6 @@ module RecordingResolution
         groups = { group => [ earliest ] }
         history["first_publication_compilation_group"] = group
       end
-      provider_failure = nil
       groups.sort_by { |group, refs| [ refs.first.dig("release-group", "primary-type") == "Album" ? 0 : 1, group ] }.each do |group, refs|
         metadata = refs.first.fetch("release-group")
         references = @musicbrainz.collection_editions(@session, group, limit: BROWSE_PAGE)
@@ -86,13 +85,11 @@ module RecordingResolution
       rescue ProviderError => error
         raise if error.deferred
 
-        provider_failure ||= error
         history["pending_groups"] << group
         (history["group_errors"] ||= {})[group] = { "http_status" => error.http_status, "reason" => "Provider unavailable" }.compact
       rescue CanonicalCatalog::Store::Unverified
         history["pending_groups"] << group
       end
-      raise provider_failure if provider_failure && history["original_groups"].empty?
 
       history
     rescue CanonicalCatalog::Store::Unverified

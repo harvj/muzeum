@@ -28,7 +28,7 @@ function permits(method, raw) {
   if (url.username || url.password || ![origin, issuer].includes(url.origin)) return false;
   if (['GET', 'HEAD'].includes(method)) return true;
   if (url.search || url.hash || method !== 'POST') return false;
-  return url.origin === issuer ? ['/login', '/otp-auth', '/authorize'].includes(url.pathname) : ['/session', '/resolution/293137/decide'].includes(url.pathname);
+  return url.origin === issuer ? ['/login', '/otp-auth', '/authorize'].includes(url.pathname) : ['/session', '/resolution/293137/decide', '/resolution/293209/decide', '/resolution/293210/decide'].includes(url.pathname);
 }
 
 await runCandidate({ chromium: chrome, artifact: 'candidate.tar.gz', binding, output: 'evidence', permits,
@@ -106,6 +106,7 @@ await runCandidate({ chromium: chrome, artifact: 'candidate.tar.gz', binding, ou
         await checkbox.press('Space');
         await page.waitForURL(url => url.searchParams.has('candidate'));
         await action.waitFor();
+        assert.equal(await action.isDisabled(), true);
         assert.equal(await checkbox.isChecked(), true);
         assert.equal(await checkbox.evaluate(el => getComputedStyle(el).backgroundColor), 'rgb(23, 24, 23)');
         assert.equal(await release.evaluate(el => el.open), false);
@@ -127,17 +128,6 @@ await runCandidate({ chromium: chrome, artifact: 'candidate.tar.gz', binding, ou
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
       });
     }
-    await step('apply-birthday-recording-only', async () => {
-      const response = page.waitForResponse(item => item.url() === origin + '/resolution/293137/decide' &&
-        item.request().method() === 'POST' && item.status() === 303);
-      await page.getByRole('button', { name: 'Resolve all 8 observations', exact: true }).click();
-      await response;
-      await page.getByText('Recording decision saved.', { exact: true }).waitFor();
-      await page.goto(origin + '/resolution/293137?section=observations');
-      const table = page.getByRole('table', { name: 'Matching observations' });
-      assert.equal(await table.locator('tbody tr').count(), 8);
-      assert.equal(await table.getByRole('link', { name: 'Birthday', exact: true }).count(), 8);
-    });
     await step('admit-album-with-configurations-and-singles', async () => {
       await page.goto(origin + '/resolution/293137?section=evidence');
       await page.getByRole('checkbox', { name: /^Birthday/ }).check();
@@ -182,6 +172,28 @@ await runCandidate({ chromium: chrome, artifact: 'candidate.tar.gz', binding, ou
       await page.locator('summary').filter({ hasText: 'GB · 1991-08-27' }).filter({ hasText: '(preferred)' }).waitFor();
       await page.locator('summary').filter({ hasText: 'US · 1991-09-24' }).waitFor();
     });
+    for (const [id, title, recordingId, count] of [
+      [293209, 'Crash', '5639cdb3-7f91-4a04-bf16-b536ff7c040e', 19],
+      [293210, 'Heartland', 'a79f2c69-4372-4ac3-a357-8b52764a3373', 4],
+    ]) {
+      await step('resolve-release-backed-' + title.toLowerCase(), async () => {
+        const path = '/resolution/' + id;
+        const action = page.locator('#recording-resolution-confirmation').getByRole('button', { name: 'Resolve all ' + count });
+        for (const { name, width, height } of viewports) {
+          await page.setViewportSize({ width, height });
+          await page.goto(origin + path + '?candidate=' + recordingId);
+          await action.waitFor();
+          await page.getByText('Admit 1 new release', { exact: false }).first().waitFor();
+          await action.scrollIntoViewIfNeeded();
+          await screenshot(name + '-release-backed-' + title.toLowerCase(), [trigger]);
+        }
+        await action.click();
+        await page.getByText('Recording decision saved.', { exact: true }).waitFor();
+        await page.goto(origin + path + '?section=observations');
+        const table = page.getByRole('table', { name: 'Matching observations' });
+        assert.equal(await table.getByRole('link', { name: title, exact: true }).count(), count);
+      });
+    }
     await step('same-title-observation-remains-ambiguous', async () => {
       await page.goto(origin + '/resolution/293200?section=evidence');
       await page.getByText('Competing recording identities are possible.', { exact: false }).waitFor();

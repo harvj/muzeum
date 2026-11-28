@@ -1,0 +1,690 @@
+{
+  "title": "CRASH",
+  "packaging": "None",
+  "id": "0c41aa7d-de57-4d98-a3c0-4c740834b410",
+  "release-events": [
+    {
+      "area": null,
+      "date": "2022-03-18"
+    }
+  ],
+  "asin": null,
+  "packaging-id": "119eba76-b343-3e02-a292-f0f00644bb9b",
+  "date": "2022-03-18",
+  "artist-credit": [
+    {
+      "name": "Charli XCX",
+      "artist": {
+        "type": "Person",
+        "sort-name": "Charli xcx",
+        "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+        "name": "Charli xcx",
+        "id": "260b6184-8828-48eb-945c-bc4cb6fc34ca",
+        "country": "GB",
+        "disambiguation": ""
+      },
+      "joinphrase": ""
+    }
+  ],
+  "status": "Official",
+  "quality": "normal",
+  "text-representation": {
+    "script": "Latn",
+    "language": "eng"
+  },
+  "release-group": {
+    "disambiguation": "",
+    "artist-credit": [
+      {
+        "name": "Charli XCX",
+        "artist": {
+          "type": "Person",
+          "sort-name": "Charli xcx",
+          "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+          "id": "260b6184-8828-48eb-945c-bc4cb6fc34ca",
+          "name": "Charli xcx",
+          "country": "GB",
+          "disambiguation": ""
+        },
+        "joinphrase": ""
+      }
+    ],
+    "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+    "secondary-type-ids": [],
+    "secondary-types": [],
+    "primary-type": "Album",
+    "title": "CRASH",
+    "id": "8d0f0148-7c6e-455d-872e-9851284c5522",
+    "first-release-date": "2022-03-18"
+  },
+  "country": null,
+  "media": [
+    {
+      "track-count": 12,
+      "title": "",
+      "tracks": [
+        {
+          "id": "7f1c58de-0b88-48c7-a65e-8cf4f3c68713",
+          "length": 130000,
+          "title": "Crash",
+          "artist-credit": [
+            {
+              "name": "Charli XCX",
+              "artist": {
+                "type": "Person",
+                "name": "Charli xcx",
+                "id": "260b6184-8828-48eb-945c-bc4cb6fc34ca",
+                "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+                "sort-name": "Charli xcx",
+                "country": "GB",
+                "disambiguation": ""
+              },
+              "joinphrase": ""
+            }
+          ],
+          "position": 1,
+          "number": "1",
+          "recording": {
+            "first-release-date": "2022-03-18",
+            "id": "5639cdb3-7f91-4a04-bf16-b536ff7c040e",
+            "length": 130000,
+            "title": "Crash",
+            "artist-credit": [
+              {
+                "artist": {
+                  "disambiguation": "",
+                  "country": "GB",
+                  "id": "260b6184-8828-48eb-945c-bc4cb6fc34ca",
+                  "name": "Charli xcx",
+                  "sort-name": "Charli xcx",
+                  "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+                  "type": "Person"
+                },
+                "name": "Charli XCX",
+                "joinphrase": ""
+              }
+            ],
+            "disambiguation": ""
+          }
+        },
+        {
+          "position": 2,
+          "recording": {
+            "id": "64608b54-cbae-4e8d-b7f5-ff60809217a7",
+            "first-release-date": "2021-11-04",
+            "title": "New Shapes",
+            "length": 200266,
+            "disambiguation": "",
+            "artist-credit": [
+              {
+                "artist": {
+                  "disambiguation": "",
+                  "type": "Person",
+                  "name": "Charli xcx",
+                  "id": "260b6184-8828-48eb-945c-bc4cb6fc34ca",
+                  "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+                  "sort-name": "Charli xcx",
+                  "country": "GB"
+                },
+                "name": "Charli XCX",
+                "joinphrase": " feat. "
+              },
+              {
+                "name": "Christine and the Queens",
+                "artist": {
+                  "disambiguation": "French singer and songwriter",
+                  "country": "FR",
+                  "name": "Christine and the Queens",
+                  "id": "9c90ffbf-b137-4dee-bfcc-b8010787840d",
+                  "sort-name": "Christine and the Queens",
+                  "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+                  "type": "Person"
+                },
+                "joinphrase": " and "
+              },
+              {
+                "joinphrase": "",
+                "name": "Caroline Polachek",
+                "artist": {
+                  "country": "US",
+                  "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+                  "sort-name": "Polachek, Caroline",
+                  "name": "Caroline Polachek",
+                  "id": "d8f43dc5-4613-48ac-8c23-a62b82f8c67a",
+                  "type": "Person",
+                  "disambiguation": ""
+                }
+              }
+            ]
+          },
+          "number": "2",
+          "id": "9ad0d410-5fdd-4ed2-9039-1d315414f4c8",
+          "artist-credit": [
+            {
+              "artist": {
+                "disambiguation": "",
+                "type": "Person",
+                "id": "260b6184-8828-48eb-945c-bc4cb6fc34ca",
+                "name": "Charli xcx",
+                "sort-name": "Charli xcx",
+                "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+                "country": "GB"
+              },
+              "name": "Charli XCX",
+              "joinphrase": " feat. "
+            },
+            {
+              "name": "Christine and the Queens",
+              "artist": {
+                "disambiguation": "French singer and songwriter",
+                "type": "Person",
+                "sort-name": "Christine and the Queens",
+                "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+                "name": "Christine and the Queens",
+                "id": "9c90ffbf-b137-4dee-bfcc-b8010787840d",
+                "country": "FR"
+              },
+              "joinphrase": " and "
+            },
+            {
+              "name": "Caroline Polachek",
+              "artist": {
+                "country": "US",
+                "sort-name": "Polachek, Caroline",
+                "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+                "id": "d8f43dc5-4613-48ac-8c23-a62b82f8c67a",
+                "name": "Caroline Polachek",
+                "type": "Person",
+                "disambiguation": ""
+              },
+              "joinphrase": ""
+            }
+          ],
+          "title": "New Shapes",
+          "length": 200000
+        },
+        {
+          "number": "3",
+          "recording": {
+            "artist-credit": [
+              {
+                "name": "Charli XCX",
+                "artist": {
+                  "country": "GB",
+                  "name": "Charli xcx",
+                  "id": "260b6184-8828-48eb-945c-bc4cb6fc34ca",
+                  "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+                  "sort-name": "Charli xcx",
+                  "type": "Person",
+                  "disambiguation": ""
+                },
+                "joinphrase": ""
+              }
+            ],
+            "disambiguation": "",
+            "title": "Good Ones",
+            "length": 136614,
+            "first-release-date": "2021-09-02",
+            "id": "d11ea377-8b4b-4631-9161-c6e4d485e234"
+          },
+          "position": 3,
+          "length": 136000,
+          "title": "Good Ones",
+          "artist-credit": [
+            {
+              "artist": {
+                "id": "260b6184-8828-48eb-945c-bc4cb6fc34ca",
+                "name": "Charli xcx",
+                "sort-name": "Charli xcx",
+                "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+                "type": "Person",
+                "country": "GB",
+                "disambiguation": ""
+              },
+              "name": "Charli XCX",
+              "joinphrase": ""
+            }
+          ],
+          "id": "093621dd-d6c9-4e17-9ea6-d05b0864a9de"
+        },
+        {
+          "number": "4",
+          "recording": {
+            "length": 189000,
+            "title": "Constant Repeat",
+            "id": "35402eb9-404c-404c-baad-545f9be32aeb",
+            "first-release-date": "2022-03-18",
+            "artist-credit": [
+              {
+                "joinphrase": "",
+                "artist": {
+                  "disambiguation": "",
+                  "name": "Charli xcx",
+                  "id": "260b6184-8828-48eb-945c-bc4cb6fc34ca",
+                  "sort-name": "Charli xcx",
+                  "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+                  "type": "Person",
+                  "country": "GB"
+                },
+                "name": "Charli XCX"
+              }
+            ],
+            "disambiguation": ""
+          },
+          "position": 4,
+          "title": "Constant Repeat",
+          "length": 189000,
+          "artist-credit": [
+            {
+              "artist": {
+                "country": "GB",
+                "type": "Person",
+                "name": "Charli xcx",
+                "id": "260b6184-8828-48eb-945c-bc4cb6fc34ca",
+                "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+                "sort-name": "Charli xcx",
+                "disambiguation": ""
+              },
+              "name": "Charli XCX",
+              "joinphrase": ""
+            }
+          ],
+          "id": "5ddefbb8-bbfa-45dc-97b3-10e37b336a73"
+        },
+        {
+          "number": "5",
+          "recording": {
+            "disambiguation": "",
+            "artist-credit": [
+              {
+                "joinphrase": " feat. ",
+                "name": "Charli XCX",
+                "artist": {
+                  "disambiguation": "",
+                  "type": "Person",
+                  "sort-name": "Charli xcx",
+                  "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+                  "id": "260b6184-8828-48eb-945c-bc4cb6fc34ca",
+                  "name": "Charli xcx",
+                  "country": "GB"
+                }
+              },
+              {
+                "joinphrase": "",
+                "name": "Rina Sawayama",
+                "artist": {
+                  "disambiguation": "",
+                  "country": "GB",
+                  "name": "Rina Sawayama",
+                  "id": "52494f9b-789d-4467-bcaf-9915e70cc8f6",
+                  "sort-name": "Sawayama, Rina",
+                  "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+                  "type": "Person"
+                }
+              }
+            ],
+            "length": 168053,
+            "title": "Beg for You",
+            "first-release-date": "2022-01-27",
+            "id": "4b296f7f-9441-4ec9-a311-7d76246bbf0e"
+          },
+          "position": 5,
+          "title": "Beg for You",
+          "length": 168000,
+          "artist-credit": [
+            {
+              "joinphrase": " feat. ",
+              "artist": {
+                "type": "Person",
+                "name": "Charli xcx",
+                "id": "260b6184-8828-48eb-945c-bc4cb6fc34ca",
+                "sort-name": "Charli xcx",
+                "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+                "country": "GB",
+                "disambiguation": ""
+              },
+              "name": "Charli XCX"
+            },
+            {
+              "joinphrase": "",
+              "artist": {
+                "disambiguation": "",
+                "name": "Rina Sawayama",
+                "id": "52494f9b-789d-4467-bcaf-9915e70cc8f6",
+                "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+                "sort-name": "Sawayama, Rina",
+                "type": "Person",
+                "country": "GB"
+              },
+              "name": "Rina Sawayama"
+            }
+          ],
+          "id": "603a7db8-4779-45b4-9d5e-51326731784f"
+        },
+        {
+          "position": 6,
+          "number": "6",
+          "recording": {
+            "disambiguation": "",
+            "artist-credit": [
+              {
+                "artist": {
+                  "disambiguation": "",
+                  "sort-name": "Charli xcx",
+                  "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+                  "id": "260b6184-8828-48eb-945c-bc4cb6fc34ca",
+                  "name": "Charli xcx",
+                  "type": "Person",
+                  "country": "GB"
+                },
+                "name": "Charli XCX",
+                "joinphrase": ""
+              }
+            ],
+            "id": "7e794b19-bd94-4e5f-ae5b-bdb522570d7d",
+            "first-release-date": "2022-03-18",
+            "title": "Move Me",
+            "length": 147000
+          },
+          "id": "087a1904-25a0-4435-b701-653843ffb8d0",
+          "length": 147000,
+          "title": "Move Me",
+          "artist-credit": [
+            {
+              "name": "Charli XCX",
+              "artist": {
+                "disambiguation": "",
+                "country": "GB",
+                "type": "Person",
+                "sort-name": "Charli xcx",
+                "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+                "id": "260b6184-8828-48eb-945c-bc4cb6fc34ca",
+                "name": "Charli xcx"
+              },
+              "joinphrase": ""
+            }
+          ]
+        },
+        {
+          "id": "d9904055-7e53-4443-88fb-93f0949f4234",
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "artist": {
+                "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+                "sort-name": "Charli xcx",
+                "id": "260b6184-8828-48eb-945c-bc4cb6fc34ca",
+                "name": "Charli xcx",
+                "type": "Person",
+                "country": "GB",
+                "disambiguation": ""
+              },
+              "name": "Charli XCX"
+            }
+          ],
+          "length": 159000,
+          "title": "Baby",
+          "position": 7,
+          "recording": {
+            "disambiguation": "",
+            "artist-credit": [
+              {
+                "joinphrase": "",
+                "artist": {
+                  "country": "GB",
+                  "name": "Charli xcx",
+                  "id": "260b6184-8828-48eb-945c-bc4cb6fc34ca",
+                  "sort-name": "Charli xcx",
+                  "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+                  "type": "Person",
+                  "disambiguation": ""
+                },
+                "name": "Charli XCX"
+              }
+            ],
+            "first-release-date": "2022-03-01",
+            "id": "717eb033-c0a8-4d87-8f0e-f0517c8a69e1",
+            "length": 159920,
+            "title": "Baby"
+          },
+          "number": "7"
+        },
+        {
+          "number": "8",
+          "recording": {
+            "disambiguation": "",
+            "artist-credit": [
+              {
+                "artist": {
+                  "disambiguation": "",
+                  "country": "GB",
+                  "type": "Person",
+                  "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+                  "sort-name": "Charli xcx",
+                  "name": "Charli xcx",
+                  "id": "260b6184-8828-48eb-945c-bc4cb6fc34ca"
+                },
+                "name": "Charli XCX",
+                "joinphrase": ""
+              }
+            ],
+            "first-release-date": "2022-03-18",
+            "id": "a5bbfb01-64fb-4cf2-8234-216be9caa07b",
+            "title": "Lightning",
+            "length": 237000
+          },
+          "position": 8,
+          "length": 237000,
+          "title": "Lightning",
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "name": "Charli XCX",
+              "artist": {
+                "disambiguation": "",
+                "type": "Person",
+                "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+                "sort-name": "Charli xcx",
+                "id": "260b6184-8828-48eb-945c-bc4cb6fc34ca",
+                "name": "Charli xcx",
+                "country": "GB"
+              }
+            }
+          ],
+          "id": "e3582463-a777-4541-8331-251f9d86ff25"
+        },
+        {
+          "id": "29c5aa32-38fd-41cc-ab92-c81c50f2630f",
+          "artist-credit": [
+            {
+              "artist": {
+                "country": "GB",
+                "id": "260b6184-8828-48eb-945c-bc4cb6fc34ca",
+                "name": "Charli xcx",
+                "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+                "sort-name": "Charli xcx",
+                "type": "Person",
+                "disambiguation": ""
+              },
+              "name": "Charli XCX",
+              "joinphrase": ""
+            }
+          ],
+          "title": "Every Rule",
+          "length": 183000,
+          "position": 9,
+          "recording": {
+            "artist-credit": [
+              {
+                "joinphrase": "",
+                "name": "Charli XCX",
+                "artist": {
+                  "disambiguation": "",
+                  "country": "GB",
+                  "name": "Charli xcx",
+                  "id": "260b6184-8828-48eb-945c-bc4cb6fc34ca",
+                  "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+                  "sort-name": "Charli xcx",
+                  "type": "Person"
+                }
+              }
+            ],
+            "disambiguation": "",
+            "title": "Every Rule",
+            "length": 183000,
+            "first-release-date": "2022-03-14",
+            "id": "2cc2d59c-5852-43da-9e5a-b0736ce5756b"
+          },
+          "number": "9"
+        },
+        {
+          "position": 10,
+          "recording": {
+            "id": "b8ce772b-f0e2-4680-936a-da6a732b5c22",
+            "first-release-date": "2022-03-18",
+            "title": "Yuck",
+            "length": 138000,
+            "artist-credit": [
+              {
+                "artist": {
+                  "type": "Person",
+                  "name": "Charli xcx",
+                  "id": "260b6184-8828-48eb-945c-bc4cb6fc34ca",
+                  "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+                  "sort-name": "Charli xcx",
+                  "country": "GB",
+                  "disambiguation": ""
+                },
+                "name": "Charli XCX",
+                "joinphrase": ""
+              }
+            ],
+            "disambiguation": ""
+          },
+          "number": "10",
+          "id": "5b4ce388-98cc-4023-8aee-6ea20b3ae4a7",
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "name": "Charli XCX",
+              "artist": {
+                "disambiguation": "",
+                "id": "260b6184-8828-48eb-945c-bc4cb6fc34ca",
+                "name": "Charli xcx",
+                "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+                "sort-name": "Charli xcx",
+                "type": "Person",
+                "country": "GB"
+              }
+            }
+          ],
+          "title": "Yuck",
+          "length": 138000
+        },
+        {
+          "length": 148000,
+          "title": "Used to Know Me",
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "name": "Charli XCX",
+              "artist": {
+                "disambiguation": "",
+                "country": "GB",
+                "type": "Person",
+                "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+                "sort-name": "Charli xcx",
+                "name": "Charli xcx",
+                "id": "260b6184-8828-48eb-945c-bc4cb6fc34ca"
+              }
+            }
+          ],
+          "id": "66aab67e-d23f-4c2e-920a-e56e9e08c47a",
+          "number": "11",
+          "recording": {
+            "artist-credit": [
+              {
+                "joinphrase": "",
+                "name": "Charli XCX",
+                "artist": {
+                  "type": "Person",
+                  "id": "260b6184-8828-48eb-945c-bc4cb6fc34ca",
+                  "name": "Charli xcx",
+                  "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+                  "sort-name": "Charli xcx",
+                  "country": "GB",
+                  "disambiguation": ""
+                }
+              }
+            ],
+            "disambiguation": "",
+            "title": "Used to Know Me",
+            "length": 145840,
+            "first-release-date": "2022-03-17",
+            "id": "5da1f2f3-9e99-460e-a534-ef542065bb98"
+          },
+          "position": 11
+        },
+        {
+          "id": "0438e942-55fa-409f-b84b-e044253aaccd",
+          "length": 194000,
+          "title": "Twice",
+          "artist-credit": [
+            {
+              "artist": {
+                "disambiguation": "",
+                "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+                "sort-name": "Charli xcx",
+                "name": "Charli xcx",
+                "id": "260b6184-8828-48eb-945c-bc4cb6fc34ca",
+                "type": "Person",
+                "country": "GB"
+              },
+              "name": "Charli XCX",
+              "joinphrase": ""
+            }
+          ],
+          "position": 12,
+          "number": "12",
+          "recording": {
+            "id": "2aae951a-3759-4a49-abf4-0f726eedfc06",
+            "first-release-date": "2022-03-18",
+            "length": 194000,
+            "title": "Twice",
+            "artist-credit": [
+              {
+                "artist": {
+                  "name": "Charli xcx",
+                  "id": "260b6184-8828-48eb-945c-bc4cb6fc34ca",
+                  "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+                  "sort-name": "Charli xcx",
+                  "type": "Person",
+                  "country": "GB",
+                  "disambiguation": ""
+                },
+                "name": "Charli XCX",
+                "joinphrase": ""
+              }
+            ],
+            "disambiguation": ""
+          }
+        }
+      ],
+      "id": "c2d01e60-85d0-3a2a-8010-3ba6df42b02a",
+      "track-offset": 0,
+      "position": 1,
+      "format-id": "907a28d9-b3b2-3ef6-89a8-7b18d91d4794",
+      "format": "Digital Media"
+    }
+  ],
+  "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+  "cover-art-archive": {
+    "count": 1,
+    "darkened": false,
+    "back": false,
+    "artwork": true,
+    "front": true
+  },
+  "disambiguation": "",
+  "barcode": "190296409165"
+}
