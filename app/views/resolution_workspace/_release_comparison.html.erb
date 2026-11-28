@@ -33,24 +33,26 @@
   <% end %>
 
   <fieldset class="release-edition-choices">
-    <legend>Release to confirm</legend>
-    <% comparison.groups.each do |same_sequence| %>
+    <legend>Release configuration to confirm</legend>
+    <% comparison.representatives.each do |proposal| %>
+      <% base = proposal.construction.base %>
+      <% release = base.data %>
+      <% id = release.fetch("id") %>
       <div class="release-edition-group">
-        <strong><%= pluralize(same_sequence.first.construction.base.slots.size, "track") %> sequence</strong>
-        <% same_sequence.each do |proposal| %>
-          <% base = proposal.construction.base %>
-          <% release = base.data %>
-          <% id = release.fetch("id") %>
-          <div class="release-edition-option">
-            <label>
-              <%= radio_button_tag :construct_release, id, id == selected_edition,
-                id: "construct_release_#{id}", required: true, form: "recording-resolution-confirmation",
-                data: { release_proposal_target: "choice", action: "change->release-proposal#choose" } %>
-              <span><%= resolution_release_date(release.fetch("date")) %> · <%= release["country"].presence || "Country unknown" %> · <%= pluralize(base.slots.size, "track") %></span>
-            </label>
-            <%= link_to id.first(8), "https://musicbrainz.org/release/#{id}", aria: { label: "MusicBrainz release #{id}" } %>
-          </div>
-        <% end %>
+        <label class="release-edition-option">
+          <%= radio_button_tag :construct_release, id, id == selected_edition,
+            id: "construct_release_#{id}", required: true, form: "recording-resolution-confirmation",
+            data: { release_proposal_target: "choice", source_editions: comparison.sources(proposal).pluck("id").join(","),
+              action: "change->release-proposal#choose" } %>
+          <span>
+            <%= resolution_configuration_label(base) %> · <%= resolution_release_date(release.fetch("date")) %>
+            <% if comparison.groups.many? %>
+              · <%= pluralize(base.slots.pluck(:medium).uniq.size, "medium", plural: "media") %>
+              <% if (slot = base.slots[comparison.shared.size]) %> · Track <%= slot[:position] %> · <%= slot[:title] %><% end %>
+            <% end %>
+          </span>
+        </label>
+        <%= render "configuration_sources", proposal: %>
       </div>
     <% end %>
   </fieldset>

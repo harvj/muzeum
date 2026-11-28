@@ -38,9 +38,19 @@ RSpec.describe "Release-backed recording resolution", type: :request do
 
       get resolution_surface_path(target, candidate: mbid)
       expect(response.body).to include("Admit 1 new release", "Resolve all #{example[:observations]}")
-      post decide_resolution_surface_path(target), params: confirmation.merge(assessment_id: assessment.id, construct_release: edition["id"])
+      document = Nokogiri::HTML(response.body)
+      expect(document.css('input[type="radio"][name="construct_release"]')).to be_empty
+      source_ids = document.css('.release-configuration-sources a').map { |link| link["href"].split("/").last }
+      expect(source_ids).to include(edition.fetch("id"))
+      expect(source_ids.size).to eq(example[:file] == "crash" ? 16 : 2)
+      expect(source_ids).not_to include("3e70fdcd-c807-48f5-be82-ffe256f0884d")
+      selected_source = document.at_css('#recording-resolution-confirmation input[name="construct_release"]')["value"]
+      post decide_resolution_surface_path(target), params: confirmation.merge(assessment_id: assessment.id, construct_release: selected_source)
       expect(flash[:notice]).to eq("Recording decision saved.")
       release = Release.sole
+      evidence = RecordingResolution::ReleaseTracklist.new(release).revision.evidence
+      expect(evidence.fetch("checked_recording_appearances").select { |source| source["supports_base_configuration"] }.pluck("id"))
+        .to match_array(source_ids)
       recording = Recording.find_by!(mbid:)
       expect(recording.verified_release_membership?).to be(true)
       expect(release.catalog_track_slots.base_sequence.count).to eq(example[:tracks])

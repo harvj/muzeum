@@ -115,7 +115,9 @@ module CanonicalCatalog
     end
 
     def equivalent_sequence?(left, right)
-      left.size == right.size && left.zip(right).all? { |first, second| compare(first, second) == :equivalent }
+      left.size == right.size && left.zip(right).all? do |first, second|
+        first.values_at(:medium, :position) == second.values_at(:medium, :position) && compare(first, second) == :equivalent
+      end
     end
 
     def titles(slot)

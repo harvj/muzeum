@@ -39,6 +39,7 @@ end %>
   <% if @may_manage_observation && @assessment_matches_claims && !@release_review&.policy %>
   <% original_groups = CanonicalCatalog::ReviewedConstruction.for(@assessment, mbid, source_ids: identity.source_ids || [ mbid ]).group_by { |item| item.construction.base.data.dig("release-group", "id") } %>
   <% proposals = CanonicalCatalog::ReviewedConstruction.resolution_choices(@assessment, mbid, identity.recording || catalog_recording, source_ids: identity.source_ids || [ mbid ]).flatten %>
+  <% proposals = CanonicalCatalog::ReleaseComparison.new(proposals).representatives %>
   <%= form_with url: decide_resolution_surface_path(@observation) do |form| %>
     <%= form.hidden_field :identity_signature, value: identity.fingerprint, id: nil %>
     <%= form.hidden_field :recording_mbid, value: mbid, id: nil %>
@@ -81,6 +82,7 @@ end %>
             <ul><% proposal.construction.additional_slots.each do |slot| %><li><%= slot[:title] %> · <%= slot[:appearance_date] %></li><% end %></ul>
           <% end %>
         </details>
+        <%= render "configuration_sources", proposal: %>
         <%= form.button "#{proposal.existing ? 'Correct' : 'Construct'} release & resolve #{pluralize(@affected_count, 'observation')}#{(" · #{data['country']} / #{base.slots.size} tracks (#{data['id'].first(8)})" if proposals.many?)}",
           name: "construct_release", value: data["id"] %>
       <% end %>

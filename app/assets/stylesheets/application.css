@@ -1028,10 +1028,9 @@ h3.resolution-release-title {
 .release-edition-choices { border: 0; padding: 0; margin: .75rem 0; }
 .release-edition-choices legend { font-weight: 700; }
 .release-edition-group { padding-block: .35rem; }
-.release-edition-option { display: flex; flex-wrap: wrap; align-items: center; gap: .25rem .6rem; }
-.release-edition-option label { display: flex; gap: .45rem; align-items: center; margin: 0; cursor: pointer; }
+.release-edition-option { display: flex; gap: .45rem; align-items: baseline; margin: 0; cursor: pointer; }
 .release-edition-option input[type="radio"] { inline-size: 1rem; min-height: 1rem; padding: 0; cursor: pointer; }
-.release-edition-option a { font: .85rem monospace; }
+.release-configuration-sources a { font: .85rem monospace; overflow-wrap: anywhere; }
 
 :is(.investigation-progress, .investigation-badge) [data-state="queued"] { --status-ink: #674a00; --status-fill: #ffebad; }
 :is(.investigation-progress, .investigation-badge) [data-state="investigating"] { --status-ink: #123d72; --status-fill: #d8eaff; }

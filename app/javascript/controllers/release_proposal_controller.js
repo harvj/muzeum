@@ -13,7 +13,7 @@ export default class extends Controller {
       history.replaceState(history.state, "", url)
     }
     if (edition) {
-      this.choiceTargets.forEach(choice => { choice.checked = !url.searchParams.has("review_edition") && choice.value === edition })
+      this.choiceTargets.forEach(choice => { choice.checked = !url.searchParams.has("review_edition") && (choice.value === edition || choice.dataset.sourceEditions?.split(",").includes(edition)) })
     }
     this.showSelection()
   }

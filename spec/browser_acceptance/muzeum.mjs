@@ -184,6 +184,13 @@ await runCandidate({ chromium: chrome, artifact: 'candidate.tar.gz', binding, ou
           await page.goto(origin + path + '?candidate=' + recordingId);
           await action.waitFor();
           await page.getByText('Admit 1 new release', { exact: false }).first().waitFor();
+          assert.equal(await page.locator('input[type="radio"][name="construct_release"]').count(), 0);
+          const sources = page.locator('.release-configuration-sources').first();
+          const expectedSources = title === 'Crash' ? 16 : 2;
+          await sources.locator('summary').getByText(expectedSources + ' verified MusicBrainz source', { exact: false }).waitFor();
+          await sources.locator('summary').click();
+          assert.equal(await sources.getByRole('link').count(), expectedSources);
+          await sources.locator('summary').click();
           await action.scrollIntoViewIfNeeded();
           await screenshot(name + '-release-backed-' + title.toLowerCase(), [trigger]);
         }

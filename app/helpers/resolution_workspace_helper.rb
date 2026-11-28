@@ -50,6 +50,16 @@ module ResolutionWorkspaceHelper
     end
   end
 
+  def resolution_configuration_label(base, standard: false)
+    data = base.data
+    adjective = CanonicalCatalog::ConfigurationEvidence.mix(base)
+    adjective ||= "standard" if standard && data.dig("release-group", "primary-type") == "Album"
+    kind = data.dig("release-group", "primary-type").to_s.downcase
+    [ data.dig("release-group", "title").presence || data.fetch("title"),
+      resolution_candidate_credit(data).presence, data.fetch("date").first(4),
+      [ "#{base.slots.size}-track", adjective, kind.presence || "configuration" ].compact.join(" ") ].compact.join(" · ")
+  end
+
   def resolution_source_edition(source)
     fields = [ source["title"], resolution_release_date(source["date"]), source["country"],
       Array(source["media"]).pluck("format").compact.uniq.join(" / ").presence, source["disambiguation"] ].compact

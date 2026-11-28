@@ -1,0 +1,17 @@
+<% sources = proposal.construction.appearances.select { |source| source["supports_base_configuration"] } %>
+<details class="release-configuration-sources">
+  <summary><%= pluralize(sources.size, "verified MusicBrainz source") %></summary>
+  <p class="muted">These sources verify the album configuration. The edition played remains unknown.</p>
+  <ul class="catalog-list">
+    <% sources.each do |source| %>
+      <% id = source.fetch("id") %>
+      <% countries = ([source["country"]] + Array(source["release-events"]).flat_map { |event| event["country_codes"] }).compact.uniq %>
+      <li>
+        <%= link_to id, "https://musicbrainz.org/release/#{id}", aria: { label: "MusicBrainz release #{id}" } %>
+        <span class="muted">· <%= [resolution_release_date(source["date"]), countries.join(", ").presence || "Country unknown",
+          Array(source["media"]).pluck("format").compact.uniq.join(" / ").presence, source["packaging"].presence, source["disambiguation"].presence,
+          ("Barcode #{source['barcode']}" if source["barcode"].present?)].compact.join(" · ") %></span>
+      </li>
+    <% end %>
+  </ul>
+</details>

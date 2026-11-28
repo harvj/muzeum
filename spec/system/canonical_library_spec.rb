@@ -941,8 +941,9 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
 
     within(".release-comparison") do
       expect(page).to have_css(".release-edition-group", count: 2)
+      expect(page).to have_css(".release-edition-group input[type='radio']", count: 2)
       [ canadian, overseas, worldwide ].each do |id|
-        expect(page).to have_css("a[href='https://musicbrainz.org/release/#{id}']", text: id.first(8))
+        expect(page).to have_css(".release-configuration-sources a[href='https://musicbrainz.org/release/#{id}']", visible: :all)
       end
       find("summary", text: "15 shared opening tracks").click
       expect(page).to have_css("details[open] li", count: 15)
@@ -961,7 +962,8 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
 
     browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 390, height: 844, deviceScaleFactor: 1, mobile: true)
     browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "prefers-color-scheme", value: "dark" } ])
-    choose "construct_release_#{worldwide}"
+    expanded = find(".release-edition-group", text: "20-track album").find("input[type='radio']")[:value]
+    choose "construct_release_#{expanded}"
     expect(page).to have_css("#{preview} summary", text: "3 additional edition tracks")
     within(preview) do
       find("summary", text: "3 additional edition tracks").click
@@ -980,9 +982,9 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     refreshed = save_evidence.call(editions)
     Turbo::StreamsChannel.broadcast_refresh_to(request, method: :morph, scroll: :preserve)
     expect(page).to have_css("input[name='assessment_id'][value='#{refreshed.id}']", visible: :all)
-    expect(page).to have_checked_field("construct_release_#{worldwide}")
+    expect(page).to have_checked_field("construct_release_#{expanded}")
 
-    changed = save_evidence.call(editions.reject { |edition| edition["id"] == worldwide })
+    changed = save_evidence.call(editions.reject { |edition| [ overseas, worldwide ].include?(edition["id"]) })
     Turbo::StreamsChannel.broadcast_refresh_to(request, method: :morph, scroll: :preserve)
     expect(page).to have_css("input[name='assessment_id'][value='#{changed.id}']", visible: :all)
     expect(page).to have_css("[role='alert']", text: "The selected edition is no longer in this review")
@@ -992,13 +994,13 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     Turbo::StreamsChannel.broadcast_refresh_to(request, method: :morph, scroll: :preserve)
     expect(page).to have_css("input[name='assessment_id'][value='#{restored.id}']", visible: :all)
     expect(page).to have_no_css(".release-edition-choices input:checked")
-    choose "construct_release_#{overseas}"
+    choose "construct_release_#{expanded}"
 
     click_button "Resolve this observation"
     expect(page).to have_text("Recording decision saved.")
     release = Release.sole
-    expect(release.ingested_from_release_mbid).to eq(overseas)
-    selected = CanonicalCatalog::Edition.new(editions.find { |edition| edition["id"] == overseas }, overseas)
+    expect(release.ingested_from_release_mbid).to eq(expanded)
+    selected = CanonicalCatalog::Edition.new(editions.find { |edition| edition["id"] == expanded }, expanded)
     expect(release.catalog_track_slots.base_sequence.order(:medium, :position).pluck(:source_recording_mbid))
       .to eq(selected.slots.pluck(:source_recording_mbid))
     source_signature = selected.slots.map { |slot| slot.values_at(:medium, :position, :source_recording_mbid) }
