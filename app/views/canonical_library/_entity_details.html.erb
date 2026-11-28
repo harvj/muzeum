@@ -1,0 +1,32 @@
+<%= tag.details class: "card library-card entity-details", id: "entity-details", open: params[:details] == "1" do %>
+  <summary>Details</summary>
+  <%= render "listening_history_data" if @timeline&.any? { |_, totals| totals.plays.positive? } %>
+  <% if @plays.present? %>
+    <h3 class="section-heading"><%= @entry.is_a?(Recording) ? "Played at" : "Individual plays" %></h3>
+    <%= render(@entry.is_a?(Recording) ? "recording_plays" : "release_plays") %>
+  <% end %>
+
+  <% if @entry.is_a?(Artist) %>
+    <h3 class="section-heading">Geographic evidence</h3>
+    <%= render "artist_metadata" %>
+  <% end %>
+  <%= render "recording_date_tools" if @entry.is_a?(Recording) %>
+
+  <% unless @public_profile %>
+    <h3 class="section-heading">Catalog import</h3>
+    <p role="status"><%= import_status(@import_request, verified: @revision.present?) %></p>
+    <% if @import_request&.active? && !CatalogImport.worker_enabled? %><p>Background imports are paused in this environment.</p><% end %>
+    <% if @import_request&.failure.present? %><p><%= @import_request.failure %></p><% end %>
+    <%= button_to (@import_request&.state == "failed" ? "Retry import" : "Import"),
+        catalog_import_path(@entry), method: :post if @may_import %>
+    <% if @revision %>
+      <h3 class="section-heading">Metadata provenance</h3>
+      <p>MusicBrainz · <%= browser_time(@revision.created_at) %></p>
+      <% if @revision.evidence["conflicts"].present? %><p>Existing values kept for review: <%= @revision.evidence["conflicts"].keys.join(", ").humanize %>.</p><% end %>
+    <% end %>
+    <% if @entry.is_a?(Release) %>
+      <%= button_to (@ranked_release ? "Exclude from my release rankings" : "Include in my release rankings"),
+        ranking_release_path(@entry), method: :patch, params: { decision: @ranked_release ? "exclude" : "include" } %>
+    <% end %>
+  <% end %>
+<% end %>

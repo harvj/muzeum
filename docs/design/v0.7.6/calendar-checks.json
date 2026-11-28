@@ -1,0 +1,508 @@
+{
+  "artist-all-years-desktop": {
+    "path": "/artists/6000",
+    "slots": 14,
+    "empty": 3,
+    "range": [
+      "2013-01-01",
+      "2026-01-01"
+    ],
+    "labels": 3,
+    "year_markers": [
+      "2013",
+      "2018",
+      "2023"
+    ],
+    "overflow": "none",
+    "checked_bars": 11,
+    "peak_plays": 235,
+    "axis_peak": "619 min",
+    "plot_length_px": 128,
+    "bar_thickness_px": 20
+  },
+  "artist-all-years-mobile": {
+    "path": "/artists/6000",
+    "slots": 14,
+    "empty": 3,
+    "range": [
+      "2013-01-01",
+      "2026-01-01"
+    ],
+    "labels": 5,
+    "year_markers": [
+      "2026",
+      "2023",
+      "2020",
+      "2017",
+      "2014"
+    ],
+    "overflow": "vertical",
+    "checked_bars": 11,
+    "peak_plays": 235,
+    "axis_peak": "619 min",
+    "plot_length_px": 144,
+    "bar_thickness_px": 20
+  },
+  "release-all-months-desktop": {
+    "path": "/releases/81273",
+    "slots": 162,
+    "empty": 65,
+    "range": [
+      "2013-06-01",
+      "2026-11-01"
+    ],
+    "labels": 54,
+    "year_markers": [
+      "2014",
+      "2015",
+      "2016",
+      "2017",
+      "2018",
+      "2019",
+      "2020",
+      "2021",
+      "2022",
+      "2023",
+      "2024",
+      "2025",
+      "2026"
+    ],
+    "overflow": "horizontal",
+    "checked_bars": 97,
+    "peak_plays": 71,
+    "axis_peak": "187 min",
+    "plot_length_px": 128,
+    "bar_thickness_px": 10,
+    "scrolled_pixels": 746
+  },
+  "release-all-months-mobile": {
+    "path": "/releases/81273",
+    "slots": 162,
+    "empty": 65,
+    "range": [
+      "2013-06-01",
+      "2026-11-01"
+    ],
+    "labels": 54,
+    "year_markers": [
+      "2026",
+      "2025",
+      "2024",
+      "2023",
+      "2022",
+      "2021",
+      "2020",
+      "2019",
+      "2018",
+      "2017",
+      "2016",
+      "2015",
+      "2014"
+    ],
+    "overflow": "vertical",
+    "checked_bars": 97,
+    "peak_plays": 71,
+    "axis_peak": "187 min",
+    "plot_length_px": 144,
+    "bar_thickness_px": 10,
+    "scrolled_pixels": 1754
+  },
+  "recording-3y-years-desktop": {
+    "path": "/recordings/165690",
+    "slots": 3,
+    "empty": 0,
+    "range": [
+      "2024-01-01",
+      "2026-01-01"
+    ],
+    "labels": 1,
+    "year_markers": [
+      "2024"
+    ],
+    "overflow": "none",
+    "checked_bars": 3,
+    "peak_plays": 235,
+    "axis_peak": "235",
+    "plot_length_px": 128,
+    "bar_thickness_px": 20
+  },
+  "recording-3y-years-mobile": {
+    "path": "/recordings/165690",
+    "slots": 3,
+    "empty": 0,
+    "range": [
+      "2024-01-01",
+      "2026-01-01"
+    ],
+    "labels": 1,
+    "year_markers": [
+      "2026"
+    ],
+    "overflow": "none",
+    "checked_bars": 3,
+    "peak_plays": 235,
+    "axis_peak": "235",
+    "plot_length_px": 144,
+    "bar_thickness_px": 20
+  },
+  "artist-3y-months-desktop": {
+    "path": "/artists/6000",
+    "slots": 36,
+    "empty": 7,
+    "range": [
+      "2024-01-01",
+      "2026-12-01"
+    ],
+    "labels": 12,
+    "year_markers": [
+      "2024",
+      "2025",
+      "2026"
+    ],
+    "overflow": "none",
+    "checked_bars": 29,
+    "peak_plays": 71,
+    "axis_peak": "187 min",
+    "plot_length_px": 128,
+    "bar_thickness_px": 10
+  },
+  "artist-3y-months-mobile": {
+    "path": "/artists/6000",
+    "slots": 36,
+    "empty": 7,
+    "range": [
+      "2024-01-01",
+      "2026-12-01"
+    ],
+    "labels": 12,
+    "year_markers": [
+      "2026",
+      "2025",
+      "2024"
+    ],
+    "overflow": "vertical",
+    "checked_bars": 29,
+    "peak_plays": 71,
+    "axis_peak": "187 min",
+    "plot_length_px": 144,
+    "bar_thickness_px": 10
+  },
+  "release-year-months-current-desktop": {
+    "path": "/releases/81273",
+    "slots": 12,
+    "empty": 2,
+    "range": [
+      "2026-01-01",
+      "2026-12-01"
+    ],
+    "labels": 4,
+    "year_markers": [
+      "2026"
+    ],
+    "overflow": "none",
+    "checked_bars": 10,
+    "peak_plays": 71,
+    "axis_peak": "187 min",
+    "plot_length_px": 128,
+    "bar_thickness_px": 10
+  },
+  "release-year-months-current-mobile": {
+    "path": "/releases/81273",
+    "slots": 12,
+    "empty": 2,
+    "range": [
+      "2026-01-01",
+      "2026-12-01"
+    ],
+    "labels": 4,
+    "year_markers": [
+      "2026"
+    ],
+    "overflow": "none",
+    "checked_bars": 10,
+    "peak_plays": 71,
+    "axis_peak": "187 min",
+    "plot_length_px": 144,
+    "bar_thickness_px": 10
+  },
+  "release-year-months-previous-desktop": {
+    "path": "/releases/81273",
+    "slots": 12,
+    "empty": 3,
+    "range": [
+      "2025-01-01",
+      "2025-12-01"
+    ],
+    "labels": 4,
+    "year_markers": [
+      "2025"
+    ],
+    "overflow": "none",
+    "checked_bars": 9,
+    "peak_plays": 8,
+    "axis_peak": "21 min",
+    "plot_length_px": 128,
+    "bar_thickness_px": 10
+  },
+  "release-year-months-previous-mobile": {
+    "path": "/releases/81273",
+    "slots": 12,
+    "empty": 3,
+    "range": [
+      "2025-01-01",
+      "2025-12-01"
+    ],
+    "labels": 4,
+    "year_markers": [
+      "2025"
+    ],
+    "overflow": "none",
+    "checked_bars": 9,
+    "peak_plays": 8,
+    "axis_peak": "21 min",
+    "plot_length_px": 144,
+    "bar_thickness_px": 10
+  },
+  "recording-year-days-leap-desktop": {
+    "path": "/recordings/165690",
+    "slots": 366,
+    "empty": 353,
+    "range": [
+      "2024-01-01",
+      "2024-12-31"
+    ],
+    "labels": 74,
+    "year_markers": [
+      "2024"
+    ],
+    "overflow": "horizontal",
+    "checked_bars": 13,
+    "peak_plays": 8,
+    "axis_peak": "8",
+    "plot_length_px": 128,
+    "bar_thickness_px": 8
+  },
+  "recording-year-days-leap-mobile": {
+    "path": "/recordings/165690",
+    "slots": 366,
+    "empty": 353,
+    "range": [
+      "2024-01-01",
+      "2024-12-31"
+    ],
+    "labels": 122,
+    "year_markers": [
+      "2024"
+    ],
+    "overflow": "vertical",
+    "checked_bars": 13,
+    "peak_plays": 8,
+    "axis_peak": "8",
+    "plot_length_px": 144,
+    "bar_thickness_px": 8
+  },
+  "artist-6m-months-desktop": {
+    "path": "/artists/6000",
+    "slots": 6,
+    "empty": 0,
+    "range": [
+      "2026-06-01",
+      "2026-11-01"
+    ],
+    "labels": 2,
+    "year_markers": [],
+    "overflow": "none",
+    "checked_bars": 6,
+    "peak_plays": 71,
+    "axis_peak": "187 min",
+    "plot_length_px": 128,
+    "bar_thickness_px": 10
+  },
+  "artist-6m-months-mobile": {
+    "path": "/artists/6000",
+    "slots": 6,
+    "empty": 0,
+    "range": [
+      "2026-06-01",
+      "2026-11-01"
+    ],
+    "labels": 2,
+    "year_markers": [],
+    "overflow": "none",
+    "checked_bars": 6,
+    "peak_plays": 71,
+    "axis_peak": "187 min",
+    "plot_length_px": 144,
+    "bar_thickness_px": 10
+  },
+  "release-6m-days-desktop": {
+    "path": "/releases/81273",
+    "slots": 183,
+    "empty": 112,
+    "range": [
+      "2026-06-01",
+      "2026-11-30"
+    ],
+    "labels": 37,
+    "year_markers": [],
+    "overflow": "horizontal",
+    "checked_bars": 71,
+    "peak_plays": 8,
+    "axis_peak": "21 min",
+    "plot_length_px": 128,
+    "bar_thickness_px": 8
+  },
+  "release-6m-days-mobile": {
+    "path": "/releases/81273",
+    "slots": 183,
+    "empty": 112,
+    "range": [
+      "2026-06-01",
+      "2026-11-30"
+    ],
+    "labels": 61,
+    "year_markers": [],
+    "overflow": "vertical",
+    "checked_bars": 71,
+    "peak_plays": 8,
+    "axis_peak": "21 min",
+    "plot_length_px": 144,
+    "bar_thickness_px": 8
+  },
+  "recording-90d-days-current-desktop": {
+    "path": "/recordings/165690",
+    "slots": 90,
+    "empty": 21,
+    "range": [
+      "2026-08-28",
+      "2026-11-25"
+    ],
+    "labels": 18,
+    "year_markers": [],
+    "overflow": "none",
+    "checked_bars": 69,
+    "peak_plays": 5,
+    "axis_peak": "5",
+    "plot_length_px": 128,
+    "bar_thickness_px": 8
+  },
+  "recording-90d-days-current-mobile": {
+    "path": "/recordings/165690",
+    "slots": 90,
+    "empty": 21,
+    "range": [
+      "2026-08-28",
+      "2026-11-25"
+    ],
+    "labels": 30,
+    "year_markers": [],
+    "overflow": "vertical",
+    "checked_bars": 69,
+    "peak_plays": 5,
+    "axis_peak": "5",
+    "plot_length_px": 144,
+    "bar_thickness_px": 8
+  },
+  "recording-90d-days-previous-desktop": {
+    "path": "/recordings/165690",
+    "slots": 90,
+    "empty": 88,
+    "range": [
+      "2026-05-30",
+      "2026-08-27"
+    ],
+    "labels": 18,
+    "year_markers": [],
+    "overflow": "none",
+    "checked_bars": 2,
+    "peak_plays": 8,
+    "axis_peak": "8",
+    "plot_length_px": 128,
+    "bar_thickness_px": 8
+  },
+  "recording-90d-days-previous-mobile": {
+    "path": "/recordings/165690",
+    "slots": 90,
+    "empty": 88,
+    "range": [
+      "2026-05-30",
+      "2026-08-27"
+    ],
+    "labels": 30,
+    "year_markers": [],
+    "overflow": "vertical",
+    "checked_bars": 2,
+    "peak_plays": 8,
+    "axis_peak": "8",
+    "plot_length_px": 144,
+    "bar_thickness_px": 8
+  },
+  "recording-30d-days-current-desktop": {
+    "path": "/recordings/165690",
+    "slots": 30,
+    "empty": 7,
+    "range": [
+      "2026-10-27",
+      "2026-11-25"
+    ],
+    "labels": 6,
+    "year_markers": [],
+    "overflow": "none",
+    "checked_bars": 23,
+    "peak_plays": 5,
+    "axis_peak": "5",
+    "plot_length_px": 128,
+    "bar_thickness_px": 8
+  },
+  "recording-30d-days-current-mobile": {
+    "path": "/recordings/165690",
+    "slots": 30,
+    "empty": 7,
+    "range": [
+      "2026-10-27",
+      "2026-11-25"
+    ],
+    "labels": 10,
+    "year_markers": [],
+    "overflow": "vertical",
+    "checked_bars": 23,
+    "peak_plays": 5,
+    "axis_peak": "5",
+    "plot_length_px": 144,
+    "bar_thickness_px": 8
+  },
+  "recording-30d-days-previous-desktop": {
+    "path": "/recordings/165690",
+    "slots": 30,
+    "empty": 5,
+    "range": [
+      "2026-09-27",
+      "2026-10-26"
+    ],
+    "labels": 6,
+    "year_markers": [],
+    "overflow": "none",
+    "checked_bars": 25,
+    "peak_plays": 5,
+    "axis_peak": "5",
+    "plot_length_px": 128,
+    "bar_thickness_px": 8
+  },
+  "recording-30d-days-previous-mobile": {
+    "path": "/recordings/165690",
+    "slots": 30,
+    "empty": 5,
+    "range": [
+      "2026-09-27",
+      "2026-10-26"
+    ],
+    "labels": 10,
+    "year_markers": [],
+    "overflow": "vertical",
+    "checked_bars": 25,
+    "peak_plays": 5,
+    "axis_peak": "5",
+    "plot_length_px": 144,
+    "bar_thickness_px": 8
+  }
+}

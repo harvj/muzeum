@@ -1,0 +1,66 @@
+  <% badge = ->(label, state = nil) do
+    markup = tag.p(label, role: "status", class: "investigation-badge", data: { state: })
+    if (position_badge = local_assigns[:position_badge])
+      position_badge.call(markup)
+      nil
+    else
+      markup
+    end
+  end %>
+  <% provider_incomplete = @assessment&.evidence&.fetch("partial", false) %>
+  <% request_failed = @assessment_request&.state == "failed" %>
+  <% throttled = request_failed && @assessment_request.failure == "musicbrainz throttled (503)" %>
+  <% expired = @assessment_request&.expired_investigation? || @assessment_request&.failure == "Investigation expired before completion." %>
+  <% queue = RecordingResolution::QueueStatus.new(@assessment_request) if @assessment_request && !expired && params[:assessment].blank? %>
+  <% queue_state = queue&.state %>
+  <% can_retry = @may_manage_observation && CatalogImport.worker_enabled? %>
+  <% if expired %>
+    <%= badge.call(can_retry ? "Failed — Retry" : "Needs attention") %>
+    <p class="muted">The investigation expired.</p>
+    <%= button_to "Retry search", investigate_resolution_surface_path(@observation) if can_retry %>
+  <% elsif queue&.attention %>
+    <%= badge.call("Needs attention") %>
+    <%= render "investigation_queue_details", queue: %>
+  <% elsif queue_state.in?([ :queued, :investigating, :retrying ]) %>
+    <div class="investigation-progress" role="status" aria-label="Investigation progress">
+      <ul>
+        <% { queued: "Queued", investigating: "Investigating", retrying: "Waiting to retry",
+          complete: "Investigation complete", review: "Needs review" }.each do |state, label| %>
+          <%= tag.li label, data: { state: }, aria: { current: ("true" if state == queue_state) } %>
+        <% end %>
+      </ul>
+      <%= render "investigation_queue_details", queue: queue if queue.phase %>
+    </div>
+  <% elsif @assessment_request&.active? && params[:assessment].blank? %>
+    <%= badge.call("Needs attention") %>
+    <p class="muted"><%= queue_state == :unavailable ? "The investigation queue could not be checked." : "No investigation attempt is scheduled." %></p>
+    <%= button_to "Retry search", investigate_resolution_surface_path(@observation) if can_retry && queue_state != :unavailable %>
+  <% elsif request_failed && @assessment_request.failure == CatalogImport::INVESTIGATION_WORKER_FAILURE %>
+    <%= badge.call("Failed — Needs Codex") %>
+    <p class="muted">The investigation worker failed unexpectedly.</p>
+  <% elsif request_failed || provider_incomplete %>
+    <div class="investigation-outcome">
+      <div role="status">
+        <p class="investigation-badge"><%= request_failed && can_retry ? "Failed — Retry" : "Needs attention" %></p>
+        <p class="muted"><%= throttled ? "MusicBrainz search unavailable" : "Provider evidence unavailable or incomplete" %></p>
+        <p><% if throttled %>
+          <%= pluralize(@assessment_request.attempts, "recording-search attempt") %> failed (HTTP 503).
+        <% end %>
+        <% if @candidates.any? %>Retained candidates are shown below.<% else %>No verified candidates are available yet.<% end %></p>
+        <% if request_failed && can_retry %><p>Retrying the search preserves the original observation and its evidence.</p><% end %>
+      </div>
+      <% if request_failed && can_retry %>
+        <%= button_to "Retry search", investigate_resolution_surface_path(@observation) %>
+      <% end %>
+    </div>
+  <% elsif @assessment_request&.state == "incomplete" %>
+    <%= badge.call("Needs review", :review) %>
+    <p class="muted"><%= @assessment_request.failure %></p>
+  <% elsif @assessment %>
+    <% disputed = contexts.values.any? { |proposals| proposals.group_by { |proposal| proposal.construction.base.data.dig("release-group", "id") }.values.any?(&:many?) } %>
+    <%= badge.call("Needs review", :review) unless resolution_distinct_recording_count(@assessment, @candidates) == 1 && !disputed %>
+    <% unless compact %><p class="muted"><%= browser_time(@assessment.created_at) %></p><% end %>
+  <% else %>
+    <p>This observation has not been investigated.<%= " Background investigation is paused." unless RecordingResolution::Investigation.enabled? %></p>
+  <% end %>
+  <% if @assessment && !@assessment_matches_claims %><p>This historical assessment used different source ID claims.</p><% end %>

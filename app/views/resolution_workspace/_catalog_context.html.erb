@@ -1,0 +1,16 @@
+  <h3 class="section-heading">Canonical in Muzeum</h3>
+  <% release_selection = ReleaseConfigurationSelection.new(current_user, rows.flat_map { |_, entries, _| entries.grep(Release).map(&:id) }) %>
+  <dl>
+    <% rows.each do |label, entries, status| %>
+      <div>
+        <dt><span class="review-catalog-mark<%= " present" if entries.any? %>" aria-hidden="true"><%= entries.any? ? "✓" : "—" %></span><%= label %></dt>
+        <dd><% if entries.any? %><%= safe_join(entries.map { |entry|
+        date = release_selection.date(entry).iso if entry.is_a?(Release)
+        safe_join([catalog_link(entry), (tag.span(" · #{date}", class: "compact-meta") if date)].compact)
+      }, ", ") %><% else %><%= status || "No verified catalog match" %><% end %></dd>
+      </div>
+    <% end %>
+  </dl>
+  <p class="compact-meta">Resolution <%= rows[1][1].any? ? "reuses the existing recording" : "creates a catalog entry for this recording" %> and applies it to this matching group.
+    The original Last.fm release text is preserved. The edition played stays unverified.
+    <% if rows[2][1].empty? %>Uncertain release memberships stay pending.<% end %></p>

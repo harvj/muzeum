@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Migrate only an exact Muzeum candidate as the isolated migration OS identity."""
-import fcntl,json,os,re,signal,subprocess,sys
+import fcntl,hashlib,json,os,re,signal,stat,subprocess,sys
 from pathlib import Path
+from urllib.parse import urlsplit
 def run_bounded(argv, *, cwd, env, timeout):
     process = subprocess.Popen(argv, cwd=cwd, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, start_new_session=True)
     try:
@@ -24,33 +25,65 @@ def main():
     os.umask(0o077)
     with open('/etc/muzeum/migration.lock','a') as lock:
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
-        env={'PATH':'/opt/auth/ruby-3.4.12/bin:/usr/bin:/bin','LANG':'C.UTF-8','HOME':'/home/muzeum-migrate','BUNDLE_WITHOUT':'development:test','BUNDLE_IGNORE_CONFIG':'1','BUNDLE_DEPLOYMENT':'true','BUNDLE_FROZEN':'true','BOOTSNAP_READONLY':'1','PGOPTIONS':'-c lock_timeout=5000 -c statement_timeout=120000'}
+        env = {}
         for line in Path('/etc/muzeum/migrate.env').read_text().splitlines():
-            name,value=line.split('=',1);env[name]=value
-        env.update(BOOTSNAP_READONLY='1', PGOPTIONS='-c lock_timeout=5000 -c statement_timeout=120000')
-        env['BUNDLE_GEMFILE']=str(release/'Gemfile')
-        # Only empty auxiliary databases may receive an explicit first bootstrap.
-        ruby="""require 'bundler/setup';require './config/environment';
-%w[cache queue cable].each do |name|
- config=ActiveRecord::Base.configurations.configs_for(env_name:'production',name:name)
- ActiveRecord::Base.establish_connection(config)
- if ActiveRecord::Base.connection.tables.empty?
-  load Rails.root.join('db',name+'_schema.rb')
- end
-end
-"""
-        result=run_bounded(['/usr/sbin/runuser','-u','muzeum-migrate','--','/opt/auth/ruby-3.4.12/bin/ruby','-e',ruby],cwd=release,env=env,timeout=120)
-        if result.returncode:
-            diagnostic=Path('/etc/muzeum/migration-last-error')
-            fd=os.open(diagnostic,os.O_WRONLY|os.O_CREAT|os.O_TRUNC|os.O_NOFOLLOW,0o600)
-            with os.fdopen(fd,'wb') as out:out.write(result.stderr)
-            raise RuntimeError()
-        result=run_bounded(['/usr/sbin/runuser','-u','muzeum-migrate','--','/opt/auth/ruby-3.4.12/bin/bundle','exec','rails','db:migrate'],cwd=release,env=env,timeout=180)
-        if result.returncode:
-            diagnostic=Path('/etc/muzeum/migration-last-error')
-            fd=os.open(diagnostic,os.O_WRONLY|os.O_CREAT|os.O_TRUNC|os.O_NOFOLLOW,0o600)
-            with os.fdopen(fd,'wb') as out:out.write(result.stderr)
-            raise RuntimeError()
+            name, value = line.split('=', 1)
+            env[name] = value
+        for name, suffix in zip(('DATABASE_URL', 'CACHE_DATABASE_URL', 'QUEUE_DATABASE_URL',
+                                 'CABLE_DATABASE_URL'), ('', '_cache', '_queue', '_cable')):
+            url = urlsplit(env[name])
+            if (url.scheme not in ('postgresql', 'postgres') or url.hostname != '127.0.0.1'
+                    or url.username != 'muzeum_migrator' or url.path != '/muzeum_production' + suffix
+                    or url.query or url.fragment):
+                raise RuntimeError('Unexpected migration database boundary')
+        sys.path.insert(0, '/usr/local/lib/muzeum-deploy')
+        from muzeum_deploy import Host, RUBY_BIN, reviewed_migrations, runtime_environment
+
+        receipt_path = Path('/var/lib/muzeum-deploy/active.json')
+        for path in (receipt_path, *receipt_path.parents):
+            info = path.lstat()
+            if info.st_uid != 0 or stat.S_ISLNK(info.st_mode) or info.st_mode & 0o022:
+                raise RuntimeError('Untrusted migration receipt path')
+        if not receipt_path.is_file():
+            raise RuntimeError('Missing migration receipt')
+        receipt = json.loads(receipt_path.read_text())
+        host = Host()
+        if (receipt.get('sha') != sha or receipt.get('release') != str(release)
+                or receipt.get('phase') != 'prepared_checkout' or receipt.get('migrating') is not True
+                or receipt.get('withdrawn') is not True
+                or receipt.get('baseline', {}).get('revision') != host.revision()
+                or not receipt.get('pre_backup')):
+            raise RuntimeError('Active guarded migration required')
+
+        pending = host.inspect(release)['pending']
+        if not pending or pending != receipt.get('migrations'):
+            raise RuntimeError('Pending migration set changed')
+        reviewed_migrations(release, pending)
+        for item in pending:
+            path = release / item['path']
+            if (item['database'] != 'primary' or
+                    not re.fullmatch(r'[0-9]+', item['version']) or
+                    not re.fullmatch(r'db/migrate/' + item['version'] + r'_[a-z0-9_]+\.rb', item['path']) or
+                    path.resolve(strict=True) != path or
+                    hashlib.sha256(path.read_bytes()).hexdigest() != item['sha256']):
+                raise RuntimeError('Unapproved primary migration bytes')
+
+        env = runtime_environment(env, LANG='C.UTF-8', HOME='/home/muzeum-migrate', SKIP_SCHEMA_DUMP='1',
+                                  BUNDLE_GEMFILE=str(release / 'Gemfile'),
+                                  PGOPTIONS='-c lock_timeout=5000 -c statement_timeout=120000')
+        for item in pending:
+            path = release / item['path']
+            if hashlib.sha256(path.read_bytes()).hexdigest() != item['sha256']:
+                raise RuntimeError('Reviewed migration changed')
+            result = run_bounded(['/usr/sbin/runuser', '-u', 'muzeum-migrate', '--',
+                                  str(RUBY_BIN / 'ruby'), str(RUBY_BIN / 'bundle'), 'exec', 'rails', 'db:migrate:up:primary'],
+                                 cwd=release, env=dict(env, VERSION=item['version']), timeout=180)
+            if result.returncode:
+                diagnostic = Path('/etc/muzeum/migration-last-error')
+                fd = os.open(diagnostic, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o600)
+                with os.fdopen(fd, 'wb') as out:
+                    out.write(result.stderr)
+                raise RuntimeError('Reviewed migration failed')
     print('Exact Muzeum candidate migration completed with isolated migrator credentials.')
 
 if __name__ == '__main__':

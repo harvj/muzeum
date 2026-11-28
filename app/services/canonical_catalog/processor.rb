@@ -1,7 +1,7 @@
 module CanonicalCatalog
   class Processor
     MAX_ATTEMPTS = 5
-    MAX_EDITIONS = 3
+    MAX_EDITIONS = 25
 
     def initialize(request, session_factory: nil)
       @request = request
@@ -13,10 +13,12 @@ module CanonicalCatalog
       @token = claim
       return unless @token
 
+      yield if block_given?
+
       @session = @session_factory.call(@request, @token)
       @store = Store.new(@request, @session)
       case @request.kind
-      when "recording" then import_recording
+      when "recording", CatalogImport::RECORDING_METADATA then import_recording
       when "release" then import_release
       when "artist" then import_artist
       when "artist_geography" then import_artist_geography
@@ -121,41 +123,60 @@ module CanonicalCatalog
       data = @musicbrainz.verify_recording(@session, mbid, catalog: true)["data"]
       raise Store::Unverified, "Selected recording identity could not be verified" unless data && data["id"] == mbid
 
-      locked { @store.recording(data, expected: mbid) }
-      context = @request.context
-      return complete if context.blank?
+      assessment = RecordingResolution::Assessment.find_by(id: @request.context["assessment_id"])
+      publication = assessment&.evidence&.dig("recording_publications", mbid, "earliest_publication")
+      locked { @store.recording(data, expected: mbid, publication:) }
+      return complete if @request.kind == CatalogImport::RECORDING_METADATA || @request.context.key?("assessment_id")
 
-      edition = select_edition(data, context)
-      return complete("incomplete", "Release association pending. Select a verified edition to continue.") unless edition
+      ids = Array(data["releases"]).filter_map do |appearance|
+        group = appearance["release-group"]
+        classified = appearance["status"].present? && group&.fetch("primary-type", nil).present? &&
+          group["first-release-date"].present?
+        next if classified && !Edition.collection_context?(appearance)
 
-      complete { @store.release(edition.data, edition.slots) }
-    end
+        id = appearance["id"]
+        id if Clients::Musicbrainz::MBID.match?(id.to_s)
+      end.uniq.sort
+      if ids.size > MAX_EDITIONS
+        return complete("incomplete", "Release memberships pending. More editions require verification than this import can check.")
+      end
 
-    def select_edition(recording, context)
-      mbid = recording.fetch("id")
-      explicit = context["edition_mbid"]
-      return fetch_edition(explicit, recording_mbid: mbid) if explicit.present?
-
-      album = context["album"]
-      return if album.blank?
-
-      appearances = Array(recording["releases"])
-      matching = appearances.select { |release| release["title"] == album }
-      ids = [ context["observed_edition_mbid"], *matching.pluck("id") ].compact.uniq
-      return if ids.size > MAX_EDITIONS && context["observed_edition_mbid"].blank?
-
-      # The exact observed edition can supply strong context even when the title has many variants.
-      editions = ids.first(MAX_EDITIONS).filter_map do |id|
+      pending = false
+      editions = ids.filter_map do |id|
         edition = fetch_edition(id, recording_mbid: mbid)
-        edition if edition.original_context?(album)
+        edition if Edition.collection_context?(edition.data)
       rescue Store::Unverified
+        pending = true
         nil
       end
-      # Compare collection content rather than interpreting a provider group as a collection identity.
-      albums = editions.select { |edition| edition.data.dig("release-group", "primary-type") == "Album" }
-      editions = albums if albums.any?
-      collections = editions.group_by { |edition| edition.slots.map { |slot| slot.dig(:recording, "id") } }
-      collections.values.first.first if collections.one?
+      contexts = editions.group_by { |edition| edition.data.dig("release-group", "id") }
+      pending ||= contexts.empty?
+      remaining_editions = MAX_EDITIONS - ids.size
+      contexts.each do |group, matches|
+        unless matches.any? { |edition| Edition.original_context?(edition.data) }
+          original_date = matches.first.data.dig("release-group", "first-release-date")
+          originals = @musicbrainz.collection_editions(@session, group, limit: MAX_EDITIONS).select do |row|
+            row["status"] == "Official" && row["date"] == original_date
+          end
+          if originals.size > remaining_editions
+            raise Store::Unverified, "Original tracklists exceed the evidence budget"
+          end
+          remaining_editions -= originals.size
+          matches += originals.map { |row| fetch_edition(row.fetch("id")) }.select do |edition|
+            edition.data.dig("release-group", "id") == group && Edition.original_context?(edition.data)
+          end
+        end
+        construction = Construction.new(matches)
+        edition = construction.base
+        pending ||= edition.slots.none? { |slot| slot.dig(:recording, "id") == mbid }
+        locked do
+          @store.release(edition.data, edition.slots, strict_collection: true,
+            checked_editions: construction.appearances)
+        end
+      rescue Store::Unverified
+        pending = true
+      end
+      pending ? complete("incomplete", "Some release memberships remain pending verification.") : complete
     end
 
     def fetch_edition(id, recording_mbid: nil)
@@ -181,27 +202,43 @@ module CanonicalCatalog
       if @group && (@group.claims != @claims || !RecordingResolution::Workspace.new(user).surface(observation)&.id.eql?(surface.id))
         return complete("incomplete", "Observation claims no longer match this investigation.")
       end
-      @local_candidates = RecordingResolution::LocalCandidates.call(surface, @claims)
-      local_evidence = { "source_claims" => @claims, "candidates" => @local_candidates, "reasons" => [] }
-      local_evidence.merge!(RecordingResolution::LocalCandidates.checked_edition(@claims, @local_candidates))
-      local_ranking = RecordingResolution::Ranking.call(surface, local_evidence)
-      known_identifier = @local_candidates.any? { |candidate| candidate["verified_local_claim"] }
-      unambiguous_slot = @claims["track_mbid"].blank? && local_evidence["edition"].present? && local_ranking.one?
-      if (known_identifier || unambiguous_slot) &&
-          @request.context["refresh"] != true &&
-          RecordingResolution::Ranking.recommended?(local_ranking)
-        return complete { write_assessment(local_evidence) }
-      end
-      @evaluator = RecordingResolution::Evaluator.new(@session, discogs: nil, workspace: true,
-        review_alternative: @request.context["refresh"] == true)
-      evidence = @evaluator.call(surface, @claims)
-      if (manual = @request.context["manual_mbid"]).present?
-        result = @musicbrainz.verify_recording(@session, manual, catalog: true)
-        if (recording = result["data"])
-          evidence["candidates"] = [ *evidence["candidates"], recording ]
-          evidence["manually_verified_mbid"] = recording.fetch("id")
+      return assess_track_provenance if @request.context["provenance_mbid"]
+
+      if (reassessment = @group && RecordingResolution::Assessment.find_by(id: @request.context["reassessment_id"], group_id: @group.id))
+        review = RecordingResolution::ReleaseReview.new(reassessment.evidence)
+        if review.policy || !reassessment.evidence["partial"]
+          evidence = review.policy ? review.refresh(@musicbrainz, @session) : reassessment.evidence.dup
+          evidence["reassessment"] = { "previous_id" => reassessment.id, "checked_at" => Time.current.utc.iso8601(6) }
+          evidence["reused_publication_requests"] = (Array(evidence["reused_publication_requests"]) + Array(evidence["requests"])).uniq
+          return complete { write_assessment(evidence) }
         end
       end
+
+      @local_candidates = RecordingResolution::LocalCandidates.call(surface)
+      identity = RecordingResolution::LocalCandidates.catalog_identity(surface)
+      unless @request.context["refresh"] == true || RecordingResolution::TitleInterpretation.call(surface.track)
+        local_evidence = { "source_claims" => @claims, "candidates" => @local_candidates, "reasons" => [] }
+        local_evidence["canonical_artist_mbid"] = identity[:artist_mbid] if identity[:artist_mbid]
+        local_evidence.merge!(RecordingResolution::LocalCandidates.checked_edition(surface, @local_candidates))
+        ranks = RecordingResolution::Ranking.call(surface, local_evidence, source_hints: true)
+        return complete { write_assessment(local_evidence) } if ranks.one? && RecordingResolution::Ranking.recommended?(ranks)
+      end
+      previous = RecordingResolution::Assessment.where(group_id: @group&.id).where("evidence ? 'construction_editions'")
+        .order(id: :desc).pick(:evidence)
+      retained = Array(previous&.fetch("construction_editions", nil)) if RecordingResolution::TitleInterpretation.call(surface.track)
+      @evaluator = RecordingResolution::Evaluator.new(@session, discogs: nil, workspace: true,
+        review_alternative: @request.context["refresh"] == true, review_release: @request.context["release_mbid"],
+        catalog_identity: identity, origins: false, adaptive: true, retained: retained || [])
+      evidence = @evaluator.call(surface, @claims) do |recording_evidence|
+        if (manual = @request.context["manual_mbid"]).present?
+          result = @musicbrainz.verify_recording(@session, manual, catalog: true)
+          if (recording = result["data"])
+            recording_evidence["candidates"] = [ *recording_evidence["candidates"], recording ]
+            recording_evidence["manually_verified_mbid"] = recording.fetch("id")
+          end
+        end
+      end
+      investigate_publication(surface, evidence)
       edition_slots = Array(evidence["slots"])
       candidates = RecordingResolution::Workspace.candidate_evidence(evidence)
       supported = candidates.select do |candidate|
@@ -213,7 +250,73 @@ module CanonicalCatalog
       complete { write_assessment(evidence) }
     end
 
+    def assess_track_provenance
+      mbid, assessment_id = @request.context.values_at("provenance_mbid", "provenance_assessment_id")
+      prior = RecordingResolution::Assessment.where(group_id: @group.id)
+      source = prior.find_by(id: assessment_id)
+      unless source && RecordingResolution::ReleaseProvenance.checked_recording?(source.evidence, mbid)
+        return complete("incomplete", "The recording is no longer supported by checked edition evidence.")
+      end
+
+      retained = Array(source.evidence["construction_editions"])
+      counterparts = RecordingResolution::ReleaseProvenance.possible_counterparts(source.evidence, mbid)
+      history = RecordingResolution::RecordingProvenance.new(@musicbrainz, @session).call(mbid, retained:, counterparts:)
+      history["requests"] = @session.provenance
+      complete do
+        latest = prior.order(id: :desc).first!
+        publications = latest.evidence.fetch("additional_recording_publications", {})
+        evidence = latest.evidence.merge("additional_recording_publications" => publications.merge(mbid => history))
+        digest = Digest::SHA256.hexdigest(evidence.to_json)
+        prior.create_or_find_by!(version: latest.version, digest:) do |row|
+          row.actor = "catalog_workspace"
+          row.evidence = evidence
+        end
+      end
+    end
+
+    def investigate_publication(surface, evidence)
+      # Appearance evidence belongs to the investigation, but it cannot decide
+      # which otherwise plausible identities get a publication lookup.
+      independent = evidence.except("edition", "slots", "review_tracklists").merge(
+        "candidates" => Array(evidence["candidates"]).map { |candidate| candidate.except("release_discovery", "local_release_context", "releases") })
+      ids = RecordingResolution::Ranking.call(surface, independent, source_hints: true).filter_map do |rank|
+        inputs = rank.fetch("inputs")
+        rank["recording_mbid"] if inputs.dig("title", "state") == "positive" && inputs.dig("artist_name", "state") == "positive"
+      end.first(RecordingResolution::Workspace::REVIEW_CANDIDATES)
+      # A checked track caption can identify a split movement even when its
+      # recording title omits the section prefix used in the source.
+      caption_ids = RecordingResolution::Ranking.call(surface, evidence, source_hints: true).filter_map do |rank|
+        inputs = rank.fetch("inputs")
+        appearance = inputs.dig("catalog_release_appearance", "provenance")
+        if appearance&.fetch("relationship", nil) == "matching_catalog_caption" &&
+            inputs.dig("title", "state") == "positive" && inputs.dig("artist_name", "state") == "positive"
+          rank["recording_mbid"]
+        end
+      end
+      ids = (ids | caption_ids).first(RecordingResolution::Workspace::REVIEW_CANDIDATES)
+      ids |= Array(evidence["manually_verified_mbid"])
+
+      previous = RecordingResolution::Assessment.where(group_id: @group&.id, created_at: 1.day.ago..)
+        .where("evidence ? 'recording_publications'").order(id: :desc).pick(:evidence) || {}
+      evidence["additional_recording_publications"] = previous["additional_recording_publications"] if previous.key?("additional_recording_publications")
+      saved = previous.fetch("recording_publications", {}).slice(*ids).reject do |_, history|
+        history["checked_at"].to_s < 1.day.ago.utc.iso8601 || !history.key?("verified_recording") || history["pending"] || history["appearance_browse_incomplete"] || Array(history["pending_groups"]).any? ||
+          (Array(history["original_groups"]).any? && !history.key?("edition_coverage"))
+      end
+      # Only reuse completed, recent histories and their checked source editions.
+      groups = saved.values.flat_map { |history| Array(history["original_groups"]) }
+      previous_editions = Array(previous["construction_editions"]).select { |edition| groups.include?(edition.dig("release-group", "id")) }
+      retained = (previous_editions + Array(evidence["construction_editions"])).uniq { |edition| edition["id"] }
+      evidence["recording_publications"] = saved
+      evidence["construction_editions"] = retained
+      evidence["reused_publication_requests"] = (Array(previous["reused_publication_requests"]) + Array(previous["requests"])).uniq if saved.any?
+      result = RecordingResolution::RecordingOrigins.new(@musicbrainz, @session).call(ids - saved.keys, retained:)
+      evidence.merge!(result.merge("recording_publications" => saved.merge(result.fetch("recording_publications"))))
+    end
+
     def persist_assessment_failure(error, stopped)
+      return if @request.context["provenance_mbid"]
+
       evidence = @evaluator&.evidence || { "source_claims" => @claims, "reasons" => [], "reason_details" => {} }
       code = error.terminal ? "provider_request_stopped" : "provider_temporarily_unavailable"
       evidence["reasons"] << code
@@ -234,12 +337,12 @@ module CanonicalCatalog
       if verified && (local = local_contexts[verified["id"]])
         evidence["verified_recording"] = verified.merge(local.slice("local_release_context"))
       end
-      evidence["ranking"] = RecordingResolution::Ranking.call(@surface, evidence)
+      evidence["ranking"] = RecordingResolution::Ranking.call(@surface, evidence, source_hints: true)
       evidence["ranking_version"] = evidence["ranking"].first&.fetch("version") || RecordingResolution::Ranking::VERSION
       group = @group || RecordingResolution::Group.create_or_find_by!(surface_id: @surface.id,
         version: RecordingResolution::Ledger::VERSION, claims: @claims)
       digest = Digest::SHA256.hexdigest(evidence.to_json)
-      RecordingResolution::Assessment.create_or_find_by!(group_id: group.id, version: "workspace-evidence-v2", digest:) do |row|
+      RecordingResolution::Assessment.create_or_find_by!(group_id: group.id, version: RecordingResolution::Assessment::INTERPRETATION_VERSION, digest:) do |row|
         row.actor = "catalog_workspace"
         row.evidence = evidence.merge("requests" => @session.provenance)
       end

@@ -1,11 +1,18 @@
 <% mbid = candidate.fetch("id") %>
+<% publications = @assessment.evidence["recording_publications"] %>
+<% publication = publications&.fetch(mbid, { "pending" => true }) || {} %>
 <% appearance = rank.dig("inputs", "catalog_release_appearance", "provenance") %>
 <% edition = @assessment.evidence["edition"] if Array(@assessment.evidence["slots"]).any? { |slot| slot["recording_mbid"] == mbid } %>
 <% local_id = candidate.dig("local_release_context", "edition_mbid") %>
 <% references = Array(candidate["releases"]) %>
 <% references = [ { "id" => local_id }, *references ] if local_id %>
 <% shared_isrc = @candidates.any? { |other| other["id"] != mbid && (Array(other["isrcs"]) & Array(candidate["isrcs"])).any? } %>
-<% reference = appearance || edition || references.find { |item| @review_releases[item["id"]]&.fetch("state", nil) == "complete" } || references.first %>
+<% retained_appearance = @review_releases.values.find do |listing|
+  listing["state"] == "complete" && Array(listing["media"]).any? do |medium|
+    Array(medium["tracks"]).any? { |track| track["recording_mbid"] == mbid }
+  end
+end %>
+<% reference = appearance || edition || references.find { |item| @review_releases[item["id"]]&.fetch("state", nil) == "complete" } || retained_appearance || references.first %>
 <% release_id = reference&.fetch("id", nil) %>
 <% release = @review_releases[release_id] %>
 <% metadata = (reference || {}).merge(release || {}) %>
@@ -14,29 +21,113 @@
 <% factors = rank.fetch("inputs").select { |_, item| %w[positive contradictory].include?(item["state"]) } %>
 <% positives, conflicts = factors.partition { |_, item| item["state"] == "positive" } %>
 <% target = @selected_scrobble || @observation %>
+<% identity = resolution_recording_identity(@assessment, mbid) if @may_manage_observation && @assessment_matches_claims %>
 <details class="candidate review-candidate<%= " recommended" if recommended %>" name="resolution-candidate" <%= "open" if expanded %>>
   <summary class="review-candidate-summary">
     <span>
       <% if recommended %><strong class="review-recommendation" aria-label="Muzeum’s recommendation">Recommended</strong><% end %>
       <strong class="review-candidate-title"><%= candidate["title"] %></strong>
-      <span class="review-credit"><%= Array(candidate["artist-credit"]).map { |credit| "#{credit["name"]}#{credit["joinphrase"]}" }.join.presence || "Artist credit unavailable" %>
+      <span class="review-credit"><%= resolution_candidate_credit(candidate) %>
         <% if candidate["disambiguation"].present? %> · <%= candidate["disambiguation"] %><% end %></span>
-      <span class="review-edition"><%= metadata["title"].presence || "MusicBrainz supplied no release title" %><% if metadata["disambiguation"].present? %> · <%= metadata["disambiguation"] %><% end %> · <%= release_date&.first(4) || "Release year unavailable" %></span>
+
       <span class="compact-meta"><%= recording_duration(candidate["length"]) if candidate["length"] %><%= " · " if candidate["length"] %>MusicBrainz ID <%= mbid.first(8) %></span>
     </span>
     <span class="review-score">Score <strong><%= rank["score"] %></strong></span>
   </summary>
+  <% catalog_rows = @catalog_context.rows(candidate) %>
+  <% catalog_recording = catalog_rows[1][1].first %>
+  <% if @may_manage_observation && @assessment_matches_claims && !@release_review&.policy %>
+  <% original_groups = CanonicalCatalog::ReviewedConstruction.for(@assessment, mbid, source_ids: identity.source_ids || [ mbid ]).group_by { |item| item.construction.base.data.dig("release-group", "id") } %>
+  <% proposals = CanonicalCatalog::ReviewedConstruction.resolution_choices(@assessment, mbid, identity.recording || catalog_recording, source_ids: identity.source_ids || [ mbid ]).flatten %>
+  <%= form_with url: decide_resolution_surface_path(@observation) do |form| %>
+    <%= form.hidden_field :identity_signature, value: identity.fingerprint, id: nil %>
+    <%= form.hidden_field :recording_mbid, value: mbid, id: nil %>
+    <%= form.hidden_field :assessment_id, value: @assessment.id, id: nil %>
+    <% if @listener_ranking_token %><%= form.hidden_field :listener_ranking_token, value: @listener_ranking_token, id: nil %><% end %>
+    <%= form.hidden_field :scope, value: "surface", id: nil %>
+    <%= form.hidden_field :head, value: @surface_head&.id, id: nil %>
+    <details><summary>Add an optional comment</summary>
+      <%= form.label :comment, "Comment (optional)", for: "comment-#{mbid}" %>
+      <%= form.text_field :comment, id: "comment-#{mbid}", maxlength: 500 %>
+    </details>
+    <p class="muted">Future exact matches inherit this decision. Individual overrides are preserved.</p>
+    <% if identity.aliases&.any? %><p><%= pluralize(identity.aliases.size, "equivalent source ID") %> will be linked.</p><% end %>
+    <% if (earliest = publication["earliest_publication"]) %>
+      <p class="compact-meta">Earliest verified publication · <%= earliest["date"] %> · <%= link_to earliest["title"], "https://musicbrainz.org/release/#{earliest['id']}" %></p>
+    <% end %>
+    <% if publication["pending"] || publication["appearance_browse_incomplete"] || Array(publication["pending_groups"]).any? || proposals.empty? && @assessment.evidence["pending_original_group"].present? %>
+      <p class="muted"><%= proposals.any? ? "Some release appearances could not be checked." : "The available evidence does not verify the original release." %> You can refresh the candidate evidence.</p>
+    <% end %>
+    <% if proposals.any? %>
+      <% if original_groups.values.any?(&:many?) %><p>Original editions differ. Choose the complete tracklist to use.</p><% end %>
+      <% proposals.each do |proposal| %>
+        <% base = proposal.construction.base %>
+        <% data = base.data %>
+        <%= hidden_field_tag "construction_heads[#{data['id']}]", CanonicalCatalog::ReviewedConstruction.head(proposal.existing), id: nil %>
+        <p class="compact-meta">
+          <strong><%= proposals.one? ? "Proposed original release" : "Original release option" %></strong>
+          · <%= data["title"] %> · <%= data["date"] %> · <%= data["country"].presence || "Country unavailable" %>
+          · <%= Array(data["media"]).filter_map { |medium| medium["format"].presence }.uniq.join(" / ").presence || "Format unavailable" %>
+          · <%= pluralize(base.slots.size, "track") %>
+          <% if data["packaging"].present? && data["packaging"] != "None" %> · <%= data["packaging"] %><% end %>
+          <% if data["disambiguation"].present? %> · <%= data["disambiguation"] %><% end %>
+          · <%= link_to data["id"], "https://musicbrainz.org/release/#{data['id']}", aria: { label: "MusicBrainz release #{data['id']}" } %>
+        </p>
+        <details class="review-original-tracklist">
+          <summary><%= proposal.existing ? "Review release correction" : "Review release construction" %> · Complete tracklist</summary>
+          <%= render "review_tracklist", release: RecordingResolution::ReviewRelease.project(data), release_id: data["id"], mbid: %>
+          <% if proposal.construction.additional_slots.any? %>
+            <p>Additional edition appearances</p>
+            <ul><% proposal.construction.additional_slots.each do |slot| %><li><%= slot[:title] %> · <%= slot[:appearance_date] %></li><% end %></ul>
+          <% end %>
+        </details>
+        <%= form.button "#{proposal.existing ? 'Correct' : 'Construct'} release & resolve #{pluralize(@affected_count, 'observation')}#{(" · #{data['country']} / #{base.slots.size} tracks (#{data['id'].first(8)})" if proposals.many?)}",
+          name: "construct_release", value: data["id"] %>
+      <% end %>
+    <% end %>
+    <div class="catalog-actions">
+      <%= form.button(proposals.any? ? "Resolve recording only" : (@affected_count.positive? ? "Resolve #{pluralize(@affected_count, 'observation')}" : "Resolve future exact matches"), name: "mode", value: "resolved") %>
+      <%= form.button "Defer", name: "feedback", value: "deferred", formaction: defer_resolution_surface_path(@observation) %>
+      <%= form.button "Reject candidate", name: "feedback", value: "rejected", formaction: defer_resolution_surface_path(@observation) %>
+    </div>
+  <% end %>
+  <% end %>
   <div class="review-candidate-detail">
     <div>
       <p class="compact-meta review-recording-id"><%= rank["provenance"] == "local_catalog" ? "Local catalog" : "MusicBrainz" %> ·
         <%= link_to "Recording #{mbid}", "https://musicbrainz.org/recording/#{mbid}", title: mbid %></p>
-      <% if reference %>
-        <p class="compact-meta"><%= release_date || "Release date unavailable" %> ·
-          <% if countries.empty? %>Country unavailable<% end %>
-          <% countries.each_with_index do |country, index| %><%= ", " if index.positive? %><%= render "shared/geographic_place", country: %><% end %>
-        </p>
+      <% if publication["appearances"].present? %>
+        <details>
+          <summary>Other publication appearances (<%= publication["appearances"].size %>)</summary>
+          <ul>
+            <% publication["appearances"].each do |item| %>
+              <li><%= link_to item["title"], "https://musicbrainz.org/release/#{item['id']}" %> · <%= item["date"].presence || "Date unknown" %> · <%= item["status"] %></li>
+            <% end %>
+          </ul>
+        </details>
       <% end %>
-      <%= render "review_tracklist", release:, release_id:, mbid: %>
+      <%= tag.details(open: !publication.present?, class: "review-checked-appearance review-edition") do %>
+        <summary>Checked appearance<% if reference %> · <%= metadata["title"] %> · <%= release_date || "Date unknown" %><% end %></summary>
+        <% if reference %>
+          <p class="compact-meta">
+            <% if metadata["disambiguation"].present? %><%= metadata["disambiguation"] %> · <% end %>
+            <% if countries.empty? %>Country unavailable<% end %>
+            <% countries.each_with_index do |country, index| %><%= ", " if index.positive? %><%= render "shared/geographic_place", country: %><% end %>
+          </p>
+        <% end %>
+        <%= render "review_tracklist", release:, release_id:, mbid: %>
+      <% end %>
+      <% other_contexts = @review_releases.values.select do |listing|
+        listing["id"] != release_id && listing["state"] == "complete" && listing["title"].present? &&
+          (listing["release_group_mbid"].blank? || listing["release_group_mbid"] != release&.fetch("release_group_mbid", nil)) &&
+          Array(listing["media"]).any? { |medium| Array(medium["tracks"]).any? { |track| track["recording_mbid"] == mbid } }
+      end.uniq { |listing| listing["release_group_mbid"] || listing["id"] }.first(3) %>
+      <% other_contexts.each do |listing| %>
+        <details>
+          <summary><%= listing["title"] %><%= " · #{listing["date"]}" if listing["date"].present? %></summary>
+          <%= render "review_tracklist", release: listing, release_id: listing["id"], mbid: %>
+        </details>
+      <% end %>
     </div>
     <div class="review-factors">
       <h3>For</h3>
@@ -59,44 +150,21 @@
     </div>
   </div>
   <% if @may_manage_observation && @assessment_matches_claims %>
-  <%= form_with url: decide_resolution_surface_path(@observation) do |form| %>
-    <%= form.hidden_field :recording_mbid, value: mbid, id: nil %>
-    <%= form.hidden_field :assessment_id, value: @assessment.id, id: nil %>
-    <% if @listener_ranking_token %><%= form.hidden_field :listener_ranking_token, value: @listener_ranking_token, id: nil %><% end %>
-    <%= form.hidden_field :scope, value: @selected_scrobble ? "scrobble" : "surface", id: nil %>
-    <%= form.hidden_field :play_id, value: @selected_scrobble&.id, id: nil %>
-    <%= form.hidden_field :head, value: (@selected_scrobble ? @selected_head : @surface_head)&.id, id: nil %>
-    <details><summary>Add an optional comment</summary>
-      <%= form.label :comment, "Comment (optional)", for: "comment-#{mbid}" %>
-      <%= form.text_field :comment, id: "comment-#{mbid}", maxlength: 500 %>
-    </details>
-    <p class="muted"><% if @selected_scrobble %>Affects 1 observation, ID <%= target.id %>.
-      <%= link_to "Review matching-group scope", resolution_surface_path(@observation, assessment: @assessment.id) %>
-      <% else %>Affects <%= pluralize(@affected_count, "current matching observation") %> and future exact matches. Individual overrides take precedence.
-      <%= link_to "Review only observation #{target.id}", resolution_surface_path(@observation, assessment: @assessment.id, play: target.id) %>
-      <% end %></p>
-    <div class="catalog-actions">
-      <%= form.button(@selected_scrobble ? "Assign only observation #{target.id}" : "Assign #{pluralize(@affected_count, "matching observation")}", name: "mode", value: "resolved") %>
-      <%= form.button "Defer", name: "feedback", value: "deferred", formaction: defer_resolution_surface_path(@observation) %>
-      <%= form.button "Reject candidate", name: "feedback", value: "rejected", formaction: defer_resolution_surface_path(@observation) %>
-    </div>
-  <% end %>
-  <% if (@selected_scrobble ? @current_recording_id : @surface_recording_id) && (@selected_scrobble ? @current_recording : @recordings[@surface_recording_id])&.mbid == mbid %>
-    <% editions = RecordingResolution::Workspace.editions(candidate, @assessment) %>
-    <h3>Release edition</h3>
-    <% if editions.any? %>
-      <p>Request verification of an edition you recognize. Muzeum checks its complete track listing before admission.</p>
-      <%= form_with url: admit_resolution_surface_path(@observation) do |form| %>
-        <%= form.hidden_field :recording_mbid, value: mbid, id: nil %>
-        <%= form.hidden_field :assessment_id, value: @assessment.id, id: nil %>
-        <%= form.hidden_field :play_id, value: @selected_scrobble&.id, id: nil %>
-        <%= form.label :edition_mbid, "Release edition to verify", for: "edition-#{mbid}" %>
-        <%= form.select :edition_mbid, editions, { include_blank: "Choose a release edition" }, id: "edition-#{mbid}", required: true %>
-        <%= form.submit "Verify selected release" %>
-      <% end %>
-    <% else %>
-      <p>The available evidence does not distinguish a release edition. You can keep the recording assignment while the release is pending.</p>
+  <details>
+    <summary>Resolve only this observation</summary>
+    <p>Applies only to observation <%= target.id %>.</p>
+    <%= form_with url: decide_resolution_surface_path(@observation) do |form| %>
+    <%= form.hidden_field :identity_signature, value: identity.fingerprint, id: nil %>
+      <%= form.hidden_field :scope, value: "scrobble", id: nil %>
+      <%= form.hidden_field :play_id, value: target.id, id: nil %>
+      <%= form.hidden_field :head, value: @selected_head&.id, id: nil %>
+      <%= form.hidden_field :recording_mbid, value: mbid, id: nil %>
+      <%= form.hidden_field :assessment_id, value: @assessment.id, id: nil %>
+      <% if @listener_ranking_token %><%= form.hidden_field :listener_ranking_token, value: @listener_ranking_token, id: nil %><% end %>
+      <%= form.label :comment, "Exception comment (optional)", for: "exception-comment-#{mbid}" %>
+      <%= form.text_field :comment, id: "exception-comment-#{mbid}", maxlength: 500 %>
+      <%= form.button "Resolve observation #{target.id} only", name: "mode", value: "resolved" %>
     <% end %>
-  <% end %>
+  </details>
   <% end %>
 </details>

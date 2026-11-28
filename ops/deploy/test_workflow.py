@@ -21,6 +21,7 @@ class FixtureHost:
     def __init__(self, root, migration=False, fail=None):
         self.root, self.fail = Path(root).resolve(), fail
         self.sha, self.running, self.public = OLD, True, True
+        self.target = NEW
         self.events = []
         self.pending = []
         self.candidate = self.root / 'candidate'
@@ -47,7 +48,7 @@ class FixtureHost:
         return self.sha
 
     def release(self, path, sha):
-        if Path(path) != self.candidate or sha != NEW:
+        if Path(path) != self.candidate or sha != self.target:
             raise RuntimeError('Wrong fixture release')
         return self.candidate
 
@@ -56,11 +57,11 @@ class FixtureHost:
 
     def preflight(self):
         self.event('preflight')
-        return {'revision': OLD, 'health': 'passed'}
+        return {'revision': self.sha, 'health': 'passed'}
 
     def inspect(self, release):
         self.event('inspect')
-        return {'pending': self.pending, 'databases': {'primary': {'triggers': ['immutable_source']}}}
+        return {'pending': self.pending, 'databases': {'primary': {'tables': [], 'columns': [], 'indexes': [], 'constraints': [], 'triggers': ['immutable_source']}}}
 
     def fingerprint(self, specification=None):
         self.event('fingerprint')
@@ -84,8 +85,11 @@ class FixtureHost:
 
     def publish(self):
         self.event('publication')
-        self.sha = NEW
-        (self.root / 'current').symlink_to(self.candidate)
+        self.sha = self.target
+        current = self.root / 'current'
+        if current.is_symlink():
+            current.unlink()
+        current.symlink_to(self.candidate)
 
     def start(self):
         self.event('restart')
@@ -141,33 +145,43 @@ class WorkflowTests(unittest.TestCase):
         self.assertFalse({'backup', 'restore', 'withdraw', 'migration'} & set(host.events))
         self.assertFalse((self.root / 'audit/active.json').exists())
 
-    def test_reviewed_release_retains_approval_and_rechecks_baseline_under_lock(self):
+    def test_operator_selection_rechecks_baseline_under_lock(self):
         host, flow = self.workflow()
-        review = {
-            'branch': 'release/v0.3.2', 'version': 'v0.3.2', 'baseline': OLD,
-            'scope': 'https://github.com/harvj/muzeum/issues/32#issuecomment-10',
-            'ci': 'https://github.com/harvj/muzeum/actions/runs/20'
-        }
-        self.assertEqual(flow.release_preflight(OLD)['health'], 'passed')
-        self.assertFalse((flow.root / 'active.json').exists())
-        with self.assertRaisesRegex(RuntimeError, 'Invalid release approval'):
-            flow.run('begin', NEW, self.token, release_review={**review, 'branch': 'main'})
         host.sha = 'c' * 40
         with self.assertRaisesRegex(RuntimeError, 'Live production baseline differs'):
-            flow.run('begin', NEW, self.token, release_review=review)
+            flow.run('begin', NEW, self.token, baseline=OLD)
         self.assertFalse((flow.root / 'active.json').exists())
         host.sha = OLD
-        flow.run('begin', NEW, self.token, release_review=review)
-        with self.assertRaisesRegex(RuntimeError, 'Deployment lock retained'):
-            flow.release_preflight(OLD)
+        flow.run('begin', NEW, self.token, baseline=OLD)
         flow.run('prepare', NEW, self.token, str(host.candidate))
         host.publish()
         flow.run('finish', NEW, self.token)
         completed = flow.run('complete', NEW, self.token)
-        saved = json.loads((flow.root / (self.token + '.json')).read_text())
-        self.assertEqual(saved['sha'], NEW)
-        self.assertEqual(saved['release_review'], review)
+        self.assertEqual(completed['baseline']['revision'], OLD)
         self.assertEqual(completed['health'], 'passed')
+
+    def test_same_workflow_accepts_two_successors_and_a_compatible_retained_release(self):
+        host, flow = self.workflow()
+        rollback_target = host.candidate
+        self.success(host, flow)
+        second_sha = 'd' * 40
+        second_release = host.root / 'successor'
+        shutil.copytree(rollback_target, second_release)
+        for target, release, baseline, rollback in (
+            (second_sha, second_release, NEW, False),
+            (NEW, rollback_target, second_sha, True),
+        ):
+            host.target, host.candidate = target, release
+            token = secrets.token_hex(16)
+            flow.run('begin', target, token, baseline=baseline, rollback=rollback)
+            flow.run('prepare', target, token, str(release))
+            host.publish()
+            flow.run('finish', target, token)
+            receipt = flow.run('complete', target, token)
+            self.assertEqual(receipt['phase'], 'complete')
+            self.assertEqual(receipt['migrations'], [])
+            self.assertTrue(host.public and host.running)
+        self.assertFalse({'withdraw', 'migration', 'restore'} & set(host.events))
 
     def test_additive_migration_has_two_fresh_recovery_gates(self):
         host, flow = self.workflow(True)
@@ -314,7 +328,7 @@ class WorkflowTests(unittest.TestCase):
                     if altered == 'evidence':
                         host.fingerprint = lambda specification=None: {'source': 'corrupted'}
                     else:
-                        host.inspect = lambda release: {'pending': [], 'databases': {'primary': {'triggers': []}}}
+                        host.inspect = lambda release: {'pending': [], 'databases': {'primary': {'tables': [], 'columns': [], 'indexes': [], 'constraints': [], 'triggers': []}}}
                 host.migrate = changed
                 flow = FixtureDeployment(host, Path(root) / 'audit')
                 flow.run('begin', NEW, self.token)

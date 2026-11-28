@@ -10,7 +10,7 @@ module RecordingResolution
 
     def ranked(surface)
       evidence = @assessment.evidence
-      candidates = Workspace.candidate_evidence(evidence)
+      candidates = Workspace.candidate_evidence(evidence.except("verified_recording"))
       supported = {}
       candidates.group_by { |candidate| candidate.dig("local_release_context", "release_id") }.each do |release_id, rows|
         next unless release_id && (release = Release.find_by(id: release_id))
@@ -39,7 +39,7 @@ module RecordingResolution
         rank.dig("inputs", "catalog_release_appearance", "weight") == 2
       end
       Ranking.call(surface, evidence.merge("verified_recording" => verified, "candidates" => decorated),
-        caption_bonus: historical_caption_bonus)
+        caption_bonus: historical_caption_bonus, source_hints: true)
     end
 
     def token(ranking)
@@ -56,7 +56,7 @@ module RecordingResolution
     private
 
     def identity
-      [ @listener.id, @observation.id, @assessment.id, @assessment.digest ]
+      [ @listener.id, @observation.id, @assessment.id, @assessment.digest, "source-hints" ]
     end
 
     def verifier

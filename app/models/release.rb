@@ -1,10 +1,15 @@
 class Release < ApplicationRecord
+  has_many :release_configurations, dependent: :restrict_with_exception
   has_many :catalog_track_slots, dependent: :restrict_with_exception
-  has_many :release_artists, dependent: :destroy
+  has_many :release_artists, -> { order(:position, :id) }, dependent: :destroy
   has_many :artists, through: :release_artists
 
   has_many :release_recordings, dependent: :destroy
   has_many :recordings, dependent: :destroy
+
+  def self.member_recording_ids(releases)
+    CatalogTrackSlot.where(release_id: releases).distinct.pluck(:recording_id)
+  end
 
   enum :primary_type, {
     album: 0,

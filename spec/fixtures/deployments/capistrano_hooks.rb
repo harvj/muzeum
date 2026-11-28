@@ -9,6 +9,9 @@ load "./config/deploy.rb"
 $events = []
 $phase = nil
 $scenario = ARGV.fetch(0)
+$artifact_path = "/var/www/muzeum/releases/20261124000000"
+$artifact_identity = { "schema_version" => 1, "application" => "muzeum", "kind" => "candidate",
+  "source_sha" => "a" * 40, "target_version" => "0.7.1", "candidate_number" => 1, "artifact_sha256" => "b" * 64 }
 $api = DeploymentApiFixture.new
 $local = Dir.mktmpdir("muzeum-cap-hooks")
 $box = MuzeumDeploymentReporting::Outbox.new($local, api: $api)
@@ -29,6 +32,13 @@ module MuzeumDeploymentRevision
   end
 end
 
+module MuzeumShellPreflight
+  def self.verify!(revision)
+    $events << [ "shell preflight", revision ]
+    raise "Shell review rejected" if $scenario == "shell_rejected"
+  end
+end
+
 def self.muzeum_reporting
   $box
 end
@@ -41,8 +51,19 @@ def self.on(_server)
   yield
 end
 
+def self.test(*_args)
+  false
+end
+
 def self.capture(*args)
-  if args.first == :cat
+  if args.first == :readlink
+    $scenario == "artifact_changed" ? "/var/www/muzeum/releases/20261124000001" : $artifact_path
+  elsif args.first.to_s.end_with?("/ruby")
+    $events << [ "artifact", args[2] ]
+    $artifact_identity.to_json
+  elsif args.last.to_s.end_with?("/VERSION")
+    "0.7.1"
+  elsif args.first == :cat
     $events << [ "remote revision", args.last ]
     "a" * 40
   elsif args.last == "version"
@@ -53,6 +74,8 @@ def self.capture(*args)
 end
 
 def self.execute(*args)
+  return if args.first == :mkdir
+
   if args.first.to_s.end_with?("/ruby")
     $events << [ "metadata only", *args.drop(1) ]
     return
@@ -90,7 +113,7 @@ end
 error = nil
 begin
   Rake::Task["muzeum:authorize"].invoke
-  set :release_path, "/disposable/release"
+  set :release_path, Pathname($artifact_path)
   Rake::Task["muzeum:prepare"].invoke
   Rake::Task["muzeum:finish"].invoke
   Rake::Task["muzeum:complete"].invoke
@@ -102,6 +125,11 @@ rescue StandardError
     nil
   end
 end
+if $scenario == "shell_rejected"
+  puts "HOOK_FIXTURE:" + JSON.generate({ events: $events, error: error, creates: $api.creates.size })
+  FileUtils.remove_entry($local)
+  exit 0
+end
 before_retry = $box.read(fetch(:deployment_token))
 if $scenario == "after_api"
   2.times do
@@ -109,5 +137,5 @@ if $scenario == "after_api"
     Rake::Task["muzeum:report"].invoke(fetch(:deployment_token))
   end
 end
-puts "HOOK_FIXTURE:" + JSON.generate({ events: $events, phase: $phase, error: error, before_retry: before_retry, final: $box.read(fetch(:deployment_token)), states: $api.states, creates: $api.creates.size })
+puts "HOOK_FIXTURE:" + JSON.generate({ events: $events, phase: $phase, error: error, before_retry: before_retry, final: $box.read(fetch(:deployment_token)), states: $api.states, statuses: $api.statuses, creates: $api.creates.size })
 FileUtils.remove_entry($local)

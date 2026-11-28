@@ -2,78 +2,162 @@ module RecordingResolution
   class EditionDiscovery
     MAX_LOOKUPS = 2
     MAX_SLOTS = 100
+    MAX_ORIGINAL_LOOKUPS = 25
 
-    attr_reader :tracklists
+    attr_reader :tracklists, :construction_editions, :pending_original_group
 
-    def initialize(musicbrainz, session)
+    def initialize(musicbrainz, session, artist_mbid: nil)
       @musicbrainz = musicbrainz
       @session = session
+      @artist_mbid = artist_mbid
     end
 
-    def call(surface, claims, candidates, checked:, attempted:, search:, review_alternative: false)
-      results = [ checked ].compact
-      # An explicit source edition has already had its one lookup, even when unavailable.
-      if checked.nil? && claims["album_mbid"].blank? && surface.album.present? && search
-        results.concat(related_editions(surface, candidates, attempted))
+    def call(surface, candidates, checked:, attempted:, search:, review_alternative: false, preferred: nil, origins: true, retained: [])
+      @interpretation = TitleInterpretation.call(surface.track)
+      @pending_original_group = nil
+      @tracklists = {}
+      @construction_editions = {}
+      results = ([ checked ].compact + retained.select { |edition| DiscoveryTitle.release_context?(surface.album, edition) }).uniq { |edition| edition["id"] }
+      results.each { |edition| retain(edition.fetch("id"), edition) }
+      found = results.flat_map { |edition| appearances(surface, edition) }
+      if surface.album.present? && search && (found.empty? || retained.empty?)
+        related_editions(surface, candidates, attempted || checked&.fetch("id", nil)).each do |edition|
+          next if @tracklists.key?(edition["id"])
+
+          results << edition
+          retain(edition.fetch("id"), edition)
+          found.concat(appearances(surface, edition))
+        end
       end
-      @tracklists = results.to_h { |edition| [ edition.fetch("id"), ReviewRelease.project(edition) ] }
-      found = results.flat_map { |edition| appearances(surface, claims, edition) }
-      retain_alternative(candidates, found) if review_alternative && found.any?
-      found
+      retain(attempted, nil) if attempted && checked.nil? && release_request(attempted)
+      # Preserve a fixed fallback budget even when search supplies many releases.
+      unless preferred || review_alternative || results.empty?
+        return scan_original_editions(surface, candidates, found, origins:)
+      end
+
+      references = candidates.filter_map do |candidate|
+        next if found.any? { |row| row["id"] == candidate["id"] }
+
+        Array(candidate["releases"]).find { |release| Clients::Musicbrainz::MBID.match?(release["id"].to_s) }&.fetch("id")
+      end
+      [ preferred, *references ].compact.uniq.reject { |id| @tracklists.key?(id) || id == attempted }
+        .first(1).each do |id|
+        tracklist = nil
+        local = Release.find_by(ingested_from_release_mbid: id)
+        tracklist = ReviewRelease.from_local(local) if local
+        if tracklist
+          @tracklists[id] = tracklist
+        else
+          edition = lookup(id)
+          found.concat(appearances(surface, edition)) if edition
+        end
+      end
+      scan_original_editions(surface, candidates, found, origins:)
     end
 
     private
 
-    # One additional lookup for display during an explicit refresh. It never feeds ranking.
-    def retain_alternative(candidates, found)
-      covered = found.pluck("id")
-      candidate = candidates.find do |row|
-        !covered.include?(row["id"]) && Array(row["releases"]).any? do |release|
-          Clients::Musicbrainz::MBID.match?(release["id"].to_s) && !@tracklists.key?(release["id"])
+    def scan_original_editions(surface, candidates, found, origins:)
+      # Recording searches can return only the unseparated act or medley.
+      # Check already-bounded same-day editions for an exact credited slot.
+      matching_candidate = candidates.any? do |candidate|
+        DiscoveryTitle.recording_match?(surface.track, candidate["title"], candidate["artist-credit"]) &&
+          artist_matches?(surface, candidate)
+      end
+      needs_slot = found.empty? && !matching_candidate
+      return found unless origins || needs_slot
+
+      known_editions = @construction_editions.keys
+      retain_original_editions
+      return found unless needs_slot
+
+      added = @construction_editions.except(*known_editions).values
+      found + added.flat_map { |edition| appearances(surface, edition) }
+    end
+
+    def retain_original_editions
+      context = @construction_editions.values.first
+      return unless context
+
+      group = context.fetch("release-group")
+      title = group["title"].presence || DiscoveryTitle.album_base(context["title"])
+      references = @musicbrainz.collection_editions(@session, group.fetch("id"), limit: MAX_ORIGINAL_LOOKUPS).select do |row|
+        row["status"] == "Official" && row["date"] == group["first-release-date"] &&
+          DiscoveryTitle.match?(DiscoveryTitle.album_base(row["title"]), title)
+      end
+      references = references.reject { |row| @construction_editions.key?(row["id"]) }
+      @pending_original_group = group["id"] if references.size > MAX_ORIGINAL_LOOKUPS
+      references.first(MAX_ORIGINAL_LOOKUPS).each do |row|
+        id = row.fetch("id")
+        edition = @musicbrainz.edition(@session, id, catalog: true)
+        unless edition && edition.dig("release-group", "id") == group["id"] &&
+            CanonicalCatalog::Edition.original_context?(edition)
+          raise CanonicalCatalog::Store::Unverified, "Original edition could not be verified"
         end
+        CanonicalCatalog::Edition.new(edition, id)
+        retain(id, edition)
+      rescue CanonicalCatalog::Store::Unverified
+        @pending_original_group = group["id"]
       end
-      return unless candidate
-
-      reference = candidate.fetch("releases").find do |release|
-        Clients::Musicbrainz::MBID.match?(release["id"].to_s) && !@tracklists.key?(release["id"])
-      end
-      id = reference.fetch("id")
-      local = Release.find_by(ingested_from_release_mbid: id)
-      if local && (tracklist = ReviewRelease.from_local(local))
-        @tracklists[id] = tracklist
-        return
-      end
-
-      edition = @musicbrainz.edition(@session, id, catalog: true)
-      @tracklists[id] = edition&.fetch("id", nil) == id ? ReviewRelease.project(edition) : { "state" => "missing" }
     rescue ProviderError => error
       raise if error.deferred
 
-      @tracklists[id] = { "state" => "unavailable" }
+      @pending_original_group = group["id"]
+    rescue CanonicalCatalog::Store::Unverified
+      @pending_original_group = group["id"]
+    end
+
+    def retain(id, edition)
+      if edition && CanonicalCatalog::Edition.collection_context?(edition) &&
+          Array(edition["media"]).sum { |medium| Array(medium["tracks"]).size } <= MAX_SLOTS
+        @construction_editions[id] = edition
+      end
+      request = release_request(id)
+      @tracklists[id] = (edition ? ReviewRelease.project(edition) : { "state" => "missing" }).merge(
+        "provider" => "musicbrainz", "retrieved_at" => request&.fetch("retrieved_at", nil))
+    end
+
+    def release_request(id)
+      @session.provenance.reverse.find { |entry| entry["endpoint"] == "/ws/2/release/#{id}" }
+    end
+
+    def lookup(id)
+      edition = @musicbrainz.edition(@session, id, catalog: true)
+      edition = nil unless edition&.fetch("id", nil) == id
+      retain(id, edition)
+      edition
+    rescue ProviderError => error
+      raise if error.deferred
+
+      @tracklists[id] = { "state" => "unavailable", "provider" => "musicbrainz", "http_status" => error.http_status }.compact
+      nil
     end
 
     def related_editions(surface, candidates, attempted)
       references = candidates.flat_map { |candidate| Array(candidate["releases"]) }
       refs = references.uniq { |row| row["id"] }.select { |row| DiscoveryTitle.release_context?(surface.album, row) }
       unless refs.any? { |ref| DiscoveryTitle.displayed_edition?(surface.album, ref) }
-        search = @musicbrainz.release_candidates(@session, artist: surface.artist, title: DiscoveryTitle.album_base(surface.album))
+        search = @musicbrainz.release_candidates(@session, artist: surface.artist, title: DiscoveryTitle.album_base(surface.album), artist_mbid: @artist_mbid)
           .select { |row| DiscoveryTitle.release_context?(surface.album, row) }
         refs = (search + refs).uniq { |row| row["id"] }
       end
       refs = refs.reject { |row| row["id"] == attempted } if attempted
       remaining = attempted ? MAX_LOOKUPS - 1 : MAX_LOOKUPS
-      refs.sort_by { |row| [ DiscoveryTitle.displayed_edition?(surface.album, row) ? 0 : 1, row["id"].to_s ] }
+      mastering_year = TitleInterpretation.mastering_year(@interpretation)
+      refs.sort_by do |row|
+        [ DiscoveryTitle.displayed_edition?(surface.album, row) ? 0 : 1,
+          mastering_year && row["date"].to_s.start_with?(mastering_year.to_s) ? 0 : 1, row["id"].to_s ]
+      end
         .filter_map { |row| row["id"] if Clients::Musicbrainz::MBID.match?(row["id"].to_s) }.uniq.first(remaining).filter_map do |id|
         edition = @musicbrainz.edition(@session, id, catalog: true)
         edition if edition && edition["id"] == id && DiscoveryTitle.release_context?(surface.album, edition)
       end
     end
 
-    def appearances(surface, claims, edition)
+    def appearances(surface, edition)
       id = edition["id"]
       return [] unless Clients::Musicbrainz::MBID.match?(id.to_s)
-      return [] if claims["album_mbid"].present? && !id.casecmp?(claims["album_mbid"])
-      return [] unless DiscoveryTitle.release_context?(surface.album, edition) || claims["album_mbid"].present?
+      return [] unless DiscoveryTitle.release_context?(surface.album, edition)
 
       media = Array(edition["media"])
       return [] unless media.sum { |medium| Array(medium["tracks"]).size } <= MAX_SLOTS
@@ -86,24 +170,29 @@ module RecordingResolution
         tracks.filter_map do |slot|
           recording = slot["recording"]
           next unless recording && Clients::Musicbrainz::MBID.match?(recording["id"].to_s) &&
-            DiscoveryTitle.match?(slot["title"], surface.track) && artist_matches?(surface, claims, recording)
+            caption_matches?(surface, slot, recording) && artist_matches?(surface, recording)
 
           appearance = edition.slice("id", "title", "disambiguation", "date", "country", "release-group").merge(
             "relationship" => (DiscoveryTitle.displayed_edition?(surface.album, edition) ? "matching_catalog_caption" : "related_catalog_title"),
             "medium" => medium["position"], "position" => slot["position"], "track_mbid" => slot["id"],
-            "track_title" => slot["title"])
+            "track_title" => slot["title"], "track_length" => slot["length"])
           recording.merge("release_discovery" => appearance, "releases" => [ edition.slice("id", "title", "date", "country") ])
         end
       end
     end
 
-    def artist_matches?(surface, claims, recording)
+    def caption_matches?(surface, slot, recording)
+      DiscoveryTitle.recording_match?(surface.track, slot["title"], slot["artist-credit"].presence || recording["artist-credit"]) ||
+        (TitleInterpretation.mastering_only?(@interpretation) &&
+          DiscoveryTitle.match?(@interpretation["base_title"], slot["title"]))
+    end
+
+    def artist_matches?(surface, recording)
       credits = Array(recording["artist-credit"])
-      ids = credits.filter_map { |credit| credit.dig("artist", "id") }
+      return credits.any? { |credit| credit.dig("artist", "id") == @artist_mbid } if @artist_mbid
+
       names = credits.flat_map { |credit| [ credit["name"], credit.dig("artist", "name") ] }
       names << credits.map { |credit| "#{credit['name']}#{credit['joinphrase']}" }.join
-      artist_claim = claims["artist_mbid"]
-      return false if Clients::Musicbrainz::MBID.match?(artist_claim.to_s) && ids.any? && ids.none? { |id| id.casecmp?(artist_claim) }
 
       names.any? { |name| DiscoveryTitle.match?(name, surface.artist) }
     end

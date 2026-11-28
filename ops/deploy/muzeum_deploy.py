@@ -6,11 +6,11 @@ import fcntl
 import hashlib
 import json
 import os
-import pwd
 from pathlib import Path
 import re
 import runpy
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -22,9 +22,9 @@ BACKUPS = Path('/var/lib/harvj-backups/muzeum')
 UNITS = ('muzeum-web.service', 'muzeum-worker.service')
 SHA = re.compile(r'[a-f0-9]{40}')
 TOKEN = re.compile(r'[a-f0-9]{32}')
-RELEASE_VERSION = re.compile(r'v(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)')
-RELEASE_SCOPE = re.compile(r'https://github\.com/harvj/muzeum/issues/[0-9]+#issuecomment-[0-9]+')
-RELEASE_CI = re.compile(r'https://github\.com/harvj/muzeum/actions/runs/[0-9]+')
+RUBY_BIN = Path('/opt/muzeum/ruby-3.4.13/bin')
+BUNDLE_PATH = '/var/www/muzeum/shared/bundle/ruby-3.4.13'
+MIGRATOR_SHA256 = 'eb995010d7ea215fed5b03a33d69c91795ab5bbbc921a4818204dd81965f2736'
 ROUTE_HELPER = Path('/usr/local/sbin/harvj-muzeum-route')
 
 
@@ -81,10 +81,6 @@ class Host:
             info = helper.stat()
             if info.st_uid != 0 or info.st_mode & 0o022:
                 raise RuntimeError('Deployment/migration helpers must be root-owned and immutable to runtime')
-        runtime_uid = pwd.getpwnam('muzeum').pw_uid
-        for cache in (APP / 'releases').glob('*/tmp/cache/bootsnap'):
-            if any(path.is_dir() and path.stat().st_uid != runtime_uid for path in [cache, *cache.rglob('*')]):
-                raise RuntimeError('Legacy Bootsnap cache ownership requires operator repair before deployment')
         for name in ('/var/www/muzeum/shared/.env', '/etc/muzeum/migrate.env',
                      '/etc/muzeum/backup.pgpass', '/etc/harvj-backups/muzeum/config.json'):
             path = Path(name)
@@ -121,7 +117,6 @@ class Host:
         self.command(['curl', '--fail', '--silent', '--show-error', '--max-time', '10',
                       '--retry', '10', '--retry-connrefused', '--retry-delay', '1',
                       '-H', 'Host: muzeum.fm', '-H', 'X-Forwarded-Proto: https', 'http://127.0.0.1:3011/up'])
-        self.command(['/usr/local/sbin/check-muzeum-runtime', 'status'])
         # Runtime verifies all four database connections, grants, versions and source protections.
         inspection = self.inspect((APP / 'current').resolve(), health=True)
         if inspection['pending']:
@@ -139,13 +134,11 @@ class Host:
             url = urlsplit(values[key])
             if url.hostname != '127.0.0.1' or url.username != 'muzeum_runtime' or url.path != '/' + database:
                 raise RuntimeError('Unexpected runtime database boundary')
-        env = dict(values, PATH='/opt/auth/ruby-3.4.12/bin:/usr/bin:/bin', HOME='/home/muzeum',
-                   BUNDLE_GEMFILE=str(release / 'Gemfile'), BUNDLE_IGNORE_CONFIG='1', BUNDLE_DEPLOYMENT='true',
-                   BUNDLE_FROZEN='true', BUNDLE_WITHOUT='development:test', BOOTSNAP_READONLY='1',
-                   PGOPTIONS='-c default_transaction_read_only=on -c statement_timeout=120000',
-                   MUZEUM_DEPLOY_CHECK_HEALTH='1' if health else '0')
+        env = runtime_environment(values, HOME='/home/muzeum', BUNDLE_GEMFILE=str(release / 'Gemfile'),
+                                  PGOPTIONS='-c default_transaction_read_only=on -c statement_timeout=120000',
+                                  MUZEUM_DEPLOY_CHECK_HEALTH='1' if health else '0')
         script = Path(__file__).resolve().with_name('inspect.rb').read_bytes()
-        output = self.command(['/usr/sbin/runuser', '-u', 'muzeum', '--', '/opt/auth/ruby-3.4.12/bin/bundle',
+        output = self.command(['/usr/sbin/runuser', '-u', 'muzeum', '--', str(RUBY_BIN / 'ruby'), str(RUBY_BIN / 'bundle'),
                                'exec', 'rails', 'runner', '-'], cwd=release, env=env, input=script)
         line = next(line for line in output.splitlines() if line.startswith('MUZEUM_DEPLOY_INSPECTION:'))
         return json.loads(line.split(':', 1)[1])
@@ -231,7 +224,7 @@ class Host:
         self.route('withdraw', sha)
 
     def migrate(self, release, sha):
-        expected = hashlib.sha256((release / 'ops/provision/muzeum-migrate').read_bytes()).hexdigest()
+        expected = MIGRATOR_SHA256
         if hashlib.sha256(Path('/usr/local/sbin/muzeum-migrate').read_bytes()).hexdigest() != expected:
             raise RuntimeError('Reviewed migration helper must be installed first')
         self.command(['/usr/local/sbin/muzeum-migrate', str(release), sha])
@@ -253,12 +246,38 @@ def reviewed_migrations(release, pending):
         raise RuntimeError('Unsupported migration review manifest')
     for item in pending:
         path = item['path']
+        if item.get('database') != 'primary':
+            raise RuntimeError('Auxiliary schema changes require a separate procedure')
         if not re.fullmatch(r'db/(?:migrate|cache_migrate|queue_migrate|cable_migrate)/[0-9]+_[a-z0-9_]+\.rb', path):
             raise RuntimeError('Unexpected migration path')
         review = manifest['migrations'].get(path, {})
         if (review.get('sha256') != item['sha256'] or review.get('risk') != 'additive'
                 or review.get('quiesce') is not True or not review.get('review')):
             raise RuntimeError('Pending migration needs a matching additive review manifest')
+
+
+def verify_schema_preservation(before, after):
+    for name, database in before['databases'].items():
+        for kind in ('tables', 'columns', 'triggers', 'indexes', 'constraints'):
+            if any(value not in after['databases'][name].get(kind, []) for value in database.get(kind, [])):
+                raise RuntimeError(f'Existing schema objects changed: {name}.{kind}')
+
+
+def runtime_environment(values, **settings):
+    # Match the fixed systemd runtime and discard loader overrides from app configuration.
+    for name in ('ruby', 'bundle'):
+        executable = RUBY_BIN / name
+        for path in (executable, *executable.parents):
+            info = path.lstat()
+            if info.st_uid != 0 or stat.S_ISLNK(info.st_mode) or info.st_mode & 0o022:
+                raise RuntimeError('Untrusted Muzeum runtime path')
+        if not executable.is_file():
+            raise RuntimeError('Muzeum runtime executable missing')
+    env = {key: value for key, value in values.items()
+           if not key.startswith(('LD_', 'DYLD_', 'BUNDLE_', 'RUBY', 'GEM_', 'RBENV_'))}
+    return dict(env, PATH=f'{RUBY_BIN}:/usr/bin:/bin', BUNDLE_PATH=BUNDLE_PATH,
+                BUNDLE_IGNORE_CONFIG='1', BUNDLE_DEPLOYMENT='true', BUNDLE_FROZEN='true',
+                BUNDLE_WITHOUT='development:test', DISABLE_BOOTSNAP='1', **settings)
 
 
 class Deployment:
@@ -269,32 +288,9 @@ class Deployment:
         write_json(self.root / (record['token'] + '.json'), record)
         write_json(self.root / 'active.json', record)
 
-    def release_preflight(self, baseline):
-        if not SHA.fullmatch(baseline):
-            raise RuntimeError('Immutable production baseline required')
-        self.root.mkdir(mode=0o700, parents=True, exist_ok=True)
-        with (self.root / 'phase.lock').open('a') as lock:
-            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            if (self.root / 'active.json').exists():
-                raise RuntimeError('Deployment lock retained; inspect active.json before operator recovery')
-            with self.host.backup_lock():
-                if self.host.revision() != baseline:
-                    raise RuntimeError('Live production baseline differs from release review')
-                evidence = self.host.preflight()
-                if evidence['revision'] != baseline:
-                    raise RuntimeError('Live production baseline differs from release review')
-                return evidence
-
-    def run(self, phase, sha, token, path=None, release_review=None):
+    def run(self, phase, sha, token, path=None, *, baseline=None, rollback=False):
         if not SHA.fullmatch(sha) or not TOKEN.fullmatch(token):
             raise RuntimeError('Immutable SHA and deployment token required')
-        if release_review:
-            version = release_review['version']
-            if (phase != 'begin' or not RELEASE_VERSION.fullmatch(version) or
-                    release_review['branch'] != 'release/' + version or
-                    not SHA.fullmatch(release_review['baseline']) or release_review['baseline'] == sha or
-                    not RELEASE_SCOPE.fullmatch(release_review['scope']) or not RELEASE_CI.fullmatch(release_review['ci'])):
-                raise RuntimeError('Invalid release approval metadata')
         self.root.mkdir(mode=0o700, parents=True, exist_ok=True)
         with (self.root / 'phase.lock').open('a') as lock:
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -302,11 +298,11 @@ class Deployment:
             if phase == 'begin':
                 if active.exists():
                     raise RuntimeError('Deployment lock retained; inspect active.json before operator recovery')
-                if release_review and self.host.revision() != release_review['baseline']:
-                    raise RuntimeError('Live production baseline differs from release review')
+                if baseline is not None and (not SHA.fullmatch(baseline) or self.host.revision() != baseline):
+                    raise RuntimeError('Live production baseline differs from selected release')
                 record = {'sha': sha, 'token': token, 'started_at': now(), 'phase': 'preflight', 'migrating': False, 'withdrawn': False}
-                if release_review:
-                    record['release_review'] = release_review
+                if rollback:
+                    record['rollback'] = True
                 self.save(record)
             else:
                 record = json.loads(active.read_text())
@@ -321,8 +317,8 @@ class Deployment:
                 with self.host.backup_lock():
                     if phase == 'begin':
                         record['baseline'] = self.host.preflight()
-                        if release_review and record['baseline']['revision'] != release_review['baseline']:
-                            raise RuntimeError('Live production baseline differs from release review')
+                        if baseline is not None and record['baseline']['revision'] != baseline:
+                            raise RuntimeError('Live production baseline differs from selected release')
                         record['phase'] = 'prepared_checkout'
                     elif phase == 'prepare':
                         if record['phase'] != 'prepared_checkout':
@@ -331,6 +327,8 @@ class Deployment:
                         record['release'] = str(release)
                         before = self.host.inspect(release)
                         reviewed_migrations(release, before['pending'])
+                        if record.get('rollback') and before['pending']:
+                            raise RuntimeError('Rollback artifact requires a migration')
                         record['migrations'] = before['pending']
                         if before['pending']:
                             self.host.check_withdrawal(record['baseline']['revision'])
@@ -354,10 +352,7 @@ class Deployment:
                             after = self.host.inspect(release)
                             if after['pending'] or self.host.fingerprint(record['evidence']) != record['evidence']:
                                 raise RuntimeError('Migration changed existing evidence or left pending migrations')
-                            for name, database in before['databases'].items():
-                                for kind in ('triggers', 'indexes', 'constraints'):
-                                    if any(value not in after['databases'][name].get(kind, []) for value in database.get(kind, [])):
-                                        raise RuntimeError('Existing source protections/indexes/constraints changed')
+                            verify_schema_preservation(before, after)
                             record['schema_verified_at'] = now()
                             record['schema_versions'] = {name: value['versions'] for name, value in after['databases'].items() if 'versions' in value}
                         record['phase'] = 'ready_to_publish'
@@ -437,9 +432,6 @@ def main():
         with host.backup_lock():
             print(json.dumps(host.preflight()))
         return
-    if len(sys.argv) == 3 and sys.argv[1] == 'release-preflight':
-        print(json.dumps(Deployment(Host()).release_preflight(sys.argv[2])))
-        return
     if len(sys.argv) == 4 and sys.argv[1] == 'receipt':
         sha, token = sys.argv[2:]
         if not SHA.fullmatch(sha) or not TOKEN.fullmatch(token):
@@ -447,18 +439,18 @@ def main():
         record = json.loads((STATE / (token + '.json')).read_text())
         if record['sha'] != sha or record['token'] != token:
             raise RuntimeError('Receipt identity mismatch')
-        print(json.dumps({key: record[key] for key in ('sha', 'token', 'phase', 'health', 'release_review') if key in record}))
+        print(json.dumps({key: record[key] for key in ('sha', 'token', 'phase', 'health') if key in record}))
         return
-    if len(sys.argv) == 9 and sys.argv[1] == 'begin-release':
-        sha, token, branch, version, baseline, scope, ci = sys.argv[2:]
-        review = {'branch': branch, 'version': version, 'baseline': baseline, 'scope': scope, 'ci': ci}
-        record = Deployment(Host()).run('begin', sha, token, release_review=review)
+    if len(sys.argv) == 5 and sys.argv[1] in ('begin-operator', 'begin-rollback'):
+        action, sha, token, baseline = sys.argv[1:]
+        record = Deployment(Host()).run(
+            'begin', sha, token, baseline=baseline, rollback=action == 'begin-rollback')
     else:
         if len(sys.argv) not in (4, 5):
             raise RuntimeError('Expected phase SHA token [release]')
         record = Deployment(Host()).run(*sys.argv[1:])
     # No subprocess output, environments or opaque grants are published.
-    print(json.dumps({key: record[key] for key in ('sha', 'token', 'phase', 'baseline', 'release_review', 'migrations', 'pre_backup', 'post_backup', 'health', 'safe_state') if key in record}))
+    print(json.dumps({key: record[key] for key in ('sha', 'token', 'phase', 'baseline', 'migrations', 'pre_backup', 'post_backup', 'health', 'safe_state') if key in record}))
 
 
 if __name__ == '__main__':

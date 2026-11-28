@@ -9,23 +9,14 @@
   <% end %>
   <% if @rows.any? %>
     <%= dense_table("Observed recording surfaces") do %>
-      <thead><tr><th scope="col">Observed track</th><th scope="col">Artist and album</th><th scope="col" class="table-number">Observations</th><% if @filter == "unresolved" %><th scope="col">Next step</th><% end %></tr></thead>
+      <thead><tr><th scope="col">Observed track</th><th scope="col">Artist and album</th><th scope="col" class="table-number"><%= @filter == "unresolved" ? "Unresolved observations" : "Observations" %></th><% if @filter == "unresolved" %><th scope="col">Next step</th><% end %></tr></thead>
       <tbody>
-        <% @rows.each do |id, artist, album, track, count, state, candidates| %>
+        <% @rows.each do |id, artist, album, track, count, review| %>
           <tr><th scope="row"><%= entity_link(observed_text(track, "Track"), resolution_surface_path(id)) %></th>
             <td><%= observed_text(artist, "Artist") %><br><span class="muted"><%= observed_text(album, "Album") %></span></td><td class="table-number"><%= number_with_delimiter(count) %></td>
             <% if @filter == "unresolved" %>
-              <td><%= if CatalogImport::ACTIVE.include?(state)
-                "Investigation pending"
-              elsif candidates
-                "Review candidate evidence"
-              elsif state == "failed"
-                "Provider unavailable"
-              elsif state
-                "No supported candidates"
-              else
-                "Open to investigate"
-              end %></td>
+              <% status, action = review %>
+              <td><span class="muted"><%= status %></span><br><%= link_to action, resolution_surface_path(id), aria: { label: "#{action} · #{observed_text(track, 'Track')}" } %></td>
             <% end %>
           </tr>
         <% end %>

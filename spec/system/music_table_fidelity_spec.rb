@@ -1,4 +1,5 @@
 require "rails_helper"
+require_relative "../support/site_art_pair"
 
 RSpec.describe "Music table fidelity", type: :system do
   LONG_TITLE = "A Very Long Recording Title for a Late Night Listening Session, including the complete unabridged alternate take and the full session notes"
@@ -7,6 +8,8 @@ RSpec.describe "Music table fidelity", type: :system do
 
   before do
     skip "Run with BROWSER_TESTS=1 for music table browser verification" unless ENV["BROWSER_TESTS"] == "1"
+
+    stub_request(:get, "#{OidcClient::ISSUER}/.well-known/oauth-authorization-server").to_return(status: 503)
 
     driven_by :selenium, using: :headless_chrome do |options|
       options.binary = ENV["CHROME_BINARY"] if ENV["CHROME_BINARY"]
@@ -41,7 +44,7 @@ RSpec.describe "Music table fidelity", type: :system do
     expect(page).to have_css(".plays-tooltip:popover-open", text: LONG_TITLE)
     capture("archive-desktop-hover")
     expect(page.evaluate_script("getComputedStyle(document.querySelector('.play-recording a:hover')).backgroundColor")).not_to eq("rgba(0, 0, 0, 0)")
-    find(".library-nav a", text: "Archive").hover
+    find(".library-nav [aria-current=page]", text: "Archive").hover
     find(".play-row .table-time a", match: :first).send_keys(:tab, :tab)
     expect(page).to have_css(".play-recording a:focus-visible", text: LONG_TITLE)
     expect(page).to have_css(".plays-tooltip:popover-open", text: LONG_TITLE)
@@ -52,7 +55,7 @@ RSpec.describe "Music table fidelity", type: :system do
       find_link(name, match: :first).hover
       expect(page).to have_css(".plays-tooltip:popover-open", text: name)
     end
-    find(".library-nav a", text: "Archive").hover
+    find(".library-nav [aria-current=page]", text: "Archive").hover
 
     capture("archive-desktop-dark", appearance: "dark")
     viewport(390, 844)
@@ -76,6 +79,78 @@ RSpec.describe "Music table fidelity", type: :system do
     expect(page).to have_link(album.title, href: release_path(album))
   end
 
+  it "uses the full recording cell for original titles and previews only genuine overflow" do
+    user = User.create!(oidc_issuer: OidcClient::ISSUER, oidc_subject: "archive-width", lastfm_username: "archive-width")
+    titles = [ "Vi", "des fleurs x stromae", LONG_TITLE + ("X" * 100), "Original #{LONG_TITLE}" ]
+    plays = titles.each_with_index.map do |title, index|
+      user.scrobbles.create!(played_at: Time.current - index.minutes,
+        payload: { artist_name: "Tove Lo", track_name: title, album_name: "ESTRUS" })
+    end
+    partial = Recording.create!(title: "Unverified alternate spelling", mbid: "legacy-recording")
+    verified = Recording.create!(title: titles.fetch(2), mbid: SecureRandom.uuid)
+    release = Release.create!(title: "ESTRUS", catalog_verified_at: Time.current, ingested_from_release_mbid: SecureRandom.uuid)
+    release.catalog_track_slots.create!(recording: verified, medium: 1, position: 1, title: verified.title, track_mbid: SecureRandom.uuid)
+    [ [ plays[1], partial ], [ plays[2], verified ] ].each do |play, recording|
+      RecordingResolution::Ledger.record!(listener: user, scrobble: play, scope: :scrobble, mode: "resolved", reason: "Browser fixture", recording:)
+    end
+    authenticate_fixture(user)
+    [ [ 1440, 960 ], [ 390, 844 ] ].each do |width, height|
+      viewport(width, height)
+      visit archive_path
+      expect(all(".play-recording a", count: titles.size).map(&:text)).to eq(titles)
+      measurement = page.evaluate_script(<<~JS)
+        [...document.querySelectorAll(".play-recording a")].map(link => {
+          const name = link.closest(".play-name")
+          const layout = link.closest(".play-recording-layout")
+          const right = layout.getBoundingClientRect().right
+          const unused = right - name.getBoundingClientRect().right
+          return [link.scrollWidth > link.clientWidth, unused < 1, getComputedStyle(link).textOverflow]
+        })
+      JS
+      expect(page).to have_css(".play-row.source-claim .play-recording a[aria-label='Vi, Unresolved']")
+      expect(page).to have_css(".play-row.partially-resolved .play-recording a[aria-label$='Partially resolved']")
+      expect(page).to have_css(".play-row:not(.source-claim) .play-recording", text: titles.fetch(2))
+      page.evaluate_async_script(<<~JS)
+        const done = arguments[0];
+        document.fonts.ready.then(() => requestAnimationFrame(() => done(true)));
+      JS
+      original_recording = find(".source-claim .play-recording a", text: titles[0])
+      partial_recording = find(".partially-resolved .play-recording a")
+      canonical_recording = find(".play-row:not(.source-claim) .play-recording a")
+      original_release = first(".source-release .play-name")
+      canonical_release = find(".play-release:not(.source-release) .play-name a")
+      expect_archive_italic(original_recording)
+      expect_archive_italic(partial_recording)
+      expect_archive_italic(original_release)
+      expect_archive_italic(find_link(titles.last))
+      expect(archive_glyphs(canonical_recording)).to eq(archive_glyphs(canonical_recording, upright: true))
+      expect(archive_glyphs(canonical_release)).to eq(archive_glyphs(canonical_release, upright: true))
+      expect(measurement).to eq([ [ false, true, "ellipsis" ], [ false, true, "ellipsis" ], [ true, true, "ellipsis" ], [ true, true, "ellipsis" ] ])
+      expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
+      if width > 700
+        find_link(titles[1]).hover
+        expect(page).to have_no_css(".plays-tooltip:popover-open")
+        expect_archive_italic(partial_recording)
+        find(".library-nav a", text: "Resolution").hover
+        expect(page.evaluate_script("parseFloat(getComputedStyle(document.querySelector('.library-nav a:hover')).borderRadius)")).to be > 0
+        find_link(titles.last).hover
+        expect_archive_italic(find_link(titles.last))
+        expect(page).to have_css(".plays-tooltip:popover-open", text: titles.last)
+      end
+      page.execute_script("arguments[0].focus()", partial_recording)
+      expect_archive_italic(partial_recording)
+      page.execute_script("getSelection().selectAllChildren(arguments[0])", original_release)
+      expect_archive_italic(original_release)
+      page.execute_script("getSelection().removeAllRanges()")
+      find_link(titles.last).send_keys(:shift, :tab)
+      page.driver.browser.action.send_keys(:tab).perform
+      expect(page).to have_css(".play-recording a:focus-visible", text: titles.last)
+      expect(page).to have_css(".plays-tooltip:popover-open", text: titles.last)
+      page.execute_script("document.activeElement.blur()")
+      capture("archive-rendered-italics-#{width}", appearance: width > 700 ? "light" : "dark")
+    end
+  end
+
   it "numbers a two-disc track listing continuously while retaining the stored positions" do
     user, album = seed_library
     authenticate_fixture(user)
@@ -92,8 +167,7 @@ RSpec.describe "Music table fidelity", type: :system do
 
   it "centers the shared footer at the viewport bottom or after long content in either theme" do
     user, = seed_library
-    allow(SiteArt).to receive(:snapshot).and_return(
-      light: { url: "/environments/stone/limestone.jpg" }, dark: { url: "/environments/stone/onyx.jpg" })
+    allow(SiteArt).to receive(:snapshot).and_return(SiteArtPair::SNAPSHOT)
     revision = "a" * 40
     metadata = Tempfile.create("muzeum-footer")
     metadata.write("#{revision} v0.2.1\n")
@@ -120,7 +194,10 @@ RSpec.describe "Music table fidelity", type: :system do
   end
 
   def verify_footer(length, screen, width, height)
-    expect(page).to have_css("body > .site-footer", text: "© 2026 Jim Harvey · Muzeum v0.2.1", count: 1, visible: :all)
+    within("body > .site-footer .footer-release") do
+      expect(page).to have_css("span", exact_text: "© 2026 Jim Harvey")
+      expect(page).to have_css("span", exact_text: "Muzeum v0.2.1")
+    end
     %w[light dark].each do |appearance|
       page.execute_script(<<~JS, appearance)
         const control = document.querySelector(".controls select");
@@ -158,6 +235,44 @@ RSpec.describe "Music table fidelity", type: :system do
       if appearance == (screen == "desktop" ? "light" : "dark")
         capture("footer-#{length}-#{screen}-#{appearance}", appearance:)
       end
+    end
+  end
+
+  def expect_archive_italic(element)
+    expect(archive_glyphs(element)).not_to eq(archive_glyphs(element, upright: true))
+    muted = page.execute_script(<<~JS, element)
+      const probe = document.createElement("span");
+      probe.style.color = "var(--muted)";
+      arguments[0].append(probe);
+      const matches = getComputedStyle(probe).color === getComputedStyle(arguments[0]).color;
+      probe.remove();
+      return matches;
+    JS
+    expect(muted).to be(true)
+  end
+
+  # Compare the rendered text inside the same fixed clip. With the original
+  # upright-only family, requesting italic produced identical pixels.
+  def archive_glyphs(element, upright: false)
+    # Capture the glyphs on a fixed background so drifting Site Art pixels
+    # cannot affect the upright-versus-italic image comparison.
+    page.execute_script("arguments[0].style.setProperty('background-color', 'var(--card)', 'important')", element)
+    if upright
+      page.execute_script(<<~JS, element)
+        arguments[0].style.setProperty("font-family", "var(--harvj-font)", "important");
+        arguments[0].style.setProperty("font-style", "normal", "important");
+      JS
+    end
+    clip = page.execute_script(<<~JS, element)
+      const bounds = arguments[0].getBoundingClientRect();
+      return {x: bounds.left + scrollX, y: bounds.top + scrollY,
+        width: Math.min(130, bounds.width), height: bounds.height, scale: 1};
+    JS
+    page.driver.browser.execute_cdp("Page.captureScreenshot", format: "png", clip:).fetch("data")
+  ensure
+    page.execute_script("arguments[0].style.removeProperty('background-color')", element)
+    if upright
+      page.execute_script("arguments[0].style.removeProperty('font-family'); arguments[0].style.removeProperty('font-style')", element)
     end
   end
 
@@ -226,7 +341,7 @@ RSpec.describe "Music table fidelity", type: :system do
   end
 
   def capture(name, appearance: "light")
-    page.execute_script("document.documentElement.dataset.appearance = arguments[0]; document.documentElement.dataset.still = 'true'", appearance)
+    page.execute_script("document.documentElement.dataset.appearancePreference = arguments[0]; document.documentElement.dataset.still = 'true'", appearance)
     return unless ENV["MUSIC_TABLE_CAPTURES"]
 
     page.evaluate_async_script("const done = arguments[0]; document.fonts.ready.then(() => requestAnimationFrame(() => done(true)))")

@@ -1,0 +1,34 @@
+<% anchor = @entry.is_a?(Artist) ? "listening-history" : "listening-activity" %>
+<section class="card library-card entity-history" id="<%= anchor %>">
+  <div class="listening-history-heading">
+    <h2 class="section-heading"><%= @activity_releases&.many? ? "Combined listening history" : "Listening history" %></h2>
+    <% if @archive_available %>
+      <%= render "listening_controls", window: @history_window %>
+    <% end %>
+  </div>
+  <% if @archive_available %>
+    <% if @activity_releases&.many? %>
+      <p><%= safe_join(@activity_releases.map { |release| catalog_link(release) }, ", ") %></p>
+    <% end %>
+    <% if @timeline.any? %>
+      <%= render "listening_timeline", metric: %>
+    <% end %>
+    <% if @timeline.none? { |_, totals| totals.plays.positive? } %>
+      <p>No resolved plays in this period.</p>
+    <% end %>
+    <div class="listening-summary">
+      <p>
+        <% if @entry.is_a?(Recording) %>
+          <strong><%= pluralize(@listening_total.plays, "resolved listening observation") %></strong> · <%= estimated_listening_time(@listening_total) %> estimated listening time
+        <% else %>
+          <strong><%= estimated_listening_time(@listening_total) %></strong> estimated listening time ·
+          <%= pluralize(@listening_total.plays, @entry.is_a?(Release) ? "distinct resolved observation" : "resolved play") %>
+        <% end %>
+        <span class="muted">(all time)</span>
+      </p>
+      <%= render "duration_coverage", totals: @listening_total %>
+    </div>
+  <% else %>
+    <p>Listening history is unavailable.</p>
+  <% end %>
+</section>

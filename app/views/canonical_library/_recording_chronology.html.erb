@@ -1,0 +1,12 @@
+<section class="card library-card" id="recording-chronology">
+  <h2 class="section-heading">Chronology</h2>
+  <% dates = @chronology&.evidence || {} %>
+  <dl>
+    <div><dt>Recording date</dt><dd><%= [dates["start_date"], dates["end_date"]].compact.join(" to ").presence || "Unknown" %></dd></div>
+    <% if @verified_first_release %>
+      <div><dt>Earliest verified publication</dt><dd><%= @verified_first_release %></dd></div>
+    <% else %>
+    <div><dt>First release date reported by MusicBrainz</dt><dd><%= @first_release_claim.presence || "Unknown" %></dd></div>
+    <% end %>
+  </dl>
+</section>

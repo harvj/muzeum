@@ -1,13 +1,13 @@
-<%= dense_table(title) do %>
+<% listening = local_assigns[:listening] %>
+<%= dense_table(title, classes: ("catalog-listening-index" if listening)) do %>
   <thead>
     <tr>
       <th scope="col"><%= title.singularize %></th>
       <% if title != "Artists" %><th scope="col">Artist credits</th><% end %>
-      <% case title
-         when "Artists" %><th scope="col">Origin</th>
-      <% when "Releases" %><th scope="col" class="table-number">Year</th>
-      <% when "Recordings" %><th scope="col" class="table-number">Length</th>
+      <% if title == "Releases" %><th scope="col" class="table-number">Release date</th>
+      <% elsif title == "Recordings" %><th scope="col" class="table-number">Length</th>
       <% end %>
+      <% if listening %><th scope="col" class="catalog-listening-time">Estimated listening time</th><% end %>
     </tr>
   </thead>
   <tbody>
@@ -16,12 +16,16 @@
         <th scope="row"><%= catalog_link(item) %></th>
         <% unless item.is_a?(Artist) %><td><%= catalog_artists(item).presence || "Pending" %></td><% end %>
         <% case item
-           when Artist %>
-          <% evidence = @geographies&.fetch(item.id, nil)&.evidence %>
-          <td class="compact-meta"><%= render "shared/geographic_place",
-            place: (evidence["origin"] if evidence&.fetch("status") == "verified"), country: item.country %></td>
-        <% when Release %><td class="table-number"><%= item.release_year || "Unknown" %></td>
+           when Release %><td class="table-number"><%= catalog_release_date(item) %></td>
         <% when Recording %><td class="table-number"><%= recording_duration(item.duration_ms) %></td>
+        <% end %>
+        <% if listening %>
+          <% totals = listening[item.id] %>
+          <% duration = estimated_listening_time(totals) %>
+          <td>
+            <%= render "listening_bar", value: totals.milliseconds, maximum: maximum, label: duration, accessible_label: duration %>
+            <% if totals.known_durations < totals.plays %><small class="muted"><%= duration_coverage(totals) %></small><% end %>
+          </td>
         <% end %>
       </tr>
     <% end %>

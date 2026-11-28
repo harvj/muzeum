@@ -1,6 +1,6 @@
 # Listening statistics and rankings
 
-Status: **Authoritative accounting semantics; aggregation implementation and duration fallback are open.** See [principles](principles.md) and [release assignment](release-assignment.md).
+Status: **Authoritative accounting semantics.** See [principles](principles.md) and [release assignment](release-assignment.md).
 
 ## Definitions
 
@@ -8,21 +8,21 @@ Status: **Authoritative accounting semantics; aggregation implementation and dur
 
 **STAT-002 — Recording totals.** A recording's play count is the number of accepted, currently resolved plays of that recording in the listener's authorized archive. Recording listening time derives from those plays under a consistent documented duration policy. Release credit never changes these totals.
 
-**STAT-003 — Membership views show all recording activity.** A release page lists its member recordings and, for each, shows the **complete recording listening history**, regardless of which release received credit for those events. This may repeat the same event across different release pages as a *view*, not as multiple source listens.
+**STAT-003 — Release listening uses the listener’s effective configuration.** A preferred verified configuration counts the distinct effective observations of its recordings, regardless of the source album string. Repeated positions count each recording’s observations once. Without a configuration preference, the admitted base counts, plus explicitly admitted additional-only recordings the listener has chosen to include. Retaining source evidence alone never counts or admits a recording. Configuration selection changes release totals and history without changing recording totals or asserting the edition played. Keep all selection and inclusion revisions.
 
-**STAT-004 — Release rankings use effective credit.** For rankings by play count or listening time, each play contributes to **at most one** credited release. Unassigned/unresolved credit contributes to no release ranking until resolved. Changing a play's credited release moves its ranking contribution and time, never duplicates them.
+**STAT-004 — Union for combined contexts.** Use the union of distinct observations across selected releases for combined counts and estimated listening time.
 
-**STAT-005 — Distinguish two release metrics explicitly.** 'Activity of included recordings' (sum or listing of plays for member recordings, possibly overlapping other releases) is not 'credited release plays' (disjoint allocation for rankings). Do not label both 'release plays' without qualification. The default ranking metric is credited plays/time, not sum of member recording plays.
+**STAT-005 — Primary metrics.** Rank recordings by play count, with estimated listening time secondary on recording details. For artist and release contexts, report estimated listening time first and play count second. On the Artist page, use play-count bars for Recordings and listening-time bars for Releases.
 
 **STAT-006 — Avoid double-counting within a collection.** A recording appearing more than once in a release's track list must not silently duplicate its full recording history in collection-level distinct-play statistics. Track-list presentation can show each position, but aggregation must specify whether counting distinct recordings/plays or track slots.
 
-**STAT-007 — Artist totals are separately attributed.** Artist play counts follow the canonical recording's applicable artist credit and a documented policy for collaborations, rather than inheriting release credit. Do not accidentally multiply plays because of multiple release memberships or multiple artist relationships.
+**STAT-007 — Artist totals are separately attributed.** Artist history derives from verified credits on effective canonical recordings, including featured artists. Count distinct observations once per artist regardless of repeated credits or overlapping release memberships.
 
 **STAT-008 — Rebuildable derived data.** Counts, rankings and charts are projections of immutable observations and current scoped decisions. They must be reproducible and recalculated or incrementally corrected when assignments change. Source and decision history are authoritative; materialized totals are not.
 
-**STAT-009 — Duration uncertainty must be visible.** Prefer the resolved recording's supported duration where appropriate; distinguish known, estimated and unavailable duration. Never silently treat an unknown duration as zero *listening time* or invent actual completion duration from a Last.fm scrobble. Exact duration/fallback rules are open.
+**STAT-009 — Duration uncertainty must be visible.** Sum positive canonical recording durations across distinct effective observations to estimate listening time. Count observations without known durations in the play count and show the coverage of the estimate. A scrobble cannot establish actual elapsed playback.
 
-**STAT-010 — User/account scope.** Shared Last.fm source accounts must not cause double counting for a user. Users with the same source archive may have different credited-release rankings because their interpretations differ.
+**STAT-010 — User/account scope.** Shared Last.fm source accounts must not cause double counting for a user. Users with the same source archive may have different totals because their effective recording assignments differ.
 
 **STAT-011 — Scrobble is not proof of complete playback.** Last.fm is authoritative for what it reported, not a guarantee of the duration or completeness of actual listening. A scrobble of a recording containing a guitar solo counts as a scrobble of that recording; it does not prove the listener reached the solo's timestamp. Keep recording-level exposure queries distinct from measured passage-level playback. Conversational wording such as "how many times have I heard" may be answered naturally, but label the underlying metric accurately. Do not manufacture playback completion, elapsed listening seconds or additional events.
 
@@ -32,20 +32,35 @@ Status: **Authoritative accounting semantics; aggregation implementation and dur
 
 The canonical Radiohead recording *Fake Plastic Trees* has **150 accepted plays** (illustrative). Both *The Bends* and the *Fake Plastic Trees* single contain that recording. Each release's track listing displays 150 plays for that recording. The recording page also displays 150.
 
-For ranking purposes, suppose 120 plays are credited to *The Bends* and 30 to the single. The release-ranking contributions sum to 150, not 300. Moving one play's credit from *The Bends* to the single changes the allocation to 119/31 but leaves the recording at 150 and both track-list displays at 150.
-
-A release page may offer both 'All recording activity' and 'Credited to this release', clearly labeled. Only the latter is suitable for additive release rankings.
+The album and single each show 150 contributed observations. Their combined history contains 150 unique observations. Estimated listening time across both likewise uses those 150 observations once.
 
 ## Open questions
 
-- Listening-time duration source and fallback when MusicBrainz and Discogs disagree or omit it.
-- How to attribute a recording with multiple principal artists or featured performers in artist rankings.
+- How to reconcile conflicting provider durations when maintaining the canonical recording.
 - Treatment of unresolved recording identity in aggregate totals.
 - Whether releases with identical song collections but different ordering should be merged for ranking.
 - Presentation of partial/incomplete listening sessions and confidence of release credit.
 
 ## Revision history
 
+- v0.5.0: Defined overlapping membership, verified featured credits, listening-time estimates, and duration coverage.
+
 - 2026-11-17: Clarified Last.fm's observation authority, non-guaranteed playback, and future shelf-selection/temporal annotation query semantics.
 
 - 2026-11-17: Initial distinct membership-versus-credit and ranking semantics.
+
+- 2026-11-23: Approved base-track defaults and revisable per-release track inclusion and exclusion.
+- 2026-11-23: Made base tracks mandatory in release listening totals. Only additional tracks have listener-scoped controls.
+
+## Default release rankings (revised for v0.8.5)
+
+Rank eligible canonical releases by estimated listening time, breaking ties by title and canonical ID. A verified canonical release with qualifying resolved observations in the listener’s effective membership is eligible regardless of publication chronology. For a release with zero qualifying plays, retain the original-context or verified member first-publication default. Publication evidence and uncertainty remain separate from listening totals. A listener’s latest explicit inclusion or exclusion supersedes the default. Keep preference history without changing catalog membership or observations. Release detail, catalog totals, artist release rankings, and combined histories use the applicable included memberships for the listener. Release-ranking eligibility stays independent of the track-level calculation. Count distinct effective observations within each result, and use the union of observations for combined totals.
+
+**STAT-013 — Confirmed short-track inferences are separate.** Record confirmation
+or rejection in the listener’s inference decision history. An inference does
+not add a Last.fm observation, modify recording or release attribution, or
+contribute to existing counts, minutes, rankings, histories, or combined totals.
+Confirmed inferences are visible as such in private review. Any future combined
+observed-and-inferred metric requires an explicit accounting decision about
+deduplication against later observations, superseded evidence and overlapping
+releases, plus separately labeled observed and inferred contributions.

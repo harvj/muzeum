@@ -1,0 +1,2075 @@
+{
+  "provider": "MusicBrainz",
+  "page_size": 25,
+  "scope": "Exact recording MBID release browse. Explicit slot checks limited to the listed programs.",
+  "recordings": [
+    {
+      "title": "I Know (Extended Mix)",
+      "recording_mbid": "87dfe8ce-4861-4327-b16c-60423529e352",
+      "returned": 8,
+      "reported_count": 8,
+      "coverage": "complete_page",
+      "appearances": [
+        {
+          "id": "28465118-16ec-4f0f-aae7-bed8f9fc2ed5",
+          "date": "1999-09-27",
+          "title": "10 Year Anniversary Box Set",
+          "status": "Official",
+          "country": "GB",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6a8d9901-1017-3476-8d85-bd2b95200ea8",
+            "title": "10 Year Anniversary Box Set",
+            "first-release-date": "1999-09-27",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "5834ce7b-007f-4e47-84bb-b4b66a6bdabf",
+          "date": "2012-07-27",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "XE",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "7ea8649b-9e11-408e-8776-586d6a012d92",
+          "date": "2012-07-30",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "AF",
+          "disambiguation": "special edition",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "8ba864a9-345c-4676-86db-76049a397416",
+          "date": "1991",
+          "title": "Forever Changing",
+          "status": "Official",
+          "country": "GB",
+          "disambiguation": "",
+          "release_group": {
+            "id": "3bf1a4ee-a91d-4677-a177-4ecfb3bb7fd2",
+            "title": "Forever Changing",
+            "first-release-date": "1991",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "b11e8000-f0c2-4277-befb-b125a5edece7",
+          "date": "1990-10-15",
+          "title": "She’s So High",
+          "status": "Official",
+          "country": "GB",
+          "disambiguation": "",
+          "release_group": {
+            "id": "64468b93-32ec-3804-be78-7668018f03c9",
+            "title": "She’s So High",
+            "first-release-date": "1990-10-15",
+            "primary-type": "Single",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "ea71d0d3-4a60-4bd3-9cfe-9c0eec380ea4",
+          "date": "2012-07-27",
+          "title": "Blur 21: The Box",
+          "status": "Official",
+          "country": "XE",
+          "disambiguation": "",
+          "release_group": {
+            "id": "ca07ecb3-2fb6-4d25-a7f1-782ee24e0acd",
+            "title": "Blur 21: The Box",
+            "first-release-date": "2012-07-27",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "fa61ec9d-b1db-41bf-bed7-b157fa43cfd0",
+          "date": "2012-08-01",
+          "title": "blur 21 box",
+          "status": "Official",
+          "country": "JP",
+          "disambiguation": "Japanese edition",
+          "release_group": {
+            "id": "ca07ecb3-2fb6-4d25-a7f1-782ee24e0acd",
+            "title": "Blur 21: The Box",
+            "first-release-date": "2012-07-27",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "fbeb5683-34f1-4192-93e8-38217598ba03",
+          "date": "2012-08-01",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "JP",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        }
+      ],
+      "slot_verified_editions": [
+        "b11e8000-f0c2-4277-befb-b125a5edece7"
+      ]
+    },
+    {
+      "title": "Down",
+      "recording_mbid": "272774b1-029f-4c58-aa31-8b492cfa72ae",
+      "returned": 7,
+      "reported_count": 7,
+      "coverage": "complete_page",
+      "appearances": [
+        {
+          "id": "28465118-16ec-4f0f-aae7-bed8f9fc2ed5",
+          "date": "1999-09-27",
+          "title": "10 Year Anniversary Box Set",
+          "status": "Official",
+          "country": "GB",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6a8d9901-1017-3476-8d85-bd2b95200ea8",
+            "title": "10 Year Anniversary Box Set",
+            "first-release-date": "1999-09-27",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "5834ce7b-007f-4e47-84bb-b4b66a6bdabf",
+          "date": "2012-07-27",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "XE",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "7ea8649b-9e11-408e-8776-586d6a012d92",
+          "date": "2012-07-30",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "AF",
+          "disambiguation": "special edition",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "b11e8000-f0c2-4277-befb-b125a5edece7",
+          "date": "1990-10-15",
+          "title": "She’s So High",
+          "status": "Official",
+          "country": "GB",
+          "disambiguation": "",
+          "release_group": {
+            "id": "64468b93-32ec-3804-be78-7668018f03c9",
+            "title": "She’s So High",
+            "first-release-date": "1990-10-15",
+            "primary-type": "Single",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "ea71d0d3-4a60-4bd3-9cfe-9c0eec380ea4",
+          "date": "2012-07-27",
+          "title": "Blur 21: The Box",
+          "status": "Official",
+          "country": "XE",
+          "disambiguation": "",
+          "release_group": {
+            "id": "ca07ecb3-2fb6-4d25-a7f1-782ee24e0acd",
+            "title": "Blur 21: The Box",
+            "first-release-date": "2012-07-27",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "fa61ec9d-b1db-41bf-bed7-b157fa43cfd0",
+          "date": "2012-08-01",
+          "title": "blur 21 box",
+          "status": "Official",
+          "country": "JP",
+          "disambiguation": "Japanese edition",
+          "release_group": {
+            "id": "ca07ecb3-2fb6-4d25-a7f1-782ee24e0acd",
+            "title": "Blur 21: The Box",
+            "first-release-date": "2012-07-27",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "fbeb5683-34f1-4192-93e8-38217598ba03",
+          "date": "2012-08-01",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "JP",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        }
+      ],
+      "slot_verified_editions": [
+        "b11e8000-f0c2-4277-befb-b125a5edece7"
+      ]
+    },
+    {
+      "title": "There's No Other Way (Extended Version)",
+      "recording_mbid": "20255402-1548-4e9f-8379-c599daeea4b3",
+      "returned": 5,
+      "reported_count": 5,
+      "coverage": "complete_page",
+      "appearances": [
+        {
+          "id": "5834ce7b-007f-4e47-84bb-b4b66a6bdabf",
+          "date": "2012-07-27",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "XE",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "7ea8649b-9e11-408e-8776-586d6a012d92",
+          "date": "2012-07-30",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "AF",
+          "disambiguation": "special edition",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "ea71d0d3-4a60-4bd3-9cfe-9c0eec380ea4",
+          "date": "2012-07-27",
+          "title": "Blur 21: The Box",
+          "status": "Official",
+          "country": "XE",
+          "disambiguation": "",
+          "release_group": {
+            "id": "ca07ecb3-2fb6-4d25-a7f1-782ee24e0acd",
+            "title": "Blur 21: The Box",
+            "first-release-date": "2012-07-27",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "fa61ec9d-b1db-41bf-bed7-b157fa43cfd0",
+          "date": "2012-08-01",
+          "title": "blur 21 box",
+          "status": "Official",
+          "country": "JP",
+          "disambiguation": "Japanese edition",
+          "release_group": {
+            "id": "ca07ecb3-2fb6-4d25-a7f1-782ee24e0acd",
+            "title": "Blur 21: The Box",
+            "first-release-date": "2012-07-27",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "fbeb5683-34f1-4192-93e8-38217598ba03",
+          "date": "2012-08-01",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "JP",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        }
+      ],
+      "slot_verified_editions": []
+    },
+    {
+      "title": "Inertia",
+      "recording_mbid": "5a8f7dcb-a967-4a95-b2c4-5266ac8c7d59",
+      "returned": 13,
+      "reported_count": 13,
+      "coverage": "complete_page",
+      "appearances": [
+        {
+          "id": "0142659c-615c-46e3-bc47-ad6451f4fe15",
+          "date": "2023-04-22",
+          "title": "The Special Collectors Edition",
+          "status": "Official",
+          "country": "GB",
+          "disambiguation": "record store day blue translucent vinyl",
+          "release_group": {
+            "id": "2b8458e9-8fb2-3a33-b56d-2075a14c8163",
+            "title": "The Special Collectors Edition",
+            "first-release-date": "1994-10-26",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "28465118-16ec-4f0f-aae7-bed8f9fc2ed5",
+          "date": "1999-09-27",
+          "title": "10 Year Anniversary Box Set",
+          "status": "Official",
+          "country": "GB",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6a8d9901-1017-3476-8d85-bd2b95200ea8",
+            "title": "10 Year Anniversary Box Set",
+            "first-release-date": "1999-09-27",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "43a9a955-f35f-4646-9bd8-8fb569090bea",
+          "date": "1995-05-31",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "JP",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "5834ce7b-007f-4e47-84bb-b4b66a6bdabf",
+          "date": "2012-07-27",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "XE",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "7dee2082-5c94-35be-8965-e5ae83f7c02b",
+          "date": "1991-10-08",
+          "title": "There’s No Other Way",
+          "status": "Official",
+          "country": "US",
+          "disambiguation": "",
+          "release_group": {
+            "id": "feac2516-9f44-34b2-b6c2-b782c7c15be5",
+            "title": "There’s No Other Way",
+            "first-release-date": "1991-04-15",
+            "primary-type": "Single",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "7ea8649b-9e11-408e-8776-586d6a012d92",
+          "date": "2012-07-30",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "AF",
+          "disambiguation": "special edition",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "8b0fba8e-fb98-4b8f-a2a7-a66f58346734",
+          "title": "Another Side of...",
+          "status": "Bootleg",
+          "disambiguation": "",
+          "release_group": {
+            "id": "32495cfe-ccb2-3777-8ba5-e5b4a08b6cb7",
+            "title": "Another Side of...",
+            "first-release-date": "",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "9ab639ba-9ad7-4128-9ba2-c5d607f56156",
+          "date": "1991-09-20",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "JP",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "ea3df91a-d85f-435c-8c75-c0a5494e662c",
+          "date": "1991-04-15",
+          "title": "There’s No Other Way",
+          "status": "Official",
+          "country": "GB",
+          "disambiguation": "",
+          "release_group": {
+            "id": "feac2516-9f44-34b2-b6c2-b782c7c15be5",
+            "title": "There’s No Other Way",
+            "first-release-date": "1991-04-15",
+            "primary-type": "Single",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "ea71d0d3-4a60-4bd3-9cfe-9c0eec380ea4",
+          "date": "2012-07-27",
+          "title": "Blur 21: The Box",
+          "status": "Official",
+          "country": "XE",
+          "disambiguation": "",
+          "release_group": {
+            "id": "ca07ecb3-2fb6-4d25-a7f1-782ee24e0acd",
+            "title": "Blur 21: The Box",
+            "first-release-date": "2012-07-27",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "ebe3f39a-bc5c-447c-a903-f96632ceb5e3",
+          "date": "1994-10-26",
+          "title": "The Special Collectors Edition",
+          "status": "Official",
+          "country": "JP",
+          "disambiguation": "",
+          "release_group": {
+            "id": "2b8458e9-8fb2-3a33-b56d-2075a14c8163",
+            "title": "The Special Collectors Edition",
+            "first-release-date": "1994-10-26",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "fa61ec9d-b1db-41bf-bed7-b157fa43cfd0",
+          "date": "2012-08-01",
+          "title": "blur 21 box",
+          "status": "Official",
+          "country": "JP",
+          "disambiguation": "Japanese edition",
+          "release_group": {
+            "id": "ca07ecb3-2fb6-4d25-a7f1-782ee24e0acd",
+            "title": "Blur 21: The Box",
+            "first-release-date": "2012-07-27",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "fbeb5683-34f1-4192-93e8-38217598ba03",
+          "date": "2012-08-01",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "JP",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        }
+      ],
+      "slot_verified_editions": [
+        "ea3df91a-d85f-435c-8c75-c0a5494e662c"
+      ]
+    },
+    {
+      "title": "Mr Briggs",
+      "recording_mbid": "d641a183-8ba5-4432-86fa-73ab0b865638",
+      "returned": 11,
+      "reported_count": 11,
+      "coverage": "complete_page",
+      "appearances": [
+        {
+          "id": "28465118-16ec-4f0f-aae7-bed8f9fc2ed5",
+          "date": "1999-09-27",
+          "title": "10 Year Anniversary Box Set",
+          "status": "Official",
+          "country": "GB",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6a8d9901-1017-3476-8d85-bd2b95200ea8",
+            "title": "10 Year Anniversary Box Set",
+            "first-release-date": "1999-09-27",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "43a9a955-f35f-4646-9bd8-8fb569090bea",
+          "date": "1995-05-31",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "JP",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "49bca3d8-c75e-3a6c-a688-dc0649c8cd31",
+          "date": "1998-03-09",
+          "title": "Blowout: 18 of the Best Indie Sounds",
+          "status": "Official",
+          "country": "GB",
+          "disambiguation": "",
+          "release_group": {
+            "id": "a587bcba-5f73-31af-a8f4-d67b09c3fa70",
+            "title": "Blowout: 18 of the Best Indie Sounds",
+            "first-release-date": "1998-03-09",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "5834ce7b-007f-4e47-84bb-b4b66a6bdabf",
+          "date": "2012-07-27",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "XE",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "7dee2082-5c94-35be-8965-e5ae83f7c02b",
+          "date": "1991-10-08",
+          "title": "There’s No Other Way",
+          "status": "Official",
+          "country": "US",
+          "disambiguation": "",
+          "release_group": {
+            "id": "feac2516-9f44-34b2-b6c2-b782c7c15be5",
+            "title": "There’s No Other Way",
+            "first-release-date": "1991-04-15",
+            "primary-type": "Single",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "7ea8649b-9e11-408e-8776-586d6a012d92",
+          "date": "2012-07-30",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "AF",
+          "disambiguation": "special edition",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "9ab639ba-9ad7-4128-9ba2-c5d607f56156",
+          "date": "1991-09-20",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "JP",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "ea3df91a-d85f-435c-8c75-c0a5494e662c",
+          "date": "1991-04-15",
+          "title": "There’s No Other Way",
+          "status": "Official",
+          "country": "GB",
+          "disambiguation": "",
+          "release_group": {
+            "id": "feac2516-9f44-34b2-b6c2-b782c7c15be5",
+            "title": "There’s No Other Way",
+            "first-release-date": "1991-04-15",
+            "primary-type": "Single",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "ea71d0d3-4a60-4bd3-9cfe-9c0eec380ea4",
+          "date": "2012-07-27",
+          "title": "Blur 21: The Box",
+          "status": "Official",
+          "country": "XE",
+          "disambiguation": "",
+          "release_group": {
+            "id": "ca07ecb3-2fb6-4d25-a7f1-782ee24e0acd",
+            "title": "Blur 21: The Box",
+            "first-release-date": "2012-07-27",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "fa61ec9d-b1db-41bf-bed7-b157fa43cfd0",
+          "date": "2012-08-01",
+          "title": "blur 21 box",
+          "status": "Official",
+          "country": "JP",
+          "disambiguation": "Japanese edition",
+          "release_group": {
+            "id": "ca07ecb3-2fb6-4d25-a7f1-782ee24e0acd",
+            "title": "Blur 21: The Box",
+            "first-release-date": "2012-07-27",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "fbeb5683-34f1-4192-93e8-38217598ba03",
+          "date": "2012-08-01",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "JP",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        }
+      ],
+      "slot_verified_editions": [
+        "ea3df91a-d85f-435c-8c75-c0a5494e662c"
+      ]
+    },
+    {
+      "title": "I'm All Over",
+      "recording_mbid": "3e87c042-6577-4248-a4d9-937924da1033",
+      "returned": 9,
+      "reported_count": 9,
+      "coverage": "complete_page",
+      "appearances": [
+        {
+          "id": "28465118-16ec-4f0f-aae7-bed8f9fc2ed5",
+          "date": "1999-09-27",
+          "title": "10 Year Anniversary Box Set",
+          "status": "Official",
+          "country": "GB",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6a8d9901-1017-3476-8d85-bd2b95200ea8",
+            "title": "10 Year Anniversary Box Set",
+            "first-release-date": "1999-09-27",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "5834ce7b-007f-4e47-84bb-b4b66a6bdabf",
+          "date": "2012-07-27",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "XE",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "7dee2082-5c94-35be-8965-e5ae83f7c02b",
+          "date": "1991-10-08",
+          "title": "There’s No Other Way",
+          "status": "Official",
+          "country": "US",
+          "disambiguation": "",
+          "release_group": {
+            "id": "feac2516-9f44-34b2-b6c2-b782c7c15be5",
+            "title": "There’s No Other Way",
+            "first-release-date": "1991-04-15",
+            "primary-type": "Single",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "7ea8649b-9e11-408e-8776-586d6a012d92",
+          "date": "2012-07-30",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "AF",
+          "disambiguation": "special edition",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "e4cfd43a-ee36-48ef-83d3-a1ad599d1626",
+          "date": "1991-04-15",
+          "title": "There’s No Other Way",
+          "status": "Official",
+          "country": "GB",
+          "disambiguation": "",
+          "release_group": {
+            "id": "feac2516-9f44-34b2-b6c2-b782c7c15be5",
+            "title": "There’s No Other Way",
+            "first-release-date": "1991-04-15",
+            "primary-type": "Single",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "ea3df91a-d85f-435c-8c75-c0a5494e662c",
+          "date": "1991-04-15",
+          "title": "There’s No Other Way",
+          "status": "Official",
+          "country": "GB",
+          "disambiguation": "",
+          "release_group": {
+            "id": "feac2516-9f44-34b2-b6c2-b782c7c15be5",
+            "title": "There’s No Other Way",
+            "first-release-date": "1991-04-15",
+            "primary-type": "Single",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "ea71d0d3-4a60-4bd3-9cfe-9c0eec380ea4",
+          "date": "2012-07-27",
+          "title": "Blur 21: The Box",
+          "status": "Official",
+          "country": "XE",
+          "disambiguation": "",
+          "release_group": {
+            "id": "ca07ecb3-2fb6-4d25-a7f1-782ee24e0acd",
+            "title": "Blur 21: The Box",
+            "first-release-date": "2012-07-27",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "fa61ec9d-b1db-41bf-bed7-b157fa43cfd0",
+          "date": "2012-08-01",
+          "title": "blur 21 box",
+          "status": "Official",
+          "country": "JP",
+          "disambiguation": "Japanese edition",
+          "release_group": {
+            "id": "ca07ecb3-2fb6-4d25-a7f1-782ee24e0acd",
+            "title": "Blur 21: The Box",
+            "first-release-date": "2012-07-27",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "fbeb5683-34f1-4192-93e8-38217598ba03",
+          "date": "2012-08-01",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "JP",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        }
+      ],
+      "slot_verified_editions": [
+        "ea3df91a-d85f-435c-8c75-c0a5494e662c"
+      ]
+    },
+    {
+      "title": "Won't Do It",
+      "recording_mbid": "61c92a73-c3d5-43f6-8410-49156604b1cb",
+      "coverage": "provider_unavailable"
+    },
+    {
+      "title": "Day Upon Day (Live)",
+      "recording_mbid": "0ca3a70c-39dc-41b7-a943-acd32b24598c",
+      "returned": 5,
+      "reported_count": 5,
+      "coverage": "complete_page",
+      "appearances": [
+        {
+          "id": "5834ce7b-007f-4e47-84bb-b4b66a6bdabf",
+          "date": "2012-07-27",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "XE",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "7ea8649b-9e11-408e-8776-586d6a012d92",
+          "date": "2012-07-30",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "AF",
+          "disambiguation": "special edition",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "ea71d0d3-4a60-4bd3-9cfe-9c0eec380ea4",
+          "date": "2012-07-27",
+          "title": "Blur 21: The Box",
+          "status": "Official",
+          "country": "XE",
+          "disambiguation": "",
+          "release_group": {
+            "id": "ca07ecb3-2fb6-4d25-a7f1-782ee24e0acd",
+            "title": "Blur 21: The Box",
+            "first-release-date": "2012-07-27",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "fa61ec9d-b1db-41bf-bed7-b157fa43cfd0",
+          "date": "2012-08-01",
+          "title": "blur 21 box",
+          "status": "Official",
+          "country": "JP",
+          "disambiguation": "Japanese edition",
+          "release_group": {
+            "id": "ca07ecb3-2fb6-4d25-a7f1-782ee24e0acd",
+            "title": "Blur 21: The Box",
+            "first-release-date": "2012-07-27",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "fbeb5683-34f1-4192-93e8-38217598ba03",
+          "date": "2012-08-01",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "JP",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        }
+      ],
+      "slot_verified_editions": []
+    },
+    {
+      "title": "There's No Other Way (Blur Remix)",
+      "recording_mbid": "877ed1d9-f17c-4f7f-8537-e384f60e7315",
+      "returned": 6,
+      "reported_count": 6,
+      "coverage": "complete_page",
+      "appearances": [
+        {
+          "id": "0bdc5760-762d-4004-8c0e-2547b925341b",
+          "date": "2020-11-13",
+          "title": "100 Greatest Running Tracks",
+          "status": "Withdrawn",
+          "country": null,
+          "disambiguation": "",
+          "release_group": {
+            "id": "3cc09966-61f4-48dc-82d1-4d6e771fdd4d",
+            "title": "100 Greatest Running Tracks",
+            "first-release-date": "2020-11-13",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "5834ce7b-007f-4e47-84bb-b4b66a6bdabf",
+          "date": "2012-07-27",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "XE",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "7ea8649b-9e11-408e-8776-586d6a012d92",
+          "date": "2012-07-30",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "AF",
+          "disambiguation": "special edition",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "ea71d0d3-4a60-4bd3-9cfe-9c0eec380ea4",
+          "date": "2012-07-27",
+          "title": "Blur 21: The Box",
+          "status": "Official",
+          "country": "XE",
+          "disambiguation": "",
+          "release_group": {
+            "id": "ca07ecb3-2fb6-4d25-a7f1-782ee24e0acd",
+            "title": "Blur 21: The Box",
+            "first-release-date": "2012-07-27",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "fa61ec9d-b1db-41bf-bed7-b157fa43cfd0",
+          "date": "2012-08-01",
+          "title": "blur 21 box",
+          "status": "Official",
+          "country": "JP",
+          "disambiguation": "Japanese edition",
+          "release_group": {
+            "id": "ca07ecb3-2fb6-4d25-a7f1-782ee24e0acd",
+            "title": "Blur 21: The Box",
+            "first-release-date": "2012-07-27",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "fbeb5683-34f1-4192-93e8-38217598ba03",
+          "date": "2012-08-01",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "JP",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        }
+      ],
+      "slot_verified_editions": []
+    },
+    {
+      "title": "Bang (Extended Version)",
+      "recording_mbid": "c3b91c5b-621d-4cc8-906f-b34396c59125",
+      "returned": 7,
+      "reported_count": 7,
+      "coverage": "complete_page",
+      "appearances": [
+        {
+          "id": "28465118-16ec-4f0f-aae7-bed8f9fc2ed5",
+          "date": "1999-09-27",
+          "title": "10 Year Anniversary Box Set",
+          "status": "Official",
+          "country": "GB",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6a8d9901-1017-3476-8d85-bd2b95200ea8",
+            "title": "10 Year Anniversary Box Set",
+            "first-release-date": "1999-09-27",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "5834ce7b-007f-4e47-84bb-b4b66a6bdabf",
+          "date": "2012-07-27",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "XE",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "7916ce29-57d6-40d8-b046-016a0a5f4417",
+          "date": "1991-07-29",
+          "title": "Bang",
+          "status": "Official",
+          "country": "GB",
+          "disambiguation": "",
+          "release_group": {
+            "id": "1ee73ffa-0818-34ab-9a6d-9a80464b5b32",
+            "title": "Bang",
+            "first-release-date": "1991-07-29",
+            "primary-type": "Single",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "7ea8649b-9e11-408e-8776-586d6a012d92",
+          "date": "2012-07-30",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "AF",
+          "disambiguation": "special edition",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "ea71d0d3-4a60-4bd3-9cfe-9c0eec380ea4",
+          "date": "2012-07-27",
+          "title": "Blur 21: The Box",
+          "status": "Official",
+          "country": "XE",
+          "disambiguation": "",
+          "release_group": {
+            "id": "ca07ecb3-2fb6-4d25-a7f1-782ee24e0acd",
+            "title": "Blur 21: The Box",
+            "first-release-date": "2012-07-27",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "fa61ec9d-b1db-41bf-bed7-b157fa43cfd0",
+          "date": "2012-08-01",
+          "title": "blur 21 box",
+          "status": "Official",
+          "country": "JP",
+          "disambiguation": "Japanese edition",
+          "release_group": {
+            "id": "ca07ecb3-2fb6-4d25-a7f1-782ee24e0acd",
+            "title": "Blur 21: The Box",
+            "first-release-date": "2012-07-27",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "fbeb5683-34f1-4192-93e8-38217598ba03",
+          "date": "2012-08-01",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "JP",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        }
+      ],
+      "slot_verified_editions": [
+        "7916ce29-57d6-40d8-b046-016a0a5f4417"
+      ]
+    },
+    {
+      "title": "Explain",
+      "recording_mbid": "5cf14477-9232-4ba2-b02c-4d9c9a737c7d",
+      "returned": 8,
+      "reported_count": 8,
+      "coverage": "complete_page",
+      "appearances": [
+        {
+          "id": "28465118-16ec-4f0f-aae7-bed8f9fc2ed5",
+          "date": "1999-09-27",
+          "title": "10 Year Anniversary Box Set",
+          "status": "Official",
+          "country": "GB",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6a8d9901-1017-3476-8d85-bd2b95200ea8",
+            "title": "10 Year Anniversary Box Set",
+            "first-release-date": "1999-09-27",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "5834ce7b-007f-4e47-84bb-b4b66a6bdabf",
+          "date": "2012-07-27",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "XE",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "7916ce29-57d6-40d8-b046-016a0a5f4417",
+          "date": "1991-07-29",
+          "title": "Bang",
+          "status": "Official",
+          "country": "GB",
+          "disambiguation": "",
+          "release_group": {
+            "id": "1ee73ffa-0818-34ab-9a6d-9a80464b5b32",
+            "title": "Bang",
+            "first-release-date": "1991-07-29",
+            "primary-type": "Single",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "7ea8649b-9e11-408e-8776-586d6a012d92",
+          "date": "2012-07-30",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "AF",
+          "disambiguation": "special edition",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "e971015a-dcae-4677-acaa-310b3c46f77f",
+          "date": "1991-08-05",
+          "title": "Bang",
+          "status": "Official",
+          "country": "GB",
+          "disambiguation": "",
+          "release_group": {
+            "id": "1ee73ffa-0818-34ab-9a6d-9a80464b5b32",
+            "title": "Bang",
+            "first-release-date": "1991-07-29",
+            "primary-type": "Single",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "ea71d0d3-4a60-4bd3-9cfe-9c0eec380ea4",
+          "date": "2012-07-27",
+          "title": "Blur 21: The Box",
+          "status": "Official",
+          "country": "XE",
+          "disambiguation": "",
+          "release_group": {
+            "id": "ca07ecb3-2fb6-4d25-a7f1-782ee24e0acd",
+            "title": "Blur 21: The Box",
+            "first-release-date": "2012-07-27",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "fa61ec9d-b1db-41bf-bed7-b157fa43cfd0",
+          "date": "2012-08-01",
+          "title": "blur 21 box",
+          "status": "Official",
+          "country": "JP",
+          "disambiguation": "Japanese edition",
+          "release_group": {
+            "id": "ca07ecb3-2fb6-4d25-a7f1-782ee24e0acd",
+            "title": "Blur 21: The Box",
+            "first-release-date": "2012-07-27",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "fbeb5683-34f1-4192-93e8-38217598ba03",
+          "date": "2012-08-01",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "JP",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        }
+      ],
+      "slot_verified_editions": [
+        "7916ce29-57d6-40d8-b046-016a0a5f4417"
+      ]
+    },
+    {
+      "title": "Luminous",
+      "recording_mbid": "7d019300-5227-40bc-acca-49b6a4ee2261",
+      "returned": 13,
+      "reported_count": 13,
+      "coverage": "complete_page",
+      "appearances": [
+        {
+          "id": "0142659c-615c-46e3-bc47-ad6451f4fe15",
+          "date": "2023-04-22",
+          "title": "The Special Collectors Edition",
+          "status": "Official",
+          "country": "GB",
+          "disambiguation": "record store day blue translucent vinyl",
+          "release_group": {
+            "id": "2b8458e9-8fb2-3a33-b56d-2075a14c8163",
+            "title": "The Special Collectors Edition",
+            "first-release-date": "1994-10-26",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "28465118-16ec-4f0f-aae7-bed8f9fc2ed5",
+          "date": "1999-09-27",
+          "title": "10 Year Anniversary Box Set",
+          "status": "Official",
+          "country": "GB",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6a8d9901-1017-3476-8d85-bd2b95200ea8",
+            "title": "10 Year Anniversary Box Set",
+            "first-release-date": "1999-09-27",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "5834ce7b-007f-4e47-84bb-b4b66a6bdabf",
+          "date": "2012-07-27",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "XE",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "7916ce29-57d6-40d8-b046-016a0a5f4417",
+          "date": "1991-07-29",
+          "title": "Bang",
+          "status": "Official",
+          "country": "GB",
+          "disambiguation": "",
+          "release_group": {
+            "id": "1ee73ffa-0818-34ab-9a6d-9a80464b5b32",
+            "title": "Bang",
+            "first-release-date": "1991-07-29",
+            "primary-type": "Single",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "7ea8649b-9e11-408e-8776-586d6a012d92",
+          "date": "2012-07-30",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "AF",
+          "disambiguation": "special edition",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "86e33931-b645-4011-9586-3767fd0b0a4f",
+          "date": "1991-07-29",
+          "title": "Bang",
+          "status": "Official",
+          "country": "GB",
+          "disambiguation": "",
+          "release_group": {
+            "id": "1ee73ffa-0818-34ab-9a6d-9a80464b5b32",
+            "title": "Bang",
+            "first-release-date": "1991-07-29",
+            "primary-type": "Single",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "8b0fba8e-fb98-4b8f-a2a7-a66f58346734",
+          "title": "Another Side of...",
+          "status": "Bootleg",
+          "disambiguation": "",
+          "release_group": {
+            "id": "32495cfe-ccb2-3777-8ba5-e5b4a08b6cb7",
+            "title": "Another Side of...",
+            "first-release-date": "",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "b13e291e-5b29-3150-b32a-5664c73ae48d",
+          "date": "1991-07-29",
+          "title": "Bang",
+          "status": "Official",
+          "country": "GB",
+          "disambiguation": "",
+          "release_group": {
+            "id": "1ee73ffa-0818-34ab-9a6d-9a80464b5b32",
+            "title": "Bang",
+            "first-release-date": "1991-07-29",
+            "primary-type": "Single",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "e971015a-dcae-4677-acaa-310b3c46f77f",
+          "date": "1991-08-05",
+          "title": "Bang",
+          "status": "Official",
+          "country": "GB",
+          "disambiguation": "",
+          "release_group": {
+            "id": "1ee73ffa-0818-34ab-9a6d-9a80464b5b32",
+            "title": "Bang",
+            "first-release-date": "1991-07-29",
+            "primary-type": "Single",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "ea71d0d3-4a60-4bd3-9cfe-9c0eec380ea4",
+          "date": "2012-07-27",
+          "title": "Blur 21: The Box",
+          "status": "Official",
+          "country": "XE",
+          "disambiguation": "",
+          "release_group": {
+            "id": "ca07ecb3-2fb6-4d25-a7f1-782ee24e0acd",
+            "title": "Blur 21: The Box",
+            "first-release-date": "2012-07-27",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "ebe3f39a-bc5c-447c-a903-f96632ceb5e3",
+          "date": "1994-10-26",
+          "title": "The Special Collectors Edition",
+          "status": "Official",
+          "country": "JP",
+          "disambiguation": "",
+          "release_group": {
+            "id": "2b8458e9-8fb2-3a33-b56d-2075a14c8163",
+            "title": "The Special Collectors Edition",
+            "first-release-date": "1994-10-26",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "fa61ec9d-b1db-41bf-bed7-b157fa43cfd0",
+          "date": "2012-08-01",
+          "title": "blur 21 box",
+          "status": "Official",
+          "country": "JP",
+          "disambiguation": "Japanese edition",
+          "release_group": {
+            "id": "ca07ecb3-2fb6-4d25-a7f1-782ee24e0acd",
+            "title": "Blur 21: The Box",
+            "first-release-date": "2012-07-27",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "fbeb5683-34f1-4192-93e8-38217598ba03",
+          "date": "2012-08-01",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "JP",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        }
+      ],
+      "slot_verified_editions": [
+        "7916ce29-57d6-40d8-b046-016a0a5f4417"
+      ]
+    },
+    {
+      "title": "Berserk",
+      "recording_mbid": "73c570ae-341f-4b45-ae81-b1fb0c0a1e1a",
+      "returned": 5,
+      "reported_count": 5,
+      "coverage": "complete_page",
+      "appearances": [
+        {
+          "id": "5834ce7b-007f-4e47-84bb-b4b66a6bdabf",
+          "date": "2012-07-27",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "XE",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "7ea8649b-9e11-408e-8776-586d6a012d92",
+          "date": "2012-07-30",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "AF",
+          "disambiguation": "special edition",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "ea71d0d3-4a60-4bd3-9cfe-9c0eec380ea4",
+          "date": "2012-07-27",
+          "title": "Blur 21: The Box",
+          "status": "Official",
+          "country": "XE",
+          "disambiguation": "",
+          "release_group": {
+            "id": "ca07ecb3-2fb6-4d25-a7f1-782ee24e0acd",
+            "title": "Blur 21: The Box",
+            "first-release-date": "2012-07-27",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "fa61ec9d-b1db-41bf-bed7-b157fa43cfd0",
+          "date": "2012-08-01",
+          "title": "blur 21 box",
+          "status": "Official",
+          "country": "JP",
+          "disambiguation": "Japanese edition",
+          "release_group": {
+            "id": "ca07ecb3-2fb6-4d25-a7f1-782ee24e0acd",
+            "title": "Blur 21: The Box",
+            "first-release-date": "2012-07-27",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "fbeb5683-34f1-4192-93e8-38217598ba03",
+          "date": "2012-08-01",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "JP",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        }
+      ],
+      "slot_verified_editions": []
+    },
+    {
+      "title": "Uncle Love",
+      "recording_mbid": "c2bc53d2-5652-47b7-8c68-9a7b812f9bc3",
+      "returned": 7,
+      "reported_count": 7,
+      "coverage": "complete_page",
+      "appearances": [
+        {
+          "id": "28465118-16ec-4f0f-aae7-bed8f9fc2ed5",
+          "date": "1999-09-27",
+          "title": "10 Year Anniversary Box Set",
+          "status": "Official",
+          "country": "GB",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6a8d9901-1017-3476-8d85-bd2b95200ea8",
+            "title": "10 Year Anniversary Box Set",
+            "first-release-date": "1999-09-27",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "5834ce7b-007f-4e47-84bb-b4b66a6bdabf",
+          "date": "2012-07-27",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "XE",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "7916ce29-57d6-40d8-b046-016a0a5f4417",
+          "date": "1991-07-29",
+          "title": "Bang",
+          "status": "Official",
+          "country": "GB",
+          "disambiguation": "",
+          "release_group": {
+            "id": "1ee73ffa-0818-34ab-9a6d-9a80464b5b32",
+            "title": "Bang",
+            "first-release-date": "1991-07-29",
+            "primary-type": "Single",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "7ea8649b-9e11-408e-8776-586d6a012d92",
+          "date": "2012-07-30",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "AF",
+          "disambiguation": "special edition",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "ea71d0d3-4a60-4bd3-9cfe-9c0eec380ea4",
+          "date": "2012-07-27",
+          "title": "Blur 21: The Box",
+          "status": "Official",
+          "country": "XE",
+          "disambiguation": "",
+          "release_group": {
+            "id": "ca07ecb3-2fb6-4d25-a7f1-782ee24e0acd",
+            "title": "Blur 21: The Box",
+            "first-release-date": "2012-07-27",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "fa61ec9d-b1db-41bf-bed7-b157fa43cfd0",
+          "date": "2012-08-01",
+          "title": "blur 21 box",
+          "status": "Official",
+          "country": "JP",
+          "disambiguation": "Japanese edition",
+          "release_group": {
+            "id": "ca07ecb3-2fb6-4d25-a7f1-782ee24e0acd",
+            "title": "Blur 21: The Box",
+            "first-release-date": "2012-07-27",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "fbeb5683-34f1-4192-93e8-38217598ba03",
+          "date": "2012-08-01",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "JP",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        }
+      ],
+      "slot_verified_editions": [
+        "7916ce29-57d6-40d8-b046-016a0a5f4417"
+      ]
+    },
+    {
+      "title": "I Love Her (Demo)",
+      "recording_mbid": "f6fac006-939c-4dfd-87fc-03e5bf6f11c2",
+      "returned": 6,
+      "reported_count": 6,
+      "coverage": "complete_page",
+      "appearances": [
+        {
+          "id": "3f369479-72b3-4bb1-9f36-456bd2ec96b0",
+          "date": "1998-02-11",
+          "title": "M.O.R.",
+          "status": "Official",
+          "country": "JP",
+          "disambiguation": "",
+          "release_group": {
+            "id": "5143f879-fcbd-30ef-aea9-93002a67bec9",
+            "title": "M.O.R.",
+            "first-release-date": "1997-09-08",
+            "primary-type": "Single",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "5834ce7b-007f-4e47-84bb-b4b66a6bdabf",
+          "date": "2012-07-27",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "XE",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "7ea8649b-9e11-408e-8776-586d6a012d92",
+          "date": "2012-07-30",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "AF",
+          "disambiguation": "special edition",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "ea71d0d3-4a60-4bd3-9cfe-9c0eec380ea4",
+          "date": "2012-07-27",
+          "title": "Blur 21: The Box",
+          "status": "Official",
+          "country": "XE",
+          "disambiguation": "",
+          "release_group": {
+            "id": "ca07ecb3-2fb6-4d25-a7f1-782ee24e0acd",
+            "title": "Blur 21: The Box",
+            "first-release-date": "2012-07-27",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "fa61ec9d-b1db-41bf-bed7-b157fa43cfd0",
+          "date": "2012-08-01",
+          "title": "blur 21 box",
+          "status": "Official",
+          "country": "JP",
+          "disambiguation": "Japanese edition",
+          "release_group": {
+            "id": "ca07ecb3-2fb6-4d25-a7f1-782ee24e0acd",
+            "title": "Blur 21: The Box",
+            "first-release-date": "2012-07-27",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "fbeb5683-34f1-4192-93e8-38217598ba03",
+          "date": "2012-08-01",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "JP",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        }
+      ],
+      "slot_verified_editions": [
+        "3f369479-72b3-4bb1-9f36-456bd2ec96b0"
+      ]
+    },
+    {
+      "title": "Close",
+      "recording_mbid": "090ea6ab-8bf7-4e56-b47e-00d6d1a5f5bf",
+      "returned": 6,
+      "reported_count": 6,
+      "coverage": "complete_page",
+      "appearances": [
+        {
+          "id": "5834ce7b-007f-4e47-84bb-b4b66a6bdabf",
+          "date": "2012-07-27",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "XE",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "7ea8649b-9e11-408e-8776-586d6a012d92",
+          "date": "2012-07-30",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "AF",
+          "disambiguation": "special edition",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "955eefe1-ff4c-42d4-9316-e35e81705e1b",
+          "date": "1998-11",
+          "title": "Close",
+          "status": "Official",
+          "country": "GB",
+          "disambiguation": "",
+          "release_group": {
+            "id": "41b82d82-c198-3fec-a467-8f0e7ea780f5",
+            "title": "Close",
+            "first-release-date": "1998-11",
+            "primary-type": "Single",
+            "secondary-types": []
+          }
+        },
+        {
+          "id": "ea71d0d3-4a60-4bd3-9cfe-9c0eec380ea4",
+          "date": "2012-07-27",
+          "title": "Blur 21: The Box",
+          "status": "Official",
+          "country": "XE",
+          "disambiguation": "",
+          "release_group": {
+            "id": "ca07ecb3-2fb6-4d25-a7f1-782ee24e0acd",
+            "title": "Blur 21: The Box",
+            "first-release-date": "2012-07-27",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "fa61ec9d-b1db-41bf-bed7-b157fa43cfd0",
+          "date": "2012-08-01",
+          "title": "blur 21 box",
+          "status": "Official",
+          "country": "JP",
+          "disambiguation": "Japanese edition",
+          "release_group": {
+            "id": "ca07ecb3-2fb6-4d25-a7f1-782ee24e0acd",
+            "title": "Blur 21: The Box",
+            "first-release-date": "2012-07-27",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "fbeb5683-34f1-4192-93e8-38217598ba03",
+          "date": "2012-08-01",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "JP",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        }
+      ],
+      "slot_verified_editions": [
+        "955eefe1-ff4c-42d4-9316-e35e81705e1b"
+      ]
+    },
+    {
+      "title": "High Cool (Dub)",
+      "recording_mbid": "d4160025-2565-43ca-b4bc-6ef591d02019",
+      "returned": 3,
+      "reported_count": 3,
+      "coverage": "complete_page",
+      "appearances": [
+        {
+          "id": "372c12a2-bf97-4675-8f85-d1b669f2a638",
+          "date": "2012",
+          "title": "Out of the Box",
+          "status": "Bootleg",
+          "country": null,
+          "disambiguation": "",
+          "release_group": {
+            "id": "1caaf45d-b0ca-48ad-b7eb-db2adb530316",
+            "title": "Out of the Box",
+            "first-release-date": "2012",
+            "primary-type": null,
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "fa61ec9d-b1db-41bf-bed7-b157fa43cfd0",
+          "date": "2012-08-01",
+          "title": "blur 21 box",
+          "status": "Official",
+          "country": "JP",
+          "disambiguation": "Japanese edition",
+          "release_group": {
+            "id": "ca07ecb3-2fb6-4d25-a7f1-782ee24e0acd",
+            "title": "Blur 21: The Box",
+            "first-release-date": "2012-07-27",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "fbeb5683-34f1-4192-93e8-38217598ba03",
+          "date": "2012-08-01",
+          "title": "Leisure",
+          "status": "Official",
+          "country": "JP",
+          "disambiguation": "",
+          "release_group": {
+            "id": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+            "title": "Leisure",
+            "first-release-date": "1991-08-26",
+            "primary-type": "Album",
+            "secondary-types": []
+          }
+        }
+      ],
+      "slot_verified_editions": []
+    }
+  ]
+}

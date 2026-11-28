@@ -3,6 +3,7 @@ require "open3"
 require "fileutils"
 require "time"
 require "timeout"
+require_relative "muzeum_publication_receipt"
 
 # Operator-side outbox only. No GitHub credential or reporting code runs on production.
 module MuzeumDeploymentReporting
@@ -77,6 +78,20 @@ module MuzeumDeploymentReporting
         record = load(token)
         record["attempted"] = true
         record["reported"] = false
+        save(record)
+      end
+    end
+
+    def bind_artifact(token, candidate)
+      synchronize do
+        record = load(token)
+        unless MuzeumArtifactIdentity.candidate?(candidate, record.fetch("sha"))
+          raise Error, "Artifact differs from the approved deployment"
+        end
+        if record["artifact"] && record["artifact"] != candidate
+          raise Error, "Deployment already belongs to another artifact"
+        end
+        record["artifact"] = candidate
         save(record)
       end
     end
@@ -180,11 +195,19 @@ module MuzeumDeploymentReporting
       if latest && TERMINAL.include?(latest["state"]) && latest["state"] != record["desired"]
         raise Error, "Conflicting GitHub terminal status; no contradictory update sent"
       end
-      unless latest && latest["state"] == record["desired"]
+      description = if record["desired"] == "success" && record["artifact"]
+        MuzeumPublicationReceipt.acceptance_description(record["artifact"])
+      else
         verification = record["desired"] == "success" ? "verified service, schema and worker health" : "#{record.fetch('phase')}; inspect receipt"
+        "#{record.fetch('sha')[0, 12]} #{verification}"[0, 140]
+      end
+      if latest && latest["state"] == "success" && record["artifact"] && latest["description"] != description
+        raise Error, "GitHub acceptance refers to another artifact"
+      end
+      unless latest && latest["state"] == record["desired"]
         @api.call("POST", "#{REPOSITORY}/deployments/#{id}/statuses", {
           state: record.fetch("desired"), environment: "production", environment_url: "https://muzeum.fm",
-          auto_inactive: false, description: "#{record.fetch('sha')[0, 12]} #{verification}"[0, 140]
+          auto_inactive: false, description:
         })
       end
       record["reported"] = TERMINAL.include?(record["desired"])

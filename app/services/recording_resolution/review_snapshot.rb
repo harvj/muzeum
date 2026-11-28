@@ -17,6 +17,8 @@ module RecordingResolution
         "affected_observation_count" => affected_count,
         "assessment" => { "id" => assessment.id, "digest" => assessment.digest, "version" => assessment.version,
           "created_at" => assessment.created_at.utc.iso8601(6), "requests" => assessment.evidence["requests"] },
+        "candidate_pool" => Workspace.candidates(assessment).pluck("id"),
+        "discovery" => assessment.evidence.slice("recording_searches", "adaptive_searches", "discovery_appearances"),
         "ranking" => ranking, "shortlist" => ranking.first(3).pluck("recording_mbid"),
         "recommended_mbid" => Ranking.recommended?(ranking) ? ranking.first.fetch("recording_mbid") : nil
       }.compact

@@ -1,0 +1,373 @@
+{
+  "e77221ef-5081-41cc-96ce-c0f72c540d13": [
+    {
+      "id": "0a89047d-bb9d-413d-acc3-5f0b6b37291b",
+      "title": "Narrow Stairs",
+      "date": "2015-02-24",
+      "country": "XW",
+      "status": "Official",
+      "release-group": {
+        "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+        "secondary-type-ids": [],
+        "disambiguation": "",
+        "first-release-date": "2008-05-13",
+        "id": "9b95d445-2293-366e-8e45-6fde0aa4f1d2",
+        "primary-type": "Album",
+        "title": "Narrow Stairs",
+        "secondary-types": []
+      }
+    },
+    {
+      "id": "0aa4cf9e-f59f-30dc-9175-e39434504c0d",
+      "title": "Narrow Stairs",
+      "date": "2008-05-17",
+      "country": "AU",
+      "status": "Official",
+      "release-group": {
+        "disambiguation": "",
+        "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+        "secondary-type-ids": [],
+        "secondary-types": [],
+        "first-release-date": "2008-05-13",
+        "id": "9b95d445-2293-366e-8e45-6fde0aa4f1d2",
+        "primary-type": "Album",
+        "title": "Narrow Stairs"
+      }
+    },
+    {
+      "id": "19729970-f84d-48d0-b880-d109e0686c25",
+      "title": "Narrow Stairs",
+      "date": "2008-07-09",
+      "country": "XW",
+      "status": "Official",
+      "release-group": {
+        "secondary-types": [],
+        "id": "9b95d445-2293-366e-8e45-6fde0aa4f1d2",
+        "first-release-date": "2008-05-13",
+        "primary-type": "Album",
+        "title": "Narrow Stairs",
+        "disambiguation": "",
+        "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+        "secondary-type-ids": []
+      }
+    },
+    {
+      "id": "2ce28dec-a6bf-47dc-b75f-b946357c99ea",
+      "title": "Narrow Stairs",
+      "date": "2008-05-13",
+      "country": "XW",
+      "status": "Official",
+      "release-group": {
+        "secondary-type-ids": [],
+        "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+        "disambiguation": "",
+        "id": "9b95d445-2293-366e-8e45-6fde0aa4f1d2",
+        "first-release-date": "2008-05-13",
+        "title": "Narrow Stairs",
+        "primary-type": "Album",
+        "secondary-types": []
+      }
+    },
+    {
+      "id": "347baa98-98e0-4d61-bc69-baf6bfa1a517",
+      "title": "No Sunlight",
+      "date": "2008",
+      "country": "GB",
+      "status": "Promotion",
+      "release-group": {
+        "disambiguation": "",
+        "primary-type-id": "d6038452-8ee0-3f68-affc-2de9a1ede0b9",
+        "secondary-type-ids": [],
+        "secondary-types": [],
+        "primary-type": "Single",
+        "title": "No Sunlight",
+        "id": "0e7dc4b1-82e5-4a20-bf60-1ecad5f44117",
+        "first-release-date": "2008-12-05"
+      }
+    },
+    {
+      "id": "367c4d80-42b8-4f72-9312-6b45162ccf46",
+      "title": "Narrow Stairs",
+      "date": "2008-12-09",
+      "country": "US",
+      "status": "Official",
+      "release-group": {
+        "disambiguation": "",
+        "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+        "secondary-type-ids": [],
+        "secondary-types": [],
+        "primary-type": "Album",
+        "title": "Narrow Stairs",
+        "first-release-date": "2008-05-13",
+        "id": "9b95d445-2293-366e-8e45-6fde0aa4f1d2"
+      }
+    },
+    {
+      "id": "54c04802-6ae3-4ce7-b70d-1205cfa2ef4c",
+      "title": "Narrow Stairs",
+      "date": "2008-08-12",
+      "country": "XW",
+      "status": "Withdrawn",
+      "release-group": {
+        "disambiguation": "",
+        "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+        "secondary-type-ids": [],
+        "secondary-types": [],
+        "first-release-date": "2008-05-13",
+        "id": "9b95d445-2293-366e-8e45-6fde0aa4f1d2",
+        "primary-type": "Album",
+        "title": "Narrow Stairs"
+      }
+    },
+    {
+      "id": "627c15cd-bae2-4781-8b83-2bf4b0ea829d",
+      "title": "Narrow Stairs",
+      "date": "2008-07-09",
+      "country": "JP",
+      "status": "Official",
+      "release-group": {
+        "secondary-types": [],
+        "first-release-date": "2008-05-13",
+        "id": "9b95d445-2293-366e-8e45-6fde0aa4f1d2",
+        "title": "Narrow Stairs",
+        "primary-type": "Album",
+        "disambiguation": "",
+        "secondary-type-ids": [],
+        "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc"
+      }
+    },
+    {
+      "id": "6565b4c4-2966-459d-8a34-b7c733207c60",
+      "title": "Narrow Stairs",
+      "date": "2015",
+      "country": "XW",
+      "status": "Official",
+      "release-group": {
+        "secondary-types": [],
+        "id": "9b95d445-2293-366e-8e45-6fde0aa4f1d2",
+        "first-release-date": "2008-05-13",
+        "title": "Narrow Stairs",
+        "primary-type": "Album",
+        "disambiguation": "",
+        "secondary-type-ids": [],
+        "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc"
+      }
+    },
+    {
+      "id": "6a641b58-eb22-490c-8561-04a438fba6a1",
+      "title": "Indie/Rock Playlist: November 2008",
+      "date": "2008-12",
+      "country": "XW",
+      "status": "Bootleg",
+      "release-group": {
+        "disambiguation": "",
+        "secondary-type-ids": [
+          "dd2a21e1-0c00-3729-a7a0-de60b84eb5d1"
+        ],
+        "primary-type-id": "4fc3be2b-de1e-396b-a933-beb8f1607a22",
+        "secondary-types": [
+          "Compilation"
+        ],
+        "first-release-date": "2008-12",
+        "id": "66a871b9-9f3a-4e6b-aed1-828e0cc098a7",
+        "title": "Indie/Rock Playlist: November 2008",
+        "primary-type": "Other"
+      }
+    },
+    {
+      "id": "78030441-8509-4593-ab67-a17956106d03",
+      "title": "Narrow Stairs",
+      "date": "2008",
+      "country": "ZA",
+      "status": "Official",
+      "release-group": {
+        "first-release-date": "2008-05-13",
+        "id": "9b95d445-2293-366e-8e45-6fde0aa4f1d2",
+        "title": "Narrow Stairs",
+        "primary-type": "Album",
+        "secondary-types": [],
+        "secondary-type-ids": [],
+        "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+        "disambiguation": ""
+      }
+    },
+    {
+      "id": "7c34970e-b509-4a59-aace-da8927ff1f4b",
+      "title": "Narrow Stairs",
+      "date": "2008-05-13",
+      "country": "US",
+      "status": "Official",
+      "release-group": {
+        "disambiguation": "",
+        "secondary-type-ids": [],
+        "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+        "secondary-types": [],
+        "title": "Narrow Stairs",
+        "primary-type": "Album",
+        "id": "9b95d445-2293-366e-8e45-6fde0aa4f1d2",
+        "first-release-date": "2008-05-13"
+      }
+    },
+    {
+      "id": "7d3965c8-e6be-4c26-a377-0c340a438ad5",
+      "title": "Narrow Stairs",
+      "date": "2008-05-13",
+      "country": "CA",
+      "status": "Official",
+      "release-group": {
+        "secondary-type-ids": [],
+        "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+        "disambiguation": "",
+        "first-release-date": "2008-05-13",
+        "id": "9b95d445-2293-366e-8e45-6fde0aa4f1d2",
+        "title": "Narrow Stairs",
+        "primary-type": "Album",
+        "secondary-types": []
+      }
+    },
+    {
+      "id": "80526706-0f36-407a-a719-95e590139a7f",
+      "title": "Narrow Stairs",
+      "date": "2008-05-13",
+      "country": "XE",
+      "status": "Official",
+      "release-group": {
+        "disambiguation": "",
+        "secondary-type-ids": [],
+        "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+        "secondary-types": [],
+        "id": "9b95d445-2293-366e-8e45-6fde0aa4f1d2",
+        "first-release-date": "2008-05-13",
+        "title": "Narrow Stairs",
+        "primary-type": "Album"
+      }
+    },
+    {
+      "id": "8e94256f-625c-4af6-bfa5-a2afc651d5d7",
+      "title": "No Sunlight",
+      "date": "2008-12-05",
+      "country": "XW",
+      "status": "Official",
+      "release-group": {
+        "disambiguation": "",
+        "primary-type-id": "d6038452-8ee0-3f68-affc-2de9a1ede0b9",
+        "secondary-type-ids": [],
+        "secondary-types": [],
+        "primary-type": "Single",
+        "title": "No Sunlight",
+        "id": "0e7dc4b1-82e5-4a20-bf60-1ecad5f44117",
+        "first-release-date": "2008-12-05"
+      }
+    },
+    {
+      "id": "b49b2c61-6b12-420e-a0e2-6e7deb1facfc",
+      "title": "Narrow Stairs",
+      "date": "2008-05-13",
+      "country": "XW",
+      "status": "Official",
+      "release-group": {
+        "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+        "secondary-type-ids": [],
+        "disambiguation": "",
+        "id": "9b95d445-2293-366e-8e45-6fde0aa4f1d2",
+        "first-release-date": "2008-05-13",
+        "primary-type": "Album",
+        "title": "Narrow Stairs",
+        "secondary-types": []
+      }
+    },
+    {
+      "id": "d3f407a5-4e43-40a9-b504-5e85e531b433",
+      "title": "Narrow Stairs",
+      "date": "2008-10-28",
+      "country": "XW",
+      "status": "Official",
+      "release-group": {
+        "secondary-type-ids": [],
+        "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+        "disambiguation": "",
+        "id": "9b95d445-2293-366e-8e45-6fde0aa4f1d2",
+        "first-release-date": "2008-05-13",
+        "title": "Narrow Stairs",
+        "primary-type": "Album",
+        "secondary-types": []
+      }
+    }
+  ],
+  "5dffd281-d913-4256-8816-7035d077183f": [
+    {
+      "id": "0f42b2ff-9ad4-4d19-89b5-383db2ddc72f",
+      "title": "Alternative Times, Volume 94",
+      "date": "2008-05-17",
+      "country": "XW",
+      "status": "Bootleg",
+      "release-group": {
+        "title": "Alternative Times, Volume 94",
+        "artist-credit": [
+          {
+            "joinphrase": "",
+            "artist": {
+              "type": "Other",
+              "country": null,
+              "sort-name": "Various Artists",
+              "id": "89ad4ac3-39f7-470e-963a-56509c546377",
+              "type-id": "ac897045-5043-3294-969b-187360e45d86",
+              "disambiguation": "add compilations to this artist",
+              "name": "Various Artists"
+            },
+            "name": "Various Artists"
+          }
+        ],
+        "secondary-type-ids": [
+          "dd2a21e1-0c00-3729-a7a0-de60b84eb5d1"
+        ],
+        "id": "98fc20a0-8578-413e-8600-152f4fc5214e",
+        "secondary-types": [
+          "Compilation"
+        ],
+        "disambiguation": "",
+        "releases": [],
+        "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+        "first-release-date": "2008-05-17",
+        "primary-type": "Album"
+      }
+    },
+    {
+      "id": "1cefec58-1706-4d52-bd93-bebaaa682e2d",
+      "title": "Time Warner 2",
+      "date": "2009",
+      "country": "JP",
+      "status": "Official",
+      "release-group": {
+        "title": "Time Warner 2",
+        "artist-credit": [
+          {
+            "artist": {
+              "sort-name": "Various Artists",
+              "id": "89ad4ac3-39f7-470e-963a-56509c546377",
+              "country": null,
+              "type": "Other",
+              "name": "Various Artists",
+              "disambiguation": "add compilations to this artist",
+              "type-id": "ac897045-5043-3294-969b-187360e45d86"
+            },
+            "joinphrase": "",
+            "name": "Various Artists"
+          }
+        ],
+        "secondary-type-ids": [
+          "dd2a21e1-0c00-3729-a7a0-de60b84eb5d1"
+        ],
+        "id": "566289cc-f7ed-40a4-8258-cb20ad325a06",
+        "secondary-types": [
+          "Compilation"
+        ],
+        "disambiguation": "",
+        "releases": [],
+        "first-release-date": "2009",
+        "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+        "primary-type": "Album"
+      }
+    }
+  ]
+}

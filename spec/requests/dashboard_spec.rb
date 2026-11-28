@@ -1,5 +1,6 @@
 require "rails_helper"
 require "tmpdir"
+require Rails.root.join("lib/muzeum_publication_receipt")
 require_relative "../support/oidc_flow"
 require_relative "../support/archive_scale"
 
@@ -8,6 +9,30 @@ RSpec.describe "Listening archive", type: :request do
   include ArchiveScale
   before { prepare_oidc; finish_oidc }
   after { restore_oidc }
+
+  it "distinguishes a Last.fm service error from connectivity and shows the scheduled retry once" do
+    stub_const("ENV", ENV.to_h.merge("LASTFM_SYNC_ENABLED" => "1"))
+    user = User.find_by!(oidc_subject: @subject)
+    account = LastfmAccount.associate!(user, "source-status")
+    retry_at = 5.minutes.from_now
+    message = "Source synchronization paused; retry and source evidence retained."
+    account.update!(sync_enabled: true, next_poll_at: retry_at, last_error: message)
+    run = account.import_runs.create!(user:, source_username: account.username, upper_bound: Time.current.to_i,
+      status: :paused, retry_at:, failure_kind: "Clients::NetworkError", last_error: message)
+    fields = { import_run: run, lastfm_account: account, page_number: 1, upper_bound: run.upper_bound,
+      requested_at: Time.current, error_class: "Clients::NetworkError" }
+    SourceFetch.create!(**fields, outcome: "provider_error")
+
+    get archive_path
+    expect(response.body).to include("Last.fm service error", "Next automatic retry", retry_at.utc.iso8601)
+    expect(response.body).not_to include(message)
+
+    SourceFetch.create!(**fields, outcome: "transport_error")
+    account.update!(sync_enabled: false)
+    get archive_path
+    expect(response.body).to include("Muzeum could not reach Last.fm")
+    expect(response.body).not_to include("Last.fm service error", "Next automatic retry")
+  end
 
   it "associates only the authenticated user after public username validation" do
     stub_request(:get, /ws.audioscrobbler.com/).to_return(body: '<lfm status="ok"><user><name>Listener</name></user></lfm>')
@@ -50,6 +75,61 @@ RSpec.describe "Listening archive", type: :request do
     end
   end
 
+  it "renders the same running candidate before and after exact artifact publication" do
+    records = JSON.parse(Rails.root.join("spec/fixtures/files/application_shell/v2-release-identity.json").read).fetch("records")
+    identity = records.fetch("rc2").merge("application" => "muzeum")
+    publication = records.fetch("final").merge("candidate" => identity)
+    Dir.mktmpdir do |directory|
+      path = Pathname(directory)
+      first = path.join("first").tap(&:mkdir)
+      second = path.join("second").tap(&:mkdir)
+      current = path.join("current")
+      current.make_symlink(first)
+      first.join("ARTIFACT_IDENTITY.json").write(identity.to_json)
+      second.join("ARTIFACT_IDENTITY.json").write(records.fetch("rc1").merge("application" => "muzeum").to_json)
+      receipts = path.join("receipts").tap(&:mkdir)
+      running = MuzeumArtifactIdentity.boot(current.realpath, revision: identity.fetch("source_sha"), receipts:)
+      allow(Rails.configuration.x).to receive(:release_identity).and_return(running)
+
+      get archive_path
+      expect(response.body).to include("Muzeum v0.26.0-rc.2")
+      expect(Nokogiri::HTML(response.body).at_css('.site-footer a[href="https://harvj.com/"]').text).to eq("Jim Harvey")
+      current.unlink
+      current.make_symlink(second)
+      get archive_path
+      expect(response.body).to include("Muzeum v0.26.0-rc.2")
+
+      receipt = MuzeumPublicationReceipt.write!(receipts, publication)
+      get archive_path
+      expect(response.body).to include("Muzeum v0.26.0</span>")
+      expect(response.body).not_to include("v0.26.0-rc.2")
+      receipt.unlink
+      get archive_path
+      expect(response.body).to include("Muzeum v0.26.0</span>")
+    end
+  end
+
+  it "uses the development label when no deployed artifact is bound" do
+    allow(Rails.configuration.x).to receive(:development_release_label).and_return("v0.7.2-dev")
+    get archive_path
+    expect(response.body).to include("Muzeum v0.7.2-dev")
+  end
+
+  it "uses the packaged version only for the running revision before publication" do
+    Dir.mktmpdir do |directory|
+      reviewed = Pathname(directory).join("REVIEWED_RELEASE")
+      sha = "a" * 40
+      allow(Rails.configuration.x).to receive(:reviewed_release_path).and_return(reviewed)
+      allow(Rails.configuration.x).to receive(:running_revision).and_return(sha)
+      reviewed.write("#{sha} v0.3.4\n")
+      get archive_path
+      expect(response.body).to include("Muzeum v0.3.4")
+      allow(Rails.configuration.x).to receive(:running_revision).and_return("b" * 40)
+      get archive_path
+      expect(response.body).not_to include("Muzeum v0.3.4")
+    end
+  end
+
   it "computes statistics from only the user's persisted observations" do
     user = User.find_by!(oidc_subject: @subject)
     LastfmAccount.associate!(user, "stats-fixture")
@@ -60,10 +140,33 @@ RSpec.describe "Listening archive", type: :request do
     get archive_summary_path
     expect(response.body).to include("01 Jan 2020", "01 Jan 2021", "Observed artists", "Observed albums", "Observed tracks")
     expect(response.body).not_to include("1999", "Private Artist", "User management")
-    expect(response.body).to include("https://funding.harvj.com/", "harvj-session")
+    expect(response.body).to include("harvj-session")
     expect(controller.instance_variable_get(:@artists)).to eq(1)
     expect(controller.instance_variable_get(:@albums)).to eq(1)
     expect(controller.instance_variable_get(:@tracks)).to eq(2)
+  end
+
+  it "reuses source statistics until an observation is appended, without caching archive access" do
+    user = User.find_by!(oidc_subject: @subject)
+    LastfmAccount.associate!(user, "summary-cache-fixture")
+    allow(Rails).to receive(:cache).and_return(ActiveSupport::Cache::MemoryStore.new)
+    user.scrobbles.create!(played_at: Time.utc(2021), payload: { artist_name: "", album_name: "Album", track_name: "Track" })
+    reads = []
+    listener = ->(event) { reads << event.payload[:sql] if event.payload[:sql].include?("GROUPING SETS") }
+    ActiveSupport::Notifications.subscribed(listener, "sql.active_record") do
+      2.times { get archive_summary_path }
+      expect(reads.size).to eq(1)
+      user.scrobbles.create!(played_at: Time.utc(2020), payload: { album_name: "Album", track_name: "Track" })
+      get archive_summary_path
+      expect(reads.size).to eq(2)
+      expect(controller.instance_variable_get(:@albums)).to eq(2)
+      expect(controller.instance_variable_get(:@artists)).to eq(0)
+      expect(response.body).to include("01 Jan 2020")
+      user.user_lastfm_accounts.active.sole.revoke!
+      get archive_summary_path
+      expect(reads.size).to eq(2)
+      expect(controller.instance_variable_get(:@count)).to eq(0)
+    end
   end
 
   it "bounds each page and dashboard refresh even with a production-sized archive" do
@@ -80,11 +183,11 @@ RSpec.describe "Listening archive", type: :request do
       get archive_path
       first = Nokogiri::HTML(response.body)
       expect(first.at_css('a[data-turbo-prefetch="false"]')["href"]).to eq(archive_summary_path)
-      expect(first.css(".play-row th a").map { |link| link["href"] }).to eq(expected.first(50).map { |id| resolution_surface_path(id, play: id) })
+      expect(first.css(".play-row th a").map { |link| link["href"] }).to eq(expected.first(50).map { |id| resolution_surface_path(id) })
       older = first.at_xpath('//a[text()="Older plays"]')["href"]
       get older
       second = Nokogiri::HTML(response.body)
-      expect(second.css(".play-row th a").map { |link| link["href"] }).to eq(expected.last(50).map { |id| resolution_surface_path(id, play: id) })
+      expect(second.css(".play-row th a").map { |link| link["href"] }).to eq(expected.last(50).map { |id| resolution_surface_path(id) })
       expect(second.at_css("#archive_dashboard")["data-dashboard-sync-version-value"]).to eq("")
       get dashboard_updates_path, headers: { "Accept" => "text/vnd.turbo-stream.html" }
       expect(response).to have_http_status(:ok)
@@ -95,6 +198,17 @@ RSpec.describe "Listening archive", type: :request do
     expect(reads.grep(/FROM jsonb_to_recordset.* JOIN .*resolution_grant/).size).to eq(3)
     expect(reads.grep(/ORDER BY "scrobbles"."played_at" DESC, "scrobbles"."id" DESC LIMIT/).size).to eq(3)
     expect(reads).not_to include(a_string_matching(/COUNT\(|SELECT DISTINCT |OFFSET /i))
+
+    target = Recording.create!(title: "Scoped recording", mbid: SecureRandom.uuid)
+    unrelated = Recording.create!(title: "Protected exception", mbid: SecureRandom.uuid)
+    play = user.scrobbles.find(expected.first)
+    RecordingResolution::Ledger.record!(listener: user, scrobble: play, scope: :surface, mode: "resolved", reason: "Test", recording: target)
+    inherited = user.scrobbles.create!(played_at: 1.day.ago, payload: play.payload)
+    RecordingResolution::Ledger.record!(listener: user, scrobble: play, scope: :scrobble, mode: "resolved", reason: "Test", recording: unrelated)
+    expect(RecordingResolution::Ledger.for_recordings(user, target.id).ids).to eq([ inherited.id ])
+    expect(RecordingResolution::Ledger.for_recordings(user, unrelated.id).ids).to eq([ play.id ])
+    user.user_lastfm_accounts.active.sole.revoke!
+    expect(RecordingResolution::Ledger.for_recordings(user, target.id)).to be_empty
   end
 
   it "rejects another account's cursor on the private Archive" do

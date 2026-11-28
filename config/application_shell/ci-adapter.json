@@ -1,0 +1,40 @@
+{
+  "format_version": 1,
+  "checks": [
+    {
+      "cases": ["SH-01", "SH-03", "SH-04", "SH-05"],
+      "argv": ["bundle", "exec", "rspec", "spec/system/application_shell_spec.rb", "spec/requests/application_shell_spec.rb"],
+      "evidence": "Chrome layout, disclosure and grant transitions, and session-bound username request regressions"
+    },
+    {
+      "cases": ["SH-02"],
+      "argv": ["bundle", "exec", "rspec", "spec/system/sign_in_spec.rb", "spec/system/public_profiles_spec.rb"],
+      "evidence": "Chrome public landing, local sign-in and public profile journeys"
+    },
+    {
+      "cases": ["SH-06"],
+      "argv": ["bundle", "exec", "rspec", "spec/system/shell_v2_appearance_spec.rb", "spec/system/site_art_spec.rb"],
+      "evidence": "Signed appearance fixtures, paired and missing artwork, keyboard and mobile touch, presentation and fallback"
+    },
+    {
+      "cases": ["SH-07"],
+      "argv": ["bundle", "exec", "rspec", "spec/requests/dashboard_spec.rb", "spec/operations/artifact_identity_spec.rb", "spec/operations/candidate_number_spec.rb", "spec/operations/publication_receipt_spec.rb", "spec/operations/release_package_spec.rb"],
+      "evidence": "Packaged RC identity, exact publication evidence, same-process rendering and retained identity"
+    },
+    {
+      "cases": ["SH-08"],
+      "argv": ["python3", "ops/shell/check-sh08.py", "--output", "tmp/application-shell-sh08-source.json"],
+      "evidence": "Signed public-profile exception, focused browser route checks and retained Muzeum-only isolation and recovery evidence. Operator preflight completes the check against the exact staged artifact."
+    },
+    {
+      "cases": ["SH-09"],
+      "argv": ["bundle", "exec", "rspec", "spec/services/application_shell_registry_spec.rb"],
+      "evidence": "Signed registry refresh and withdrawal on shell-v2, persisted replay high-water mark and outage fallback"
+    },
+    {
+      "cases": ["SH-10"],
+      "argv": ["bash", "-ec", "python3 -m unittest discover -s \"$APPLICATION_SHELL_VERIFIER/tests\" -p test_application_shell_gate.py && bundle exec rspec spec/operations/deployment_hooks_spec.rb"],
+      "evidence": "Infrastructure signed selection, invalidation and outage fixtures, plus Muzeum exact-review refusal before any protected phase"
+    }
+  ]
+}

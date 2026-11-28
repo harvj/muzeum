@@ -1,7 +1,9 @@
 require "rails_helper"
+require_relative "../support/site_art_pair"
 
 RSpec.describe "Auth sign-in page", type: :system do
   before do
+    allow(SiteArt).to receive(:snapshot).and_return(SiteArtPair::SNAPSHOT)
     if ENV["BROWSER_TESTS"] == "1"
       driven_by :selenium, using: :headless_chrome do |options|
         options.binary = ENV["CHROME_BINARY"] if ENV["CHROME_BINARY"]
@@ -23,8 +25,9 @@ RSpec.describe "Auth sign-in page", type: :system do
     expect(page).to have_content("Sign-in is temporarily unavailable")
     expect(OidcAttempt.count).to eq(0)
     if ENV["BROWSER_TESTS"] == "1"
+      find(".shell-appearance summary").send_keys(:enter)
       select "Dark", from: "Appearance"
-      expect(page.evaluate_script("document.documentElement.dataset.appearance")).to eq("dark")
+      expect(page).to have_css("html[data-appearance='dark']", visible: :all)
       click_button "Pause light"
       expect(page.evaluate_script("document.documentElement.dataset.still")).to eq("true")
     end

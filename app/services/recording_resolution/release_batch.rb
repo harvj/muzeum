@@ -110,31 +110,21 @@ module RecordingResolution
       return if slots.all? { |slot| slot.recording_id == @anchor_decision.recording_id }
 
       source = row.payload.slice(*PilotRunner::CLAIM_FIELDS)
-      release_claim = source["album_mbid"]
-      return if release_claim.present? && !tracklist.release.ingested_from_release_mbid.casecmp?(release_claim.to_s)
-
       context = { "revision_id" => tracklist.revision.id, "independent_decision_id" => @anchor_decision.id }
       candidates = slots.map do |slot|
         support = slot.recording_id == @anchor_decision.recording_id ? context.except("independent_decision_id") : context
         ReleaseTracklist.candidate(slot.recording, support)
       end
-      claimed = source["track_mbid"]
-      id_match = candidates.find { |candidate| candidate["id"].casecmp?(claimed.to_s) }
-      return if claimed.present? && !id_match
-      anchor_mbid = slots.find { |slot| slot.recording_id == @anchor_decision.recording_id }&.recording&.mbid
-      return if id_match && id_match["id"] == anchor_mbid
-
       surface = Claims.new(*row.payload.values_at(*Ledger::PAYLOAD_FIELDS))
-      evidence = { "source_claims" => source, "candidates" => candidates, "verified_recording" => id_match }
-      if release_claim.present?
-        evidence["edition"] = { "title" => tracklist.release.title }
-        evidence["slots"] = slots.map { |slot| { "recording_mbid" => slot.recording.mbid, "title" => slot.title } }
-      end
-      ranking = Ranking.call(surface, evidence)
+      evidence = { "source_claims" => source, "candidates" => candidates,
+        "edition" => { "title" => tracklist.release.title },
+        "slots" => slots.map { |slot| { "recording_mbid" => slot.recording.mbid, "title" => slot.title } } }
+      ranking = Ranking.call(surface, evidence, source_hints: true)
       return if ranking.empty?
 
       input = ranking.first
-      selectable = (id_match || (release_claim.present? && ranking.one?)) &&
+      anchor_mbid = slots.find { |slot| slot.recording_id == @anchor_decision.recording_id }&.recording&.mbid
+      selectable = ranking.one? && input["recording_mbid"] != anchor_mbid &&
         input.fetch("inputs").values.none? { |factor| factor["state"] == "contradictory" }
       rejectable = ranking.one? || ranking[0]["score"] > ranking[1]["score"]
       { "observation_ids" => [ row.id ], "ranking" => ranking, "selectable" => !!selectable, "rejectable" => rejectable, "positions" => slots.map do |slot|

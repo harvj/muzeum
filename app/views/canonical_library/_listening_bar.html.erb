@@ -1,0 +1,12 @@
+<% if value.positive? %>
+  <%= tag.div class: "listening-bar", data: { controller: "listening-scale",
+    listening_scale_percent_value: 100.0 * value / maximum, **local_assigns.fetch(:colors, {}) } do %>
+    <% if local_assigns[:path] %>
+      <%= link_to label, path, class: "entity-link", aria: { label: accessible_label } %>
+    <% else %>
+      <span aria-label="<%= accessible_label %>"><%= label %></span>
+    <% end %>
+  <% end %>
+<% else %>
+  <span aria-label="<%= accessible_label %>"><%= label %></span>
+<% end %>

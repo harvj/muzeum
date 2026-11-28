@@ -1,0 +1,371 @@
+{
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Application Shell release identity records, schema version 1",
+    "description": "Shape only. Verify provenance, candidate matching and chronology before retaining a published receipt.",
+    "oneOf": [
+      {
+        "$ref": "#/$defs/development"
+      },
+      {
+        "$ref": "#/$defs/candidate"
+      },
+      {
+        "$ref": "#/$defs/publication"
+      }
+    ],
+    "$defs": {
+      "development": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema_version",
+          "application",
+          "target_version",
+          "source_sha",
+          "artifact_sha256",
+          "kind"
+        ],
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "application": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+          },
+          "target_version": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+          },
+          "source_sha": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{40}$"
+          },
+          "artifact_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "kind": {
+            "const": "development"
+          }
+        }
+      },
+      "candidate": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema_version",
+          "application",
+          "target_version",
+          "source_sha",
+          "artifact_sha256",
+          "kind",
+          "candidate_number"
+        ],
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "application": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+          },
+          "target_version": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+          },
+          "source_sha": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{40}$"
+          },
+          "artifact_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "kind": {
+            "const": "candidate"
+          },
+          "candidate_number": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      },
+      "publication": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema_version",
+          "kind",
+          "candidate",
+          "final_version",
+          "acceptance_ref",
+          "publication_ref",
+          "accepted_at",
+          "published_at",
+          "verified_at"
+        ],
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "kind": {
+            "const": "publication"
+          },
+          "candidate": {
+            "$ref": "#/$defs/candidate"
+          },
+          "final_version": {
+            "type": "string",
+            "pattern": "^v(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+          },
+          "acceptance_ref": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512,
+            "pattern": "\\S"
+          },
+          "publication_ref": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512,
+            "pattern": "\\S"
+          },
+          "accepted_at": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
+          },
+          "published_at": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
+          },
+          "verified_at": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
+          }
+        }
+      }
+    }
+  },
+  "records": {
+    "dev": {
+      "schema_version": 1,
+      "application": "example-app",
+      "target_version": "0.26.0",
+      "source_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "artifact_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "kind": "development"
+    },
+    "rc1": {
+      "schema_version": 1,
+      "application": "example-app",
+      "target_version": "0.26.0",
+      "source_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "artifact_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "kind": "candidate",
+      "candidate_number": 1
+    },
+    "rc2": {
+      "schema_version": 1,
+      "application": "example-app",
+      "target_version": "0.26.0",
+      "source_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "artifact_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+      "kind": "candidate",
+      "candidate_number": 2
+    },
+    "prior_rc": {
+      "schema_version": 1,
+      "application": "example-app",
+      "target_version": "0.25.0",
+      "source_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "artifact_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+      "kind": "candidate",
+      "candidate_number": 1
+    },
+    "final": {
+      "schema_version": 1,
+      "kind": "publication",
+      "candidate": {
+        "schema_version": 1,
+        "application": "example-app",
+        "target_version": "0.26.0",
+        "source_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "artifact_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "kind": "candidate",
+        "candidate_number": 2
+      },
+      "final_version": "v0.26.0",
+      "acceptance_ref": "acceptance/026-rc2",
+      "publication_ref": "publication/026-rc2",
+      "accepted_at": "2026-01-01T12:00:00Z",
+      "published_at": "2026-01-01T12:10:00Z",
+      "verified_at": "2026-01-01T12:11:00Z"
+    },
+    "prior_final": {
+      "schema_version": 1,
+      "kind": "publication",
+      "candidate": {
+        "schema_version": 1,
+        "application": "example-app",
+        "target_version": "0.25.0",
+        "source_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "artifact_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+        "kind": "candidate",
+        "candidate_number": 1
+      },
+      "final_version": "v0.25.0",
+      "acceptance_ref": "acceptance/025-rc1",
+      "publication_ref": "publication/025-rc1",
+      "accepted_at": "2026-01-01T12:00:00Z",
+      "published_at": "2026-01-01T12:10:00Z",
+      "verified_at": "2026-01-01T12:11:00Z"
+    },
+    "conflict": {
+      "schema_version": 1,
+      "kind": "publication",
+      "candidate": {
+        "schema_version": 1,
+        "application": "example-app",
+        "target_version": "0.26.0",
+        "source_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "artifact_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "kind": "candidate",
+        "candidate_number": 2
+      },
+      "final_version": "v0.26.0",
+      "acceptance_ref": "acceptance/026-rc2",
+      "publication_ref": "publication/unexpected",
+      "accepted_at": "2026-01-01T12:00:00Z",
+      "published_at": "2026-01-01T12:10:00Z",
+      "verified_at": "2026-01-01T12:11:00Z"
+    },
+    "chronology_error": {
+      "schema_version": 1,
+      "kind": "publication",
+      "candidate": {
+        "schema_version": 1,
+        "application": "example-app",
+        "target_version": "0.26.0",
+        "source_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "artifact_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "kind": "candidate",
+        "candidate_number": 2
+      },
+      "final_version": "v0.26.0",
+      "acceptance_ref": "acceptance/026-rc2",
+      "publication_ref": "publication/026-rc2",
+      "accepted_at": "2026-01-01T12:00:00Z",
+      "published_at": "2026-01-01T11:59:00Z",
+      "verified_at": "2026-01-01T12:11:00Z"
+    },
+    "bad_label": {
+      "schema_version": 1,
+      "kind": "publication",
+      "candidate": {
+        "schema_version": 1,
+        "application": "example-app",
+        "target_version": "0.26.0",
+        "source_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "artifact_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "kind": "candidate",
+        "candidate_number": 2
+      },
+      "final_version": "v0.25.0",
+      "acceptance_ref": "acceptance/026-rc2",
+      "publication_ref": "publication/026-rc2",
+      "accepted_at": "2026-01-01T12:00:00Z",
+      "published_at": "2026-01-01T12:10:00Z",
+      "verified_at": "2026-01-01T12:11:00Z"
+    }
+  },
+  "steps": [
+    [
+      "boot",
+      "dev",
+      "v0.26.0-dev"
+    ],
+    [
+      "boot",
+      "prior_rc",
+      "v0.25.0-rc.1"
+    ],
+    [
+      "verified",
+      "prior_final",
+      "v0.25.0"
+    ],
+    [
+      "boot",
+      "rc2",
+      "v0.26.0-rc.2"
+    ],
+    [
+      "pointer",
+      "rc1",
+      "v0.26.0-rc.2"
+    ],
+    [
+      "unverified",
+      "final",
+      "v0.26.0-rc.2"
+    ],
+    [
+      "verified",
+      "prior_final",
+      "v0.26.0-rc.2"
+    ],
+    [
+      "verified",
+      "chronology_error",
+      "v0.26.0-rc.2"
+    ],
+    [
+      "verified",
+      "bad_label",
+      "v0.26.0-rc.2"
+    ],
+    [
+      "verified",
+      "final",
+      "v0.26.0"
+    ],
+    [
+      "outage",
+      null,
+      "v0.26.0"
+    ],
+    [
+      "verified",
+      "conflict",
+      "v0.26.0"
+    ],
+    [
+      "restart",
+      "rc2",
+      "v0.26.0"
+    ],
+    [
+      "boot",
+      "prior_rc",
+      "v0.25.0"
+    ],
+    [
+      "boot",
+      "rc1",
+      "v0.26.0-rc.1"
+    ],
+    [
+      "verified",
+      "final",
+      "v0.26.0-rc.1"
+    ]
+  ]
+}

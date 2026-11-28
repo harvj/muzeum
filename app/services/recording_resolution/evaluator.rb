@@ -5,12 +5,17 @@ module RecordingResolution
 
     attr_reader :evidence
 
-    def initialize(session, discogs:, workspace: false, discover: workspace, review_alternative: false)
+    def initialize(session, discogs:, workspace: false, discover: workspace, review_alternative: false, review_release: nil, catalog_identity: {}, origins: true, adaptive: false, retained: [])
       @session = session
       @discogs = DiscogsEvidence.new(discogs, expanded: workspace) if discogs
       @workspace = workspace
       @discover = discover
       @review_alternative = review_alternative
+      @review_release = review_release
+      @catalog_identity = catalog_identity
+      @origins = origins
+      @adaptive = adaptive
+      @retained = retained
       @musicbrainz = Clients::Musicbrainz.new
     end
 
@@ -21,35 +26,46 @@ module RecordingResolution
         return evidence
       end
 
-      page = @musicbrainz.candidate_page(@session, artist: surface.artist, title: surface.track, catalog: @workspace)
+      evidence["canonical_artist_mbid"] = @catalog_identity[:artist_mbid] if @catalog_identity[:artist_mbid]
+      evidence["title_interpretation"] = TitleInterpretation.call(surface.track) if @workspace
+      page = recording_page(surface)
       candidates = page.fetch("recordings")
-      evidence["search"] = page.slice("count", "offset").merge("returned" => candidates.size)
+      evidence["search"] = page.slice("count", "offset").merge("returned" => candidates.size) unless evidence["recording_searches"]
       evidence["candidates"] = candidates.map { |candidate| recording_evidence(candidate) }
-      reason("incomplete_search", evidence["search"].merge("provider" => "musicbrainz")) if page["count"] != candidates.size
+      yield evidence if block_given?
+      reason("incomplete_search", { "provider" => "musicbrainz" }.merge(evidence["search"] || {})) if page["incomplete"] || page["count"] != candidates.size
+      if evidence["recording_search_failures"]
+        reason("incomplete_search", "provider" => "musicbrainz", "attempts" => evidence["recording_search_failures"])
+      end
       reason("missing_album", "field" => "album") if surface.album.blank?
       reason("missing_source_mbid", "field" => "track_mbid") if claims["track_mbid"].blank?
 
-      verification = claims["track_mbid"].present? ? @musicbrainz.verify_recording(@session, claims["track_mbid"], catalog: @workspace) : {}
+      verification = if !@workspace && claims["track_mbid"].present?
+        @musicbrainz.verify_recording(@session, claims["track_mbid"])
+      else
+        {}
+      end
       recording = verification["data"]
       evidence["verification"] = verification.except("data")
       evidence["verified_recording"] = recording && recording_evidence(recording)
       verified = verified_recording?(recording, verification["redirected_to"] || claims["track_mbid"])
       if verified
         assess_identity(surface, claims, recording, candidates)
-      else
+      elsif !@workspace
         reason("unverified_recording", evidence["verification"].merge("claimed_mbid" => claims["track_mbid"],
           "returned_mbid" => recording&.fetch("id", nil)))
       end
 
       releases = Array(recording&.fetch("releases", nil))
-      edition_id = claims["album_mbid"].presence || releases.find { |release| release["title"] == surface.album }&.fetch("id", nil)
+      edition_id = (claims["album_mbid"].presence || releases.find { |release| release["title"] == surface.album }&.fetch("id", nil)) unless @workspace
+      edition_id ||= @catalog_identity[:edition_mbid] if @workspace
       if @workspace && edition_id.blank? && surface.album.present?
         relevant = candidates.flat_map { |candidate| Array(candidate["releases"]) }.select { |release| release["title"] == surface.album }
         ids = relevant.pluck("id").compact.uniq
         edition_id = ids.first if ids.one?
       end
       if edition_id && surface.album.present?
-        edition = @workspace ? @musicbrainz.edition(@session, edition_id, catalog: true) : @musicbrainz.edition(@session, edition_id)
+        edition = @musicbrainz.edition(@session, edition_id, catalog: @workspace)
       end
       if edition
         evidence["edition"] = edition.slice("id", "title", "release-group", "country", "date").merge(
@@ -59,12 +75,19 @@ module RecordingResolution
       end
       evidence["slots"] = edition_slots(edition)
       if @discover
-        related = !verified || DiscoveryTitle.album_base(surface.album) != surface.album || surface.album.to_s.match?(VERSION_MARKER)
-        search = related && (candidates.empty? || candidates.any? { |candidate| Array(candidate["releases"]).any? })
-        discovery = EditionDiscovery.new(@musicbrainz, @session)
-        merge_discovered(discovery.call(surface, claims, candidates, checked: edition, attempted: edition_id, search:, review_alternative: @review_alternative))
+        related = !edition || evidence["slots"].none? { |slot| DiscoveryTitle.match?(slot["title"], surface.track) } ||
+          DiscoveryTitle.album_base(surface.album) != surface.album || surface.album.to_s.match?(VERSION_MARKER)
+        search = related
+        discovery = EditionDiscovery.new(@musicbrainz, @session, **@catalog_identity.slice(:artist_mbid))
+        merge_discovered(discovery.call(surface, candidates, checked: edition, attempted: edition_id, search:, review_alternative: @review_alternative, preferred: @review_release, origins: @origins, retained: @retained))
         evidence["review_tracklists"] = discovery.tracklists if discovery.tracklists.any?
+        if discovery.construction_editions.any?
+          evidence["construction_editions"] = (Array(evidence["construction_editions"]) + discovery.construction_editions.values)
+            .uniq { |edition| edition["id"] }
+        end
+        evidence["pending_original_group"] = discovery.pending_original_group if discovery.pending_original_group
       end
+      broaden_recording_search(surface) if @adaptive && @discover
       if verified
         slot_check = {
           "requested_edition_mbid" => edition_id, "returned_edition_mbid" => edition&.fetch("id", nil),
@@ -79,11 +102,105 @@ module RecordingResolution
       end
 
       compare_historical_fixture(surface, edition) if @discogs
-      evidence["suggested_mbid"] = recording.fetch("id") if evidence["reasons"].empty?
+      evidence["suggested_mbid"] = recording.fetch("id") if verified && evidence["reasons"].empty?
       evidence
     end
 
     private
+
+    def recording_page(surface)
+      feature = DiscoveryTitle.featured_credit(surface.track) if @workspace
+      interpretation = evidence["title_interpretation"]
+      if !feature && !interpretation && (id = @catalog_identity[:recording_mbid])
+        data = @musicbrainz.verify_recording(@session, id, catalog: true)["data"]
+        if data&.fetch("id", nil) == id
+          return { "count" => 1, "offset" => 0, "recordings" => [ data ] }
+        end
+      end
+
+      scope = @catalog_identity.slice(:artist_mbid)
+      return search_surface(surface, surface.track, scope) unless feature || interpretation
+
+      evidence["recording_searches"] = []
+      pages = [ search_surface(surface, surface.track, scope) ]
+      if feature
+        title, guest = feature
+        pages << search_surface(surface, title, scope, featured_artist: guest)
+      end
+      if interpretation
+        base = interpretation.fetch("base_title")
+        versioned = interpretation.fetch("descriptors").select { |descriptor| descriptor["kind"] == "version" }
+        titles = [ ([ base ] + versioned.pluck("text")).join(" "), base ].uniq - [ surface.track, feature&.first ]
+        titles.each { |title| pages << search_surface(surface, title, scope) }
+      end
+      recordings = pages.flat_map { |page| page.fetch("recordings") }.uniq { |row| row.fetch("id") }
+      incomplete = evidence["recording_searches"].any? { |search| search.fetch("count") != search.fetch("returned") }
+      { "count" => recordings.size, "offset" => 0, "recordings" => recordings, "incomplete" => incomplete }
+    end
+
+    def search_surface(surface, title, scope, **interpretation)
+      page = search_page(surface, title, **scope, **interpretation)
+      return page if scope.empty? || page.fetch("recordings").any?
+
+      search_page(surface, title, **interpretation)
+    end
+
+    def search_page(surface, title, **options)
+      page = @musicbrainz.candidate_page(@session, artist: surface.artist, title:, catalog: @workspace, **options)
+      if (searches = evidence["recording_searches"])
+        searches << { "query" => @session.current_request.dig("parameters", "query"),
+          "count" => page.fetch("count"), "returned" => page.fetch("recordings").size }
+      end
+      page
+    rescue ProviderError => error
+      raise unless @workspace && evidence["title_interpretation"] && !error.deferred && !error.terminal
+
+      search = { "query" => @session.current_request&.dig("parameters", "query"),
+        "message" => error.message, "http_status" => error.http_status }.compact
+      (evidence["recording_search_failures"] ||= []) << search
+      { "count" => 0, "offset" => 0, "recordings" => [] }
+    end
+
+    def broaden_recording_search(surface)
+      interpretation = evidence["title_interpretation"]
+      reported_version = interpretation && !TitleInterpretation.mastering_only?(interpretation)
+      credible = Ranking.call(surface, evidence, source_hints: true).any? do |rank|
+        version = rank.dig("inputs", "version", "state")
+        rank.dig("inputs", "title", "state") == "positive" && rank.dig("inputs", "artist_name", "state") == "positive" &&
+          (reported_version ? version == "positive" : version != "contradictory")
+      end
+      return if credible
+
+      alternatives = interpretation ? interpretation.fetch("alternatives").drop(2) : DiscoveryTitle.alternate_titles(surface.track).first(2)
+      scoped = alternatives.map { |title| [ title, { artist: surface.artist } ] }
+      # The album can recover different credit arrangements; require the credited
+      # artist before retaining any of these hits.
+      scoped << [ surface.track, { artist: nil, release: surface.album } ] if surface.album.present?
+      evidence["adaptive_searches"] = []
+      known = evidence.fetch("candidates").pluck("id").to_set
+      scoped.each do |title, options|
+        attempt = { "strategy" => options[:release] ? "title_and_album" : "alternate_title", "title" => title }
+        evidence["adaptive_searches"] << attempt
+        page = @musicbrainz.candidate_page(@session, title:, catalog: true, **options)
+        attempt.merge!("count" => page["count"], "returned" => page.fetch("recordings").size,
+          "query" => @session.current_request.dig("parameters", "query"))
+        accepted = page.fetch("recordings").select do |row|
+          DiscoveryTitle.credit_key(row["title"]) == DiscoveryTitle.credit_key(title) &&
+            Array(row["artist-credit"]).any? do |credit|
+              (@catalog_identity[:artist_mbid].present? && credit.dig("artist", "id") == @catalog_identity[:artist_mbid]) ||
+                [ credit["name"], credit.dig("artist", "name") ].any? { |name| DiscoveryTitle.match?(name, surface.artist) }
+            end
+        end
+        attempt["accepted_ids"] = accepted.pluck("id")
+        accepted.first(5).each do |row|
+          next unless known.add?(row.fetch("id"))
+
+          evidence.fetch("candidates") << recording_evidence(row).merge("adaptive_search" => attempt.slice("strategy", "title", "query"))
+        end
+        # Retain alternatives for manual review; their presence is not identity proof.
+        break if accepted.any? { |row| DiscoveryTitle.credit_key(surface.track) == DiscoveryTitle.credit_key(row["title"]) }
+      end
+    end
 
     def merge_discovered(discovered)
       by_id = discovered.group_by { |candidate| candidate["id"] }

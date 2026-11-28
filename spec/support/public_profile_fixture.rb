@@ -4,8 +4,11 @@ module PublicProfileFixture
     account = owner.source_account
     profile = ListeningProfile.establish!(account:, owner:, reference: "Disposable administrative fixture")
     artist = Artist.create!(name: "North Shore Ensemble", mbid: SecureRandom.uuid)
-    album = Release.create!(title: "Harbor Sessions", release_year: 2008, catalog_verified_at: Time.current)
+    album = Release.create!(title: "Harbor Sessions", release_year: 2008, catalog_verified_at: Time.current, ingested_from_release_mbid: SecureRandom.uuid)
     album.artists << artist
+    import = CatalogImport.create!(kind: "release_construction", entity_id: album.id, state: "imported", due_at: Time.current)
+    CatalogRevision.create!(catalog_import: import, entity_type: "Release", entity_id: album.id,
+      evidence: { "edition_mbid" => album.ingested_from_release_mbid, "original_context" => true })
     recording = Recording.create!(title: "Harbor Lights", mbid: SecureRandom.uuid, duration_ms: 240_000)
     recording.artists << artist
     unplayed = Recording.create!(title: "The Empty Pier", mbid: SecureRandom.uuid)

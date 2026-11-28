@@ -1,0 +1,13 @@
+<%= dense_table("Listening activity") do %>
+  <thead><tr><th scope="col">Played at</th></tr></thead>
+  <tbody>
+    <% @plays.each do |play| %>
+      <tr><th scope="row"><% if @public_profile %>
+        <%= browser_time(play.played_at) %>
+      <% else %>
+        <%= entity_link browser_time(play.played_at), resolution_surface_path(play) %>
+      <% end %></th></tr>
+    <% end %>
+  </tbody>
+<% end %>
+<% if @next_page %><p><%= link_to "Older observations", catalog_entry_path(@entry, before: @next_page, details: "1", **@history_window.query, anchor: "entity-details") %></p><% end %>

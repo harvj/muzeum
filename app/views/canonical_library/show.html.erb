@@ -1,32 +1,19 @@
-<section class="intro <%= "release-heading" if @entry.is_a?(Release) %>">
-  <p><%= link_to @section.capitalize, catalog_index_path(@section) %></p>
-  <% if @entry.is_a?(Release) %>
-    <p><%= catalog_artists(@entry).presence || "Artist credits pending" %></p>
-    <h1><%= catalog_title(@entry) %><% if @entry.release_year %> <span><%= @entry.release_year %></span><% end %></h1>
-  <% else %>
-    <h1><%= catalog_title(@entry) %></h1>
-    <% if @entry.is_a?(Recording) %><p><%= catalog_artists(@entry).presence || "Artist credits pending" %></p><% end %>
+<%= turbo_frame_tag "catalog-entity", target: "_top", class: "catalog-entity-frame" do %>
+  <%= tag.section class: "intro catalog-heading", data: musical_identity_attributes(@entry) do %>
+    <p class="entity-heading-label"><span class="section-heading"><%= @entry.model_name.human %></span></p>
+    <h1><%= musical_identity_badge(@entry, detailed: true) %><%= catalog_title(@entry) %>
+      <%= catalog_release_date(@entry) if @entry.is_a?(Release) %></h1>
+    <% case @entry
+       when Release, Recording %>
+      <p><span class="catalog-credit"><%= catalog_artists(@entry, badges: false).presence || "Artist credits pending" %></span></p>
+      <% if @entry.is_a?(Recording) %><p><span class="catalog-credit">Recording duration <%= recording_duration(@entry.duration_ms) %></span></p><% end %>
+    <% when Artist %>
+      <% if @entry.country.present? %><p><span class="catalog-credit"><%= render "shared/geographic_place", country: @entry.country %></span></p><% end %>
+    <% end %>
   <% end %>
-</section>
-<%= render "release" if @entry.is_a?(Release) %>
-<% unless @public_profile %>
-<section class="card library-card">
-  <h2>Catalog import</h2>
-  <p role="status"><%= import_status(@import_request, verified: @revision.present?) %></p>
-  <% if @import_request&.active? && !CatalogImport.worker_enabled? %><p>Background imports are paused in this environment.</p><% end %>
-  <% if @import_request&.failure.present? %><p><%= @import_request.failure %></p><% end %>
-  <%= button_to (@import_request&.state == "failed" ? "Retry import" : "Import"),
-      catalog_import_path(@entry) if @may_import %>
-  <% if @revision %>
-    <details>
-      <summary>Metadata provenance</summary>
-      <p>MusicBrainz · <%= browser_time(@revision.created_at) %></p>
-      <% if @revision.evidence["conflicts"].present? %><p>Existing values kept for review: <%= @revision.evidence["conflicts"].keys.join(", ").humanize %>.</p><% end %>
-    </details>
-  <% end %>
-</section>
-<% end %>
-<% case @entry
-   when Artist %><%= render "artist" %>
-<% when Recording %><%= render "recording" %>
+  <%= render "listening_history", metric: (@entry.is_a?(Recording) ? :plays : :milliseconds) %>
+  <%= render @entry.model_name.singular %>
+  <%= render "short_track_inference" if @short_track_proposals.present? || @short_track_history.present? %>
+  <%= render "recording_chronology" if @entry.is_a?(Recording) %>
+  <%= render "entity_details" if !@public_profile || @timeline&.any? { |_, totals| totals.plays.positive? } || @plays.present? || @entry.is_a?(Artist) %>
 <% end %>

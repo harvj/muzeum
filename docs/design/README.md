@@ -53,3 +53,17 @@ The browser regression covers both themes at both viewport sizes. It checks that
 ## Site Art v1
 
 The [approval preview](site-art-v1.md) shows the corrected reader with current Site Art artwork on desktop and mobile, including the light-theme contrast fallback and the limestone treatment under review.
+
+## Release design reviews
+
+Keep the final Chrome review screenshots for visual UI changes under `docs/design/` with relative links in the review README. Temporary captures can stay outside the repository during development.
+
+- [v0.6.7 entity headings and Recording Resolution](v0.6.7/)
+
+- [Catalog, Resolution, and Archive polish](catalog-resolution-archive/)
+
+- [Global header navigation states](header-navigation/)
+
+- [Entity listening bars and Guide swatches](v0.6.9/)
+
+- [Musical collections and investigation](v0.7.0/)

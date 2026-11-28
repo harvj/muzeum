@@ -1,0 +1,39 @@
+<section class="card library-card" id="short-track-inference">
+  <details>
+    <summary><strong>Review possible unscrobbled tracks</strong></summary>
+    <p>These are inferred listens based on track order and timing. Confirmations are recorded separately from Last.fm observations, play counts, minutes and charts.</p>
+    <% @short_track_proposals.each do |proposal| %>
+      <% left, missing, right = proposal.evidence.fetch("slots") %>
+      <% head = @short_track_history.find do |entry|
+        entry.before_play_id == proposal.before_play.id && entry.after_play_id == proposal.after_play.id &&
+          entry.recording_id == proposal.recording_id
+      end %>
+      <article>
+        <h3><%= proposal.title %></h3>
+        <p><%= left.fetch("title") %> → <strong><%= missing.fetch("title") %></strong> → <%= right.fetch("title") %></p>
+        <p><%= browser_time(proposal.before_play.played_at) %> to <%= browser_time(proposal.after_play.played_at) %>.
+          The observed gap fits the first track and this <%= recording_duration(missing.fetch("duration_ms")) %> track.
+          Playback remains uncertain.</p>
+        <p><%= "Latest decision: #{head.decision}." if head %></p>
+        <%= form_with url: short_track_inference_release_path(@entry), scope: :inference do |form| %>
+          <%= form.hidden_field :before_id, value: proposal.before_play.id, id: nil %>
+          <%= form.hidden_field :after_id, value: proposal.after_play.id, id: nil %>
+          <%= form.hidden_field :recording_id, value: proposal.recording_id, id: nil %>
+          <%= form.hidden_field :evidence_digest, value: @short_track_review.digest(proposal), id: nil %>
+          <%= form.button "Confirm inferred listen", name: "inference[decision]", value: "confirmed" %>
+          <%= form.button "Reject inference", name: "inference[decision]", value: "rejected" %>
+        <% end %>
+      </article>
+    <% end %>
+    <% if @short_track_history.any? %>
+      <details>
+        <summary>Recent inference decisions</summary>
+        <ul>
+          <% @short_track_history.each do |entry| %>
+            <li><%= entry.recording.title %> · <%= entry.decision %> · <%= browser_time(entry.created_at) %></li>
+          <% end %>
+        </ul>
+      </details>
+    <% end %>
+  </details>
+</section>

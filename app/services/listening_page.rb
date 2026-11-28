@@ -37,17 +37,10 @@ class ListeningPage
     recordings = Recording.where(id: effective_ids.values).eager_load(recording_artists: :artist).index_by(&:id)
 
     releases = Release.joins(:catalog_track_slots)
-      .where(catalog_track_slots: { recording_id: recordings.keys }, title: plays.filter_map { |play| play.payload["album_name"].presence })
-      .where.not(catalog_verified_at: nil)
-      .select("releases.*", "catalog_track_slots.recording_id AS member_recording_id").distinct
+      .where(catalog_track_slots: { recording_id: recordings.keys }).where.not(catalog_verified_at: nil)
+      .select("releases.*", "catalog_track_slots.recording_id AS member_recording_id").distinct.order(:title, :id)
       .group_by(&:member_recording_id)
-    recent_releases = plays.each_with_object({}) do |play, matches|
-      candidates = releases.fetch(effective_ids[play.id], []).select { |release| release.title == play.payload["album_name"] }
-      if (edition = play.payload["album_mbid"].presence)
-        candidates.select! { |release| release.ingested_from_release_mbid == edition }
-      end
-      matches[play.id] = candidates.first if candidates.one?
-    end
+    recent_releases = effective_ids.transform_values { |recording_id| releases.fetch(recording_id, []) }
     [ effective_ids.transform_values { |id| recordings[id] }, recent_releases ]
   end
 end

@@ -1,177 +1,182 @@
+<% section = params[:section].presence_in(%w[evidence observations history]) || "candidates" %>
+<% contexts = resolution_release_contexts(@assessment, @candidates) %>
+<% selected = resolution_selected_candidate(@candidates, @ranking, contexts, params[:candidate], @current_recording&.mbid) %>
+<% explicit_candidate = @candidates.any? { |candidate| candidate["id"] == params[:candidate] } %>
+<% selected = nil if @release_review&.policy && !explicit_candidate %>
+<% navigation = { assessment: params[:assessment].presence, candidate: params[:candidate].presence }.compact %>
+<% if @assessment_request&.active? && params[:assessment].blank? && !@assessment_request.expired_investigation? %>
+  <% check_at = @assessment_request.state == "refreshing" ? @assessment_request.lease_until : @assessment_request.due_at %>
+  <div id="investigation-stream-<%= @assessment_request.id %>" hidden data-controller="investigation-sync"
+    data-investigation-sync-pending-value="<%= @assessment_request.state == "pending" %>"
+    data-investigation-sync-check-at-value="<%= check_at&.iso8601(3) %>"
+    data-action="turbo:before-morph-attribute->investigation-sync#preserveConnection">
+    <%= turbo_stream_from @assessment_request %>
+  </div>
+<% end %>
 <div class="card library-card resolution-review">
-<section class="intro review-heading">
+<div class="review-overview">
+<section class="review-heading">
   <% review_state = if @current_recording
       Clients::Musicbrainz::MBID.match?(@current_recording.mbid.to_s) ? "Resolved" : "Partially resolved"
     else
-      @candidates.many? ? "Ambiguous" : "Unresolved"
+      @unresolved_count.zero? ? "Individually resolved" : (resolution_distinct_recording_count(@assessment, @candidates) > 1 ? "Ambiguous" : "Unresolved")
     end %>
-  <strong class="review-state"><%= review_state %></strong>
-  <p><%= link_to "Recording resolution", resolution_surfaces_path %></p>
+  <strong class="review-state<%= " review-state-resolved" if review_state == "Resolved" %>"><%= review_state %></strong>
   <% source = @selected_scrobble || @observation %>
-  <h1>Last.fm source claims</h1>
+  <p class="review-back"><%= link_to "Recording resolution", resolution_surfaces_path %> / Observation <%= source.id %></p>
+  <h1><%= observed_text(source.payload["track_name"], "Track") %></h1>
+  <p class="review-string-label">Recording string</p>
+  <% if (interpretation = @assessment&.evidence&.fetch("title_interpretation", nil)) && interpretation["original_title"] == source.payload["track_name"] %>
+    <details class="review-observation-meta">
+      <summary><%= interpretation["base_title"] %> — <%= interpretation["descriptors"].map { |descriptor| descriptor["kind"] == "mastering" ? [ descriptor["year"], descriptor["name"] ].compact.join(" ") : descriptor["text"] }.join(", ") %></summary>
+      <p>Search interpretation from the reported title. Recording identity still requires catalog evidence.</p>
+      <% if interpretation["unclassified"].present? %><p>Unclassified title text: <%= interpretation["unclassified"].join(", ") %>.</p><% end %>
+    </details>
+  <% end %>
   <dl class="review-source-claims">
-    <% %w[Track Artist Album].each do |label| %>
-      <div><dt><%= label %></dt><dd><%= observed_text(source.payload["#{label.downcase}_name"], label) %></dd></div>
+    <% %w[Artist Album].each do |label| %>
+      <div><dt><%= label %> string</dt><dd><%= observed_text(source.payload["#{label.downcase}_name"], label) %></dd></div>
     <% end %>
   </dl>
-  <p><%= pluralize(@observations_count, "matching observation") %> · Observation <%= source.id %></p>
+  <p class="review-observation-meta"><%= pluralize(@observations_count, "matching observation") %></p>
 </section>
+<% if selected || @current_recording %>
+  <% catalog_rows = selected ? @catalog_context.rows(selected) : RecordingResolution::CatalogContext.rows(@current_recording) %>
+  <%= render "catalog_panel", catalog_rows: %>
+<% end %>
+</div>
 <nav class="review-sections" aria-label="Review sections">
-  <a href="#review-candidates">Candidates</a>
-  <a href="#review-evidence">Evidence</a>
-  <a href="#review-observations">Observations (<%= @observations_count %>)</a>
-  <a href="#review-history">History</a>
+  <% { "candidates" => "Candidates", "evidence" => "Evidence", "observations" => "Observations (#{@observations_count})", "history" => "History" }.each do |tab, label| %>
+    <%= link_to label, resolution_surface_path(@observation, **navigation.merge(section: tab == "candidates" ? nil : tab)),
+      class: ("review-primary-section" if section == tab), aria: { current: ("page" if section == tab) } %>
+  <% end %>
 </nav>
-<div class="review-grid">
-<aside class="review-sidebar" aria-label="Resolution and investigation summary">
-<section class="review-sidebar-card" aria-labelledby="recording-status">
-  <h2 id="recording-status">Resolution</h2>
-  <% if @current_recording && Clients::Musicbrainz::MBID.match?(@current_recording.mbid.to_s) %>
-    <p><strong>Resolved</strong> · <%= catalog_link(@current_recording) %></p>
-    <p class="muted"><%= @current_decision&.scrobble_id ? "Direct assignment for this observation" :
-      (@current_decision&.user_id ? "Inherited from your exact-surface assignment" : "Derived from a recorded assessment") %>
-      <% if @current_decision %> · <%= @current_decision.reason %><% end %></p>
-  <% elsif @current_recording %>
-    <p><strong>Partially resolved</strong> · A local recording is assigned. Its provider identity is unverified.</p>
-  <% else %>
-    <p><strong><%= @candidates.many? ? "Ambiguous" : "Unresolved" %></strong>
-      <% if @current_decision&.mode == "unresolved" %> · Explicitly left unresolved<% end %></p>
-    <% if @candidates.many? %>
-      <p><%= pluralize(@candidates.size, "plausible recording") %> found. The available source evidence does not establish which recording was played.</p>
+<% if @assessment && %w[candidates evidence].include?(section) %>
+  <p class="compact-meta">Last assessment <%= browser_time(@assessment.created_at) %>.
+    <% if @assessment.version != RecordingResolution::Assessment::INTERPRETATION_VERSION %>Earlier investigation logic.<% end %>
+    <% if @assessment.evidence["reassessment"].present? %>
+      Retained evidence was reassessed.
+      <% if (lookup = @assessment.evidence["reviewed_release_lookup"]) %>
+        <%= pluralize(Array(lookup["attempted"]).size, "reviewed edition lookup") %> attempted.
+        <%= pluralize(Array(lookup["missing"]).size, "edition lookup") %> still missing.
+        <% if @assessment.evidence.fetch("reviewed_recording_browses", {}).values.any? { |browse| !browse["complete"] } %>
+          Recording appearance coverage is incomplete.
+        <% end %>
+      <% end %>
     <% end %>
-    <% if @assessment&.evidence&.fetch("reasons", [])&.include?("unverified_recording") && @assessment.evidence.dig("source_claims", "track_mbid").present? %>
-      <p>The Last.fm recording identifier could not be verified.</p>
-    <% end %>
+  </p>
+  <% if @may_manage_observation && @assessment_matches_claims && !@assessment_request&.active? %>
+    <%= button_to "Refresh investigation", investigate_resolution_surface_path(@observation),
+      params: { reassess: "1", assessment_id: @assessment.id } %>
+  <% end %>
+<% end %>
+<% if section == "candidates" || (section == "evidence" && @release_review&.policy) %>
+<section id="review-candidates" class="resolution-decision" tabindex="-1"
+  <% if @release_review&.policy %>data-controller="pending-release-review" data-action="change->pending-release-review#update"<% end %>>
+  <% candidate_badge = nil %>
+  <% position_badge = ->(badge) { candidate_badge = badge } if selected %>
+  <%= render "investigation_status", contexts:, compact: true, position_badge: %>
+  <%= render "recording_choices", selected:, contexts:, navigation:, catalog_rows:, candidate_badge: %>
+  <% if @release_review&.policy %>
+    <details class="resolution-release-evidence">
+      <summary>Release configurations and adjacent programs</summary>
+      <% if selected %>
+        <% provenance = RecordingResolution::ReleaseProvenance.new(@assessment.evidence, contexts: contexts.fetch(selected),
+          releases: catalog_rows[2][1], recording_mbid: selected.fetch("id")) %>
+        <%= render "other_recording_appearances", provenance: %>
+      <% end %>
+      <%= render "reviewed_release_programs", review: @release_review,
+        allow_selection: selected.present? && @may_manage_observation && @assessment_matches_claims %>
+    </details>
   <% end %>
   <% if @batch_releases.present? %>
-    <h3>Review other tracks</h3>
-    <ul><% @batch_releases.each do |release| %>
-      <li><%= link_to release.title, release_batch_resolution_surface_path(@observation, release_id: release.id, play: @selected_scrobble&.id), data: { turbo_prefetch: false } %></li>
-    <% end %></ul>
-  <% end %>
-  <h3>Decision scope</h3>
-  <% if @selected_scrobble %>
-    <p>Reviewing the observation at <%= browser_time(@selected_scrobble.played_at) %>.
-      <%= link_to "Review #{@affected_count} matching observations", resolution_surface_path(@observation, assessment: params[:assessment]) %></p>
-  <% else %>
-    <p>Exact matching group · <%= pluralize(@affected_count, "affected observation") %>.</p>
-    <p><%= link_to "Review only observation #{@observation.id}", resolution_surface_path(@observation, play: @observation.id, assessment: params[:assessment]) %></p>
+    <details><summary>Review other tracks</summary>
+      <ul><% @batch_releases.each do |release| %>
+        <li><%= link_to release.title, release_batch_resolution_surface_path(@observation, release_id: release.id), data: { turbo_prefetch: false } %></li>
+      <% end %></ul>
+    </details>
   <% end %>
 </section>
-  <section class="review-sidebar-card">
-    <h2>Summary</h2>
-    <dl>
-      <div><dt>Candidates</dt><dd><%= @candidates.size %></dd></div>
-      <% if @ranking.any? %><div><dt>Best score</dt><dd><%= @ranking.first["score"] %></dd></div><% end %>
-      <% if @assessment_request %><div><dt>Provider calls</dt><dd><%= @assessment_request.request_count %></dd></div><% end %>
-    </dl>
-  </section>
-</aside>
-<section class="review-candidates" id="review-candidates">
-  <h2>Candidate recordings</h2>
-  <% if @assessment_request&.active? %>
-    <p role="status"><%= @assessment_request.state == "refreshing" ? "Investigating" : "Investigation pending" %>.
-      <%= link_to "Refresh results", resolution_surface_path(@observation, play: @selected_scrobble&.id) %></p>
-  <% elsif @assessment_request&.failure == "Investigation expired before completion." %>
-    <p role="status">Investigation expired. You can request another check.</p>
-  <% elsif @assessment_request&.state == "failed" || @assessment&.evidence&.fetch("partial", false) %>
-    <p role="status">Provider evidence unavailable or incomplete. Any retained candidates are shown below.</p>
-  <% elsif @assessment_request&.state == "incomplete" %>
-    <p role="status">Investigation incomplete. <%= @assessment_request.failure %></p>
-  <% elsif @assessment %>
-    <p>Investigation completed <%= browser_time(@assessment.created_at) %>.</p>
-  <% else %>
-    <p>This observation has not been investigated.<%= " Background investigation is paused." unless RecordingResolution::Investigation.enabled? %></p>
-  <% end %>
-  <% if @assessment && !@assessment_matches_claims %><p>This historical assessment used different source ID claims.</p><% end %>
-  <% if @candidates.any? %>
-    <p>Scores rank relative evidence strength for this shortlist.</p>
-    <% @candidates.first(3).each_with_index do |candidate, index| %>
-      <%= render "candidate", candidate:, rank: @ranking[index], expanded: index.zero?, recommended: index.zero? && RecordingResolution::Ranking.recommended?(@ranking) %>
-    <% end %>
-    <% if @candidates.size > 3 %>
-      <details><summary>Additional candidates</summary>
-        <% @candidates.drop(3).each_with_index do |candidate, index| %>
-          <%= render "candidate", candidate:, rank: @ranking[index + 3], expanded: false, recommended: false %>
-        <% end %>
-      </details>
-    <% end %>
-  <% elsif @assessment %>
-    <p>No credible candidates in the retained evidence.</p>
-  <% end %>
-  <% if @assessment %>
-    <details><summary>Assessment evidence and provenance</summary><%= render "evidence", assessment: @assessment %></details>
-  <% end %>
-  <% if @may_manage_observation && CatalogImport.worker_enabled? && !@assessment_request&.active? %>
+<% end %>
+<% if section == "evidence" %>
+<section id="review-evidence">
+  <%= render "investigation_status", contexts:, compact: section == "candidates" %>
+  <%= render "investigation", selected:, review_state: %>
+  <% if @adjacent_programs.present? && !@release_review&.policy %>
     <details>
-      <summary>Retry or look up a recording identifier</summary>
-      <%= button_to "Refresh candidate evidence", investigate_resolution_surface_path(@selected_scrobble || @observation, play: @selected_scrobble&.id) %>
-      <%= form_with url: investigate_resolution_surface_path(@selected_scrobble || @observation, play: @selected_scrobble&.id) do |form| %>
-        <%= form.label :manual_mbid, "MusicBrainz recording identifier" %>
-        <%= form.text_field :manual_mbid, maxlength: 36, required: true %>
-        <%= form.submit "Look up recording", class: "catalog-submit" %>
+      <summary>Review independently issued releases</summary>
+      <p>These official programs contain an exact checked recording. Their earliest supported appearance may change as more evidence becomes available. Leave them here to retain them as evidence.</p>
+      <% @adjacent_programs.each do |mbid, edition| %>
+        <details>
+          <summary><%= [edition["title"], edition.dig("release-group", "primary-type"), edition["country"], edition["date"]].compact.join(" · ") %></summary>
+          <% history = @assessment.evidence.fetch("additional_recording_publications", {}).fetch(mbid, {}) %>
+          <p>Checked recording <%= link_to history.dig("exact_recording", "title").presence || mbid, "https://musicbrainz.org/recording/#{mbid}" %>
+            appears on this independent program.</p>
+          <% if history["incomplete"] %>
+            <p>Investigation incomplete. <%= Array(history["limitations"]).join(" ") %></p>
+          <% end %>
+          <p><%= link_to "MusicBrainz source release", "https://musicbrainz.org/release/#{edition.fetch("id")}" %></p>
+          <% edition.fetch("media").sort_by { |medium| medium.fetch("position") }.each do |medium| %>
+            <p>Medium <%= medium.fetch("position") %></p>
+            <ol>
+              <% medium.fetch("tracks").sort_by { |track| track.fetch("position") }.each do |track| %>
+                <li value="<%= track.fetch("position") %>"><%= track.fetch("title") %></li>
+              <% end %>
+            </ol>
+          <% end %>
+          <%= button_to "Admit this release", admit_adjacent_release_resolution_surface_path(@observation),
+            params: { assessment_id: @assessment.id, recording_mbid: mbid, edition_mbid: edition.fetch("id") } %>
+        </details>
       <% end %>
     </details>
   <% end %>
-  <details>
-    <summary>Recent assessments</summary>
-    <% if @assessment_history.any? %>
-      <ul class="catalog-list">
-        <% @assessment_history.each do |assessment| %>
-          <li><%= link_to "Assessment #{assessment.id}", resolution_surface_path(@observation, assessment: assessment.id, play: @selected_scrobble&.id) %> · <%= browser_time(assessment.created_at) %></li>
-        <% end %>
-      </ul>
-      <% if @next_assessment %><p><%= link_to "Earlier assessments", resolution_surface_path(@observation, assessment_before: @next_assessment, play: @selected_scrobble&.id) %></p><% end %>
-    <% else %><p>No assessments on this page.</p><% end %>
-  </details>
+  <% if @release_configurations.present? && !@release_review&.policy %>
+    <details>
+      <summary>Retain verified release configurations</summary>
+      <p>Retaining a source tracklist preserves evidence. It does not admit recordings or change a listener’s preference.</p>
+      <% @release_configurations.each do |release, edition| %>
+        <%= button_to ["Retain", release.title, edition["country"], edition["date"], edition["id"]].compact.join(" · "),
+          retain_configuration_resolution_surface_path(@observation),
+          params: { assessment_id: @assessment.id, edition_mbid: edition["id"] } %>
+      <% end %>
+    </details>
+  <% end %>
 </section>
+<% end %>
 
-</div>
-<section class="review-secondary" id="review-evidence">
-  <h2>Observation details</h2>
-  <%= render "decision_controls" if @may_manage_observation %>
-  <details>
-    <summary>Original Last.fm claims</summary>
-    <% claims = (@selected_scrobble || @observation).payload.slice(*RecordingResolution::PilotRunner::CLAIM_FIELDS) %>
-    <% if claims.values.any?(&:present?) %>
-      <ul class="catalog-list"><% claims.each do |field, value| %><% if value.present? %><li><%= field.humanize %> <code><%= value %></code></li><% end %><% end %></ul>
-    <% else %><p>No MusicBrainz IDs were supplied.</p><% end %>
-  </details>
-</section>
-
+<% if section == "observations" %>
 <section class="review-secondary" id="review-observations">
-  <details><summary>Matching observations</summary>
+  <h2 class="section-heading">Matching observations</h2>
   <%= dense_table("Matching observations") do %>
     <thead><tr><th scope="col">Played at</th><th scope="col">Effective recording</th><th scope="col">Scope</th></tr></thead>
     <tbody>
       <% @scrobbles.each do |play| %>
         <% head = @exception_heads[play.id] %>
         <tr>
-          <th scope="row"><%= entity_link browser_time(play.played_at), resolution_surface_path(@observation, play: play.id, assessment: @assessment&.id) %></th>
+          <th scope="row"><%= entity_link browser_time(play.played_at), resolution_surface_path(play) %></th>
           <td><%= @recordings[play.effective_recording_id] ? catalog_link(@recordings.fetch(play.effective_recording_id)) : "Unresolved" %></td>
           <td class="compact-meta"><%= head && head.mode != "inherit" ? "One observation" : "Inherited" %></td>
         </tr>
       <% end %>
     </tbody>
   <% end %>
-  <% if @next_scrobble %><p><%= link_to "Older observations", resolution_surface_path(@observation, before: @next_scrobble) %></p><% end %>
-</details>
+  <% if @next_scrobble %><p><%= link_to "Older observations", resolution_surface_path(@observation, before: @next_scrobble, section: "observations", assessment: navigation[:assessment], candidate: navigation[:candidate]) %></p><% end %>
 </section>
-
+<% elsif section == "history" %>
 <section class="review-secondary" id="review-history">
-  <details><summary>Decision history</summary>
+  <h2 class="section-heading">Decision history</h2>
   <% if @history.any? %>
     <ul class="catalog-list">
       <% @history.each do |decision| %>
         <li><%= browser_time(decision.created_at) %> · <%= decision.user_id ? "Your decision" : "Automatic decision" %>
           · <%= decision.scrobble_id ? "One observation" : "Surface" %> · <%= decision.mode.humanize %>
           <% if decision.recording_id %> · <%= catalog_link(@recordings.fetch(decision.recording_id)) %><% end %>
-          <% if decision.assessment_id %> · <%= link_to "Assessment", resolution_surface_path(@observation, assessment: decision.assessment_id, play: decision.scrobble_id) %><% end %>
+          <% if decision.assessment_id %> · <%= link_to "Assessment", resolution_surface_path(@observation, assessment: decision.assessment_id, play: decision.scrobble_id, section: "evidence") %><% end %>
           <br><%= decision.reason %><% if decision.evidence["comment"].present? %> · <%= decision.evidence["comment"] %><% end %></li>
       <% end %>
     </ul>
-    <% if @next_history %><p><%= link_to "Earlier decisions", resolution_surface_path(@observation, history_before: @next_history, play: @selected_scrobble&.id) %></p><% end %>
+    <% if @next_history %><p><%= link_to "Earlier decisions", resolution_surface_path(@observation, history_before: @next_history, section: "history") %></p><% end %>
   <% else %><p>No decisions yet.</p><% end %>
-</details>
 </section>
+<% end %>
 </div>

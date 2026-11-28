@@ -21,7 +21,7 @@ class DeploymentApiFixture
     end
     if method == "GET"
       return hide_records ? [] : @records if path.include?("deployments?")
-      return @statuses.reverse.map { |status| { "state" => status[:state] } }.first(1) if path.include?("statuses?")
+      return @statuses.reverse.map { |status| status.transform_keys(&:to_s) }.first(1) if path.include?("statuses?")
       @records.find { |record| record["id"] == path.split("/").last.to_i }
     elsif path.end_with?("/deployments")
       @creates << body
