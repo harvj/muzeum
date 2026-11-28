@@ -19,6 +19,8 @@ import time
 APP = Path('/var/www/muzeum')
 STATE = Path('/var/lib/muzeum-deploy')
 BACKUPS = Path('/var/lib/harvj-backups/muzeum')
+MIGRATION_LOCK = Path('/etc/muzeum/migration.lock')
+CE_CAPTURE = b'/var/lib/harvj-backups/ce/capture-qualified-inputs'
 UNITS = ('muzeum-web.service', 'muzeum-worker.service')
 SHA = re.compile(r'[a-f0-9]{40}')
 TOKEN = re.compile(r'[a-f0-9]{32}')
@@ -48,9 +50,12 @@ def write_json(path, value):
 
 
 class Host:
+    protected_fds = ()
+
     def command(self, argv, *, env=None, cwd=None, input=None, timeout=900):
         # Capture everything. Neither argv from a failure nor environment/stderr reaches logs.
-        result = subprocess.run(argv, env=env, cwd=cwd, input=input, capture_output=True, timeout=timeout)
+        result = subprocess.run(argv, env=env, cwd=cwd, input=input, capture_output=True, timeout=timeout,
+                                pass_fds=self.protected_fds)
         if result.returncode:
             STATE.mkdir(mode=0o700, parents=True, exist_ok=True)
             diagnostic = STATE / 'command-last-error'
@@ -176,6 +181,63 @@ class Host:
         with (BACKUPS.parent / 'backup.lock').open('a') as lock:
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
             yield
+
+    def ce_backup_holds_scratch(self, scratch):
+        try:
+            pid = int(self.command(['systemctl', 'show', '--property=MainPID', '--value',
+                                    'ce-storage-box-initial.service'], timeout=10))
+            if pid <= 1:
+                return False
+            process = Path('/proc') / str(pid)
+            argv = (process / 'cmdline').read_bytes().split(b'\0')
+            if (process.stat().st_uid != 0 or argv[-3:-1] !=
+                    [CE_CAPTURE, b'backup']):
+                return False
+            descriptor = (process / 'fd/9').stat()
+            held = os.fstat(scratch.fileno())
+            return ((descriptor.st_dev, descriptor.st_ino) == (held.st_dev, held.st_ino)
+                    and any(re.search(r'FLOCK\s+ADVISORY\s+WRITE', line) for line in
+                            (process / 'fdinfo/9').read_text().splitlines() if line.startswith('lock:')))
+        except (LookupError, OSError, RuntimeError, ValueError):
+            return False
+
+    @contextlib.contextmanager
+    def force_backup_guard(self):
+        with (BACKUPS / 'recovery.lock').open('r') as recovery, \
+                MIGRATION_LOCK.open('r') as migration, \
+                (BACKUPS.parent / 'backup.lock').open('r') as scratch:
+            for guard, label in ((recovery, 'Muzeum backup or restore'), (migration, 'Muzeum migration')):
+                if os.fstat(guard.fileno()).st_uid != 0 or os.fstat(guard.fileno()).st_mode & 0o022:
+                    raise RuntimeError('Untrusted ' + label + ' lock')
+                try:
+                    fcntl.flock(guard, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                except BlockingIOError:
+                    raise RuntimeError(label + ' owns its lock') from None
+            previous_fds = self.protected_fds
+            self.protected_fds = (*previous_fds, recovery.fileno(), migration.fileno())
+            try:
+                try:
+                    fcntl.flock(scratch, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                except BlockingIOError:
+                    if not self.ce_backup_holds_scratch(scratch):
+                        raise RuntimeError('Shared backup lock owner is not a verified CE-only capture') from None
+                    if shutil.disk_usage(APP).free < 8 * 1024**3:
+                        raise RuntimeError('Insufficient deployment/recovery headroom during CE backup')
+                    yield 'shared-backup-exclusivity: verified unrelated CE capture'
+                else:
+                    self.protected_fds = (*self.protected_fds, scratch.fileno())
+                    yield None
+            finally:
+                self.protected_fds = previous_fds
+
+    def publish_force(self, release, token):
+        temporary = APP / ('.force-current-' + token)
+        if temporary.exists() or temporary.is_symlink():
+            raise RuntimeError('Force publication temporary pointer already exists')
+        self.command(['/usr/sbin/runuser', '-u', 'muzeum', '--',
+                      '/usr/bin/ln', '-s', '--', str(release), str(temporary)])
+        self.command(['/usr/sbin/runuser', '-u', 'muzeum', '--',
+                      '/usr/bin/mv', '-Tf', '--', str(temporary), str(APP / 'current')])
 
     def backup_restore(self, sha):
         api, config = self.backup_api()
@@ -307,21 +369,57 @@ class Deployment:
         write_json(self.root / (record['token'] + '.json'), record)
         write_json(self.root / 'active.json', record)
 
-    def run(self, phase, sha, token, path=None, *, baseline=None, rollback=False):
+    def recover_force(self, active, baseline):
+        previous = json.loads(active.read_text())
+        token = previous.get('token')
+        require_untouched = (
+            TOKEN.fullmatch(token if isinstance(token, str) else '')
+            and previous.get('phase') == 'failed'
+            and previous.get('failed_phase') in ('begin', 'prepare')
+            and previous.get('migrating') is False and previous.get('withdrawn') is False
+            and not previous.get('route_transition')
+            and previous.get('baseline', {}).get('revision') == baseline
+            and self.host.revision() == baseline
+        )
+        if not require_untouched:
+            raise RuntimeError('Existing Muzeum attempt requires manual recovery')
+        with self.host.force_backup_guard():
+            self.host.preflight()
+            self.host.check_withdrawal(baseline)
+            archived = self.root / ('active.' + token + '.force-recovered.json')
+            if archived.exists():
+                raise RuntimeError('Recovery archive already exists')
+            active.rename(archived)
+        return archived.name
+
+    def run(self, phase, sha, token, path=None, *, baseline=None, rollback=False, force_artifact=None):
         if not SHA.fullmatch(sha) or not TOKEN.fullmatch(token):
             raise RuntimeError('Immutable SHA and deployment token required')
+        if force_artifact is not None and (phase != 'begin' or rollback or not SHA.fullmatch(baseline or '')
+                                           or not re.fullmatch(r'[0-9a-f]{64}', force_artifact)):
+            raise RuntimeError('Force requires an explicit baseline and exact qualified artifact digest')
         self.root.mkdir(mode=0o700, parents=True, exist_ok=True)
         with (self.root / 'phase.lock').open('a') as lock:
-            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            try:
+                fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except BlockingIOError:
+                raise RuntimeError('An active Muzeum operation owns the deployment phase lock') from None
             active = self.root / 'active.json'
             if phase == 'begin':
+                recovered = None
                 if active.exists():
-                    raise RuntimeError('Deployment lock retained; inspect active.json before operator recovery')
+                    if force_artifact is None:
+                        raise RuntimeError('Deployment lock retained; inspect active.json before operator recovery')
+                    recovered = self.recover_force(active, baseline)
                 if baseline is not None and (not SHA.fullmatch(baseline) or self.host.revision() != baseline):
                     raise RuntimeError('Live production baseline differs from selected release')
                 record = {'sha': sha, 'token': token, 'started_at': now(), 'phase': 'preflight', 'migrating': False, 'withdrawn': False}
                 if rollback:
                     record['rollback'] = True
+                if force_artifact is not None:
+                    record['force'] = {'operator': os.environ.get('SUDO_USER', 'root'),
+                                       'authorized_at': now(), 'artifact_sha256': force_artifact,
+                                       'overrides': [], 'recovered_receipt': recovered}
                 self.save(record)
             else:
                 record = json.loads(active.read_text())
@@ -333,7 +431,12 @@ class Deployment:
                     raise RuntimeError('Failed deployment requires operator recovery')
             try:
                 # Serialize against scheduled backups; never test health during an intentional pause.
-                with self.host.backup_lock():
+                force = record.get('force')
+                guard = self.host.force_backup_guard() if force else self.host.backup_lock()
+                with guard as overridden:
+                    if force and overridden and overridden not in force['overrides']:
+                        force['overrides'].append(overridden)
+                        self.save(record)
                     if phase == 'begin':
                         record['baseline'] = self.host.preflight()
                         if baseline is not None and record['baseline']['revision'] != baseline:
@@ -347,6 +450,9 @@ class Deployment:
                         if not record.get('rollback'):
                             record['release_integrity'] = self.host.verify_release_integrity(release, sha)
                         before = self.host.inspect(release)
+                        if force and (before['pending'] or record['release_integrity']['artifact_sha256']
+                                      != force['artifact_sha256']):
+                            raise RuntimeError('Force requires a code-only candidate with the approved artifact digest')
                         reviewed_migrations(release, before['pending'])
                         if record.get('rollback') and before['pending']:
                             raise RuntimeError('Rollback artifact requires a migration')
@@ -378,6 +484,15 @@ class Deployment:
                             record['schema_versions'] = {name: value['versions'] for name, value in after['databases'].items() if 'versions' in value}
                         record['phase'] = 'ready_to_publish'
                     elif phase == 'finish':
+                        if force and record['phase'] == 'ready_to_publish':
+                            release = self.host.release(record['release'], sha)
+                            if self.host.revision() != record['baseline']['revision'] or self.host.inspect(release)['pending']:
+                                raise RuntimeError('Force publication baseline or migration state changed')
+                            integrity = self.host.verify_release_integrity(release, sha)
+                            if integrity['artifact_sha256'] != force['artifact_sha256']:
+                                raise RuntimeError('Force publication artifact digest differs')
+                            record['release_integrity'] = integrity
+                            self.host.publish_force(release, token)
                         if record['phase'] != 'ready_to_publish' or not self.host.published(record['release'], sha):
                             raise RuntimeError('Publication did not select the exact candidate')
                         self.host.release(record['release'], sha)
@@ -460,9 +575,12 @@ def main():
         record = json.loads((STATE / (token + '.json')).read_text())
         if record['sha'] != sha or record['token'] != token:
             raise RuntimeError('Receipt identity mismatch')
-        print(json.dumps({key: record[key] for key in ('sha', 'token', 'phase', 'health', 'release_integrity') if key in record}))
+        print(json.dumps({key: record[key] for key in ('sha', 'token', 'phase', 'health', 'release_integrity', 'force') if key in record}))
         return
-    if len(sys.argv) == 5 and sys.argv[1] in ('begin-operator', 'begin-rollback'):
+    if len(sys.argv) == 6 and sys.argv[1] == 'begin-force':
+        _, _, sha, token, baseline, artifact = sys.argv
+        record = Deployment(Host()).run('begin', sha, token, baseline=baseline, force_artifact=artifact)
+    elif len(sys.argv) == 5 and sys.argv[1] in ('begin-operator', 'begin-rollback'):
         action, sha, token, baseline = sys.argv[1:]
         record = Deployment(Host()).run(
             'begin', sha, token, baseline=baseline, rollback=action == 'begin-rollback')
@@ -471,7 +589,7 @@ def main():
             raise RuntimeError('Expected phase SHA token [release]')
         record = Deployment(Host()).run(*sys.argv[1:])
     # No subprocess output, environments or opaque grants are published.
-    print(json.dumps({key: record[key] for key in ('sha', 'token', 'phase', 'baseline', 'migrations', 'pre_backup', 'post_backup', 'health', 'safe_state') if key in record}))
+    print(json.dumps({key: record[key] for key in ('sha', 'token', 'phase', 'baseline', 'migrations', 'pre_backup', 'post_backup', 'health', 'safe_state', 'force') if key in record}))
 
 
 if __name__ == '__main__':

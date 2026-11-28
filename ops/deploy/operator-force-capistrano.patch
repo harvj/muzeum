@@ -1,0 +1,58 @@
+--- a/ops/capistrano/config/deploy.rb
++++ b/ops/capistrano/config/deploy.rb
+@@ -148,10 +148,11 @@
+     end
+   end
+ 
+-  def muzeum_run_release(rollback:)
++  def muzeum_run_release(rollback:, force: false)
+     revision = fetch(:branch)
+     baseline = ENV.fetch("MUZEUM_BASELINE")
+     timestamp = ENV["MUZEUM_STAGED_RELEASE"]
++    raise "Force requires a previously qualified staged release" if force && !timestamp
+     if rollback || timestamp
+       raise "Use an exact retained release directory" unless /\A[0-9]{14}\z/.match?(timestamp.to_s)
+       set :release_path, releases_path.join(timestamp)
+@@ -162,7 +163,16 @@
+     outbox = muzeum_outbox
+     outbox.check_clear!
+     token = SecureRandom.hex(16)
+-    muzeum_phase(rollback ? "begin-rollback" : "begin-operator", revision, token, baseline)
++    if force
++      qualified = JSON.parse(File.read(ENV.fetch("MUZEUM_QUALIFIED_ARTIFACT")))
++      digest = qualified.fetch("artifact_sha256")
++      unless qualified.fetch("source_sha") == revision && /\A[0-9a-f]{64}\z/.match?(digest)
++        raise "Force requires the exact qualified artifact"
++      end
++      muzeum_phase("begin-force", revision, token, baseline, digest)
++    else
++      muzeum_phase(rollback ? "begin-rollback" : "begin-operator", revision, token, baseline)
++    end
+     begin
+       outbox.create(revision, token)
+       reporting_started = true
+@@ -184,8 +194,10 @@
+       outbox.bind_artifact(token, candidate)
+       muzeum_phase("prepare", revision, token, release_path.to_s)
+       muzeum_check_target(revision)
+-      invoke "deploy:publishing"
+-      invoke "deploy:published"
++      unless force
++        invoke "deploy:publishing"
++        invoke "deploy:published"
++      end
+       muzeum_phase("finish", revision, token)
+       on primary(:app) do
+         unless capture(:readlink, "-f", current_path) == release_path.to_s &&
+@@ -210,6 +222,11 @@
+     muzeum_run_release(rollback: false)
+   end
+ 
++  desc "Force a qualified, code-only staged release as the operator"
++  task force_deploy: :pin do
++    muzeum_run_release(rollback: false, force: true)
++  end
++
+   task restore: :pin do
+     muzeum_run_release(rollback: true)
+   end

@@ -170,3 +170,34 @@ bundle exec cap production -T
 ```
 
 Fixtures create only `muzeum_deploy_test_*` databases, synthetic observations/raw pages/OIDC principals/interpretation decisions, and production-named restricted roles in the **dedicated disposable cluster**. The inspector fixture refuses a cluster already containing those roles. Real PostgreSQL, Rails migrations, Restic encryption/read-data checks, four-database isolated restores and full application schema inspection run locally and in CI. Service restart, publication faults and Caddy boundaries use a disposable filesystem/service adapter, not production systemd/Caddy. These tests do not replace the required separate installation review or claim a second live production deployment. Never use a production port/URL. Retained verification results: [verification](verification.md).
+
+### Explicit operator force for a sealed code-only release
+
+The operator's explicit force instruction uses the same pinned Capistrano
+workflow with `cap production muzeum:force_deploy`. Apply the reviewed
+[operator runner patch](../../ops/deploy/operator-force-capistrano.patch)
+to the existing detached operator configuration. Supply the already
+qualified staged release and its exact artifact evidence as for a retained
+release. The normal deployment task never selects this mode automatically.
+
+The root coordinator may ignore the global backup lock only when it can
+identify the running CE-only capture and verify its inherited lock descriptor
+and disk headroom. The Muzeum phase lock, migration lock, Muzeum-only
+backup/restore lock, protected main, artifact digest, database inspection,
+backup receipts, and readiness remain required. Pointer publication runs
+inside the same Muzeum guard as the final artifact and schema checks.
+Migrations always use the normal workflow.
+
+A failed pre-publication attempt can be archived under the phase lock only
+after verifying the original serving revision, route, recovery evidence and
+service health with no migration or withdrawal intent. The receipt records
+operator identity, exact artifact, the archived record and any coordination
+override. Attempts with ambiguous or post-publication state remain subject
+to manual recovery.
+
+The Muzeum backup and restore entry points must be installed together with
+the coordinator and permanent root-owned `/var/lib/harvj-backups/muzeum/recovery.lock`.
+Retain the shared scratch inode for ordinary backup and restore. During
+installation, prove legacy callers are quiescent under their existing
+shared lock or its continuously held CE capture and verify the exact
+replacement bytes before enabling the operator command.
