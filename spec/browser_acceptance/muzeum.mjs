@@ -66,7 +66,7 @@ await runCandidate({ chromium: chrome, artifact: 'candidate.tar.gz', binding, ou
         await summaryLink.click();
         await page.waitForURL(origin + '/archive/summary');
         await page.getByRole('heading', { name: 'Archive summary', exact: true }).waitFor();
-        assert.equal(await page.locator('.archive-summary .stat').filter({ hasText: 'Imported scrobbles' }).locator('strong').textContent(), '11');
+        assert.equal(await page.locator('.archive-summary .stat').filter({ hasText: 'Imported scrobbles' }).locator('strong').textContent(), '34');
         await trigger.getByText(identity.username, { exact: true }).waitFor();
         const geometry = await page.evaluate(() => {
           const wordmark = document.querySelector('.harvj-wordmark').getBoundingClientRect();
