@@ -11,6 +11,7 @@ require 'rspec/rails'
 # Add additional requires below this line. Rails is not loaded until this point!
 
 require "webmock/rspec"
+require_relative "support/chrome_session_reset" if ENV["BROWSER_TESTS"] == "1"
 WebMock.disable_net_connect!(allow_localhost: true)
 
 require Rails.root.join("app/clients/clients/error")

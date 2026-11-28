@@ -10,7 +10,7 @@ Status: **Authoritative product policy**, 2026-11-17. These rules describe inten
 
 **DOM-003 — Catalog providers supply evidence. Muzeum owns product policy.** Muzeum establishes its own canonicalization, release-selection and accounting rules. A provider's classification is not automatically Muzeum's choice. Preserve source identifiers and the evidence/algorithm version behind each decision. MusicBrainz is the active external catalog provider. Preserve historical Discogs evidence with its original provenance and make no new Discogs API requests.
 
-**DOM-004 — The listener's experience is decisive.** Muzeum makes intelligent automatic interpretations so routine manual organization is unnecessary. A listener can correct the interpretation of an individual play, including its credited release, and the correction takes precedence over automatic policy for that listener.
+**DOM-004 — The listener's experience is decisive.** Muzeum makes intelligent automatic interpretations so routine manual organization is unnecessary. A listener can correct the canonical recording of an individual play, and the correction takes precedence over matching-group assignments and automatic policy for that listener.
 
 **DOM-005 — Release identity prioritizes the collection of songs.** Physical media, packaging, barcode, and remaster labels are not primary distinctions. Different song collections and orderings may be meaningfully different even when providers group them together. The listener may explicitly credit a greatest-hits collection when that represents what they heard. Do not assume MusicBrainz release group or Discogs master is always a perfect Muzeum collection identity; preserve evidence and map carefully.
 
@@ -18,7 +18,7 @@ Status: **Authoritative product policy**, 2026-11-17. These rules describe inten
 
 **DOM-007 — Shared source does not mean shared private interpretation.** Multiple Muzeum users may associate the same public Last.fm archive. Their own overrides, release credits and personal statistics remain independently scoped. Association is not proof of Last.fm account ownership. Auth at auth.harvj.com remains the only interactive identity provider.
 
-**DOM-008 — One listening event stays one event.** Multiple release views may display a recording's entire listening history; this does not create duplicate listens. Release ranking credits each play at most once. See [listening statistics](listening-statistics.md).
+**DOM-008 — One listening event stays one event.** Each verified release context can display a member recording's entire listening history. Counts deduplicate observations within a release and across combined release histories. See [listening statistics](listening-statistics.md).
 
 **DOM-009 — Near-term simplicity.** Prefer reliable, understandable implementation for demonstrated usage and plausible growth below roughly 1,000 users over speculative infrastructure for 10,000. Preserve straightforward paths to scale. Do not confuse benchmark targets with product requirements.
 
@@ -38,13 +38,13 @@ Status: **Authoritative product policy**, 2026-11-17. These rules describe inten
 
 ## Deliberate canonical catalog growth
 
-**DOM-016 — Resolve into a navigable library.** Artists, Releases and Recordings are first-class top-navigation destinations, including while the library is initially sparse. Explicitly resolving a scrobble to a verified canonical recording should initiate bounded, asynchronous enrichment of that recording and its credited artist(s), plus at least one **verified, contextually relevant** release when one can be justified. Import the complete ordered track listing of each admitted release, including recordings not yet scrobbled; these have zero listening observations until independently reported. If no defensible release exists, retain the resolved recording and a pending release association rather than inventing one. Do not require completion of background enrichment to preserve the listener's resolution decision.
+**DOM-016 — Resolve into a navigable library.** Artists, Releases and Recordings are first-class top-navigation destinations, including while the library is initially sparse. Explicitly resolving a scrobble to a verified canonical recording should initiate bounded, asynchronous enrichment of that recording and its credited artist(s), plus each **verified, contextually relevant** original release that can be justified. Import the complete ordered track listing of each admitted release, including recordings not yet scrobbled; these have zero listening observations until independently reported. If no defensible release exists, retain the resolved recording and a pending release association rather than inventing one. Do not require completion of background enrichment to preserve the listener's resolution decision.
 
-**DOM-017 — Release admission is selective.** A recording's appearance on a provider release does **not** authorize importing that release. Prefer the meaningful original album collection when supported, including over a single issued shortly before it; consider an original single/EP for otherwise non-album material, distinct song collections or sequencing, and live collections with genuinely different performances. Do not automatically admit compilations/greatest-hits, foreign/format variants, remasters or reissues solely because they appear in provider relationships. Explicit listener selection or compelling contextual evidence may justify a compilation. Do not invent chronology cutoffs or silently equate provider release groups/masters with Muzeum collections.
+**DOM-017 — Release admission is selective.** A recording's appearance on a provider release does **not** authorize importing that release. Admit independently supported original albums, singles and EPs that contain the verified recording. An earlier single and subsequent album can both qualify. Do not automatically admit compilations/greatest-hits, foreign/format variants, remasters or reissues solely because they appear in provider relationships. Explicit listener selection or compelling contextual evidence may justify a compilation. Do not invent chronology cutoffs or silently equate provider release groups/masters with Muzeum collections.
 
 **DOM-018 — Bounded, nonrecursive expansion.** After admitting a release, import its complete ordered track listing, recording identities and necessary credited artists, then **stop**. Do not recursively import other releases containing those recordings, their other tracks, or their entire provider relationship graph. Additional releases require deliberate later admission through an explicit Import action or separately justified policy. Keep compact external appearance evidence distinct from admitted canonical Releases. Deduplicate identities and track positions, preserve provenance and make retries idempotent.
 
-**DOM-019 — Catalog membership does not create listening history or credit.** An imported recording may have zero scrobbles. Release track membership does not assign the listener's historical scrobbles to that release for rankings. Listener-scoped recording resolution, shared catalog admission, and per-play credited release remain separate decisions; no import may overwrite explicit listener assignments.
+**DOM-019 — Catalog membership contributes existing listening observations.** An imported recording may have zero scrobbles. Each verified release history derives its observations from the effective recordings in its ordered track listing. The same observation can contribute to multiple releases, and their combined history counts it once. No import may overwrite explicit listener recording decisions.
 
 **DOM-020 — Profile ownership and publication are distinct.** An administrative association records local ownership provenance separately from provider verification and archive access. Owner consent can be recorded privately. Explicit activation requires current owner consent, a valid owner and grant, and provider approval. Withdrawal preserves audit history, and grant restoration does not reactivate a withdrawn profile. Public browsing projects only the published archive and its catalog context. It confers no mutation rights and exposes no private interpretation history or account settings.
 
@@ -56,7 +56,7 @@ Status: **Authoritative product policy**, 2026-11-17. These rules describe inten
 - **Admitted release:** A deliberately selected canonical collection stored in Muzeum; not every provider release appearance.
 - **External release appearance:** Evidence that a recording occurs on a provider release without admitting it to Muzeum's library.
 - **Release membership:** A recording appears on a release collection; many-to-many.
-- **Credited release:** The one collection, if any, receiving a given play's release-ranking credit.
+- **Release context:** A verified canonical collection whose ordered track listing contains a recording. Its listening history includes observations effectively resolved to the recording.
 - **Assessment:** Evidence-based evaluation, possibly without a change.
 - **Decision:** Effective selection or revision of an interpretation, with historical attribution.
 - **User override:** Explicit listener decision, protected against automatic replacement.
@@ -72,7 +72,11 @@ These documents supersede contradictory *proposals* in dated P1.0 design notes. 
 - Whether user-level release preferences are needed in addition to individual-play overrides.
 - How to handle cases where a single song has multiple distinct recordings with ambiguous source metadata.
 
+**DOM-020 — Musical identity is revisable.** Separate assertions about a recording's musical characteristics, provider metadata, listener color decisions, and predictions. Preserve provenance and uncertainty. A listener's current manual choice takes precedence over automatic predictions. Each entity can have a direct color decision. Releases and recordings without a direct palette inherit the ordered palette of their credited artists when the assigned palettes agree. A conflicting palette leaves the entity neutral. This affects presentation only. It creates no new color decision or listening observation.
+
 ## Revision history
+
+- v0.6.0: Clarified that edition evidence supports canonical release construction while recording, publication, and edition dates remain separate assertions.
 
 - 2026-11-19: Recorded the #26 decision to retire new Discogs API requests and preserve historical provenance.
 

@@ -15,13 +15,14 @@ export default class extends Controller {
       bottom: body.querySelector(":scope > footer")
     }
     this.snapshot = this.urlsValue
+    this.themeControl = body.querySelector(":scope > .shell-appearance")
     this.refreshTimer = setInterval(() => this.refreshSnapshot(), refreshInterval)
     this.scheme = matchMedia("(prefers-color-scheme: dark)")
     this.updateBackground = () => this.showBackground()
     this.scheme.addEventListener("change", this.updateBackground)
     this.appearance = new MutationObserver(this.updateBackground)
     this.appearance.observe(document.documentElement, {
-      attributes: true, attributeFilter: ["data-appearance"]
+      attributes: true, attributeFilter: ["data-appearance-preference"]
     })
     this.clearIcon = () => {
       this.iconLoad?.abort()
@@ -88,28 +89,41 @@ export default class extends Controller {
         if (values[name]) element.style.setProperty(property, values[name])
         else element.style.removeProperty(property)
       }
-      if (values.foreground) element.style.setProperty("--reading-surface", readingSurface(values.foreground))
+      if (region === "default" && values.foreground) element.style.setProperty("--reading-surface", readingSurface(values.foreground))
       else element.style.removeProperty("--reading-surface")
       element.toggleAttribute("data-art-treatment", Object.values(values).some(Boolean))
     }
   }
 
   async showBackground() {
-    const appearance = document.documentElement.dataset.appearance
-    const theme = appearance === "light" || appearance === "dark"
-      ? appearance : (this.scheme.matches ? "dark" : "light")
-    const record = this.snapshot[theme]
-    const key = JSON.stringify([theme, this.snapshot.release, record])
+    const root = document.documentElement
+    const variants = ["light", "dark"].filter(mode => {
+      const variant = this.snapshot[mode]
+      return variant?.url && Object.keys(this.regions).every(role => artworkTreatment(variant, role).foreground)
+    })
+    const paired = variants.length === 2 && this.snapshot.light.url !== this.snapshot.dark.url
+    if (this.themeControl) {
+      this.themeControl.hidden = !paired
+      if (!paired) this.themeControl.open = false
+    }
+    const preference = root.dataset.appearancePreference
+    const system = this.scheme.matches ? "dark" : "light"
+    const theme = paired ? (variants.includes(preference) ? preference : system) : variants[0]
+    const record = theme ? this.snapshot[theme] : (this.snapshot[system] || this.snapshot[system === "dark" ? "light" : "dark"])
+    const appearance = theme && (!paired || preference !== "system") ? theme : "system"
+    const key = JSON.stringify([theme, appearance, this.snapshot.release, record])
     if (key === this.backgroundKey) return
 
     this.backgroundKey = key
     this.backgroundLoad?.abort()
     if (this.background && this.background.getAttribute("src") === record?.url) {
       this.applyTreatment(record)
+      root.dataset.appearance = appearance
       return
     }
 
     if (!record) {
+      root.dataset.appearance = "system"
       this.clearBackground()
       return
     }
@@ -119,6 +133,7 @@ export default class extends Controller {
     if (load.signal.aborted) return
 
     this.clearBackground()
+    root.dataset.appearance = appearance
     if (!image) return
 
     image.className = "site-art-background"

@@ -1,0 +1,27 @@
+<details>
+  <summary>Compare release configurations</summary>
+  <p>A preferred configuration sets the tracklist, release date and release listening totals. The edition actually played remains unknown.</p>
+  <% unless @public_profile %>
+    <%= button_to "Use admitted base", configuration_release_path(@entry), method: :patch,
+      disabled: @preferred_configuration.nil? %>
+  <% end %>
+  <% @configurations.each do |configuration| %>
+    <details>
+      <summary><%= [configuration.provenance["title"], configuration.source_country, configuration.source_date.presence || "Date unknown", pluralize(configuration.tracks.size, "track")].compact.join(" · ") %>
+        <%= "(preferred)" if configuration == @preferred_configuration %></summary>
+      <p><%= link_to "MusicBrainz source edition", "https://musicbrainz.org/release/#{configuration.edition_mbid}" %></p>
+      <% configuration.tracks.group_by { |track| track.fetch("medium") }.each do |medium, tracks| %>
+        <p>Medium <%= medium %></p>
+        <ol>
+          <% tracks.each do |track| %>
+            <li value="<%= track.fetch("position") %>"><%= track.fetch("title") %></li>
+          <% end %>
+        </ol>
+      <% end %>
+      <% unless @public_profile %>
+        <%= button_to "Prefer this configuration", configuration_release_path(@entry), method: :patch,
+          params: { configuration_id: configuration.id }, disabled: configuration == @preferred_configuration %>
+      <% end %>
+    </details>
+  <% end %>
+</details>

@@ -1,4 +1,6 @@
 class CatalogImport < ApplicationRecord
+  RECORDING_METADATA = "recording_metadata".freeze
+  INVESTIGATION_WORKER_FAILURE = "Investigation worker failed unexpectedly.".freeze
   ACTIVE = %w[pending refreshing].freeze
   scope :active, -> { where(state: ACTIVE) }
   scope :due, -> { where(state: "pending", due_at: ..Time.current).or(where(state: "refreshing", lease_until: ..Time.current)) }
@@ -16,14 +18,28 @@ class CatalogImport < ApplicationRecord
   end
 
   def dispatch
-    CanonicalCatalogJob.set(wait_until: due_at).perform_later(id) if self.class.worker_enabled? && active?
+    return unless self.class.worker_enabled? && active?
+
+    CanonicalCatalogJob.set(wait_until: due_at).perform_later(id)
   rescue ActiveJob::EnqueueError, SolidQueue::Job::EnqueueError
-    # A due request can be dispatched again from the page or the bounded recovery task.
     false
+  end
+
+  def investigation_queue_state
+    RecordingResolution::QueueStatus.new(self).state
+  end
+
+  def expired_investigation?
+    kind == RecordingResolution::Investigation::KIND && created_at <= 1.day.ago &&
+      (state == "pending" || (state == "refreshing" && !lease_until.future?))
   end
 
   def active?
     state.in?(ACTIVE)
+  end
+
+  def self.latest_recording_work(entity_id)
+    latest([ "recording", RECORDING_METADATA ], entity_id)
   end
 
   def self.latest(kind, entity_id)

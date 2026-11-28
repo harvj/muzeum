@@ -1,0 +1,60 @@
+{
+  "format_version": 1,
+  "application": "muzeum",
+  "revision": "824893b334fcccbe00ddab093339f1772f867e89",
+  "tree": "2afaeaae71c9080c632adff87e6109c54c44a0ed",
+  "artifact_sha256": "383ecd67b9306c8caea9207e3ba05d011ed10ea081a7913242ac846fb447cb20",
+  "environment_sha256": "c5483b233790c707c149a8a6e1bcff4fa016e8102de5f125e2efdb9eb4fac319",
+  "viewports": [
+    {
+      "name": "desktop",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "name": "mobile",
+      "width": 390,
+      "height": 844
+    }
+  ],
+  "started_at": "2026-11-26T15:36:41.827Z",
+  "steps": [
+    {
+      "name": "anonymous-landing",
+      "result": "pass",
+      "milliseconds": 154
+    },
+    {
+      "name": "native-password-totp-oidc",
+      "result": "pass",
+      "milliseconds": 770
+    },
+    {
+      "name": "desktop-archive-shell",
+      "result": "pass",
+      "milliseconds": 1119
+    },
+    {
+      "name": "mobile-archive-shell",
+      "result": "pass",
+      "milliseconds": 221
+    },
+    {
+      "name": "logout-and-private-boundary",
+      "result": "pass",
+      "milliseconds": 488
+    }
+  ],
+  "screenshots": [
+    {
+      "name": "desktop",
+      "sha256": "25c7ec2ae571d117ef8ea76def23c6997a0dd4e21e1f68ee2de4a14663f3293b"
+    },
+    {
+      "name": "mobile",
+      "sha256": "7425b350d1deaaf290a077d036752f89159f0d3ef09901681753d45819a13b98"
+    }
+  ],
+  "result": "pass",
+  "finished_at": "2026-11-26T15:36:45.440Z"
+}

@@ -59,6 +59,32 @@ module RecordingResolution
     end
     private_class_method :visible_surfaces
 
+    # Start from recordings mentioned by a decision. The usual projection still chooses
+    # the effective head, including later changes and individual exceptions.
+    def self.for_recordings(listener, recording_ids)
+      ids = Array(recording_ids).compact.uniq
+      return effective(listener).none if ids.empty?
+
+      matching = Scrobble.sanitize_sql_array([ <<~SQL, { listener: listener.id, recordings: ids } ])
+        WITH relevant_decisions AS MATERIALIZED (
+          SELECT DISTINCT surface_id, scrobble_id FROM resolution_decisions
+          WHERE recording_id IN (:recordings)
+            AND (user_id = :listener OR (user_id IS NULL AND scrobble_id IS NULL))
+        )
+        SELECT scrobble_id FROM relevant_decisions WHERE scrobble_id IS NOT NULL
+        UNION
+        SELECT scrobbles.id FROM relevant_decisions
+        JOIN resolution_surfaces surface ON surface.id = relevant_decisions.surface_id
+        JOIN scrobbles ON scrobbles.lastfm_account_id = surface.lastfm_account_id
+          AND #{EXACT_KEY_SQL} = surface.exact_key
+          AND (surface.artist, surface.album, surface.track) IS NOT DISTINCT FROM
+            (scrobbles.payload->>'artist_name', scrobbles.payload->>'album_name', scrobbles.payload->>'track_name')
+        WHERE relevant_decisions.scrobble_id IS NULL
+      SQL
+      effective(listener).joins("JOIN (#{matching}) relevant_plays ON relevant_plays.scrobble_id = scrobbles.id")
+        .where("effective_resolution.recording_id IN (?)", ids)
+    end
+
     # Keep archive authorization in the query so a previously constructed relation observes revocation.
     def self.effective(listener)
       return Scrobble.none unless listener.id
@@ -74,24 +100,56 @@ module RecordingResolution
           AND exact_surface.exact_key = #{EXACT_KEY_SQL}
           AND (exact_surface.artist, exact_surface.album, exact_surface.track) IS NOT DISTINCT FROM
             (scrobbles.payload->>'artist_name', scrobbles.payload->>'album_name', scrobbles.payload->>'track_name')
+        #{effective_decision_join(":listener", "scrobbles.id")}
+      SQL
+      Scrobble.joins(join).select("scrobbles.*, effective_resolution.recording_id AS effective_recording_id, " \
+        "effective_resolution.id AS effective_recording_decision_id, effective_resolution.mode AS effective_recording_mode")
+    end
+
+    # Probe only surfaces that have ever had an assignment when building the
+    # unresolved queue. The indexed lookup still evaluates every current head.
+    def self.assigned_observation_ids(listener, accounts)
+      user = Integer(listener.id)
+      statement = <<~SQL
+        SELECT play.id
+        FROM resolution_surfaces exact_surface
+        CROSS JOIN LATERAL (
+          SELECT scrobbles.id FROM scrobbles
+          WHERE scrobbles.lastfm_account_id = exact_surface.lastfm_account_id AND #{EXACT_KEY_SQL} = exact_surface.exact_key
+            AND (scrobbles.payload->>'artist_name', scrobbles.payload->>'album_name', scrobbles.payload->>'track_name')
+              IS NOT DISTINCT FROM (exact_surface.artist, exact_surface.album, exact_surface.track)
+          OFFSET 0
+        ) play
+        #{effective_decision_join(user, "play.id")}
+        WHERE exact_surface.lastfm_account_id IN (#{accounts.to_sql})
+          AND EXISTS (
+            SELECT FROM resolution_decisions d WHERE d.surface_id = exact_surface.id
+              AND (d.user_id = #{user} OR d.user_id IS NULL) AND d.recording_id IS NOT NULL
+          )
+          AND effective_resolution.recording_id IS NOT NULL
+      SQL
+      Scrobble.from(Arel.sql("(#{statement}) assigned_plays")).select("assigned_plays.id")
+    end
+
+    def self.effective_decision_join(user, observation)
+      <<~SQL
         LEFT JOIN LATERAL (
           SELECT id, mode, recording_id FROM (
             (SELECT id, mode, recording_id, 1 AS priority FROM resolution_decisions
-             WHERE surface_id = exact_surface.id AND user_id = :listener AND scrobble_id = scrobbles.id
+             WHERE surface_id = exact_surface.id AND user_id = #{user} AND scrobble_id = #{observation}
              ORDER BY id DESC LIMIT 1)
             UNION ALL
             (SELECT id, mode, recording_id, 2 AS priority FROM resolution_decisions
-             WHERE surface_id = exact_surface.id AND user_id = :listener AND scrobble_id IS NULL
+             WHERE surface_id = exact_surface.id AND user_id = #{user} AND scrobble_id IS NULL
              ORDER BY id DESC LIMIT 1)
             UNION ALL
             (SELECT id, mode, recording_id, 3 AS priority FROM resolution_decisions
              WHERE surface_id = exact_surface.id AND user_id IS NULL AND scrobble_id IS NULL
              ORDER BY id DESC LIMIT 1)
-          ) heads WHERE mode <> 'inherit' ORDER BY priority LIMIT 1
+          ) heads WHERE exact_surface.id IS NOT NULL AND mode <> 'inherit' ORDER BY priority LIMIT 1
         ) effective_resolution ON true
       SQL
-      Scrobble.joins(join).select("scrobbles.*, effective_resolution.recording_id AS effective_recording_id, " \
-        "effective_resolution.id AS effective_recording_decision_id, effective_resolution.mode AS effective_recording_mode")
     end
+    private_class_method :effective_decision_join
   end
 end

@@ -15,7 +15,7 @@ RSpec.describe "Release tracklist review", type: :request do
     @release = Release.create!(title: "Fixture album", ingested_from_release_mbid: SecureRandom.uuid, catalog_verified_at: Time.current)
     @anchor, @accepted, @rejected = %w[Anchor Candidate Alternate].each_with_index.map do |title, i|
       recording = Recording.create!(title:, mbid: SecureRandom.uuid)
-      RecordingArtist.create!(artist: @artist, recording:, position: 0)
+      RecordingArtist.create!(artist: @artist, recording:, position: 1)
       CatalogTrackSlot.create!(release: @release, recording:, medium: 1, position: i + 1, track_mbid: SecureRandom.uuid, title:)
       observation(title, recording)
     end
@@ -66,7 +66,7 @@ RSpec.describe "Release tracklist review", type: :request do
     legends = doc.css("legend").map(&:text)
     expect(legends).to include("Candidate · 2 observations", "Alternate · 1 observation")
     expect(legends.grep(/Anchor/)).to be_empty
-    expect(doc.text).to include("independently confirmed in your archive", "Disc 1, track 2")
+    expect(doc.text).to include("independently confirmed in your archive", "Track 2")
     token = doc.at_css('[name="batch_token"]')["value"]
     choices = legends.each_with_index.to_h { |label, i| [ i.to_s, label.start_with?("Candidate") ? "accept" : "reject" ] }
     expect { submit(token, choices) }.to change(RecordingResolution::Decision, :count).by(3)
@@ -93,7 +93,7 @@ RSpec.describe "Release tracklist review", type: :request do
 
   it "keeps duplicate tracks and conflicting editions out of batch acceptance" do
     competing = Recording.create!(title: "Candidate", mbid: SecureRandom.uuid)
-    RecordingArtist.create!(recording: competing, artist: @artist, position: 0)
+    RecordingArtist.create!(recording: competing, artist: @artist, position: 1)
     CatalogTrackSlot.create!(release: @release, recording: competing, medium: 2, position: 1,
       track_mbid: SecureRandom.uuid, title: "Candidate")
     record_tracklist
@@ -105,7 +105,7 @@ RSpec.describe "Release tracklist review", type: :request do
       payload: without_id.payload.merge("album_mbid" => other_edition.ingested_from_release_mbid))
     doc = open_batch
     ambiguous = doc.css("fieldset").find { |field| field.text.include?("competing version") }
-    expect(ambiguous.text).to include("Disc 1, track 2", "Disc 2, track 1")
+    expect(ambiguous.text).to include("Track 2", "Track 4")
     expect(ambiguous.css('option[value="accept"]')).to be_empty
     expect(doc.css("legend").map(&:text).grep(/Candidate/)).to all(include("1 observation"))
   end
@@ -124,7 +124,7 @@ RSpec.describe "Release tracklist review", type: :request do
     expect(assessment.evidence.fetch("ranking").first.fetch("inputs")).not_to have_key("local_release_history")
     expect(assessment.evidence.dig("edition", "complete_tracklist")).to be(true)
 
-    get resolution_surface_path(target, play: target.id)
+    get resolution_surface_path(target, play: target.id, section: "evidence")
     doc = Nokogiri::HTML(response.body)
     expect(doc.text).to include("another recording independently confirmed in your archive")
     token = doc.at_css('[name="listener_ranking_token"]')["value"]

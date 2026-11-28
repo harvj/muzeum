@@ -1,0 +1,37 @@
+<dialog class="muzeum-guide" aria-labelledby="muzeum-guide-title" data-guide-target="drawer" data-action="click->guide#dismissOutside close->guide#closed">
+  <div class="muzeum-guide-heading" id="guide-overview" tabindex="-1">
+    <h2 id="muzeum-guide-title">Muzeum Guide</h2>
+    <button type="button" data-action="guide#close" autofocus>Close</button>
+  </div>
+  <nav aria-label="Guide contents">
+    <ul>
+      <li><a data-action="guide#navigate" href="#guide-colors">Musical identity colors</a></li>
+      <li><a data-action="guide#navigate" href="#guide-releases">Canonical releases</a></li>
+      <li><a data-action="guide#navigate" href="#guide-listening">Listening history</a></li>
+    </ul>
+  </nav>
+  <% if controller_name == "canonical_library" && action_name == "show" %>
+    <%= render "shared/identity_assignment", entry: @entry, decision: musical_identity(@entry) %>
+  <% end %>
+  <section aria-labelledby="guide-colors-heading" tabindex="-1" id="guide-colors">
+    <h3 id="guide-colors-heading">Musical identity colors</h3>
+    <p>The palette describes musical affinities. A two-color badge expresses two meaningful affinities without splitting listening time between them. A release or recording with no colors of its own can inherit a credited artist’s colors. If credited artists have conflicting colors, it stays neutral until you assign its own colors.</p>
+    <figure class="guide-dual-example">
+      <span aria-hidden="true" class="identity-swatch identity-swatch-dual identity-light-green"></span>
+      <figcaption>Jazz and soul, R&amp;B, and funk. These colors describe a musical combination.</figcaption>
+    </figure>
+    <ul class="guide-palette">
+      <% MusicalIdentity::Palette::COLORS.each do |color, description| %>
+        <li><span aria-hidden="true" class="identity-swatch identity-<%= color %>"></span><%= description %></li>
+      <% end %>
+    </ul>
+  </section>
+  <section aria-labelledby="guide-release-heading" tabindex="-1" id="guide-releases">
+    <h3 id="guide-release-heading">Canonical releases</h3>
+    <p>Muzeum preserves the original Last.fm strings. A confirmed recording can belong to several verified releases. Tracklists document where a recording appears. Which commercial edition was played remains unknown.</p>
+  </section>
+  <section aria-labelledby="guide-listening-heading" tabindex="-1" id="guide-listening">
+    <h3 id="guide-listening-heading">Listening history</h3>
+    <p>Muzeum estimates listening time from known recording durations. Plays with unknown durations still contribute to play counts. Combined histories count each observation once, including when releases overlap.</p>
+  </section>
+</dialog>

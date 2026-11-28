@@ -1,0 +1,118 @@
+[
+  {
+    "id": "35b0f752-a764-46dd-a596-a9fb84b1ac96",
+    "title": "There's No Other Way",
+    "length": 220000,
+    "disambiguation": "",
+    "isrcs": [],
+    "relationships": [
+      {
+        "type": "performance",
+        "direction": "forward",
+        "target_type": "work",
+        "recording": null,
+        "work": {
+          "id": "c8d95c0f-981c-3649-b492-f254209d6f39",
+          "title": "There’s No Other Way"
+        }
+      }
+    ]
+  },
+  {
+    "id": "6eb416f2-5649-497a-b36e-2e47c92f366b",
+    "title": "There’s No Other Way",
+    "length": 193960,
+    "disambiguation": "single version",
+    "isrcs": [
+      "GBAYE9100151",
+      "GBAYF9100001"
+    ],
+    "relationships": [
+      {
+        "type": "performance",
+        "direction": "forward",
+        "target_type": "work",
+        "recording": null,
+        "work": {
+          "id": "c8d95c0f-981c-3649-b492-f254209d6f39",
+          "title": "There’s No Other Way"
+        }
+      }
+    ]
+  },
+  {
+    "id": "b9168df7-5d1d-48e8-9b6a-4762c379569d",
+    "title": "She’s So High (edit)",
+    "length": 230960,
+    "disambiguation": "",
+    "isrcs": [],
+    "relationships": [
+      {
+        "type": "edit",
+        "direction": "forward",
+        "target_type": "recording",
+        "recording": {
+          "id": "1c14202a-2ea7-4aff-bc41-6c97eb8a45e8",
+          "title": "She’s So High",
+          "length": 286173
+        },
+        "work": null
+      },
+      {
+        "type": "performance",
+        "direction": "forward",
+        "target_type": "work",
+        "recording": null,
+        "work": {
+          "id": "eca46b7d-2a31-4f6c-899d-aa5a567fe19e",
+          "title": "She’s So High"
+        }
+      }
+    ]
+  },
+  {
+    "id": "f2903d45-03c8-4631-a1e1-3d0d33c57cbe",
+    "title": "There’s No Other Way",
+    "length": 203933,
+    "disambiguation": "",
+    "isrcs": [
+      "GBAYE1200427",
+      "GBAYE1200900",
+      "GBAYF9100001"
+    ],
+    "relationships": [
+      {
+        "type": "mashes up",
+        "direction": "backward",
+        "target_type": "recording",
+        "recording": {
+          "id": "1c33858d-9a7b-46b5-a618-82d6f67481b0",
+          "title": "There’s No Other Trouble (Beastie Boys vs. Blur)",
+          "length": 186000
+        },
+        "work": null
+      },
+      {
+        "type": "remix",
+        "direction": "backward",
+        "target_type": "recording",
+        "recording": {
+          "id": "877ed1d9-f17c-4f7f-8537-e384f60e7315",
+          "title": "There’s No Other Way (Blur remix)",
+          "length": 296866
+        },
+        "work": null
+      },
+      {
+        "type": "performance",
+        "direction": "forward",
+        "target_type": "work",
+        "recording": null,
+        "work": {
+          "id": "c8d95c0f-981c-3649-b492-f254209d6f39",
+          "title": "There’s No Other Way"
+        }
+      }
+    ]
+  }
+]

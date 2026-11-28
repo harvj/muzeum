@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  get "application-shell", to: "application_shell#show", as: :application_shell
   get "site-art", to: "site_art#show"
   get "up" => "rails/health#show", as: :rails_health_check
   get "login", to: "sessions#login"
@@ -18,13 +19,24 @@ Rails.application.routes.draw do
   %i[artists releases recordings].each do |section|
     resources section, only: %i[index show], controller: "canonical_library", defaults: { section: } do
       post :import, on: :member
+      patch :musical_identity, on: :member
+      if section == :releases
+        patch :configuration, on: :member
+        post :short_track_inference, on: :member
+        patch :ranking, on: :member
+        patch :track_listening, on: :member
+        post :admit_edition_track, on: :member
+      end
+      patch :chronology, on: :member if section == :recordings
     end
   end
   resources :resolution_surfaces, path: "resolution", controller: "resolution_workspace", only: %i[index show] do
     post :investigate, on: :member
+    post :retain_configuration, on: :member
+    post :select_reviewed_configuration, on: :member
+    post :admit_adjacent_release, on: :member
     post :defer, on: :member
     post :decide, on: :member
-    post :admit, on: :member
     get :release_batch, on: :member
     post :confirm_release_batch, on: :member
   end

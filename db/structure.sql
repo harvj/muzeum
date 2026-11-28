@@ -376,6 +376,11 @@ CREATE TABLE public.catalog_track_slots (
     number character varying,
     track_mbid character varying NOT NULL,
     title character varying NOT NULL,
+    edition_mbid character varying,
+    appearance_date character varying,
+    source_recording_mbid character varying,
+    duration_ms integer,
+    source_artist_credit jsonb,
     CONSTRAINT catalog_track_slot_position CHECK (((medium > 0) AND ("position" > 0)))
 );
 
@@ -750,6 +755,41 @@ ALTER SEQUENCE public.listening_profiles_id_seq OWNED BY public.listening_profil
 
 
 --
+-- Name: musical_identity_decisions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.musical_identity_decisions (
+    id bigint NOT NULL,
+    entity_type character varying NOT NULL,
+    entity_id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    colors character varying[] DEFAULT '{}'::character varying[] NOT NULL,
+    rationale text,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: musical_identity_decisions_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.musical_identity_decisions_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: musical_identity_decisions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.musical_identity_decisions_id_seq OWNED BY public.musical_identity_decisions.id;
+
+
+--
 -- Name: oidc_attempts; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -848,6 +888,40 @@ CREATE SEQUENCE public.recording_artists_id_seq
 --
 
 ALTER SEQUENCE public.recording_artists_id_seq OWNED BY public.recording_artists.id;
+
+
+--
+-- Name: recording_source_decisions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.recording_source_decisions (
+    id bigint NOT NULL,
+    source_mbid uuid NOT NULL,
+    recording_id bigint NOT NULL,
+    actor character varying NOT NULL,
+    evidence jsonb NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: recording_source_decisions_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.recording_source_decisions_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: recording_source_decisions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.recording_source_decisions_id_seq OWNED BY public.recording_source_decisions.id;
 
 
 --
@@ -960,6 +1034,39 @@ ALTER SEQUENCE public.release_artists_id_seq OWNED BY public.release_artists.id;
 
 
 --
+-- Name: release_ranking_decisions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.release_ranking_decisions (
+    id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    release_id bigint NOT NULL,
+    included boolean NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: release_ranking_decisions_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.release_ranking_decisions_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: release_ranking_decisions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.release_ranking_decisions_id_seq OWNED BY public.release_ranking_decisions.id;
+
+
+--
 -- Name: release_recordings; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -990,6 +1097,40 @@ CREATE SEQUENCE public.release_recordings_id_seq
 --
 
 ALTER SEQUENCE public.release_recordings_id_seq OWNED BY public.release_recordings.id;
+
+
+--
+-- Name: release_track_listening_decisions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.release_track_listening_decisions (
+    id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    release_id bigint NOT NULL,
+    recording_id bigint NOT NULL,
+    included boolean NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: release_track_listening_decisions_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.release_track_listening_decisions_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: release_track_listening_decisions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.release_track_listening_decisions_id_seq OWNED BY public.release_track_listening_decisions.id;
 
 
 --
@@ -1318,7 +1459,9 @@ CREATE TABLE public.sessions (
     updated_at timestamp(6) without time zone NOT NULL,
     grant_token text,
     verified_at timestamp(6) without time zone,
-    last_seen_at timestamp(6) without time zone
+    last_seen_at timestamp(6) without time zone,
+    shell_username character varying,
+    shell_username_issued_at bigint
 );
 
 
@@ -1621,6 +1764,13 @@ ALTER TABLE ONLY public.listening_profiles ALTER COLUMN id SET DEFAULT nextval('
 
 
 --
+-- Name: musical_identity_decisions id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.musical_identity_decisions ALTER COLUMN id SET DEFAULT nextval('public.musical_identity_decisions_id_seq'::regclass);
+
+
+--
 -- Name: oidc_attempts id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -1639,6 +1789,13 @@ ALTER TABLE ONLY public.page_commits ALTER COLUMN id SET DEFAULT nextval('public
 --
 
 ALTER TABLE ONLY public.recording_artists ALTER COLUMN id SET DEFAULT nextval('public.recording_artists_id_seq'::regclass);
+
+
+--
+-- Name: recording_source_decisions id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.recording_source_decisions ALTER COLUMN id SET DEFAULT nextval('public.recording_source_decisions_id_seq'::regclass);
 
 
 --
@@ -1663,10 +1820,24 @@ ALTER TABLE ONLY public.release_artists ALTER COLUMN id SET DEFAULT nextval('pub
 
 
 --
+-- Name: release_ranking_decisions id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.release_ranking_decisions ALTER COLUMN id SET DEFAULT nextval('public.release_ranking_decisions_id_seq'::regclass);
+
+
+--
 -- Name: release_recordings id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.release_recordings ALTER COLUMN id SET DEFAULT nextval('public.release_recordings_id_seq'::regclass);
+
+
+--
+-- Name: release_track_listening_decisions id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.release_track_listening_decisions ALTER COLUMN id SET DEFAULT nextval('public.release_track_listening_decisions_id_seq'::regclass);
 
 
 --
@@ -1838,6 +2009,14 @@ ALTER TABLE ONLY public.listening_profiles
 
 
 --
+-- Name: musical_identity_decisions musical_identity_decisions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.musical_identity_decisions
+    ADD CONSTRAINT musical_identity_decisions_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: oidc_attempts oidc_attempts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1859,6 +2038,14 @@ ALTER TABLE ONLY public.page_commits
 
 ALTER TABLE ONLY public.recording_artists
     ADD CONSTRAINT recording_artists_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: recording_source_decisions recording_source_decisions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.recording_source_decisions
+    ADD CONSTRAINT recording_source_decisions_pkey PRIMARY KEY (id);
 
 
 --
@@ -1886,11 +2073,27 @@ ALTER TABLE ONLY public.release_artists
 
 
 --
+-- Name: release_ranking_decisions release_ranking_decisions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.release_ranking_decisions
+    ADD CONSTRAINT release_ranking_decisions_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: release_recordings release_recordings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.release_recordings
     ADD CONSTRAINT release_recordings_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: release_track_listening_decisions release_track_listening_decisions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.release_track_listening_decisions
+    ADD CONSTRAINT release_track_listening_decisions_pkey PRIMARY KEY (id);
 
 
 --
@@ -2077,6 +2280,26 @@ CREATE INDEX due_lastfm_accounts ON public.lastfm_accounts USING btree (next_pol
 
 
 --
+-- Name: idx_catalog_track_slots_edition_position; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_catalog_track_slots_edition_position ON public.catalog_track_slots USING btree (release_id, edition_mbid, medium, "position") WHERE (edition_mbid IS NOT NULL);
+
+--
+-- Name: idx_catalog_track_slots_base_position; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_catalog_track_slots_base_position ON public.catalog_track_slots USING btree (release_id, medium, "position") WHERE (edition_mbid IS NULL);
+
+
+--
+-- Name: idx_on_entity_type_entity_id_id_c7b7191f51; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_on_entity_type_entity_id_id_c7b7191f51 ON public.musical_identity_decisions USING btree (entity_type, entity_id, id);
+
+
+--
 -- Name: idx_on_listening_profile_id_24b6f2d861; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2084,10 +2307,10 @@ CREATE INDEX idx_on_listening_profile_id_24b6f2d861 ON public.listening_profile_
 
 
 --
--- Name: idx_on_release_id_medium_position_5d7e315be8; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_on_user_id_release_id_id_8bad624ede; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX idx_on_release_id_medium_position_5d7e315be8 ON public.catalog_track_slots USING btree (release_id, medium, "position");
+CREATE INDEX idx_on_user_id_release_id_id_8bad624ede ON public.release_ranking_decisions USING btree (user_id, release_id, id);
 
 
 --
@@ -2322,6 +2545,13 @@ CREATE INDEX index_listening_profiles_on_owner_id ON public.listening_profiles U
 
 
 --
+-- Name: index_musical_identity_decisions_on_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_musical_identity_decisions_on_user_id ON public.musical_identity_decisions USING btree (user_id);
+
+
+--
 -- Name: index_oidc_attempts_on_state; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2361,6 +2591,20 @@ CREATE INDEX index_recording_artists_on_recording_id ON public.recording_artists
 --
 
 CREATE UNIQUE INDEX index_recording_artists_on_recording_id_and_artist_id ON public.recording_artists USING btree (recording_id, artist_id);
+
+
+--
+-- Name: index_recording_source_decisions_on_recording_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_recording_source_decisions_on_recording_id ON public.recording_source_decisions USING btree (recording_id);
+
+
+--
+-- Name: index_recording_source_decisions_on_source_mbid_and_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_recording_source_decisions_on_source_mbid_and_id ON public.recording_source_decisions USING btree (source_mbid, id);
 
 
 --
@@ -2455,6 +2699,13 @@ CREATE UNIQUE INDEX index_release_recordings_on_release_id_and_recording_id ON p
 
 
 --
+-- Name: index_release_track_listening_on_listener_release_recording; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_release_track_listening_on_listener_release_recording ON public.release_track_listening_decisions USING btree (user_id, release_id, recording_id, id);
+
+
+--
 -- Name: index_releases_on_ingested_from_release_mbid; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2466,6 +2717,13 @@ CREATE UNIQUE INDEX index_releases_on_ingested_from_release_mbid ON public.relea
 --
 
 CREATE INDEX index_releases_on_release_group_mbid ON public.releases USING btree (release_group_mbid);
+
+
+--
+-- Name: index_resolution_decisions_on_recording_and_listener; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_resolution_decisions_on_recording_and_listener ON public.resolution_decisions USING btree (recording_id, user_id) WHERE (recording_id IS NOT NULL);
 
 
 --
@@ -2983,6 +3241,14 @@ ALTER TABLE ONLY public.page_commits
 
 
 --
+-- Name: release_ranking_decisions fk_rails_1218ae2788; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.release_ranking_decisions
+    ADD CONSTRAINT fk_rails_1218ae2788 FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
 -- Name: recording_artists fk_rails_1465a00657; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3007,6 +3273,14 @@ ALTER TABLE ONLY public.daily_listens
 
 
 --
+-- Name: release_track_listening_decisions fk_rails_34a42965e1; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.release_track_listening_decisions
+    ADD CONSTRAINT fk_rails_34a42965e1 FOREIGN KEY (recording_id) REFERENCES public.recordings(id);
+
+
+--
 -- Name: scrobbles fk_rails_34b49bed2b; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3020,6 +3294,14 @@ ALTER TABLE ONLY public.scrobbles
 
 ALTER TABLE ONLY public.source_deliveries
     ADD CONSTRAINT fk_rails_35b08045ae FOREIGN KEY (scrobble_id) REFERENCES public.scrobbles(id);
+
+
+--
+-- Name: release_track_listening_decisions fk_rails_3be875762b; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.release_track_listening_decisions
+    ADD CONSTRAINT fk_rails_3be875762b FOREIGN KEY (release_id) REFERENCES public.releases(id);
 
 
 --
@@ -3119,6 +3401,14 @@ ALTER TABLE ONLY public.scrobbles
 
 
 --
+-- Name: release_track_listening_decisions fk_rails_718c4192d7; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.release_track_listening_decisions
+    ADD CONSTRAINT fk_rails_718c4192d7 FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
 -- Name: import_runs fk_rails_726701e472; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3164,6 +3454,14 @@ ALTER TABLE ONLY public.listening_profile_publication_events
 
 ALTER TABLE ONLY public.import_pages
     ADD CONSTRAINT fk_rails_86b2e76ad1 FOREIGN KEY (import_run_id) REFERENCES public.import_runs(id);
+
+
+--
+-- Name: musical_identity_decisions fk_rails_89e2521d19; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.musical_identity_decisions
+    ADD CONSTRAINT fk_rails_89e2521d19 FOREIGN KEY (user_id) REFERENCES public.users(id);
 
 
 --
@@ -3223,6 +3521,14 @@ ALTER TABLE ONLY public.scrobbles
 
 
 --
+-- Name: release_ranking_decisions fk_rails_bb0b040719; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.release_ranking_decisions
+    ADD CONSTRAINT fk_rails_bb0b040719 FOREIGN KEY (release_id) REFERENCES public.releases(id);
+
+
+--
 -- Name: listening_profiles fk_rails_bca1665695; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3244,6 +3550,14 @@ ALTER TABLE ONLY public.source_deliveries
 
 ALTER TABLE ONLY public.ingestion_issues
     ADD CONSTRAINT fk_rails_dcb1c83871 FOREIGN KEY (source_fetch_id) REFERENCES public.source_fetches(id);
+
+
+--
+-- Name: recording_source_decisions fk_rails_f0a2b062ed; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.recording_source_decisions
+    ADD CONSTRAINT fk_rails_f0a2b062ed FOREIGN KEY (recording_id) REFERENCES public.recordings(id);
 
 
 --
@@ -3396,7 +3710,322 @@ ALTER TABLE ONLY public.resolution_work
 
 SET search_path TO "$user", public;
 
+--
+-- Name: release_configuration_decisions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.release_configuration_decisions (
+    id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    release_id bigint NOT NULL,
+    release_configuration_id bigint,
+    created_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: release_configuration_decisions_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.release_configuration_decisions_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: release_configuration_decisions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.release_configuration_decisions_id_seq OWNED BY public.release_configuration_decisions.id;
+
+
+--
+-- Name: release_configurations; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.release_configurations (
+    id bigint NOT NULL,
+    release_id bigint NOT NULL,
+    edition_mbid character varying NOT NULL,
+    source_date character varying,
+    source_country character varying,
+    digest character varying NOT NULL,
+    tracks jsonb NOT NULL,
+    provenance jsonb NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: release_configurations_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.release_configurations_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: release_configurations_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.release_configurations_id_seq OWNED BY public.release_configurations.id;
+
+
+--
+-- Name: release_configuration_decisions id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.release_configuration_decisions ALTER COLUMN id SET DEFAULT nextval('public.release_configuration_decisions_id_seq'::regclass);
+
+
+--
+-- Name: release_configurations id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.release_configurations ALTER COLUMN id SET DEFAULT nextval('public.release_configurations_id_seq'::regclass);
+
+
+--
+-- Name: release_configuration_decisions release_configuration_decisions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.release_configuration_decisions
+    ADD CONSTRAINT release_configuration_decisions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: release_configurations release_configurations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.release_configurations
+    ADD CONSTRAINT release_configurations_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: idx_on_release_configuration_id_ee97a5f926; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_on_release_configuration_id_ee97a5f926 ON public.release_configuration_decisions USING btree (release_configuration_id);
+
+
+--
+-- Name: index_release_configuration_decisions_on_release_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_release_configuration_decisions_on_release_id ON public.release_configuration_decisions USING btree (release_id);
+
+
+--
+-- Name: index_release_configuration_decisions_on_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_release_configuration_decisions_on_user_id ON public.release_configuration_decisions USING btree (user_id);
+
+
+--
+-- Name: index_release_configurations_on_release_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_release_configurations_on_release_id ON public.release_configurations USING btree (release_id);
+
+
+--
+-- Name: index_release_configurations_on_release_id_and_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_release_configurations_on_release_id_and_id ON public.release_configurations USING btree (release_id, id);
+
+
+--
+-- Name: release_configuration_decisions fk_rails_0f4dd73cbe; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.release_configuration_decisions
+    ADD CONSTRAINT fk_rails_0f4dd73cbe FOREIGN KEY (release_id, release_configuration_id) REFERENCES public.release_configurations(release_id, id);
+
+
+--
+-- Name: release_configurations fk_rails_521e1b02d2; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.release_configurations
+    ADD CONSTRAINT fk_rails_521e1b02d2 FOREIGN KEY (release_id) REFERENCES public.releases(id);
+
+
+--
+-- Name: release_configuration_decisions fk_rails_6238d6fd28; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.release_configuration_decisions
+    ADD CONSTRAINT fk_rails_6238d6fd28 FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
+-- Name: release_configuration_decisions fk_rails_783c803ed3; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.release_configuration_decisions
+    ADD CONSTRAINT fk_rails_783c803ed3 FOREIGN KEY (release_id) REFERENCES public.releases(id);
+
+
+CREATE UNIQUE INDEX index_release_configuration_snapshots ON public.release_configurations USING btree (release_id, edition_mbid, digest);
+
+CREATE INDEX index_release_configuration_decision_history ON public.release_configuration_decisions USING btree (user_id, release_id, id);
+
+--
+-- Name: short_track_inference_decisions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.short_track_inference_decisions (
+    id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    release_id bigint NOT NULL,
+    before_play_id bigint NOT NULL,
+    after_play_id bigint NOT NULL,
+    recording_id bigint NOT NULL,
+    predecessor_id bigint,
+    decision character varying NOT NULL,
+    evidence jsonb NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT valid_short_track_inference_decision CHECK ((((decision)::text = ANY ((ARRAY['confirmed'::character varying, 'rejected'::character varying])::text[])) AND (before_play_id <> after_play_id)))
+);
+
+
+--
+-- Name: short_track_inference_decisions_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.short_track_inference_decisions_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: short_track_inference_decisions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.short_track_inference_decisions_id_seq OWNED BY public.short_track_inference_decisions.id;
+
+
+--
+-- Name: short_track_inference_decisions id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.short_track_inference_decisions ALTER COLUMN id SET DEFAULT nextval('public.short_track_inference_decisions_id_seq'::regclass);
+
+
+--
+-- Name: short_track_inference_decisions short_track_inference_decisions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.short_track_inference_decisions
+    ADD CONSTRAINT short_track_inference_decisions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: index_short_track_inference_decisions_on_after_play_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_short_track_inference_decisions_on_after_play_id ON public.short_track_inference_decisions USING btree (after_play_id);
+
+
+--
+-- Name: index_short_track_inference_decisions_on_before_play_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_short_track_inference_decisions_on_before_play_id ON public.short_track_inference_decisions USING btree (before_play_id);
+
+
+--
+-- Name: index_short_track_inference_decisions_on_predecessor_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_short_track_inference_decisions_on_predecessor_id ON public.short_track_inference_decisions USING btree (predecessor_id);
+
+
+--
+-- Name: index_short_track_inference_decisions_on_recording_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_short_track_inference_decisions_on_recording_id ON public.short_track_inference_decisions USING btree (recording_id);
+
+
+--
+-- Name: index_short_track_inference_history; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_short_track_inference_history ON public.short_track_inference_decisions USING btree (user_id, release_id, before_play_id, after_play_id, recording_id, id);
+
+
+--
+-- Name: short_track_inference_decisions fk_rails_3506dab902; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.short_track_inference_decisions
+    ADD CONSTRAINT fk_rails_3506dab902 FOREIGN KEY (predecessor_id) REFERENCES public.short_track_inference_decisions(id);
+
+
+--
+-- Name: short_track_inference_decisions fk_rails_3ac458a50e; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.short_track_inference_decisions
+    ADD CONSTRAINT fk_rails_3ac458a50e FOREIGN KEY (after_play_id) REFERENCES public.scrobbles(id);
+
+
+--
+-- Name: short_track_inference_decisions fk_rails_4edb294d3c; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.short_track_inference_decisions
+    ADD CONSTRAINT fk_rails_4edb294d3c FOREIGN KEY (before_play_id) REFERENCES public.scrobbles(id);
+
+
+--
+-- Name: short_track_inference_decisions fk_rails_6c3fcd75f1; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.short_track_inference_decisions
+    ADD CONSTRAINT fk_rails_6c3fcd75f1 FOREIGN KEY (release_id) REFERENCES public.releases(id);
+
+
+--
+-- Name: short_track_inference_decisions fk_rails_8986676585; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.short_track_inference_decisions
+    ADD CONSTRAINT fk_rails_8986676585 FOREIGN KEY (recording_id) REFERENCES public.recordings(id);
+
+
+--
+-- Name: short_track_inference_decisions fk_rails_a143154156; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.short_track_inference_decisions
+    ADD CONSTRAINT fk_rails_a143154156 FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
 INSERT INTO "schema_migrations" (version) VALUES
+('20261126173000'),
+('20261126170000'),
+('20261124162000'),
+('20261124030000'),
+('20261123231500'),
+('20261123230000'),
+('20261122223000'),
+('20261122170100'),
+('20261122170000'),
+('20261121160000'),
 ('20261119150200'),
 ('20261119150100'),
 ('20261119150000'),

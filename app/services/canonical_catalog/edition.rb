@@ -25,12 +25,23 @@ module CanonicalCatalog
       end
     end
 
-    def original_context?(title)
+    def self.mispressing?(data)
+      data["disambiguation"].to_s.match?(/\bmispress(?:ed|ing)?\b/i)
+    end
+
+    def self.original_context?(data, compilation: false)
+      collection_context?(data, compilation:) && data["date"] == data.dig("release-group", "first-release-date")
+    end
+
+    def self.collection_context?(data, compilation: false)
       group = data["release-group"] || {}
-      data["title"] == title && data["status"] == "Official" && data["date"].present? &&
-        data["date"] == group["first-release-date"] &&
-        ((group["primary-type"] == "Album" && Array(group["secondary-types"]).empty?) ||
-          (group["primary-type"].in?(%w[Single EP]) && Array(group["secondary-types"]).empty?))
+      comparable_title = group["title"].blank? || RecordingResolution::DiscoveryTitle.match?(
+        RecordingResolution::DiscoveryTitle.album_base(data["title"]), group["title"])
+      secondary = Array(group["secondary-types"])
+      supported = secondary.empty? || (compilation && secondary == [ "Compilation" ] && group["primary-type"] == "Album")
+      comparable_title && Clients::Musicbrainz::MBID.match?(group["id"].to_s) && data["status"] == "Official" && data["date"].present? &&
+        group["first-release-date"].present? &&
+        supported && group["primary-type"].in?(%w[Album Single EP])
     end
 
     private
@@ -45,7 +56,9 @@ module CanonicalCatalog
       Store.name!(recording["title"])
       recording = recording.merge("artist-credit" => track["artist-credit"]) if recording["artist-credit"].blank?
       { medium:, position: track["position"], number: track["number"], track_mbid: Store.mbid!(track["id"]),
-        title: Store.name!(track["title"]), recording: }
+        title: Store.name!(track["title"]), source_recording_mbid: recording.fetch("id"),
+        duration_ms: track["length"].is_a?(Integer) && track["length"].positive? ? track["length"] : nil,
+        source_artist_credit: track["artist-credit"].presence || recording["artist-credit"], recording: }
     end
   end
 end

@@ -41,14 +41,14 @@ RSpec.describe "Public listening profiles", type: :request do
     expect(response.headers["Cache-Control"]).to include("no-store")
     html = Nokogiri::HTML(response.body)
     expect(html.at_css('nav[aria-label="Music library"]')).to be_present
-    expect(html.at_css('summary[aria-label="Session menu"]')).to be_present
+    expect(html.at_css('.harvj-session > summary')).to be_present
     expect(html.css("header a").map(&:text)).not_to include("Log In")
 
     user.sessions.sole.update!(last_seen_at: 13.hours.ago)
     expect { get root_path }.not_to change(OidcAttempt, :count)
     expect(response).to have_http_status(:ok)
     html = Nokogiri::HTML(response.body)
-    expect(html.at_css('summary[aria-label="Session menu"]')).to be_nil
+    expect(html.at_css('.harvj-session > summary')).to be_nil
     expect(html.css("header a").map(&:text)).to include("Log In")
   end
 
@@ -74,7 +74,11 @@ RSpec.describe "Public listening profiles", type: :request do
 
     get public_profile_artists_path(profile)
     expect(response.body).to include(public_profile_artist_path(profile, fixture.fetch(:artist)))
+    expect(Nokogiri::HTML(response.body).css('.library-nav a[aria-current="page"]').map(&:text)).to eq([ "Artists" ])
     get public_profile_artist_path(profile, fixture.fetch(:artist))
+    navigation = Nokogiri::HTML(response.body).at_css(".library-nav")
+    expect(navigation.css('[aria-current="page"]')).to be_empty
+    expect(navigation.at_css("a[href='#{public_profile_path(profile)}']").text).to eq("Archive")
     expect(response.body).to include(public_profile_release_path(profile, fixture.fetch(:album)))
     get public_profile_releases_path(profile)
     expect(response.body).to include("Harbor Sessions")
@@ -157,6 +161,6 @@ RSpec.describe "Public listening profiles", type: :request do
     expect { post decide_resolution_surface_path(play), params: { mode: "unresolved", scope: "scrobble", play_id: play.id,
       head: head.id, reason: "Owner review" } }
       .to change(RecordingResolution::Decision, :count).by(1)
-    expect(response).to redirect_to(resolution_surface_path(play, play: play.id))
+    expect(response).to redirect_to(resolution_surface_path(play))
   end
 end

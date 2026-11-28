@@ -1,0 +1,17 @@
+<% counts = @entry.is_a?(Recording) %>
+<% metric = counts ? :plays : :milliseconds %>
+<% maximum = @timeline.map { |_, totals| totals.public_send(metric) }.max %>
+<% colors = @activity_releases&.many? ? {} : musical_identity_attributes(@entry) %>
+<h3 class="section-heading">Listening history data</h3>
+<ul class="listening-periods">
+  <% @timeline.each do |date, totals| %>
+    <% next if totals.plays.zero? %>
+    <li data-duration-ms="<%= totals.milliseconds %>">
+      <time datetime="<%= date.iso8601 %>"><%= date.iso8601 %></time>
+      <% label = counts ? pluralize(totals.plays, "play") : estimated_listening_time(totals) %>
+      <%= render "listening_bar", value: totals.public_send(metric), maximum:, label:, accessible_label: label, colors: %>
+      <small><%= counts ? estimated_listening_time(totals) : pluralize(totals.plays, "play") %></small>
+      <% if totals.known_durations < totals.plays %><small><%= duration_coverage(totals) %></small><% end %>
+    </li>
+  <% end %>
+</ul>

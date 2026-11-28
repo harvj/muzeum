@@ -1,0 +1,1448 @@
+{
+  "leisure_editions": [
+    {
+      "id": "2d855ad9-fbd5-4f73-86a1-949302680df6",
+      "title": "Leisure",
+      "date": "2012-07-27",
+      "country": "XE",
+      "barcode": "5099962483216",
+      "status": "Official",
+      "disambiguation": "",
+      "release_group": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+      "label_info": [],
+      "media": [
+        {
+          "position": 1,
+          "format": "12\" Vinyl",
+          "tracks": [
+            {
+              "position": 1,
+              "number": "A1",
+              "title": "She’s So High",
+              "length": 283000,
+              "track_mbid": "9c544360-a7b8-37cb-83e2-844740aee3f5",
+              "recording_mbid": "1c14202a-2ea7-4aff-bc41-6c97eb8a45e8"
+            },
+            {
+              "position": 2,
+              "number": "A2",
+              "title": "Bang",
+              "length": 205000,
+              "track_mbid": "8da56647-7e3a-3cf7-bf43-46218b1d19c8",
+              "recording_mbid": "2460e0f7-17c3-4a9f-a555-e20fea6b17a0"
+            },
+            {
+              "position": 3,
+              "number": "A3",
+              "title": "Slow Down",
+              "length": 190000,
+              "track_mbid": "5518a8a1-1788-33fb-99f6-c2c84b5993a8",
+              "recording_mbid": "31e589f5-4ed0-45d0-ac00-ef16b612f4a7"
+            },
+            {
+              "position": 4,
+              "number": "A4",
+              "title": "Repetition",
+              "length": 323000,
+              "track_mbid": "4f0d5777-68ef-3a31-9642-617647b95a03",
+              "recording_mbid": "ca5c9d27-0e32-4b4b-9068-cfffb926c4bd"
+            },
+            {
+              "position": 5,
+              "number": "A5",
+              "title": "Bad Day",
+              "length": 263000,
+              "track_mbid": "7062ebbd-f686-3f8f-b89f-019d25b4336c",
+              "recording_mbid": "a0238504-59f9-44a9-915b-f81f6afa98af"
+            },
+            {
+              "position": 6,
+              "number": "A6",
+              "title": "Sing",
+              "length": 359000,
+              "track_mbid": "97f73785-3405-303c-b9d9-eccadeb680cf",
+              "recording_mbid": "4a9a98da-581b-419f-8f02-9c01cc94eb9b"
+            },
+            {
+              "position": 7,
+              "number": "B1",
+              "title": "There’s No Other Way",
+              "length": 200000,
+              "track_mbid": "151b0ddf-beb6-30d5-b4bd-0ee6aafacc13",
+              "recording_mbid": "f2903d45-03c8-4631-a1e1-3d0d33c57cbe"
+            },
+            {
+              "position": 8,
+              "number": "B2",
+              "title": "Fool",
+              "length": 193000,
+              "track_mbid": "493c1abf-b56b-3a0b-af12-54c8be5b90ac",
+              "recording_mbid": "5234f29d-777c-480b-bb47-d42c922a80ac"
+            },
+            {
+              "position": 9,
+              "number": "B3",
+              "title": "Come Together",
+              "length": 231000,
+              "track_mbid": "877a0ca4-6010-3bfe-8578-f7075f928fd9",
+              "recording_mbid": "27090003-009c-4337-a648-7483c36bbfff"
+            },
+            {
+              "position": 10,
+              "number": "B4",
+              "title": "High Cool",
+              "length": 215000,
+              "track_mbid": "3eebb706-ffd7-397f-b22b-080896008449",
+              "recording_mbid": "c3820526-1b1d-4852-b8ee-9fb909ddafb0"
+            },
+            {
+              "position": 11,
+              "number": "B5",
+              "title": "Birthday",
+              "length": 228000,
+              "track_mbid": "24571411-d1d1-354e-8446-6224ba7618c0",
+              "recording_mbid": "0b9b5669-eef0-420a-b695-350b36219c62"
+            },
+            {
+              "position": 12,
+              "number": "B6",
+              "title": "Wear Me Down",
+              "length": 289333,
+              "track_mbid": "95a80bb8-7b45-365b-97fc-21beaf51332f",
+              "recording_mbid": "a4f6872f-ff57-476c-8897-3ddc52d2169b"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "5834ce7b-007f-4e47-84bb-b4b66a6bdabf",
+      "title": "Leisure",
+      "date": "2012-07-27",
+      "country": "XE",
+      "status": "Official",
+      "disambiguation": "",
+      "release_group": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+      "label_info": [],
+      "media": [
+        {
+          "position": 1,
+          "format": "CD",
+          "tracks": [
+            {
+              "position": 1,
+              "number": "1",
+              "title": "She’s So High",
+              "length": 286173,
+              "track_mbid": "6a390c59-6266-36f9-a4a3-ee909ec66ffc",
+              "recording_mbid": "1c14202a-2ea7-4aff-bc41-6c97eb8a45e8"
+            },
+            {
+              "position": 2,
+              "number": "2",
+              "title": "Bang",
+              "length": 217253,
+              "track_mbid": "b3bf31ee-64fa-3ba0-91fd-ae37780d95ea",
+              "recording_mbid": "2460e0f7-17c3-4a9f-a555-e20fea6b17a0"
+            },
+            {
+              "position": 3,
+              "number": "3",
+              "title": "Slow Down",
+              "length": 191106,
+              "track_mbid": "af2c967f-aeb7-3359-8d55-bb230ccb4a89",
+              "recording_mbid": "31e589f5-4ed0-45d0-ac00-ef16b612f4a7"
+            },
+            {
+              "position": 4,
+              "number": "4",
+              "title": "Repetition",
+              "length": 325693,
+              "track_mbid": "78f40025-5d6d-3aa6-b97a-d35cfcd07e37",
+              "recording_mbid": "ca5c9d27-0e32-4b4b-9068-cfffb926c4bd"
+            },
+            {
+              "position": 5,
+              "number": "5",
+              "title": "Bad Day",
+              "length": 264466,
+              "track_mbid": "1d2741d1-844d-3781-858f-56b2d8742869",
+              "recording_mbid": "a0238504-59f9-44a9-915b-f81f6afa98af"
+            },
+            {
+              "position": 6,
+              "number": "6",
+              "title": "Sing",
+              "length": 360973,
+              "track_mbid": "f98742b0-ae3c-370d-a956-0531375676aa",
+              "recording_mbid": "4a9a98da-581b-419f-8f02-9c01cc94eb9b"
+            },
+            {
+              "position": 7,
+              "number": "7",
+              "title": "There’s No Other Way",
+              "length": 204866,
+              "track_mbid": "f16017ab-93cf-3406-90b7-25119c557700",
+              "recording_mbid": "f2903d45-03c8-4631-a1e1-3d0d33c57cbe"
+            },
+            {
+              "position": 8,
+              "number": "8",
+              "title": "Fool",
+              "length": 194106,
+              "track_mbid": "a05e43f5-20ca-3b19-b867-d446bddccdcb",
+              "recording_mbid": "5234f29d-777c-480b-bb47-d42c922a80ac"
+            },
+            {
+              "position": 9,
+              "number": "9",
+              "title": "Come Together",
+              "length": 232400,
+              "track_mbid": "fe8e8e38-229a-3e4b-8977-d6df6879f75c",
+              "recording_mbid": "27090003-009c-4337-a648-7483c36bbfff"
+            },
+            {
+              "position": 10,
+              "number": "10",
+              "title": "High Cool",
+              "length": 217866,
+              "track_mbid": "0b13fed5-c2ed-3f39-a2f2-dfcf58b63e83",
+              "recording_mbid": "c3820526-1b1d-4852-b8ee-9fb909ddafb0"
+            },
+            {
+              "position": 11,
+              "number": "11",
+              "title": "Birthday",
+              "length": 229920,
+              "track_mbid": "93d115a2-e18b-3676-9957-02e653c6c619",
+              "recording_mbid": "0b9b5669-eef0-420a-b695-350b36219c62"
+            },
+            {
+              "position": 12,
+              "number": "12",
+              "title": "Wear Me Down",
+              "length": 291506,
+              "track_mbid": "89e794fb-9abb-381c-a545-034dae8bcfca",
+              "recording_mbid": "a4f6872f-ff57-476c-8897-3ddc52d2169b"
+            }
+          ]
+        },
+        {
+          "position": 2,
+          "format": "CD",
+          "tracks": [
+            {
+              "position": 1,
+              "number": "1",
+              "title": "I Know (extended mix)",
+              "length": 391253,
+              "track_mbid": "46e5859c-e42e-3487-a354-8c94e4271a48",
+              "recording_mbid": "87dfe8ce-4861-4327-b16c-60423529e352"
+            },
+            {
+              "position": 2,
+              "number": "2",
+              "title": "Down",
+              "length": 358626,
+              "track_mbid": "18496815-389a-37f7-a640-08b152615ef5",
+              "recording_mbid": "272774b1-029f-4c58-aa31-8b492cfa72ae"
+            },
+            {
+              "position": 3,
+              "number": "3",
+              "title": "There’s No Other Way (extended version)",
+              "length": 238506,
+              "track_mbid": "832d1f22-f82b-3755-aa8a-d30f009ed658",
+              "recording_mbid": "20255402-1548-4e9f-8379-c599daeea4b3"
+            },
+            {
+              "position": 4,
+              "number": "4",
+              "title": "Inertia",
+              "length": 229440,
+              "track_mbid": "e62de737-dca9-3980-a65f-d0f6dfd354e2",
+              "recording_mbid": "5a8f7dcb-a967-4a95-b2c4-5266ac8c7d59"
+            },
+            {
+              "position": 5,
+              "number": "5",
+              "title": "Mr Briggs",
+              "length": 238800,
+              "track_mbid": "b34cfee6-1b9c-3717-b7f1-471b9e5673e8",
+              "recording_mbid": "d641a183-8ba5-4432-86fa-73ab0b865638"
+            },
+            {
+              "position": 6,
+              "number": "6",
+              "title": "I’m All Over",
+              "length": 120240,
+              "track_mbid": "0b00fd1b-234b-3067-9fbb-4687ac24a4a6",
+              "recording_mbid": "3e87c042-6577-4248-a4d9-937924da1033"
+            },
+            {
+              "position": 7,
+              "number": "7",
+              "title": "Won't Do It",
+              "length": 200186,
+              "track_mbid": "138a443b-c410-331f-8a47-286e066fadaa",
+              "recording_mbid": "61c92a73-c3d5-43f6-8410-49156604b1cb"
+            },
+            {
+              "position": 8,
+              "number": "8",
+              "title": "Day Upon Day (live)",
+              "length": 253986,
+              "track_mbid": "9be05790-035e-382a-bdc0-3cf0bb098901",
+              "recording_mbid": "0ca3a70c-39dc-41b7-a943-acd32b24598c"
+            },
+            {
+              "position": 9,
+              "number": "9",
+              "title": "There’s No Other Way (Blur remix)",
+              "length": 296866,
+              "track_mbid": "812e9b2d-42fe-3daa-94e3-4dade8e8c3f4",
+              "recording_mbid": "877ed1d9-f17c-4f7f-8537-e384f60e7315"
+            },
+            {
+              "position": 10,
+              "number": "10",
+              "title": "Bang (extended version)",
+              "length": 265853,
+              "track_mbid": "f41a3f8f-f17f-3c15-af25-28923a61db0a",
+              "recording_mbid": "c3b91c5b-621d-4cc8-906f-b34396c59125"
+            },
+            {
+              "position": 11,
+              "number": "11",
+              "title": "Explain",
+              "length": 165280,
+              "track_mbid": "0c993912-ded8-3e2f-9763-809b5ee3efe2",
+              "recording_mbid": "5cf14477-9232-4ba2-b02c-4d9c9a737c7d"
+            },
+            {
+              "position": 12,
+              "number": "12",
+              "title": "Luminous",
+              "length": 194026,
+              "track_mbid": "68459647-41b8-3b09-8cf1-bccc9ff67b7f",
+              "recording_mbid": "7d019300-5227-40bc-acca-49b6a4ee2261"
+            },
+            {
+              "position": 13,
+              "number": "13",
+              "title": "Berserk",
+              "length": 403360,
+              "track_mbid": "7dba6cdf-fb3b-33f6-8628-7a8c42379040",
+              "recording_mbid": "73c570ae-341f-4b45-ae81-b1fb0c0a1e1a"
+            },
+            {
+              "position": 14,
+              "number": "14",
+              "title": "Uncle Love",
+              "length": 151320,
+              "track_mbid": "a569f4e4-c523-3eef-97e8-8a32b71a23e7",
+              "recording_mbid": "c2bc53d2-5652-47b7-8c68-9a7b812f9bc3"
+            },
+            {
+              "position": 15,
+              "number": "15",
+              "title": "I Love Her (demo version)",
+              "length": 216440,
+              "track_mbid": "f9e2083d-9189-3aa5-b537-97ba0d5cb781",
+              "recording_mbid": "f6fac006-939c-4dfd-87fc-03e5bf6f11c2"
+            },
+            {
+              "position": 16,
+              "number": "16",
+              "title": "Close",
+              "length": 182880,
+              "track_mbid": "3931f359-c4f9-3a6c-99d6-eb1ba8a97865",
+              "recording_mbid": "090ea6ab-8bf7-4e56-b47e-00d6d1a5f5bf"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "9ab639ba-9ad7-4128-9ba2-c5d607f56156",
+      "title": "Leisure",
+      "date": "1991-09-20",
+      "country": "JP",
+      "barcode": "4988006662995",
+      "status": "Official",
+      "disambiguation": "",
+      "release_group": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+      "label_info": [],
+      "media": [
+        {
+          "position": 1,
+          "format": "CD",
+          "tracks": [
+            {
+              "position": 1,
+              "number": "1",
+              "title": "She’s So High",
+              "length": 286866,
+              "track_mbid": "2cf0142c-5dd9-39bb-bd9e-122bf7156253",
+              "recording_mbid": "1c14202a-2ea7-4aff-bc41-6c97eb8a45e8"
+            },
+            {
+              "position": 2,
+              "number": "2",
+              "title": "There’s No Other Way",
+              "length": 203893,
+              "track_mbid": "2a423fa8-3d97-30de-9fa2-e0894a8dfaa2",
+              "recording_mbid": "f2903d45-03c8-4631-a1e1-3d0d33c57cbe"
+            },
+            {
+              "position": 3,
+              "number": "3",
+              "title": "Bang",
+              "length": 217333,
+              "track_mbid": "ade3e877-f9ee-39f6-b80b-54561fe379c8",
+              "recording_mbid": "2460e0f7-17c3-4a9f-a555-e20fea6b17a0"
+            },
+            {
+              "position": 4,
+              "number": "4",
+              "title": "I Know",
+              "length": 212600,
+              "track_mbid": "339f772a-f07f-399b-b3f0-0ddd7a9ccf68",
+              "recording_mbid": "56c868df-84df-4895-bb96-d3f97b7dc709"
+            },
+            {
+              "position": 5,
+              "number": "5",
+              "title": "Slow Down",
+              "length": 191400,
+              "track_mbid": "b9fa9620-c002-33fd-b794-a1d3d633ab87",
+              "recording_mbid": "31e589f5-4ed0-45d0-ac00-ef16b612f4a7"
+            },
+            {
+              "position": 6,
+              "number": "6",
+              "title": "Repetition",
+              "length": 325533,
+              "track_mbid": "d13add37-2303-323e-be00-fba5aa6e2587",
+              "recording_mbid": "ca5c9d27-0e32-4b4b-9068-cfffb926c4bd"
+            },
+            {
+              "position": 7,
+              "number": "7",
+              "title": "Bad Day",
+              "length": 264533,
+              "track_mbid": "b0017233-90f3-3d9f-895b-c9e1bd44ca5c",
+              "recording_mbid": "a0238504-59f9-44a9-915b-f81f6afa98af"
+            },
+            {
+              "position": 8,
+              "number": "8",
+              "title": "Sing",
+              "length": 360773,
+              "track_mbid": "5dc4b5b1-1fd5-386d-ab05-2b616ba0918d",
+              "recording_mbid": "4a9a98da-581b-419f-8f02-9c01cc94eb9b"
+            },
+            {
+              "position": 9,
+              "number": "9",
+              "title": "High Cool",
+              "length": 218333,
+              "track_mbid": "269839a7-f0d0-3480-b885-f83dffb99065",
+              "recording_mbid": "c3820526-1b1d-4852-b8ee-9fb909ddafb0"
+            },
+            {
+              "position": 10,
+              "number": "10",
+              "title": "Come Together",
+              "length": 232893,
+              "track_mbid": "6cd3381b-12e6-3b61-859d-f51f4678b4c7",
+              "recording_mbid": "27090003-009c-4337-a648-7483c36bbfff"
+            },
+            {
+              "position": 11,
+              "number": "11",
+              "title": "Inertia",
+              "length": 228866,
+              "track_mbid": "cc78d3f6-5594-3128-a622-83be4dab1935",
+              "recording_mbid": "5a8f7dcb-a967-4a95-b2c4-5266ac8c7d59"
+            },
+            {
+              "position": 12,
+              "number": "12",
+              "title": "Mr. Briggs",
+              "length": 239666,
+              "track_mbid": "50a51201-8691-3ff8-b237-6bdf459297d5",
+              "recording_mbid": "d641a183-8ba5-4432-86fa-73ab0b865638"
+            },
+            {
+              "position": 13,
+              "number": "13",
+              "title": "Fool",
+              "length": 196573,
+              "track_mbid": "f7742d8a-d5db-3e5c-8f42-94433f2d30fd",
+              "recording_mbid": "5234f29d-777c-480b-bb47-d42c922a80ac"
+            },
+            {
+              "position": 14,
+              "number": "14",
+              "title": "Birthday",
+              "length": 230400,
+              "track_mbid": "6285ff1a-7f74-325c-b0d4-c66eea4df032",
+              "recording_mbid": "0b9b5669-eef0-420a-b695-350b36219c62"
+            },
+            {
+              "position": 15,
+              "number": "15",
+              "title": "Wear Me Down",
+              "length": 289334,
+              "track_mbid": "a033ebce-570b-37fa-bbd6-3e73b4dd863a",
+              "recording_mbid": "a4f6872f-ff57-476c-8897-3ddc52d2169b"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "b59d1131-4a58-4648-b9dd-b78b8f9c80fd",
+      "title": "Leisure",
+      "date": "2012-07-30",
+      "country": "XW",
+      "barcode": "5099997262558",
+      "status": "Official",
+      "disambiguation": "",
+      "release_group": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+      "label_info": [],
+      "media": [
+        {
+          "position": 1,
+          "format": "Digital Media",
+          "tracks": [
+            {
+              "position": 1,
+              "number": "1",
+              "title": "She’s So High",
+              "length": 286173,
+              "track_mbid": "3166b10c-4e93-4aa3-9580-68515f67ac49",
+              "recording_mbid": "1c14202a-2ea7-4aff-bc41-6c97eb8a45e8"
+            },
+            {
+              "position": 2,
+              "number": "2",
+              "title": "Bang",
+              "length": 217253,
+              "track_mbid": "0b1a56b9-ebbb-494a-a1fa-69ba0580ef01",
+              "recording_mbid": "2460e0f7-17c3-4a9f-a555-e20fea6b17a0"
+            },
+            {
+              "position": 3,
+              "number": "3",
+              "title": "Slow Down",
+              "length": 191106,
+              "track_mbid": "a41376c9-b7c4-4e03-948d-d0d9ba8fdff9",
+              "recording_mbid": "31e589f5-4ed0-45d0-ac00-ef16b612f4a7"
+            },
+            {
+              "position": 4,
+              "number": "4",
+              "title": "Repetition",
+              "length": 325693,
+              "track_mbid": "622da67e-baf4-45ad-86f5-ae0e12572516",
+              "recording_mbid": "ca5c9d27-0e32-4b4b-9068-cfffb926c4bd"
+            },
+            {
+              "position": 5,
+              "number": "5",
+              "title": "Bad Day",
+              "length": 264466,
+              "track_mbid": "9a60b30f-839b-4468-8e6b-3339bef56765",
+              "recording_mbid": "a0238504-59f9-44a9-915b-f81f6afa98af"
+            },
+            {
+              "position": 6,
+              "number": "6",
+              "title": "Sing",
+              "length": 360973,
+              "track_mbid": "08c17e15-5e5f-4ef5-8ffc-b783f37450a0",
+              "recording_mbid": "4a9a98da-581b-419f-8f02-9c01cc94eb9b"
+            },
+            {
+              "position": 7,
+              "number": "7",
+              "title": "There’s No Other Way",
+              "length": 204866,
+              "track_mbid": "82b65254-41f6-418b-8fbc-6f4a02e86a6b",
+              "recording_mbid": "f2903d45-03c8-4631-a1e1-3d0d33c57cbe"
+            },
+            {
+              "position": 8,
+              "number": "8",
+              "title": "Fool",
+              "length": 194106,
+              "track_mbid": "7f8ba3fa-ef45-4651-a5a8-91399802e048",
+              "recording_mbid": "5234f29d-777c-480b-bb47-d42c922a80ac"
+            },
+            {
+              "position": 9,
+              "number": "9",
+              "title": "Come Together",
+              "length": 232400,
+              "track_mbid": "b8d9eb98-aa7f-40da-8c0a-128a4460edab",
+              "recording_mbid": "27090003-009c-4337-a648-7483c36bbfff"
+            },
+            {
+              "position": 10,
+              "number": "10",
+              "title": "High Cool",
+              "length": 217866,
+              "track_mbid": "f52458c6-bb95-411c-86d4-cfc5d6caa18d",
+              "recording_mbid": "c3820526-1b1d-4852-b8ee-9fb909ddafb0"
+            },
+            {
+              "position": 11,
+              "number": "11",
+              "title": "Birthday",
+              "length": 229920,
+              "track_mbid": "74d5f226-c49f-4c40-bbfa-c45fe09a6152",
+              "recording_mbid": "0b9b5669-eef0-420a-b695-350b36219c62"
+            },
+            {
+              "position": 12,
+              "number": "12",
+              "title": "Wear Me Down",
+              "length": 291506,
+              "track_mbid": "64335756-0529-4b0d-8799-dc54da1f0d6b",
+              "recording_mbid": "a4f6872f-ff57-476c-8897-3ddc52d2169b"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "d550f756-9e71-3e6b-8492-84a37154c10f",
+      "title": "Leisure",
+      "date": "1991-08-27",
+      "country": "GB",
+      "barcode": "077779750627",
+      "status": "Official",
+      "disambiguation": "",
+      "release_group": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+      "label_info": [],
+      "media": [
+        {
+          "position": 1,
+          "format": "CD",
+          "tracks": [
+            {
+              "position": 1,
+              "number": "1",
+              "title": "She’s So High",
+              "length": 284733,
+              "track_mbid": "28c891c5-64f5-39a5-9e14-fe0fca79f785",
+              "recording_mbid": "1c14202a-2ea7-4aff-bc41-6c97eb8a45e8"
+            },
+            {
+              "position": 2,
+              "number": "2",
+              "title": "Bang",
+              "length": 217933,
+              "track_mbid": "663ab6d1-275d-34e7-a27b-a434d5799de9",
+              "recording_mbid": "2460e0f7-17c3-4a9f-a555-e20fea6b17a0"
+            },
+            {
+              "position": 3,
+              "number": "3",
+              "title": "Slow Down",
+              "length": 191266,
+              "track_mbid": "3dbd1297-ad46-37b0-805a-0b681de3aa96",
+              "recording_mbid": "31e589f5-4ed0-45d0-ac00-ef16b612f4a7"
+            },
+            {
+              "position": 4,
+              "number": "4",
+              "title": "Repetition",
+              "length": 325560,
+              "track_mbid": "4ccbf75f-05d5-3c37-92cd-528fe8f26dd1",
+              "recording_mbid": "ca5c9d27-0e32-4b4b-9068-cfffb926c4bd"
+            },
+            {
+              "position": 5,
+              "number": "5",
+              "title": "Bad Day",
+              "length": 264600,
+              "track_mbid": "eec36fb5-9e2e-3cc8-afaf-d330f8f93d67",
+              "recording_mbid": "a0238504-59f9-44a9-915b-f81f6afa98af"
+            },
+            {
+              "position": 6,
+              "number": "6",
+              "title": "Sing",
+              "length": 360933,
+              "track_mbid": "9aabdb5f-4b0c-33bf-a71c-02c4a40fc203",
+              "recording_mbid": "4a9a98da-581b-419f-8f02-9c01cc94eb9b"
+            },
+            {
+              "position": 7,
+              "number": "7",
+              "title": "There’s No Other Way",
+              "length": 203840,
+              "track_mbid": "eed29715-2bce-39ea-867e-4ca0f776d6b6",
+              "recording_mbid": "f2903d45-03c8-4631-a1e1-3d0d33c57cbe"
+            },
+            {
+              "position": 8,
+              "number": "8",
+              "title": "Fool",
+              "length": 195333,
+              "track_mbid": "5f0e6156-21d3-30b3-8a52-039e76aa46cc",
+              "recording_mbid": "5234f29d-777c-480b-bb47-d42c922a80ac"
+            },
+            {
+              "position": 9,
+              "number": "9",
+              "title": "Come Together",
+              "length": 232400,
+              "track_mbid": "d4e02862-54ae-3e5e-bb6e-307184b9341f",
+              "recording_mbid": "27090003-009c-4337-a648-7483c36bbfff"
+            },
+            {
+              "position": 10,
+              "number": "10",
+              "title": "High Cool",
+              "length": 217626,
+              "track_mbid": "a9e30529-1e27-3ae2-9e84-91cfbd24b5d5",
+              "recording_mbid": "c3820526-1b1d-4852-b8ee-9fb909ddafb0"
+            },
+            {
+              "position": 11,
+              "number": "11",
+              "title": "Birthday",
+              "length": 230000,
+              "track_mbid": "c24d54db-0951-3c28-8c35-34bdd99cf183",
+              "recording_mbid": "0b9b5669-eef0-420a-b695-350b36219c62"
+            },
+            {
+              "position": 12,
+              "number": "12",
+              "title": "Wear Me Down",
+              "length": 289333,
+              "track_mbid": "3853ff49-df8f-33e7-9591-3704bea0f7b9",
+              "recording_mbid": "a4f6872f-ff57-476c-8897-3ddc52d2169b"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "d81bfb74-5d2e-4dcf-956f-550cfde5eed5",
+      "title": "Leisure",
+      "date": "1991-09-24",
+      "country": "US",
+      "barcode": "077779788026",
+      "status": "Official",
+      "disambiguation": "",
+      "release_group": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+      "label_info": [],
+      "media": [
+        {
+          "position": 1,
+          "format": "CD",
+          "tracks": [
+            {
+              "position": 1,
+              "number": "1",
+              "title": "She’s So High",
+              "length": 286200,
+              "track_mbid": "008dbc04-88ab-3d5f-b981-0d84473b5d3c",
+              "recording_mbid": "1c14202a-2ea7-4aff-bc41-6c97eb8a45e8"
+            },
+            {
+              "position": 2,
+              "number": "2",
+              "title": "There’s No Other Way",
+              "length": 203933,
+              "track_mbid": "ecc5fef1-6316-3567-bf42-4e6c8301d431",
+              "recording_mbid": "f2903d45-03c8-4631-a1e1-3d0d33c57cbe"
+            },
+            {
+              "position": 3,
+              "number": "3",
+              "title": "Bang",
+              "length": 217293,
+              "track_mbid": "f69ebcdd-8758-3194-8db4-1d9bd5a04294",
+              "recording_mbid": "2460e0f7-17c3-4a9f-a555-e20fea6b17a0"
+            },
+            {
+              "position": 4,
+              "number": "4",
+              "title": "I Know",
+              "length": 212706,
+              "track_mbid": "51dacdac-6932-3a28-95b0-4dc798ebaa20",
+              "recording_mbid": "56c868df-84df-4895-bb96-d3f97b7dc709"
+            },
+            {
+              "position": 5,
+              "number": "5",
+              "title": "Slow Down",
+              "length": 191200,
+              "track_mbid": "6b73d95b-6e0b-353d-8f42-943dba04607b",
+              "recording_mbid": "31e589f5-4ed0-45d0-ac00-ef16b612f4a7"
+            },
+            {
+              "position": 6,
+              "number": "6",
+              "title": "Repetition",
+              "length": 325626,
+              "track_mbid": "2c18d643-15cd-369d-a95a-17facffbab66",
+              "recording_mbid": "ca5c9d27-0e32-4b4b-9068-cfffb926c4bd"
+            },
+            {
+              "position": 7,
+              "number": "7",
+              "title": "Bad Day",
+              "length": 264466,
+              "track_mbid": "f364de3d-5757-30ec-8301-6767b01052eb",
+              "recording_mbid": "a0238504-59f9-44a9-915b-f81f6afa98af"
+            },
+            {
+              "position": 8,
+              "number": "8",
+              "title": "High Cool",
+              "length": 218333,
+              "track_mbid": "42c607a0-b54c-3e2b-b8d6-65ffba450dad",
+              "recording_mbid": "c3820526-1b1d-4852-b8ee-9fb909ddafb0"
+            },
+            {
+              "position": 9,
+              "number": "9",
+              "title": "Come Together",
+              "length": 232933,
+              "track_mbid": "8af5869c-115b-3d29-a45b-79cb2dc7b343",
+              "recording_mbid": "27090003-009c-4337-a648-7483c36bbfff"
+            },
+            {
+              "position": 10,
+              "number": "10",
+              "title": "Fool",
+              "length": 196533,
+              "track_mbid": "96f30f25-c836-3789-bbfc-e4e7d3e118d6",
+              "recording_mbid": "5234f29d-777c-480b-bb47-d42c922a80ac"
+            },
+            {
+              "position": 11,
+              "number": "11",
+              "title": "Birthday",
+              "length": 230400,
+              "track_mbid": "972a43cf-1bdb-3493-9a88-9e6277003ab7",
+              "recording_mbid": "0b9b5669-eef0-420a-b695-350b36219c62"
+            },
+            {
+              "position": 12,
+              "number": "12",
+              "title": "Wear Me Down",
+              "length": 289733,
+              "track_mbid": "6c9de7ad-5a10-3a00-8d99-a5bca7c7f801",
+              "recording_mbid": "a4f6872f-ff57-476c-8897-3ddc52d2169b"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dc2c22eb-9e48-4caa-8263-87c4cfe40a1a",
+      "title": "Leisure",
+      "date": "1991-08-26",
+      "country": "US",
+      "barcode": null,
+      "status": "Official",
+      "disambiguation": "",
+      "release_group": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+      "label_info": [],
+      "media": [
+        {
+          "position": 1,
+          "format": "CD",
+          "tracks": [
+            {
+              "position": 1,
+              "number": "1",
+              "title": "She's So High",
+              "length": 287000,
+              "track_mbid": "f5ac629e-3c04-41d8-a182-2d43f55fe8ba",
+              "recording_mbid": "3f08ad45-0c00-436e-b737-80c137d4e081"
+            },
+            {
+              "position": 2,
+              "number": "2",
+              "title": "There's No Other Way",
+              "length": 220000,
+              "track_mbid": "c7c5334d-1c15-45c7-abdb-fa98ad6df7b5",
+              "recording_mbid": "35b0f752-a764-46dd-a596-a9fb84b1ac96"
+            },
+            {
+              "position": 3,
+              "number": "3",
+              "title": "Bang!",
+              "length": 193000,
+              "track_mbid": "029b4616-d83f-4f04-a4c5-987b75ac1ccf",
+              "recording_mbid": "1d88be40-8a9b-40a4-b4dc-c74e670fe2bd"
+            },
+            {
+              "position": 4,
+              "number": "4",
+              "title": "I Know",
+              "length": 328000,
+              "track_mbid": "e782b3dd-5c6d-48fc-9c06-e4332d13ffd3",
+              "recording_mbid": "49254bfe-df6a-419b-a5f3-d9f837408008"
+            },
+            {
+              "position": 5,
+              "number": "5",
+              "title": "Slow Down",
+              "length": 267000,
+              "track_mbid": "aa3fb358-2b37-48ac-97fa-81262f04eafd",
+              "recording_mbid": "b42fec06-e937-4054-b587-0e91286db582"
+            },
+            {
+              "position": 6,
+              "number": "6",
+              "title": "Sing",
+              "length": 363000,
+              "track_mbid": "128c5410-32ee-431a-8950-8dfe2e853bb0",
+              "recording_mbid": "4a9a98da-581b-419f-8f02-9c01cc94eb9b"
+            },
+            {
+              "position": 7,
+              "number": "7",
+              "title": "Bad Day",
+              "length": 206000,
+              "track_mbid": "e467dfa4-c2c7-4b67-abb0-5727b8522522",
+              "recording_mbid": "bc98afa2-f01f-4ee0-a371-85578e6bf2e2"
+            },
+            {
+              "position": 8,
+              "number": "8",
+              "title": "High Cool",
+              "length": 197000,
+              "track_mbid": "0e41dabf-3f7a-447f-90b8-d34471428708",
+              "recording_mbid": "5930d9ec-2d90-45e4-8176-f3e2e84d8987"
+            },
+            {
+              "position": 9,
+              "number": "9",
+              "title": "Come Together",
+              "length": 234000,
+              "track_mbid": "aebb6634-7cd3-42c6-9260-7aa7b97414c9",
+              "recording_mbid": "27090003-009c-4337-a648-7483c36bbfff"
+            },
+            {
+              "position": 10,
+              "number": "10",
+              "title": "Fool",
+              "length": 220000,
+              "track_mbid": "739dceb4-6eeb-41f5-8820-26a2734ebf6a",
+              "recording_mbid": "19c91857-18c3-40b7-a41f-db93a5feb8dd"
+            },
+            {
+              "position": 11,
+              "number": "11",
+              "title": "Birthday",
+              "length": 232000,
+              "track_mbid": "381abb3d-60fe-470a-a743-996d13f4951a",
+              "recording_mbid": "0b9b5669-eef0-420a-b695-350b36219c62"
+            },
+            {
+              "position": 12,
+              "number": "12",
+              "title": "Wear Me Down",
+              "length": 289000,
+              "track_mbid": "836601f5-f85a-488c-9102-2935a72ed429",
+              "recording_mbid": "a4f6872f-ff57-476c-8897-3ddc52d2169b"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fbeb5683-34f1-4192-93e8-38217598ba03",
+      "title": "Leisure",
+      "date": "2012-08-01",
+      "country": "JP",
+      "barcode": "4988006895508",
+      "status": "Official",
+      "disambiguation": "",
+      "release_group": "6ef2736f-e68b-3512-97e5-0b5003fd3d9a",
+      "label_info": [],
+      "media": [
+        {
+          "position": 1,
+          "format": "CD",
+          "tracks": [
+            {
+              "position": 1,
+              "number": "1",
+              "title": "She's So High",
+              "length": 286173,
+              "track_mbid": "db2dac16-d967-4801-bf9f-a291127f54e7",
+              "recording_mbid": "1c14202a-2ea7-4aff-bc41-6c97eb8a45e8"
+            },
+            {
+              "position": 2,
+              "number": "2",
+              "title": "Bang",
+              "length": 217253,
+              "track_mbid": "d17bb11e-8ce2-4336-8108-78df9e2be65e",
+              "recording_mbid": "2460e0f7-17c3-4a9f-a555-e20fea6b17a0"
+            },
+            {
+              "position": 3,
+              "number": "3",
+              "title": "Slow Down",
+              "length": 191106,
+              "track_mbid": "23e19524-9e00-48d9-8071-f405eb49301c",
+              "recording_mbid": "31e589f5-4ed0-45d0-ac00-ef16b612f4a7"
+            },
+            {
+              "position": 4,
+              "number": "4",
+              "title": "Repetition",
+              "length": 325693,
+              "track_mbid": "78fdc040-fbd8-4739-a74e-82fd22293b44",
+              "recording_mbid": "ca5c9d27-0e32-4b4b-9068-cfffb926c4bd"
+            },
+            {
+              "position": 5,
+              "number": "5",
+              "title": "Bad Day",
+              "length": 264466,
+              "track_mbid": "16611764-f727-41bf-9ec6-510aa56bc4f5",
+              "recording_mbid": "a0238504-59f9-44a9-915b-f81f6afa98af"
+            },
+            {
+              "position": 6,
+              "number": "6",
+              "title": "Sing",
+              "length": 360973,
+              "track_mbid": "1e77c5ad-7861-46d7-87bf-957aa74f0db6",
+              "recording_mbid": "4a9a98da-581b-419f-8f02-9c01cc94eb9b"
+            },
+            {
+              "position": 7,
+              "number": "7",
+              "title": "There's No Other Way",
+              "length": 204866,
+              "track_mbid": "598946f7-382c-4a61-9544-854f2b57d673",
+              "recording_mbid": "f2903d45-03c8-4631-a1e1-3d0d33c57cbe"
+            },
+            {
+              "position": 8,
+              "number": "8",
+              "title": "Fool",
+              "length": 194106,
+              "track_mbid": "651c6656-db28-4d90-9a36-5bea5d62f899",
+              "recording_mbid": "5234f29d-777c-480b-bb47-d42c922a80ac"
+            },
+            {
+              "position": 9,
+              "number": "9",
+              "title": "Come Together",
+              "length": 232400,
+              "track_mbid": "5b23df90-c18b-4458-bd15-1c8a9368a53a",
+              "recording_mbid": "27090003-009c-4337-a648-7483c36bbfff"
+            },
+            {
+              "position": 10,
+              "number": "10",
+              "title": "High Cool",
+              "length": 217866,
+              "track_mbid": "76e4ba26-e597-46db-ad38-f4e9258c95d0",
+              "recording_mbid": "c3820526-1b1d-4852-b8ee-9fb909ddafb0"
+            },
+            {
+              "position": 11,
+              "number": "11",
+              "title": "Birthday",
+              "length": 229920,
+              "track_mbid": "f1696319-4871-4b0b-baeb-c50b1bb64b68",
+              "recording_mbid": "0b9b5669-eef0-420a-b695-350b36219c62"
+            },
+            {
+              "position": 12,
+              "number": "12",
+              "title": "Wear Me Down",
+              "length": 291506,
+              "track_mbid": "1d147793-5bdf-4f81-8703-62a58b26e2d3",
+              "recording_mbid": "a4f6872f-ff57-476c-8897-3ddc52d2169b"
+            }
+          ]
+        },
+        {
+          "position": 2,
+          "format": "CD",
+          "tracks": [
+            {
+              "position": 1,
+              "number": "1",
+              "title": "I Know (Extended Mix)",
+              "length": 391253,
+              "track_mbid": "e259056c-055c-47c4-a112-a47aeecf768c",
+              "recording_mbid": "87dfe8ce-4861-4327-b16c-60423529e352"
+            },
+            {
+              "position": 2,
+              "number": "2",
+              "title": "Down",
+              "length": 358626,
+              "track_mbid": "c9ac3f5e-9856-45a7-8ea5-c59d2a7f8d7e",
+              "recording_mbid": "272774b1-029f-4c58-aa31-8b492cfa72ae"
+            },
+            {
+              "position": 3,
+              "number": "3",
+              "title": "There's No Other Way (Extended Version)",
+              "length": 238506,
+              "track_mbid": "1fb3562c-cb64-48f6-b914-6bda51dbc79c",
+              "recording_mbid": "20255402-1548-4e9f-8379-c599daeea4b3"
+            },
+            {
+              "position": 4,
+              "number": "4",
+              "title": "Inertia",
+              "length": 229440,
+              "track_mbid": "cc4143d3-a950-409a-ab6a-9e577d13680d",
+              "recording_mbid": "5a8f7dcb-a967-4a95-b2c4-5266ac8c7d59"
+            },
+            {
+              "position": 5,
+              "number": "5",
+              "title": "Mr Briggs",
+              "length": 238800,
+              "track_mbid": "0ab361db-681d-41e8-b750-3ae8a4fe82f0",
+              "recording_mbid": "d641a183-8ba5-4432-86fa-73ab0b865638"
+            },
+            {
+              "position": 6,
+              "number": "6",
+              "title": "I'm All Over",
+              "length": 120240,
+              "track_mbid": "b0aa2d6b-20e7-46f1-bd82-a0d80637bd61",
+              "recording_mbid": "3e87c042-6577-4248-a4d9-937924da1033"
+            },
+            {
+              "position": 7,
+              "number": "7",
+              "title": "Won't Do It",
+              "length": 200186,
+              "track_mbid": "42dc1598-9212-4aa9-a1e1-75e25306a9c5",
+              "recording_mbid": "61c92a73-c3d5-43f6-8410-49156604b1cb"
+            },
+            {
+              "position": 8,
+              "number": "8",
+              "title": "Day Upon Day (Live)",
+              "length": 253986,
+              "track_mbid": "0e968e9e-8203-491f-92cb-36df34611973",
+              "recording_mbid": "0ca3a70c-39dc-41b7-a943-acd32b24598c"
+            },
+            {
+              "position": 9,
+              "number": "9",
+              "title": "There's No Other Way (Blur Remix)",
+              "length": 296866,
+              "track_mbid": "472efdef-9b77-4a79-b410-d245dbf50a0f",
+              "recording_mbid": "877ed1d9-f17c-4f7f-8537-e384f60e7315"
+            },
+            {
+              "position": 10,
+              "number": "10",
+              "title": "Bang (Extended Version)",
+              "length": 265853,
+              "track_mbid": "5b10fc70-5355-452d-a58d-16d053f25253",
+              "recording_mbid": "c3b91c5b-621d-4cc8-906f-b34396c59125"
+            },
+            {
+              "position": 11,
+              "number": "11",
+              "title": "Explain",
+              "length": 165280,
+              "track_mbid": "da804852-feae-4314-898e-d28cae3dd16b",
+              "recording_mbid": "5cf14477-9232-4ba2-b02c-4d9c9a737c7d"
+            },
+            {
+              "position": 12,
+              "number": "12",
+              "title": "Luminous",
+              "length": 194026,
+              "track_mbid": "34f63acd-79a6-4b89-a216-d1bcd6814ce6",
+              "recording_mbid": "7d019300-5227-40bc-acca-49b6a4ee2261"
+            },
+            {
+              "position": 13,
+              "number": "13",
+              "title": "Berserk",
+              "length": 403360,
+              "track_mbid": "54c71890-ee40-426f-9bd5-55363c966cbf",
+              "recording_mbid": "73c570ae-341f-4b45-ae81-b1fb0c0a1e1a"
+            },
+            {
+              "position": 14,
+              "number": "14",
+              "title": "Uncle Love",
+              "length": 151320,
+              "track_mbid": "9b7a781e-f4b7-4699-871e-afae63dfed1a",
+              "recording_mbid": "c2bc53d2-5652-47b7-8c68-9a7b812f9bc3"
+            },
+            {
+              "position": 15,
+              "number": "15",
+              "title": "I Love Her (Demo)",
+              "length": 216440,
+              "track_mbid": "7f4b6a34-e41b-40de-93a6-5c7a4321d55b",
+              "recording_mbid": "f6fac006-939c-4dfd-87fc-03e5bf6f11c2"
+            },
+            {
+              "position": 16,
+              "number": "16",
+              "title": "Close",
+              "length": 187453,
+              "track_mbid": "6f1fa63a-4d4b-46a9-a5fd-60568f05b8b4",
+              "recording_mbid": "090ea6ab-8bf7-4e56-b47e-00d6d1a5f5bf"
+            },
+            {
+              "position": 17,
+              "number": "17",
+              "title": "High Cool (Dub)",
+              "length": 220426,
+              "track_mbid": "6cf3f312-2fe9-44d6-8742-f4bd918ad4c6",
+              "recording_mbid": "d4160025-2565-43ca-b4bc-6ef591d02019"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "adjacent_program_editions": [
+    {
+      "id": "3f369479-72b3-4bb1-9f36-456bd2ec96b0",
+      "title": "M.O.R.",
+      "date": "1998-02-11",
+      "country": "JP",
+      "barcode": "4988006738676",
+      "status": "Official",
+      "disambiguation": "",
+      "release_group": "5143f879-fcbd-30ef-aea9-93002a67bec9",
+      "label_info": [],
+      "media": [
+        {
+          "position": 1,
+          "format": "CD",
+          "tracks": [
+            {
+              "position": 1,
+              "number": "1",
+              "title": "M.O.R. (Road version)",
+              "length": 193000,
+              "track_mbid": "2a57c606-0532-37ac-a339-42cd503d1069",
+              "recording_mbid": "ed59ae01-7361-40ee-b9d9-25c965c6451e"
+            },
+            {
+              "position": 2,
+              "number": "2",
+              "title": "M.O.R. (karaoke version)",
+              "length": 193000,
+              "track_mbid": "fdf3674c-946b-3470-af10-503e59d34a45",
+              "recording_mbid": "826826f1-6284-4f12-b870-2d7dffa433b7"
+            },
+            {
+              "position": 3,
+              "number": "3",
+              "title": "I Love Her (demo version)",
+              "length": 214000,
+              "track_mbid": "91bf27a1-e9ee-3f69-82b5-76f8d609aff2",
+              "recording_mbid": "f6fac006-939c-4dfd-87fc-03e5bf6f11c2"
+            },
+            {
+              "position": 4,
+              "number": "4",
+              "title": "Death of a Party (live version)",
+              "length": 256000,
+              "track_mbid": "f0643664-4ff4-3605-930b-57557c4e2628",
+              "recording_mbid": "f36f74a7-914f-4480-b0e1-00f1fa8d3571"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "955eefe1-ff4c-42d4-9316-e35e81705e1b",
+      "title": "Close",
+      "date": "1998-11",
+      "country": "GB",
+      "barcode": null,
+      "status": "Official",
+      "disambiguation": "",
+      "release_group": "41b82d82-c198-3fec-a467-8f0e7ea780f5",
+      "label_info": [],
+      "media": [
+        {
+          "position": 1,
+          "format": "CD",
+          "tracks": [
+            {
+              "position": 1,
+              "number": "1",
+              "title": "Close",
+              "length": 185000,
+              "track_mbid": "80de3033-263c-35c2-a431-0d01fb98c654",
+              "recording_mbid": "090ea6ab-8bf7-4e56-b47e-00d6d1a5f5bf"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "b11e8000-f0c2-4277-befb-b125a5edece7",
+      "title": "She’s So High",
+      "date": "1990-10-15",
+      "country": "GB",
+      "barcode": "5099920408725",
+      "status": "Official",
+      "disambiguation": "",
+      "release_group": "64468b93-32ec-3804-be78-7668018f03c9",
+      "label_info": [],
+      "media": [
+        {
+          "position": 1,
+          "format": "CD",
+          "tracks": [
+            {
+              "position": 1,
+              "number": "1",
+              "title": "She’s So High (edit)",
+              "length": 230960,
+              "track_mbid": "2da98cb4-c8d0-300d-89a2-6273611fd01f",
+              "recording_mbid": "b9168df7-5d1d-48e8-9b6a-4762c379569d"
+            },
+            {
+              "position": 2,
+              "number": "2",
+              "title": "I Know (extended)",
+              "length": 391840,
+              "track_mbid": "48017b3e-05af-3437-84ab-3e64e0f415c1",
+              "recording_mbid": "87dfe8ce-4861-4327-b16c-60423529e352"
+            },
+            {
+              "position": 3,
+              "number": "3",
+              "title": "Down",
+              "length": 357760,
+              "track_mbid": "4261134e-2947-36bb-8317-bf938beeb2bf",
+              "recording_mbid": "272774b1-029f-4c58-aa31-8b492cfa72ae"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ea3df91a-d85f-435c-8c75-c0a5494e662c",
+      "title": "There’s No Other Way",
+      "date": "1991-04-15",
+      "country": "GB",
+      "barcode": "5099920427221",
+      "status": "Official",
+      "disambiguation": "",
+      "release_group": "feac2516-9f44-34b2-b6c2-b782c7c15be5",
+      "label_info": [],
+      "media": [
+        {
+          "position": 1,
+          "format": "CD",
+          "tracks": [
+            {
+              "position": 1,
+              "number": "1",
+              "title": "There’s No Other Way",
+              "length": 194560,
+              "track_mbid": "9d042e09-ac31-3f1b-b7cb-69dfb4a33253",
+              "recording_mbid": "6eb416f2-5649-497a-b36e-2e47c92f366b"
+            },
+            {
+              "position": 2,
+              "number": "2",
+              "title": "Inertia",
+              "length": 231040,
+              "track_mbid": "1b518732-c96d-363c-aff6-8d70503604ec",
+              "recording_mbid": "5a8f7dcb-a967-4a95-b2c4-5266ac8c7d59"
+            },
+            {
+              "position": 3,
+              "number": "3",
+              "title": "Mr. Briggs",
+              "length": 239200,
+              "track_mbid": "267ac620-d0f7-3f26-b8fe-c8f333618041",
+              "recording_mbid": "d641a183-8ba5-4432-86fa-73ab0b865638"
+            },
+            {
+              "position": 4,
+              "number": "4",
+              "title": "I’m All Over",
+              "length": 119666,
+              "track_mbid": "5b90f8bc-2ce7-38ba-8f96-a46f7547c68c",
+              "recording_mbid": "3e87c042-6577-4248-a4d9-937924da1033"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "7916ce29-57d6-40d8-b046-016a0a5f4417",
+      "title": "Bang",
+      "date": "1991-07-29",
+      "country": "GB",
+      "barcode": "5099920441265",
+      "status": "Official",
+      "disambiguation": "",
+      "release_group": "1ee73ffa-0818-34ab-9a6d-9a80464b5b32",
+      "label_info": [],
+      "media": [
+        {
+          "position": 1,
+          "format": "12\" Vinyl",
+          "tracks": [
+            {
+              "position": 1,
+              "number": "A1",
+              "title": "Bang (extended)",
+              "length": 263000,
+              "track_mbid": "e7593564-572f-4e79-8a72-a05e0dd50050",
+              "recording_mbid": "c3b91c5b-621d-4cc8-906f-b34396c59125"
+            },
+            {
+              "position": 2,
+              "number": "A2",
+              "title": "Explain",
+              "length": 162000,
+              "track_mbid": "70855e93-eb90-35cf-b242-dda616cd667b",
+              "recording_mbid": "5cf14477-9232-4ba2-b02c-4d9c9a737c7d"
+            },
+            {
+              "position": 3,
+              "number": "B1",
+              "title": "Luminous",
+              "length": 192000,
+              "track_mbid": "08ba04a9-a001-3720-bdd8-195f721bdd5a",
+              "recording_mbid": "7d019300-5227-40bc-acca-49b6a4ee2261"
+            },
+            {
+              "position": 4,
+              "number": "B2",
+              "title": "Uncle Love",
+              "length": 148000,
+              "track_mbid": "dc63902e-3a18-3ef8-bd08-2e4b4128768d",
+              "recording_mbid": "c2bc53d2-5652-47b7-8c68-9a7b812f9bc3"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

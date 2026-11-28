@@ -1,6 +1,6 @@
 class Recording < ApplicationRecord
   has_many :catalog_track_slots, dependent: :restrict_with_exception
-  has_many :recording_artists, dependent: :destroy
+  has_many :recording_artists, -> { order(:position, :id) }, dependent: :destroy
   has_many :artists, through: :recording_artists
   has_many :admitted_releases, -> { distinct }, through: :catalog_track_slots, source: :release
 

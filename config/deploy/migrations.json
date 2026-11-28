@@ -1,6 +1,12 @@
 {
   "format": 1,
   "migrations": {
+    "db/migrate/20261124162000_add_verified_shell_identity_to_sessions.rb": {
+      "sha256": "24a059f80fd3ceff1aadcc08d1d91b51ac1b2ea18c911e810f6d9547f3806fbd",
+      "risk": "additive",
+      "quiesce": true,
+      "review": "v0.7.2 SH-05: adds two nullable columns to the Muzeum sessions table. No defaults, backfill, index rebuild or catalog writes. Brief table lock during Muzeum-only quiescence. Older releases can ignore both columns."
+    },
     "db/migrate/20261118120000_add_recording_resolution.rb": {
       "sha256": "9d2678e0e0383c0845277c738f0bd506142880cbee4b987f1bdedcf2a434e875",
       "risk": "additive",
@@ -36,6 +42,60 @@
       "risk": "additive",
       "quiesce": true,
       "review": "Adds an empty append-only publication audit table, foreign key, and an owning-grant revocation trigger. No backfill, profile activation, or source data changes. DDL briefly locks the profile and grant tables. Require Muzeum-only quiescence, a fresh encrypted backup and isolated four-database recovery. Retain the migration and audit records during forward repair."
-    }
+    },
+    "db/migrate/20261121160000_index_resolution_decisions_by_recording.rb": {
+      "sha256": "ccf5ac6f930dde4487cc537cb6a77112fc7bb2e5df63abb9d02107a47d2288e8",
+      "risk": "additive",
+      "quiesce": true,
+      "review": "Adds one concurrent partial index for catalog listening lookups. No decision or source observation rewrite. Require existing guarded migration and recovery checks."
+    },
+    "db/migrate/20261122170000_create_musical_identity_decisions.rb": {
+      "sha256": "03f0ad572609fa20e2d4484d6615edcdcb865172f9b969375d648c4ff987cc85",
+      "risk": "additive",
+      "quiesce": true,
+      "review": "Adds an empty decision-history table with a user foreign key, palette array, and entity-history lookup index. No backfill or writes to existing rows. Quiesce Muzeum and use the existing four-database recovery procedure."
+    },
+    "db/migrate/20261122170100_add_edition_appearances_to_catalog_track_slots.rb": {
+      "sha256": "bcb291ff246e16c7cfbaa94900cf8a1ddf1de9adcd04e254df937cf086c4f847",
+      "risk": "additive",
+      "quiesce": true,
+      "review": "Adds nullable edition and appearance-date columns with no backfill. Before dropping the old global position index, creates two unique partial indexes in the same transaction. Existing rows have NULL edition identity and retain unique base positions; additional positions are unique per release and edition. Quiesce Muzeum for the table lock and index build. Retain the upgraded schema during application rollback. The schema-preservation verifier requires the exact retired and replacement index definitions, with the replacement bound to this migration hash."
+    },
+    "db/migrate/20261122223000_create_release_ranking_decisions.rb": {
+      "sha256": "cbecc4eb0efe229d46eb559bdb4270bc385135bb62ad692367167469bd68d754",
+      "risk": "additive",
+      "quiesce": true,
+      "review": "Adds an empty user-scoped release ranking decision history with foreign keys and a lookup index. No observation or catalog backfill. Retain this table and its decisions during application rollback."
+    },
+    "db/migrate/20261123230000_create_release_track_listening_decisions.rb": {
+      "sha256": "874544bc3ac831644b0cf466bbebcb6ac5284437e53b6c5fb0b99ad5f160fdab",
+      "risk": "additive",
+      "quiesce": true,
+      "review": "Adds an empty listener, release and recording preference history with foreign keys and an index. No changes to existing memberships, decisions or observations. Retain the table during application recovery."
+    },
+    "db/migrate/20261123231500_add_source_provenance_to_catalog_track_slots.rb": {
+      "sha256": "ba5ac7a515034486e3e7825d691c3b3c46cc1b24e9285369d4100b9d62863292",
+      "risk": "additive",
+      "quiesce": true,
+      "review": "Adds nullable source recording ID, duration and credit fields. No backfill, source reconstruction or changes to existing values. Quiesce for the existing table lock and retain the fields during application recovery."
+    },
+    "db/migrate/20261124030000_create_recording_source_decisions.rb": {
+      "sha256": "d1cfc582a30dcf95a3033ff112b11b3ea16690eabecd0946b9117fb6cf1e91ee",
+      "risk": "additive",
+      "quiesce": true,
+      "review": "Adds an empty source identity decision history with a recording foreign key and a source and revision lookup index. No mappings or existing row changes are performed by this migration. Quiesce for the foreign key setup and keep the journal during roll-forward repair."
+    },
+      "db/migrate/20261126170000_create_release_configurations.rb": {
+        "sha256": "500080f5572e0682321403a3448e02038595239067e6c35fdd7a2be59979e5a9",
+        "risk": "additive",
+        "quiesce": true,
+        "review": "Adds empty release configuration snapshots and listener selection history with foreign keys and indexes. No backfill, slot rewrite, or changes to existing listening decisions. Retain the tables during recovery."
+      },
+      "db/migrate/20261126173000_create_short_track_inference_decisions.rb": {
+        "sha256": "fdc9236c176313c318bcf1a468b6998093f6a939f02d5e44d506b1b208c3557d",
+        "risk": "additive",
+        "quiesce": true,
+        "review": "Adds an empty short-track inference decision history with foreign keys, indexes, and a decision constraint. No writes to existing observations, catalog memberships, or recording decisions. Retain the journal during recovery."
+      }
   }
 }

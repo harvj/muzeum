@@ -2,10 +2,10 @@
 <html lang="en">
   <head>
     <title>Muzeum — listening archive</title>
-    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
-    <% if @public_profile || controller_name == "landing" %><meta name="turbo-cache-control" content="no-cache"><% end %>
+    <% if current_user || @public_profile || controller_name == "landing" %><meta name="turbo-cache-control" content="no-cache"><% end %>
     <%= tag.link rel: "icon", href: asset_path("muzeum-favicon.svg"), type: "image/svg+xml", sizes: "any" %>
     <link rel="stylesheet" href="/identity/v1/identity.css">
     <link rel="stylesheet" href="/identity/v1/session.css">
@@ -13,44 +13,54 @@
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
-  <body>
+  <body data-controller="guide" data-action="hashchange@window->guide#openFromLocation">
     <%= tag.div class: "stone-environment", aria: { hidden: true },
                 data: { controller: "site-art", site_art_urls_value: SiteArt.snapshot } %>
-    <header>
+    <a class="shell-skip-link" href="#main-content">Skip to content</a>
+    <header data-controller="shell-header"
+            data-action="scroll@window->shell-header#schedule resize@window->shell-header#schedule focusin@document->shell-header#clearFocus">
       <a class="harvj-wordmark" href="https://muzeum.fm/">muzeum</a>
       <div class="header-navigation">
         <% if @public_profile %>
           <nav class="library-nav" aria-label="Public profile">
-            <%= link_to "Archive", public_profile_path(@public_profile), class: "entity-link" %>
+            <%= shell_navigation_item "Archive", public_profile_path(@public_profile), descendants: false %>
             <% %w[artists releases recordings].each do |section| %>
-              <%= link_to section.capitalize, catalog_index_path(section), class: "entity-link" %>
+              <%= shell_navigation_item section.capitalize, catalog_index_path(section), descendants: false %>
             <% end %>
           </nav>
         <% elsif current_user %>
           <nav class="library-nav" aria-label="Music library">
             <% { "Recordings" => recordings_path, "Releases" => releases_path, "Artists" => artists_path,
                  "Archive" => archive_path, "Resolution" => resolution_surfaces_path }.each do |label, path| %>
-              <% active = request.path.start_with?(path) %>
-              <%= link_to label, path, class: "entity-link", aria: { current: active ? "page" : nil } %>
+              <%= shell_navigation_item label, path, descendants: %w[Archive Resolution].include?(label) %>
             <% end %>
           </nav>
         <% end %>
         <% if current_user %>
           <div class="account-nav" aria-label="Profile"><%= render "shared/session_dropdown" %></div>
         <% else %>
-          <div class="account-nav">
+          <div class="account-nav anonymous-account-nav">
             <%= link_to "Log In", login_path, class: "entity-link", data: { turbo: false, turbo_prefetch: false } %>
-            <%= render "shared/appearance" %>
           </div>
         <% end %>
       </div>
     </header>
-    <main>
+    <main id="main-content" tabindex="-1">
       <% flash.each do |_, message| %><p class="card flash" role="status"><%= message %></p><% end %>
       <%= yield %>
     </main>
     <footer class="site-footer">
-      <span>© 2026 <%= link_to "Jim Harvey", "https://harvj.com/" %><% if (tag = published_release_tag) %> · Muzeum <%= tag %><% end %></span>
+      <nav aria-label="Help"><%= link_to "Guide", "#guide-overview", class: "entity-link guide-trigger", data: { action: "guide#open" } %></nav>
+      <div class="footer-release">
+        <span>© <%= Date.current.year %> <%= link_to "Jim Harvey", "https://harvj.com/" %></span>
+        <% if (label = running_release_label) %><span>Muzeum <%= label %></span><% end %>
+      </div>
     </footer>
+    <details class="shell-appearance" hidden data-controller="appearance"
+      data-action="keydown.esc->appearance#dismiss">
+      <summary aria-label="Appearance settings"><span aria-hidden="true">◐</span></summary>
+      <%= render "shared/appearance" %>
+    </details>
+    <%= render "shared/guide" %>
   </body>
 </html>

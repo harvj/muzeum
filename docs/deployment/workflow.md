@@ -8,7 +8,7 @@ Standing operator convention: **`cap production deploy`** (equivalently `bundle 
 
 1. Require clean local `main`, including untracked files, tracking `origin/main` in `harvj/muzeum`. Fetch with noninteractive SSH and require exact equality; refuse ahead/behind/diverged/detached states. Require the latest `CI` run for that exact commit to have passed. Pin that immutable SHA for Capistrano's Git archive.
 2. Verify the installed root helper and inspector match the local reviewed bytes. Acquire a persistent Muzeum-only deployment lock and create an independently retained root-only receipt under `/var/lib/muzeum-deploy/<token>.json`. A second invocation or crash never steals the lock.
-3. Check protected credentials/configuration, root-owned helpers, existing independent recovery escrow, existing backup freshness (the established 26-hour limit), disk headroom (the established 8 GiB recovery allowance), service/loopback health, all four database connections, restricted roles/grants, valid indexes/constraints, source triggers and native Solid Queue process heartbeats. Refuse legacy migrator-owned Bootsnap caches before modifying a release. Use the existing host backup lock to exclude scheduled backup pauses during each guarded phase; contention fails safely rather than treating a refused backup as success.
+3. Check protected credentials/configuration, root-owned helpers, existing independent recovery escrow, existing backup freshness (the established 26-hour limit), disk headroom (the established 8 GiB recovery allowance), service/loopback health, all four database connections, restricted roles/grants, valid indexes/constraints, source triggers and native Solid Queue process heartbeats. Use the existing host backup lock to exclude scheduled backup pauses during each guarded phase; contention fails safely rather than treating a refused backup as success.
 4. After preflight, create the native GitHub Deployment and `in_progress` status locally, correlated by SHA/token with the server receipt. If initiation reporting fails, cancel untouched server preparation without withdrawing/restarting services. Then let Capistrano prepare the exact release, link shared configuration, install the locked bundle and build assets. Inspect pending Rails migrations across primary/cache/queue/cable. Require an exact matching review entry for each pending file.
 5. For **code only**, retain public availability through preparation, skip fresh capture/recovery drills and migrations, publish, restart only Muzeum web/worker, and verify readiness. The normal systemd restart can briefly interrupt Muzeum requests; no new rolling-service infrastructure is introduced.
 6. For **migrations**, check withdrawal eligibility without changing services, then withdraw only Muzeum through the shared infrastructure route interface. Stop its writers only after successful withdrawal. Take and isolated-restore-verify a fresh encrypted four-database backup against the old release. Fingerprint every existing application table's original columns under the SELECT-only backup role, including observations, provenance, identities and interpretation history. Exclude only Rails migration/internal metadata.
@@ -18,6 +18,25 @@ Standing operator convention: **`cap production deploy`** (equivalently `bundle 
 10. Finish Capistrano cleanup, reverify health/current release, retain the completed receipt, then release the deployment lock. Output SHA, migration inventory, backup/recovery references, service verification and outcome. Only after the server records `complete` with passed health, publish GitHub `success` from the local command. A failed attempted deployment reports `failure`; cancelled initiation reports `error`. Releases, migration versions and off-host backup snapshots remain separate audit records.
 
 The helper uses the **installed existing** backup/recovery implementation and the same host lock, repository, protected credentials, escrow, monitoring and scoped databases. It does not provision infrastructure, rotate keys, change timers, or restart CE/Auth/shared Caddy. The infrastructure route interface validates the assembled Caddy configuration under the shared lock and gracefully reloads Caddy after changing the Muzeum site file. It compares the live configuration against a fresh transaction snapshot, so earlier changes to other sites do not invalidate eligibility. Old releases remain subject to Capistrano's five-release retention.
+
+## Release acceptance
+
+Use shared Chromium for authenticated acceptance before deployment. Stage the exact candidate with the existing disposable Capistrano workflow and run the [shared browser scenario](../../spec/browser_acceptance/README.md) with disposable native Auth. Retain the passing report, its source SHA, tree, sealed inventory and archive digest, and sanitized screenshots. Reuse that evidence for the exact candidate during deployment and publication. Verify signed Application Shell requirements through the existing preflight.
+
+Use the normal guarded completion receipt and independently verified **production** artifact identity for live verification. The disposable artifact digest cannot identify a separate production build. Run the public smoke against the verified production identity before publication, then again after publication sync:
+
+```sh
+script/smoke-muzeum-release /path/to/verified-production-artifact.json candidate
+script/smoke-muzeum-release /path/to/verified-production-artifact.json published
+```
+
+The guarded workflow verifies production service health and the running artifact. The HTTP smoke checks the public health endpoint, anonymous denial of private routes, and the appropriate footer. Carry forward the qualified login, MFA, authenticated navigation, and logout results from shared Chromium. The routine deployment needs no signed-in production browser. If a production incident requires authenticated diagnosis and no authorized noninteractive credentials are available, record that limitation and preserve the existing authentication boundary.
+
+## Required post-publication main reconciliation
+
+After the stable GitHub release is published and its tag is verified against the deployed source SHA, check whether that exact commit is an ancestor of GitHub's `main`. If it already is, record that result in the release handoff. Otherwise, open a PR into `main` from the **published tag**. Do not use a release branch that may have advanced past the deployed commit. If the histories conflict, reconcile them on a separate branch from current `main`, merging the published tag into that branch before opening the PR.
+
+Use the normal PR checks and a **merge commit** so the release SHA and existing main-only commits remain ancestors of `main`. After merging, fetch again and verify reachability with `git merge-base --is-ancestor <published-sha> origin/main`. Record the PR and resulting `main` SHA in the release handoff. If the PR is blocked, leave it open and report the pending reconciliation. This GitHub-only step is part of closing out publication and requires no redeployment or additional deployment approval.
 
 ## Published version in the footer
 
@@ -78,6 +97,8 @@ Add a reviewed entry to `config/deploy/migrations.json` in the same change as th
 
 This is a review declaration, **not a static proof that arbitrary Ruby is safe**. Review SQL, lock impact, forward compatibility, runtime grants, source/interpretation preservation, expected duration, concurrent-index failure handling and new schema expectations. All routine migrations use Muzeum-only quiescence and fresh before/after restoration; the deliberate small design avoids per-migration runtime flags and risk-class engines. Use additive schema changes; ship substantive data backfills as separately reviewed bounded work. Hash changes invalidate approval. Already applied historical migrations need no new entry. Cache/cable/queue bootstrap schema version anchors are recognized explicitly; unknown database migration versions are refused.
 
+The ordinary migration verifier preserves existing schema objects and source fingerprints. The one-time v0.6.0 edition-slot index replacement exception has expired.
+
 Destructive/irreversible data migrations, live restoration/cutover, credential rotation, changes to other apps/shared infrastructure, and changes to this privileged helper require separate review/authorization. They cannot be enabled by changing an environment flag or declaring `risk: destructive`.
 
 ## Failure recovery without losing data
@@ -131,19 +152,9 @@ cap production muzeum:preflight
 
 It validates clean synchronized local main/CI, the version handshake and production readiness without creating a GitHub Deployment, acquiring a persistent deployment attempt, running migrations or publishing/restarting a release.
 
-## Reviewed release branches
+## Reviewed operator releases
 
-The default deployment command still requires synchronized `main`. An isolated stable release can use a separate checkout that tracks `origin/release/vX.Y.Z`. Run release commands from the clean, synchronized `main` control checkout. Add an explicit review entry to [the release manifest](../../config/deploy/releases.json) on main with the exact candidate SHA, expected live baseline SHA, and a link to the reviewed scope. The release branch must have a successful push run of the CI workflow for its exact SHA.
-
-Run the read-only combined preflight from main after the reviewed root helper has been installed:
-
-```sh
-cap production 'muzeum:release_preflight[v0.3.2,/absolute/path/to/release-checkout]'
-```
-
-The local guard verifies both checkouts, the approved remote, exact SHA, branch CI, and Git ancestry. The installed helper compares the reviewed baseline with the live revision under the phase and backup locks, refuses a lingering deployment attempt, and runs its ordinary health and recovery checks. The preflight retains no deployment attempt. If production moves, review the new baseline and ancestry before trying again.
-
-After explicit authorization, use `cap production 'muzeum:release_deploy[v0.3.2,/absolute/path/to/release-checkout]'`. It runs the same Capistrano lifecycle and pins the reviewed SHA. The root coordinator verifies the baseline again while acquiring the persistent lock and stores the branch, version, reviewed baseline, scope record and CI URL alongside the SHA and ordinary deployment evidence in its receipt. Publish and synchronize the release only after verifying the exact running SHA and a completed receipt. Reconcile the released changes with main without overwriting subsequent work.
+The existing operator Capistrano selection verifies the synchronized release checkout, exact CI and signed Shell review before opening a protected deployment. The protected `begin-operator` phase compares the exact running baseline under the phase lock. A successful staging qualification identifies the complete artifact digest. Activate only the retained artifact that matches the reviewed identity. The v0.3.2 static release list and its separate commands are retired.
 
 ## Reproduction and limits
 

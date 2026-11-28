@@ -1,33 +1,31 @@
-<% if @releases.any? %>
-  <%= render "related", title: "Release appearances", items: @releases %>
-<% else %>
+<% if (variant = CanonicalCatalog::RecordingVariant.for(@entry.mbid)) %>
   <section class="card library-card">
-    <h2>Release appearances</h2>
-    <p>Release association pending.<%= " Use a resolution observation to verify an eligible release." unless @public_profile %></p>
+    <h2 class="section-heading">Recording variant</h2>
+    <p><%= variant.values_at("label", "status").join(" · ") %></p>
+    <p><%= variant.fetch("note") %> <%= link_to "Source release", "https://musicbrainz.org/release/#{variant.fetch('release')}" %></p>
+    <% if variant["edit_of"] %>
+      <p><%= link_to "Recording identified as the source of this edit", "https://musicbrainz.org/recording/#{variant.fetch('edit_of')}" %></p>
+    <% end %>
+    <% related = CanonicalCatalog::RecordingVariant.related(@entry.mbid) %>
+    <% if related.any? %>
+      <% recordings = Recording.where(mbid: related.keys).index_by(&:mbid) %>
+      <ul>
+        <% related.each do |mbid, evidence| %>
+          <li><%= recordings[mbid] ? catalog_link(recordings.fetch(mbid)) : link_to(evidence.fetch("label"), "https://musicbrainz.org/recording/#{mbid}") %></li>
+        <% end %>
+      </ul>
+    <% end %>
   </section>
 <% end %>
-<section class="card library-card" id="listening-activity">
-  <h2>Listening activity</h2>
-  <p>Recording duration <%= recording_duration(@entry.duration_ms) %></p>
-  <% if @archive_available %>
-    <p><%= pluralize(@observation_count, "resolved listening observation") %>.</p>
-    <% if @unresolved_available %><p class="muted">Your archive contains unresolved observations that are outside this count.</p><% end %>
-    <% if @plays.any? %>
-      <%= dense_table("Listening activity") do %>
-        <thead><tr><th scope="col">Played at</th></tr></thead>
-        <tbody>
-          <% @plays.each do |play| %>
-            <tr><th scope="row"><% if @public_profile %>
-              <%= browser_time(play.played_at) %>
-            <% else %>
-              <%= entity_link browser_time(play.played_at), resolution_surface_path(play, play: play.id) %>
-            <% end %></th></tr>
-          <% end %>
-        </tbody>
-      <% end %>
-      <% if @next_page %><p><%= link_to "Older observations", catalog_entry_path(@entry, before: @next_page) %></p><% end %>
-    <% end %>
-  <% else %>
-    <p>Listening activity is unavailable until you connect a Last.fm archive.</p>
-  <% end %>
-</section>
+<% unless Clients::Musicbrainz::MBID.match?(@entry.mbid.to_s) %>
+  <p class="muted">Partially resolved · The provider identity is unverified.</p>
+<% end %>
+<% if @releases.any? %>
+  <%= render "related", title: "Release appearances", items: @releases %>
+  <% if @next_appearance %><p><%= link_to "More release appearances", catalog_entry_path(@entry, after_appearance: @next_appearance, before: params[:before]) %></p><% end %>
+<% else %>
+  <section class="card library-card">
+    <h2 class="section-heading">Release appearances</h2>
+    <p>Release memberships pending verification.</p>
+  </section>
+<% end %>

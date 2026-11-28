@@ -6,7 +6,10 @@ module CanonicalCatalog
       def recording!(data)
         mbid = mbid!(data["id"])
         title = name!(data["title"])
-        Recording.create_or_find_by!(mbid:) { |recording| recording.title = title }
+        Recording.transaction do
+          RecordingSourceDecision.lock!
+          RecordingSourceDecision.resolve(mbid) || Recording.create_or_find_by!(mbid:) { |recording| recording.title = title }
+        end
       end
 
       def mbid!(value)
@@ -27,12 +30,15 @@ module CanonicalCatalog
       @session = session
     end
 
-    def recording(data, expected: self.class.mbid!(data["id"]))
+    def recording(data, expected: self.class.mbid!(data["id"]), publication: nil)
       raise Unverified, "Recording identity changed" unless data["id"] == expected
 
       record = self.class.recording!(data)
-      refresh(record, { "title" => data["title"], "duration_ms" => positive(data["length"]) },
-        "artist_credit" => credit_evidence(data["artist-credit"]))
+      return record if record.mbid != expected
+
+      evidence = metadata_evidence(data).merge("artist_credit" => credit_evidence(data["artist-credit"]))
+      evidence["verified_publication"] = publication if publication
+      refresh(record, { "title" => data["title"], "duration_ms" => positive(data["length"]) }, evidence)
       attach_credits(record, data["artist-credit"], RecordingArtist, :recording)
       record
     end
@@ -42,25 +48,32 @@ module CanonicalCatalog
       name = self.class.name!(data["name"])
       artist = Artist.create_or_find_by!(mbid:) { |row| row.name = name }
       refresh(artist, { "name" => name, "country" => data["country"].presence },
-        data.slice("wikidata_ids", "area", "begin-area"))
+        data.slice("wikidata_ids", "area", "begin-area").merge(metadata_evidence(data)))
       artist
     end
 
-    def release(data, slots, comparison: {})
+    def release(data, slots, comparison: {}, strict_collection: false, checked_editions: [], additional_slots: [], corrected_release: nil, first_publication_compilation: false)
+      RecordingSourceDecision.lock!
       edition = self.class.mbid!(data["id"])
-      title = self.class.name!(data["title"])
+      title = self.class.name!(data.dig("release-group", "title").presence || data["title"])
       group = data.dig("release-group", "id")
       signature = slots.map { |slot| [ slot.fetch(:medium), slot.fetch(:position), slot.fetch(:recording).fetch("id") ] }
       evidence = { "edition_mbid" => edition, "release_group_mbid" => group, "track_count" => slots.size,
         "tracklist_digest" => Digest::SHA256.hexdigest(signature.to_json), "discogs" => comparison }
-      release = Release.find_by(ingested_from_release_mbid: edition)
+      evidence["original_context"] = Edition.original_context?(data, compilation: first_publication_compilation) if strict_collection
+      evidence.merge!(metadata_evidence(data))
+      evidence["checked_recording_appearances"] = checked_editions if checked_editions.present?
+      release = corrected_release || Release.find_by(ingested_from_release_mbid: edition)
       unless release
         lock_collection(group) if group.present?
         release = Release.find_by(ingested_from_release_mbid: edition)
         equivalent = equivalent_release(title, group, signature, data["artist-credit"]) unless release || group.blank?
         if equivalent
-          refresh(equivalent, {}, evidence.merge("equivalent_edition" => true))
-          return equivalent
+          release = equivalent
+          evidence["equivalent_edition"] = true
+        end
+        if strict_collection && !release && Release.where(release_group_mbid: group).where.not(catalog_verified_at: nil).exists?
+          raise Unverified, "A verified catalog collection already exists with conflicting edition evidence"
         end
       end
       release ||= Release.create_or_find_by!(ingested_from_release_mbid: edition) do |row|
@@ -71,24 +84,55 @@ module CanonicalCatalog
       end
       release.lock!
       existing = release_signature(release)
-      if existing.any? && existing != signature
+      unless corrected_release
+        reviewed = CatalogRevision.joins(:catalog_import).where(entity_type: "Release", entity_id: release.id,
+          catalog_imports: { kind: "release_construction" }).order(id: :desc).pick(:evidence)
+        if reviewed
+          reviewed_date = reviewed.fetch("verified_fields").values_at("release_year", "release_month", "release_day").compact
+            .map { |part| format("%02d", part) }.join("-")
+          unless reviewed["edition_mbid"] == edition && reviewed_date == data["date"]
+            raise Unverified, "Provider evidence differs from the reviewed original release"
+          end
+        end
+      end
+      if corrected_release
+        evidence["reviewed_correction"] = true
+        evidence["previous_edition_mbid"] = ReviewedConstruction.current_edition(release)
+        evidence["previous_base_sequence"] = existing
+        evidence["previous_additions"] = release.catalog_track_slots.additional_appearances.pluck(:edition_mbid, :appearance_date, :medium, :position, :recording_id)
+        evidence["previous_publication_date"] = release.attributes.values_at("release_year", "release_month", "release_day")
+        release.catalog_track_slots.base_sequence.delete_all
+      elsif existing.any? && existing != signature
         raise Unverified, "Provider track order or membership changed; existing collection kept for review"
       end
 
       year, month, day = data["date"].to_s[/\A\d{4}(?:-\d{2}){0,2}\z/].to_s.split("-").map(&:to_i)
+      if corrected_release
+        corrected_release.update!(release_year: year, release_month: month, release_day: day)
+      end
       refresh(release, { "title" => title, "catalog_country" => data["country"],
         "release_year" => year, "release_month" => month, "release_day" => day },
         evidence.merge("artist_credit" => credit_evidence(data["artist-credit"])))
       attach_credits(release, data["artist-credit"], ReleaseArtist, :release)
 
-      slots.each do |slot|
-        track_recording = self.recording(slot.fetch(:recording))
-        release.catalog_track_slots.find_or_create_by!(medium: slot.fetch(:medium), position: slot.fetch(:position)) do |row|
-          row.assign_attributes(slot.except(:recording).merge(recording: track_recording))
-        end
-      end
+      (slots + additional_slots).each { |slot| track_slot(release, slot) }
       release.update!(catalog_verified_at: Time.current)
       release
+    end
+
+    def track_slot(release, slot)
+      track = release.catalog_track_slots.find_or_initialize_by(
+        edition_mbid: slot[:edition_mbid], medium: slot.fetch(:medium), position: slot.fetch(:position))
+      if track.persisted?
+        raise Unverified, "Track position differs from the verified evidence" unless track.evidence_recording_mbid == slot.dig(:recording, "id")
+        recording(slot.fetch(:recording))
+        track.update!(appearance_date: slot[:appearance_date]) if track.edition_mbid && slot[:appearance_date].present?
+        return track
+      end
+
+      track_recording = recording(slot.fetch(:recording))
+      track.update!(slot.except(:recording).merge(recording: track_recording))
+      track
     end
 
     private
@@ -102,15 +146,22 @@ module CanonicalCatalog
     def equivalent_release(title, group, signature, credits)
       artist_mbids = credit_evidence(credits).pluck("artist_mbid").uniq
       Release.where(title:, release_group_mbid: group).where.not(catalog_verified_at: nil).order(:id).find do |item|
-        item.artists.order(Arel.sql("release_artists.position ASC NULLS LAST"), :id).pluck(:mbid) == artist_mbids &&
+        item.artists.pluck(:mbid) == artist_mbids &&
           release_signature(item).map(&:last) == signature.map(&:last)
       end
     end
 
     def release_signature(release)
-      release.catalog_track_slots.order(:medium, :position).includes(:recording).map do |slot|
-        [ slot.medium, slot.position, slot.recording.mbid ]
+      release.catalog_track_slots.base_sequence.order(:medium, :position).includes(:recording).map do |slot|
+        [ slot.medium, slot.position, slot.evidence_recording_mbid ]
       end
+    end
+
+    def metadata_evidence(data)
+      evidence = data.slice("genres", "tags", "first-release-date")
+      return {} if evidence.empty?
+
+      { "musicbrainz" => evidence.merge("id" => data.fetch("id")) }
     end
 
     def credit_evidence(credits)
@@ -134,9 +185,11 @@ module CanonicalCatalog
         raise Unverified, "Provider artist credits are incomplete"
       end
 
-      credits.each_with_index do |credit, index|
-        credited_artist = artist(credit.fetch("artist"))
-        join.create_or_find_by!(association => entity, artist: credited_artist) { |row| row.position = index }
+      incoming = credits.map { |credit| artist(credit.fetch("artist")) }.uniq
+      retained = entity.artists.to_a - incoming
+      (incoming + retained).each.with_index(1) do |credited_artist, position|
+        row = join.create_or_find_by!(association => entity, artist: credited_artist) { |created| created.position = position }
+        row.update!(position:) if row.position != position
       end
     end
 

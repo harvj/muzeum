@@ -33,11 +33,13 @@ RSpec.describe "Verified artist geography", type: :system do
       browser.execute_cdp("Emulation.setDeviceMetricsOverride", width:, height:, deviceScaleFactor: 1, mobile: width < 700)
       browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "prefers-color-scheme", value: theme } ])
       visit artist_path(boards)
+      find("#entity-details > summary").click
       expect(page).to have_link("Scotland", href: "https://www.wikidata.org/wiki/Q22")
       expect(page).to have_css('img[alt="Flag of Scotland"][src$="/Flag_of_Scotland.svg"]', visible: :all)
       expect(page).to have_text("Founded in Edinburgh", normalize_ws: true)
 
       visit artist_path(wilco)
+      find("#entity-details > summary").click
       expect(page).to have_link("Chicago", href: "https://www.wikidata.org/wiki/Q1297")
       expect(page).to have_css('img[alt="Flag of Chicago"][src$="/Flag_of_Chicago%2C_Illinois.svg"]', visible: :all)
       expect(page).to have_text(/Chicago.*Illinois.*United States/, normalize_ws: true)
@@ -50,6 +52,7 @@ RSpec.describe "Verified artist geography", type: :system do
 
     save_evidence(wilco, missing)
     visit artist_path(wilco)
+    find("#entity-details > summary").click
     expect(page).to have_link("Chicago")
     expect(page).to have_no_css('img[alt="Flag of Chicago"]', visible: :all)
     expect(page).to have_no_css('img[alt="Flag of United States"]', visible: :all)

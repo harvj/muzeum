@@ -1,19 +1,15 @@
-<details class="harvj-session">
-  <summary aria-label="Session menu"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="9" r="3"/><path d="M5 19c1-6 13-6 14 0"/></svg><span>Profile</span><span aria-hidden="true">⌄</span></summary>
+<details class="harvj-session" data-controller="application-shell" data-application-shell-url-value="<%= application_shell_path(format: :json) %>"
+         data-application-shell-binding-value="<%= ApplicationShellEvidence.session_binding(Current.session) %>"
+         data-action="toggle->application-shell#toggle keydown.esc->application-shell#escape click@document->application-shell#outside pageshow@window->application-shell#restore pagehide@window->application-shell#clear visibilitychange@document->application-shell#refresh turbo:before-cache@document->application-shell#clear">
+  <summary data-application-shell-target="trigger"><span class="shell-authenticated-dot" aria-hidden="true"></span><span data-application-shell-target="username"<%= " data-identity-pending" unless session_username %>><%= session_username || "Signed in" %></span><span aria-hidden="true">⌄</span></summary>
   <div class="harvj-session-panel">
-    <p class="profile-label">Applications</p>
-    <%= link_to "Auth", "https://auth.harvj.com/" %>
-    <%= link_to "Continuum Engine", "https://funding.harvj.com/" %>
-    <% if auth_administration_available? %>
-      <%= link_to "User management", "https://auth.harvj.com/admin" %>
-    <% end %>
-    <div class="profile-settings">
-      <p class="profile-label">Muzeum settings</p>
-      <details class="appearance-submenu" data-controller="hover-disclosure" data-action="pointerenter->hover-disclosure#enter pointerleave->hover-disclosure#leave">
-        <summary data-action="click->hover-disclosure#pin">Appearance <span aria-hidden="true">‹</span></summary>
-        <%= render "shared/appearance" %>
-      </details>
+    <div data-application-shell-target="applications" hidden>
+      <p class="profile-label">Applications</p>
+      <div data-application-shell-target="links"></div>
     </div>
-    <%= button_to "Log out", session_path, method: :delete %>
+    <% if OidcClient.configured? %>
+      <%= link_to "Account Settings", "#{OidcClient::ISSUER}/account?#{URI.encode_www_form(client_id: ENV.fetch('OIDC_CLIENT_ID'))}" %>
+    <% end %>
+    <%= button_to "Log Out", session_path, method: :delete %>
   </div>
 </details>

@@ -16,3 +16,6 @@ production:
   lastfm_synchronization:
     class: LastfmSchedulerJob
     schedule: every second
+  application_shell_registry_refresh:
+    class: ApplicationShellRegistryRefreshJob
+    schedule: every 5 minutes

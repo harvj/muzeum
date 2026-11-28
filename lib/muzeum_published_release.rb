@@ -51,6 +51,8 @@ module MuzeumPublishedRelease
       Tempfile.create(".published-release", shared) do |staged|
         staged.write("#{revision} #{tag}\n")
         staged.flush
+        # The setgid shared directory gives the marker the Muzeum runtime group.
+        staged.chmod(0o640)
         staged.fsync
         raise "Deployed SHA changed during release verification" unless self.revision(current) == revision
 

@@ -12,6 +12,7 @@ RSpec.describe "Shared Auth browser navigation", type: :system do
       options.binary = ENV["CHROME_BINARY"] if ENV["CHROME_BINARY"]
     end
     prepare_oidc
+    stub_request(:get, "#{OidcClient::ISSUER}/.well-known/oauth-authorization-server").to_return(status: 503)
     @old_forgery_protection = ActionController::Base.allow_forgery_protection
     ActionController::Base.allow_forgery_protection = true
     visit root_path
@@ -111,7 +112,7 @@ RSpec.describe "Shared Auth browser navigation", type: :system do
         visit path
         expect(page).to have_css('header .harvj-wordmark[href="https://muzeum.fm/"]')
         expect(page).to have_link("Jim Harvey", href: "https://harvj.com/")
-        expect(page).to have_css("header summary[aria-label='Session menu']", text: "Profile")
+        expect(page).to have_css("header .harvj-session > summary", text: "Signed in")
         expect(page).to have_no_link("Log In")
         expect(page.evaluate_script("innerWidth")).to eq(width)
       end
@@ -164,8 +165,8 @@ RSpec.describe "Shared Auth browser navigation", type: :system do
   it "logs out without immediately starting a new provider session" do
     navigate_from_ce(:sso)
     expect(page).to have_link("Archive summary")
-    find("summary[aria-label='Session menu']").click
-    click_button "Log out"
+    find(".harvj-session > summary").click
+    click_button "Log Out"
     expect(page).to have_link("Log In", href: login_path)
     visit "#{@application_url}/archive"
     expect(page).to have_link("Log In", href: login_path)

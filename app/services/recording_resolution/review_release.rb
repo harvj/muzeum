@@ -16,7 +16,7 @@ module RecordingResolution
         "incomplete"
       end
       edition.slice("id", "title", "date", "country", "disambiguation").merge(
-        "state" => state, "countries" => Array(edition["release-events"]).flat_map { |event| Array(event["country_codes"]) }.uniq,
+        "state" => state, "release_group_mbid" => edition.dig("release-group", "id"), "countries" => Array(edition["release-events"]).flat_map { |event| Array(event["country_codes"]) }.uniq,
         "media" => slots <= MAX_SLOTS ? media.map { |medium| project_medium(medium) } : [])
     end
 
@@ -30,7 +30,8 @@ module RecordingResolution
 
     def self.from_local(release)
       fields = ReleaseTracklist.new(release).assessment_fields
-      fields.fetch("edition").merge("state" => "complete", "media" => grouped_slots(fields["slots"]))
+      fields.fetch("edition").merge("state" => "complete", "media" => grouped_slots(fields["slots"]),
+        "provider" => "musicbrainz", "retrieved_at" => release.catalog_verified_at&.utc&.iso8601, "source" => "verified_local_catalog")
     rescue ArgumentError
       nil
     end

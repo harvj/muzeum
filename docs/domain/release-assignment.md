@@ -2,19 +2,28 @@
 
 Status: **Authoritative semantics; algorithmic thresholds remain open.** See [principles](principles.md), [recording resolution](recording-resolution.md), and [listening statistics](listening-statistics.md).
 
-## Separate concepts
+## Release listening context (v0.5.0)
 
-**REL-001 — Membership is not credit.** A recording may belong to many release collections, and its entire listening history may appear in each collection's track listing. Separately, each play has **zero or one effective credited release** for release rankings. This is not a claim that the listener physically played that particular edition.
+**REL-001 — Membership defines the release history.** A recording can belong to multiple verified release collections. Each release contributes the distinct effective observations resolved to its member recordings regardless of the Last.fm album string. For multiple releases, count the union of observations. This history does not identify which edition played.
 
-**REL-002 — Automatic default is the normal path.** For each resolved play, Muzeum attempts to select a credited release automatically. A listener should normally correct exceptions rather than manually assign their whole history. When no defensible candidate exists, retain explicit unresolved credit rather than fabricate certainty. Resolution of recording identity may be a prerequisite to release credit.
+**REL-014 — Admission follows corroborated recording membership.** Confirmation may admit one supported original context when the recording has no verified membership in an admitted release. With a verified membership already present, confirmation admits zero new releases. Background enrichment from confirmation may update recording evidence and credits. Other releases require a separate catalog operation. Retaining a complete alternate source configuration does not admit shared catalog membership. An independently issued adjacent program requires explicit admission, and a same-group sibling additionally requires verified distinct-program evidence and the existing conflicting-group review. Admission and ranking eligibility are independent. Reuse equivalent editions with matching ordered recording membership; check uncertain or conflicting collections separately and leave unresolved memberships pending. Keep the provider edition identifiers as evidence. Never recursively traverse the releases of imported tracks.
 
-**REL-003 — User overrides prevail.** A listener may reassign any individual play to an eligible release without changing its canonical recording. An explicit user override takes precedence over subsequent automatic reassessments until the listener explicitly returns the play to automatic management. Bulk corrections of selected plays or a listening session may be offered, but must not eliminate individual control. A revert appends a new decision with provenance.
+Recording identity, publication, collection membership, and source observation are independent. Lookup starts from the recording MBID and browses its release relationships within the existing provider budget. A checked official dated appearance may establish the earliest verified publication, even if it belongs to a different collection. Recording/session dates use separate evidence. An observed album caption may help discover candidates and never limits their publication history. A compilation or reissue can support an appearance without defining the original program. Equivalent original sequences have one representative. Materially different sequences require a choice. When evidence is incomplete, keep the history pending and preserve verified context already retained. Admit an edition-specific addition only for the recording being resolved.
 
-## Release admission versus listening credit
+For original-album construction, independent recording identity and verified edition appearances are separate evidence. Compare complete official editions at the release group's first publication date. Prefer an independently verified original sequence over an edition that appends bonus recordings. Equivalent sequences use a deterministic representative, preferring a supported artist-country match before presentation metadata such as format and packaging. Catalog the exact selected tracklist and retain its MusicBrainz release MBID in provenance. Conflicting original sequences require explicit selection. Later verified additions retain their own appearance and publication evidence.
 
-**REL-014 — Admission is deliberate.** A verified recording resolution may trigger import of one contextually justified canonical release collection and its full track listing; it must not traverse every compilation, reissue, edition or other release appearance. Original album context is generally preferred when justified, including over an earlier single, while original singles/EPs, distinct collections, live albums and explicitly selected compilations can qualify. No arbitrary chronology window is approved. See DOM-016–DOM-019.
+**REL-015 — Keep source and interpretation separate.** Importing release tracks does not create observations. Preserve the immutable Last.fm input and effective recording override precedence. Each release retains its title, date and ordered tracks. Muzeum does not designate a primary release for listening attribution.
 
-**REL-015 — Complete membership is not automatic credit.** Importing all tracks of an admitted release establishes catalog relationships, not historical listening events or per-play release credit. An unresolvable release choice leaves the recording available with a pending association. A listener's explicit credited compilation remains permissible even if that compilation was not the automatic import default; deliberate admission and credited-release assignment are independently auditable.
+**REL-016 — Construct the musical collection from evidence.** Treat MusicBrainz editions as provenance for title, credits, dates, track order, and recording appearances. Construct the original published sequence from one authentic edition when sufficiently supported. Where credible editions disagree, show a single aligned comparison and require selection of a specific release MBID. Preserve the complete source track order, each source recording MBID, and source date precision in immutable configuration snapshots. An append-only listener choice selects the displayed order, release listening membership, and effective catalog date. The admitted base remains the fallback. Compare the other verified editions against the selected base by corroborated recording identity, retaining distinct additional tracks and edition positions separately and leaving uncertain matches available for review. A source-edition appearance alone grants no canonical membership. An additional recording may be admitted through explicit confirmation of that recording with its release proposal or through a separate, source-specific admission action. An admission does not select the track for listening totals or admit its edition as another canonical release. Retain verified appearances as evidence independently of admission. Never backdate additions or infer the edition played. Apply [STAT-003](listening-statistics.md#definitions) to release totals and retain the admitted membership regardless of the listener’s accounting preference. Resolve independent recording identity even while construction is pending. A first-publication compilation is eligible only when a complete recording-first browse supports it as the original context, no separate original album, single, or EP is supported by the appearances, and the complete official program verifies the recording. Preserve its compilation type.
+
+Use one authentic representative release and copy its complete ordered source sequence. Each new slot retains the source recording MBID, track MBID, title, track duration, and recorded credits independently of the canonical recording it points to. Keep the representative release's source evidence even if a later decision maps another recording MBID to the same canonical recording.
+
+Compare ordered musical tracks using source recording identity, titles, credited artists, durations, versions, and available corroboration. Distinct recording MBIDs are insufficient evidence of different music. Compatible matching metadata plus a shared ISRC or identical source track MBID can corroborate an equivalent comparison. A look-alike with insufficient corroboration stays uncertain. Retain competing original programs and uncertain matches as evidence. Additional edition tracks require a meaningful difference from the selected base. Representative selection weighs chronology, edition status, artist origin, country, and edition evidence together and leaves conflicts for review.
+
+
+**REL-017 — Independent chronology.** Preserve recording date, canonical publication date, recording first publication, and specific edition appearances as distinct facts. Retain unknown dates and source precision, including ranges. A publication date cannot establish when a performance was captured.
+
+The sections below describe the deferred per-play credit proposal. It does not govern v0.5.0 release histories or combined totals.
 
 ## Default evidence and chronology
 
@@ -62,6 +71,44 @@ A listener hears Radiohead's **High and Dry → Fake Plastic Trees → Bones** i
 
 ## Revision history
 
+- v0.6.0: Clarified that edition evidence supports canonical release construction while recording, publication, and edition dates remain separate assertions.
+
 - 2026-11-17: Clarified deliberate release admission, bounded full-tracklist enrichment and separation from per-play release credit.
 
 - 2026-11-17: Initial policy for session inference, origin-country chronology, per-play credit and append-only reassessment.
+
+### Verified configurations and adjacent programs
+
+REL-014 applies to catalog admission. Retaining a complete verified source
+edition under an existing canonical release admits no shared track membership.
+An independently issued adjacent program requires explicit admission. A
+same-group sibling additionally requires corroborated distinct-program evidence
+and must pass the existing conflicting-group review. An extra disc alone does
+not establish a distinct program.
+
+REL-016 also permits multiple immutable ordered source configurations under one
+canonical release. An append-only listener preference selects the tracklist,
+effective release date and release listening membership. It never identifies
+the edition played, changes shared admission, or revises a confirmed recording.
+No preference means the admitted base remains operative. Source snapshots retain
+date precision. An unknown preferred date stays unknown, even if the admitted
+base date is known. A date filter matches partial evidence only when its full
+possible interval falls within the requested range. Sorting uses the earliest
+supported bound, with unknown dates last. Shared publication history remains
+separate from these listener-scoped projections.
+
+### Contextual short-track review
+
+The v0.8.0 review checks a bounded page of a listener’s release observations. A
+proposal needs two consecutive Last.fm observations from the same source
+account, an unambiguous one-position gap within one medium of a verified
+configuration, and known source track lengths. The missing track must be a
+labeled intro or interlude shorter than both neighbors. The elapsed time must
+match the first track plus the interlude at the observations’ second
+resolution. Tied or intervening observations disqualify the proposal. A
+matching gap makes the inference reviewable and leaves playback and the
+edition actually heard uncertain. Confirmation and rejection append private
+decisions and follow STAT-013.
+
+**Open:** Broader track types, a duration cutoff and any timing tolerance need
+evidence before applying them. Opening or closing tracks lack two anchors.

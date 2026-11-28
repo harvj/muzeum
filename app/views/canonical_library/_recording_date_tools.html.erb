@@ -1,0 +1,15 @@
+<% dates = @chronology&.evidence || {} %>
+<% if dates["source"].present? && !@public_profile %><p>Recording date source: <%= dates["source"] %></p><% end %>
+<% if @may_edit_identity %>
+  <h3 class="section-heading">Correct recording date</h3>
+  <%= form_with scope: :chronology, url: chronology_recording_path(@entry), method: :patch do |form| %>
+    <%= form.hidden_field :head, value: @chronology&.id %>
+    <%= form.label :start_date, "Recording date or range start (YYYY, YYYY-MM, or YYYY-MM-DD)" %>
+    <%= form.text_field :start_date, value: dates["start_date"], maxlength: 10 %>
+    <%= form.label :end_date, "Range end, if known" %>
+    <%= form.text_field :end_date, value: dates["end_date"], maxlength: 10 %>
+    <%= form.label :source, "Source or reason the date is unknown" %>
+    <%= form.text_area :source, maxlength: 1000, required: true %>
+    <%= form.submit "Save recording date" %>
+  <% end %>
+<% end %>

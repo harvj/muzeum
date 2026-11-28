@@ -1,0 +1,63 @@
+<% provenance.established.each do |tracklist| %>
+  <% fields = tracklist.assessment_fields %>
+  <% edition = fields.fetch("edition") %>
+  <% source = Array(@assessment.evidence["construction_editions"]).find { |item| item["id"] == edition["id"] } %>
+  <section class="resolution-context" aria-label="Established canonical release">
+    <h2 class="section-heading">Established canonical release</h2>
+    <h3 class="resolution-release-title"><%= catalog_link(tracklist.release) %></h3>
+    <p class="compact-meta">
+      <%= [resolution_release_date(edition["date"]), edition["country"], Array(source&.fetch("media", nil)).pluck("format").compact.uniq.join(" / ").presence, pluralize(fields["slots"].size, "track")].compact.join(" · ") %>
+      · <%= link_to "Selected MusicBrainz edition", "https://musicbrainz.org/release/#{edition.fetch('id')}" %>
+    </p>
+    <%= render "ordered_tracks", tracks: fields.fetch("slots"), mbid:, recording_ids: %>
+    <p class="muted">The edition played is unverified.</p>
+  </section>
+<% end %>
+<% if provenance.editions.any? %>
+  <% navigation = request.query_parameters.slice("assessment", "play", "edition").merge(candidate: mbid) %>
+  <% selected_recording = params[:source_recording] if provenance.appearances.any? { |appearance| appearance.track[:source_recording_mbid] == params[:source_recording] } %>
+  <%= tag.details open: selected_recording.present? || provenance.editions.any? { |edition| edition.data["id"] == params[:source_edition] }, class: "release-provenance", id: "release-provenance" do %>
+    <summary>Alternative editions and track provenance</summary>
+    <p class="muted"><%= pluralize(provenance.editions.size, "checked edition") %> · The edition played is unverified.</p>
+    <% histories = @assessment.evidence.fetch("additional_recording_publications", {}) %>
+    <% groups = provenance.appearances.group_by { |appearance| appearance.track[:source_recording_mbid] }.group_by do |source_id, _|
+      histories.dig(source_id, "classification") || "unclassified"
+    end %>
+    <% { "alternate" => "Verified alternate versions of base recordings",
+         "independent" => "Verified independent recordings",
+         "unclassified" => "Unclassified additional material" }.each do |classification, heading| %>
+      <% next if groups[classification].blank? %>
+      <h3><%= heading %></h3>
+      <ul>
+        <% groups.fetch(classification).each do |source_id, appearances| %>
+          <li>
+            <%= link_to appearances.first.track[:title], resolution_surface_path(@observation,
+              navigation.merge(source_recording: source_id, anchor: "release-provenance")) %>
+            <% if selected_recording == source_id %>
+              <%= render "track_provenance", source_id:, appearances:, history: histories[source_id], mbid: %>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+    <%= tag.details open: provenance.editions.any? { |edition| edition.data["id"] == params[:source_edition] } do %>
+      <summary>Source editions and tracklists</summary>
+      <ul>
+        <% provenance.editions.each do |edition| %>
+          <% source = edition.data %>
+          <li><%= resolution_source_edition(source) %> ·
+            <%= link_to "Inspect tracklist", resolution_surface_path(@observation, navigation.merge(source_edition: source["id"], anchor: "release-provenance")) %>
+            <% if params[:source_edition] == source["id"] %>
+              <% RecordingResolution::ReviewRelease.project(source).fetch("media").each do |medium| %>
+                <p class="compact-meta">Medium <%= medium["position"] %> · <%= medium["format"] %></p>
+                <%= render "ordered_tracks", tracks: medium.fetch("tracks"), mbid:, recording_ids: %>
+              <% end %>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  <% end %>
+<% end %>
+
+<%= render "other_recording_appearances", provenance: %>

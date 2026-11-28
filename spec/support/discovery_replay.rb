@@ -1,23 +1,31 @@
 module DiscoveryReplay
   class Session
-    attr_reader :paths
+    attr_reader :paths, :provenance
 
     def initialize(fixture, example)
       @fixture = fixture
       @example = example
       @paths = []
+      @provenance = []
     end
 
     def get(_provider, path, params:)
       @paths << path
+      @provenance << { "endpoint" => path, "retrieved_at" => "2026-11-21T00:00:00Z" }
       data = case path
       when "/ws/2/recording"
         candidates = @example.fetch("candidates")
         { "recordings" => candidates, "count" => candidates.size, "offset" => params.fetch(:offset) }
       when "/ws/2/release"
-        { "releases" => @fixture.fetch("searches").fetch(@example.fetch("release_search")) }
+        if (collection = @fixture.dig("recording_releases", params[:recording]) || @fixture.dig("collections", params["release-group"]))
+          { "releases" => collection, "release-count" => collection.size }
+        else
+          { "releases" => @fixture.fetch("searches").fetch(@example.fetch("release_search"), []) }
+        end
+      when %r{\A/ws/2/release-group/}
+        @fixture.fetch("release_groups", {})[path.split("/").last]
       when %r{\A/ws/2/release/}
-        @fixture.fetch("releases").fetch(path.split("/").last)
+        @fixture.fetch("releases")[path.split("/").last]
       when %r{\A/ws/2/recording/}
         @example["verified_recording"]
       else

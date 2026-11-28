@@ -1,0 +1,30 @@
+<% context = request.query_parameters.slice("recording_sort", "recording_page", "after_appearance", "after_track", "after_legacy_track", "with_release", "edition_tracks").symbolize_keys %>
+<div class="listening-controls">
+  <div class="listening-control">
+    <span class="muted">Period</span>
+    <nav aria-label="Listening history period" class="artist-ranges">
+      <% CatalogListening::Window::PERIODS.each do |period, (label, _)| %>
+        <% destination = CatalogListening::Window.new(period:, grouping: window.grouping, now: window.now) unless period == window.period %>
+        <%= listening_history_option(label, destination && context.merge(destination.query)) %>
+      <% end %>
+    </nav>
+  </div>
+  <% if window.groupings.many? %>
+    <div class="listening-control">
+      <span class="muted">Group by</span>
+      <nav aria-label="Listening history grouping" class="artist-ranges">
+        <% window.groupings.each do |grouping| %>
+          <%= listening_history_option(grouping.capitalize, (context.merge(window.query).merge(grouping:) unless grouping == window.grouping)) %>
+        <% end %>
+      </nav>
+    </div>
+  <% end %>
+  <% if window.historical? %>
+    <nav class="listening-window" aria-label="Listening history window">
+      <%= listening_window_arrow("‹", "Previous window", window.previous, context.merge(window.query)) %>
+      <span class="listening-window-dates"><time datetime="<%= window.first.iso8601 %>"><%= window.first.strftime("%b %-d, %Y") %></time>
+        – <time datetime="<%= window.last.iso8601 %>"><%= window.last.strftime("%b %-d, %Y") %></time></span>
+      <%= listening_window_arrow("›", "Next window", window.following, context.merge(window.query)) %>
+    </nav>
+  <% end %>
+</div>

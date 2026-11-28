@@ -8,37 +8,40 @@ module RecordingResolution
       @release = release
       raise ArgumentError unless release.catalog_verified_at? && Clients::Musicbrainz::MBID.match?(release.ingested_from_release_mbid.to_s)
 
-      @slots = release.catalog_track_slots.order(:medium, :position).limit(MAX_SLOTS + 1).includes(recording: :artists).to_a
+      @slots = release.catalog_track_slots.base_sequence.order(:medium, :position).limit(MAX_SLOTS + 1).includes(recording: :artists).to_a
       raise ArgumentError unless (1..MAX_SLOTS).cover?(slots.size)
 
-      signature = slots.map { |slot| [ slot.medium, slot.position, slot.recording.mbid ] }
+      signature = slots.map { |slot| [ slot.medium, slot.position, slot.evidence_recording_mbid ] }
       digest = Digest::SHA256.hexdigest(signature.to_json)
       @revision = CatalogRevision.where(entity_type: "Release", entity_id: release.id)
-        .where("evidence @> ?", { edition_mbid: release.ingested_from_release_mbid, track_count: slots.size, tracklist_digest: digest }.to_json)
+        .where("evidence @> ?", { track_count: slots.size, tracklist_digest: digest }.to_json)
+        .where("(evidence->>'edition_mbid' = ? OR evidence @> ?)",
+          release.ingested_from_release_mbid, { reviewed_correction: true }.to_json)
         .order(id: :desc).first
-      raise ArgumentError unless revision
+      @edition_mbid = revision&.evidence&.fetch("edition_mbid", nil)
+      raise ArgumentError unless Clients::Musicbrainz::MBID.match?(@edition_mbid.to_s)
     end
 
     def evidence
-      { "release_id" => release.id, "edition_mbid" => release.ingested_from_release_mbid,
+      { "release_id" => release.id, "edition_mbid" => @edition_mbid,
         "revision_id" => revision.id, "tracklist_digest" => revision.evidence.fetch("tracklist_digest"),
         "requests" => revision.evidence["requests"] }.compact
     end
 
     def assessment_fields
       date = release.attributes.values_at("release_year", "release_month", "release_day").take_while(&:present?)
-      { "edition" => { "id" => release.ingested_from_release_mbid, "title" => release.title,
+      { "edition" => { "id" => @edition_mbid, "title" => release.title,
           "date" => date.map { |part| format("%02d", part) }.join("-").presence,
           "country" => release.catalog_country, "complete_tracklist" => true },
         "slots" => slots.map do |slot|
           { "medium" => slot.medium, "position" => slot.position, "number" => slot.number,
-            "title" => slot.title, "track_mbid" => slot.track_mbid, "recording_mbid" => slot.recording.mbid,
-            "length" => slot.recording.duration_ms }
+            "title" => slot.title, "track_mbid" => slot.track_mbid, "recording_mbid" => slot.evidence_recording_mbid,
+            "length" => slot.duration_ms || slot.recording.duration_ms, "artist-credit" => slot.source_artist_credit }
         end }
     end
 
     def independently_confirmed(listener, account_id, excluding:)
-      ids = slots.reject { |slot| excluding.include?(slot.recording.mbid) }.pluck(:recording_id)
+      ids = slots.reject { |slot| excluding.include?(slot.evidence_recording_mbid) || excluding.include?(slot.recording.mbid) }.pluck(:recording_id)
       decisions = Ledger.history(listener).where(user_id: listener.id, actor: "listener", mode: "resolved", recording_id: ids)
         .where.not("evidence ? 'release_batch'").order(id: :desc).limit(20).to_a
       plays = decisions.filter_map { |decision| decision.scrobble_id || decision.evidence["observation_id"] }

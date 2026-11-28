@@ -1,25 +1,66 @@
-<section class="card library-card">
-  <h2>Artist details</h2>
-  <% geography = @geography&.evidence %>
-  <% if geography&.fetch("status") == "verified" %>
-    <p>Origin <%= render "shared/geographic_place", place: geography.fetch("origin") %>
-      <% geography.fetch("hierarchy").drop(1).each do |parent| %> · <%= render "shared/geographic_place", place: parent %><% end %>
-    </p>
-    <% if geography.dig("origin", "id") != geography.dig("founding_location", "id") %>
-      <p>Founded in <%= render "shared/geographic_place", place: geography.fetch("founding_location") %></p>
+<% colors = musical_identity_attributes(@entry) %>
+<section class="card library-card" id="artist-recordings">
+  <h2 class="section-heading">Recordings (<%= @recording_count %>)</h2>
+  <% if @recording_rows.any? %>
+    <table class="artist-listening-table artist-recordings">
+      <thead><tr>
+        <% { "title" => "Title", "length" => "Length", "recent" => "Last listened", "plays" => "Play count" }.each do |sort, label| %>
+          <th scope="col" aria-sort="<%= (@recording_sort == sort ? (sort == "title" ? "ascending" : "descending") : "none") %>">
+            <%= link_to label, catalog_entry_path(@entry, **@history_window.query, recording_sort: sort, anchor: "artist-recordings"), data: { turbo: false } %>
+          </th>
+        <% end %>
+      </tr></thead>
+      <tbody>
+        <% @recording_rows.each do |recording, totals| %>
+          <tr>
+            <td><%= catalog_link(recording) %></td>
+            <td><%= recording_duration(recording.duration_ms) %></td>
+            <td><%= browser_time(totals.last_played, date_only: true) if totals.last_played %></td>
+            <td><%= render "listening_bar", value: totals.plays, maximum: @play_bar_max, label: totals.plays, accessible_label: pluralize(totals.plays, "play"), colors: %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+    <% if @recording_page.positive? %>
+      <%= link_to "Previous recordings", catalog_entry_path(@entry, **@history_window.query, recording_sort: @recording_sort, recording_page: @recording_page - 1, anchor: "artist-recordings"), data: { turbo: false } %>
     <% end %>
-    <% checked = Array(geography["requests"]).find { |request| request["provider"] == "wikidata" }&.fetch("retrieved_at", nil) %>
-    <% if checked && Time.iso8601(checked) < 7.days.ago %><p class="muted">Wikidata evidence is due for refresh.</p><% end %>
-  <% elsif geography %>
-    <p class="muted"><%= geography.fetch("status").start_with?("conflicting") ?
-      "The geographic evidence conflicts. A specific origin could not be verified." : "Wikidata evidence is incomplete or the artist link could not be verified." %></p>
+    <% if (@recording_page + 1) * 10 < @recording_count %>
+      <%= link_to "More recordings", catalog_entry_path(@entry, **@history_window.query, recording_sort: @recording_sort, recording_page: @recording_page + 1, anchor: "artist-recordings"), data: { turbo: false } %>
+    <% end %>
+  <% else %>
+    <p>No canonical recordings are available.</p>
   <% end %>
-  <p>Country (MusicBrainz) <%= render "shared/geographic_place", country: @entry.country %>
-    <% if Clients::Musicbrainz::MBID.match?(@entry.mbid.to_s) %> · <%= link_to "MusicBrainz artist", "https://musicbrainz.org/artist/#{@entry.mbid}" %><% end %>
-    <% if geography && Clients::Wikimedia::ENTITY.match?(geography["entity_id"].to_s) %> ·
-      <%= link_to "Wikidata artist statements", "https://www.wikidata.org/wiki/#{geography.fetch("entity_id")}" %>
-    <% end %>
-  </p>
 </section>
-<%= render "related", title: "Recordings", items: @recordings %>
-<%= render "related", title: "Releases", items: @releases %>
+<section class="card library-card" id="artist-releases">
+  <h2 class="section-heading">Ranked releases (<%= @release_rows.size %>)</h2>
+  <% if @release_rows.any? %>
+    <table class="artist-listening-table artist-releases">
+      <thead><tr><th scope="col">Release</th><th scope="col">Release date</th><th scope="col" aria-sort="descending">Estimated listening time</th></tr></thead>
+      <tbody>
+        <% @release_rows.each do |release, totals| %>
+          <tr><td><%= catalog_link(release) %></td><td><%= catalog_release_date(release) %></td>
+            <td>
+              <% duration = estimated_listening_time(totals) %>
+              <%= render "listening_bar", value: totals.milliseconds, maximum: @time_bar_max, label: duration,
+                accessible_label: "#{duration}, #{pluralize(totals.plays, 'play')}", colors: %>
+              <small><%= pluralize(totals.plays, "play") %></small>
+              <% if totals.known_durations < totals.plays %><small><%= duration_coverage(totals) %></small><% end %>
+            </td></tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% else %>
+    <p>No releases qualify for these rankings.</p>
+  <% end %>
+</section>
+
+<% if @unranked_releases.any? %>
+  <section class="card library-card" id="artist-unranked-releases">
+    <h2 class="section-heading">Other canonical releases (<%= @unranked_releases.size %>)</h2>
+    <ul class="catalog-list">
+      <% @unranked_releases.each do |release| %>
+        <li><%= catalog_link(release) %> · <%= catalog_release_date(release) %></li>
+      <% end %>
+    </ul>
+  </section>
+<% end %>

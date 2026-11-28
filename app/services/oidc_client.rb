@@ -30,8 +30,8 @@ class OidcClient
   def exchange(code, attempt)
     client.authorization_code = code
     token = client.access_token!(code_verifier: attempt.verifier)
-    header = JSON::JWT.decode(token.id_token, :skip_verification)
-    raise Failure unless header.algorithm.to_s == "RS256"
+    claims = JSON::JWT.decode(token.id_token, :skip_verification)
+    raise Failure unless claims.algorithm.to_s == "RS256"
     identity = OpenIDConnect::ResponseObject::IdToken.decode(token.id_token, discovery)
     identity.verify!(issuer: ISSUER, client_id: ENV.fetch("OIDC_CLIENT_ID"), nonce: attempt.nonce)
     raise Failure if identity.sub.blank? || identity.iat.to_i > Time.current.to_i + 30
@@ -40,7 +40,7 @@ class OidcClient
     required_acr = ENV["OIDC_REQUIRED_ACR"].presence
     raise Failure if required_acr && identity.acr != required_acr
     raise Failure if token.refresh_token.blank?
-    [ identity.sub, token.refresh_token ]
+    [ identity.sub, token.refresh_token, claims["preferred_username"], identity.iat.to_i ]
   rescue OpenIDConnect::Exception, Rack::OAuth2::Client::Error, JSON::JWT::Exception, Faraday::Error, URI::InvalidURIError
     raise Failure
   end
@@ -57,8 +57,29 @@ class OidcClient
     raise Failure
   end
 
+  def shell_evidence(local_session)
+    metadata = HTTP.timeout(3).get("#{ISSUER}/.well-known/oauth-authorization-server")
+    raise Failure unless metadata.status.success?
+
+    data = JSON.parse(metadata.to_s)
+    endpoint = URI(data.fetch("introspection_endpoint"))
+    methods = data["introspection_endpoint_auth_methods_supported"]
+    unless data["issuer"] == ISSUER && methods.is_a?(Array) && methods.include?("client_secret_basic") && endpoint.scheme == "https" && endpoint.host == URI(ISSUER).host &&
+        endpoint.port == 443 && endpoint.userinfo.nil? && endpoint.query.nil? && endpoint.fragment.nil?
+      raise Failure
+    end
+
+    response = http.post(endpoint.to_s, form: { token: local_session.grant_token, token_type_hint: "refresh_token",
+      application_shell_version: "1" })
+    raise Failure unless response.status.success? && response.headers["Cache-Control"].to_s.split(",").map { |directive| directive.strip.downcase }.include?("no-store")
+
+    ApplicationShellEvidence.verify(JSON.parse(response.to_s), session: local_session, client_id: ENV.fetch("OIDC_CLIENT_ID"))
+  rescue HTTP::Error, JSON::ParserError, KeyError, TypeError, URI::InvalidURIError, ArgumentError, ApplicationShellEvidence::Invalid
+    raise Failure
+  end
+
   def revoke(grant)
-    http.post("#{ISSUER}/revoke", form: { token: grant, token_type_hint: "refresh_token" })
+    http.headers("Accept" => "application/json").post("#{ISSUER}/revoke", json: { token: grant, token_type_hint: "refresh_token" })
   rescue HTTP::Error
     nil # Local logout is always available during provider outages.
   end

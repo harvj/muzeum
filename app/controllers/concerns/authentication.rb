@@ -5,13 +5,35 @@ module Authentication
     before_action :prevent_private_caching
     before_action :resume_session
     before_action :require_authentication
-    helper_method :current_user
+    helper_method :current_user, :session_username
   end
 
   private
 
   def current_user
     Current.user
+  end
+
+  def session_username
+    return unless Current.session
+
+    # Keep the verified label on sessions created before this release.
+    legacy_id, legacy_username = session[:authenticated_username]
+    Current.session.shell_username || (legacy_username if legacy_id == Current.session.id)
+  end
+
+  def remember_session_username(username, issued_at:)
+    if Current.session && issued_at.is_a?(Integer) &&
+        username.is_a?(String) && ApplicationShellEvidence::USERNAME.match?(username)
+      # Compare the source timestamp in the write so concurrent valid responses
+      # cannot replace newer identity evidence with older evidence.
+      identities = Session.unexpired.where(id: Current.session.id, user_id: Current.user.id)
+      identities.where("shell_username_issued_at IS NULL OR shell_username_issued_at < ?", issued_at)
+        .update_all(shell_username: username, shell_username_issued_at: issued_at)
+      return identities.pick(:shell_username)
+    end
+
+    session_username
   end
 
   def resume_session
@@ -31,6 +53,7 @@ module Authentication
     end
     Current.session.update!(last_seen_at: Time.current) if request.get? && request.format.html?
   rescue OidcClient::Failure
+    @session_verification_unavailable = true
     session[:oidc_auto_blocked] = true
     Current.session = nil
   end
