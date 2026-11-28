@@ -51,6 +51,8 @@ RSpec.describe "Release-backed recording resolution", type: :request do
       evidence = RecordingResolution::ReleaseTracklist.new(release).revision.evidence
       expect(evidence.fetch("checked_recording_appearances").select { |source| source["supports_base_configuration"] }.pluck("id"))
         .to match_array(source_ids)
+      alternatives = evidence.fetch("checked_recording_appearances").reject { |source| source["supports_base_configuration"] }
+      expect(alternatives.pluck("track_count").uniq).to include(example[:file] == "crash" ? 16 : 15)
       recording = Recording.find_by!(mbid:)
       expect(recording.verified_release_membership?).to be(true)
       expect(release.catalog_track_slots.base_sequence.count).to eq(example[:tracks])

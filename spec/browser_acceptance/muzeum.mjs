@@ -190,6 +190,7 @@ await runCandidate({ chromium: chrome, artifact: 'candidate.tar.gz', binding, ou
           await sources.locator('summary').getByText(expectedSources + ' verified MusicBrainz source', { exact: false }).waitFor();
           await sources.locator('summary').click();
           assert.equal(await sources.getByRole('link').count(), expectedSources);
+          assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
           await sources.locator('summary').click();
           await action.scrollIntoViewIfNeeded();
           await screenshot(name + '-release-backed-' + title.toLowerCase(), [trigger]);

@@ -523,7 +523,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     end
 
     expect(page).to have_css(".resolution-context .review-track-match", text: "No Sunlight")
-    expect(page).to have_no_css(".resolution-context details")
+    expect(page).to have_css(".resolution-context details.release-configuration-sources:not([open])")
     click_link "Review evidence"
     expect(page).to have_css(".review-score")
     expect(page).to have_css("details:not([open]) > summary", text: "Checked appearance · Narrow Stairs", visible: :all)
@@ -590,7 +590,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
           })()
         JS
         expect(page).to have_no_text(/Disc|Vinyl|Complete tracklist|MusicBrainz release/)
-        expect(page).to have_no_css("details")
+        expect(page).to have_css("details.release-configuration-sources:not([open])")
         expect(all(".review-tracks li > span:first-child").map(&:text)).to eq((1..15).map(&:to_s))
         expect(all(".review-tracks li > span:nth-child(2)").map { |element| element.text.sub(/\s+\(candidate recording\)\z/, "") }).to eq(titles)
       end
@@ -862,6 +862,8 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     expect(page).to have_text("1 result returned")
     visit resolution_surface_path(play)
     within(".resolution-choices") { expect(page).to have_text("Charli xcx, Sky Ferreira") }
+    expect(page).to have_css(".release-edition-group", count: 2)
+    within(find(".release-edition-group", text: /1 medium/)) { find("input[type='radio']").click }
     within('[aria-label="Resolution preview"]') do
       expect(page).to have_text("Recording · Cross You Out · Charli xcx, Sky Ferreira")
       expect(page).to have_text("Release · Charli · 15 tracks")
@@ -984,7 +986,7 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     expect(page).to have_css("input[name='assessment_id'][value='#{refreshed.id}']", visible: :all)
     expect(page).to have_checked_field("construct_release_#{expanded}")
 
-    changed = save_evidence.call(editions.reject { |edition| [ overseas, worldwide ].include?(edition["id"]) })
+    changed = save_evidence.call(editions.reject { |edition| edition["id"] == worldwide })
     Turbo::StreamsChannel.broadcast_refresh_to(request, method: :morph, scroll: :preserve)
     expect(page).to have_css("input[name='assessment_id'][value='#{changed.id}']", visible: :all)
     expect(page).to have_css("[role='alert']", text: "The selected edition is no longer in this review")
@@ -994,13 +996,13 @@ RSpec.describe "Canonical library resolution workflow", type: :system do
     Turbo::StreamsChannel.broadcast_refresh_to(request, method: :morph, scroll: :preserve)
     expect(page).to have_css("input[name='assessment_id'][value='#{restored.id}']", visible: :all)
     expect(page).to have_no_css(".release-edition-choices input:checked")
-    choose "construct_release_#{expanded}"
+    choose "construct_release_#{canadian}"
 
     click_button "Resolve this observation"
     expect(page).to have_text("Recording decision saved.")
     release = Release.sole
-    expect(release.ingested_from_release_mbid).to eq(expanded)
-    selected = CanonicalCatalog::Edition.new(editions.find { |edition| edition["id"] == expanded }, expanded)
+    expect(release.ingested_from_release_mbid).to eq(canadian)
+    selected = CanonicalCatalog::Edition.new(editions.find { |edition| edition["id"] == canadian }, canadian)
     expect(release.catalog_track_slots.base_sequence.order(:medium, :position).pluck(:source_recording_mbid))
       .to eq(selected.slots.pluck(:source_recording_mbid))
     source_signature = selected.slots.map { |slot| slot.values_at(:medium, :position, :source_recording_mbid) }

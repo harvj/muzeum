@@ -15,8 +15,6 @@ module CanonicalCatalog
       return "Surround mix" if label.match?(/\b(?:surround|[57]\.1)\b/i)
       return "Mono" if label.match?(/\bmono\b/i)
       return "Stereo" if label.match?(/\bstereo\b/i)
-      return "Clean" if label.match?(/\bclean\b/i)
-      return "Explicit" if label.match?(/\bexplicit\b/i)
 
       label.strip.presence if label.match?(/\b(?:mix(?:es)?|remix(?:es)?)\b/i)
     end
