@@ -21,3 +21,11 @@ All eleven shared Chromium steps passed against the sealed candidate with dispos
 - [Shared report](shared-chromium.json)
 - [Heartland desktop](desktop-release-backed-heartland.png) and [mobile](mobile-release-backed-heartland.png)
 - [Crash desktop](desktop-release-backed-crash.png) and [mobile](mobile-release-backed-crash.png)
+
+## Production review
+
+The [guarded deployment](https://github.com/harvj/muzeum/deployments) completed as deployment `8126268372`. The public footer displays v0.8.7-rc.2. The web endpoint and Solid Queue passed health checks. Auth discovery and anonymous private-route denial passed. Neighbor process identities and catalog, preference, observation, and decision fingerprints matched before and after activation. No migrations were pending. Read-only checks confirmed 19 assigned Crash observations and four unassigned Heartland observations. The rc.1 rollback seal also verified.
+
+- [Production artifact identity](production-artifact.json)
+- [Live Heartland review](https://muzeum.fm/resolution/293210)
+- [Protected merge](https://github.com/harvj/muzeum/pull/51)
