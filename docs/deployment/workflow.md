@@ -186,7 +186,8 @@ verify its inherited lock descriptors and disk headroom. The isolated restore
 exception is bound to the reviewed root-owned script digest and its CE and
 shared lock descriptors. It preserves the restore’s 100 GiB reserve, plus
 Muzeum’s 8 GiB when they share a filesystem. The guard checks capacity again
-before switching the live release. The Muzeum phase lock, migration lock, Muzeum-only
+before switching the live release. Standalone read-only preflight reports when this
+scoped coordination is in effect. The Muzeum phase lock, migration lock, Muzeum-only
 backup/restore lock, protected main, artifact digest, database inspection,
 backup receipts, and readiness remain required. Pointer publication runs
 inside the same Muzeum guard as the final artifact and schema checks.
