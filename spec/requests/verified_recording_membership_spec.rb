@@ -40,9 +40,9 @@ RSpec.describe "Release-backed recording resolution", type: :request do
       expect(assessment.evidence.fetch("candidates").pluck("id")).to include(example[:competing])
       expect(provider.paths).to include("/ws/2/recording/#{mbid}")
       if example[:assessment] == "heartland"
-        expect(provider.paths.grep(%r{\A/ws/2/recording})).to eq(["/ws/2/recording/#{mbid}"])
+        expect(provider.paths.grep(%r{\A/ws/2/recording})).to eq([ "/ws/2/recording/#{mbid}" ])
         expect(provider.paths).to include("/ws/2/release/#{edition.fetch("id")}")
-        expect(assessment.evidence.dig("reassessment", "pending_publication_retries")).to eq([mbid])
+        expect(assessment.evidence.dig("reassessment", "pending_publication_retries")).to eq([ mbid ])
       end
 
       get resolution_surface_path(target, candidate: mbid)
