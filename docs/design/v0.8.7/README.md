@@ -18,3 +18,5 @@ Shared Chromium passed against sealed candidate `78aed5cdaed839064d0b6894961e169
 | Jeopardy | [Desktop](desktop-release-backed-heartland.png) | [Mobile](mobile-release-backed-heartland.png) |
 
 [Shared Chromium report](shared-chromium.json), [browser environment digests](browser-environment.json), [disposable seal](disposable-artifact.json), and [Linux staging and rollback run](https://github.com/harvj/muzeum/actions/runs/46116328520).
+
+The [exact-SHA CI run](https://github.com/harvj/muzeum/actions/runs/46116303532), [signed Application Shell v2.0.0 preflight](signed-preflight.txt), and [protected main PR](https://github.com/harvj/muzeum/pull/48) passed for the same candidate. No database migrations are introduced.
