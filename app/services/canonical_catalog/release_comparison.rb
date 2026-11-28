@@ -3,19 +3,33 @@ module CanonicalCatalog
     attr_reader :groups, :shared
 
     def initialize(proposals)
-      @groups = []
-      proposals.sort_by do |proposal|
-        data = proposal.construction.base.data
-        [ slots(proposal).size, data.fetch("date"), data.fetch("id") ]
-      end.each do |proposal|
-        group = groups.find { |items| items.all? { |item| TrackComparison.equivalent_sequence?(slots(item), slots(proposal)) } }
-        group ? group << proposal : groups << [ proposal ]
-      end
-      @shared = slots(groups.first.first).each_with_index.take_while do |_, index|
+      @groups = proposals.sort_by do |proposal|
+        base = proposal.construction.base
+        data = base.data
+        [ slots(proposal).size, data.fetch("date"),
+          proposal.existing && ReviewedConstruction.current_edition(proposal.existing) == data["id"] ? 0 : 1,
+          data["country"].present? ? 0 : 1, data.fetch("id") ]
+      end.group_by { |proposal| ConfigurationEvidence.key(proposal.construction.base) }.values
+      @shared = groups.empty? ? [] : slots(groups.first.first).each_with_index.take_while do |_, index|
         groups.map { |group| slots(group.first)[index] }.combination(2).all? do |left, right|
-          left && right && TrackComparison.compare(left, right) == :equivalent
+          left && right && left.values_at(:medium, :position) == right.values_at(:medium, :position) && TrackComparison.compare(left, right) == :equivalent
         end
       end.map(&:first)
+    end
+
+    def representatives
+      groups.map(&:first)
+    end
+
+    def representative_for(edition_id)
+      group = groups.find do |members|
+        sources(members.first).any? { |source| source["id"] == edition_id }
+      end
+      group&.first
+    end
+
+    def sources(proposal)
+      proposal.construction.appearances.select { |edition| edition["supports_base_configuration"] }
     end
 
     def comparisons

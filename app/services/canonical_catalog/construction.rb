@@ -14,7 +14,7 @@ module CanonicalCatalog
 
       groups = originals.sort_by { |edition| edition.data.fetch("id") }.each_with_object([]) do |edition, grouped|
         equivalent = grouped.find do |group|
-          group.all? { |other| TrackComparison.equivalent_sequence?(edition.slots, other.slots) }
+          group.all? { |other| ConfigurationEvidence.mix(edition) == ConfigurationEvidence.mix(other) && TrackComparison.equivalent_sequence?(edition.slots, other.slots) }
         end
         equivalent ? equivalent << edition : grouped << [ edition ]
       end
@@ -25,7 +25,7 @@ module CanonicalCatalog
         groups.any? do |other|
           shorter = other.first.slots
           shorter.size < tracks.size && group.all? do |edition|
-            other.all? { |base| TrackComparison.equivalent_sequence?(edition.slots.take(shorter.size), base.slots) }
+            other.all? { |base| ConfigurationEvidence.mix(edition) == ConfigurationEvidence.mix(base) && TrackComparison.equivalent_sequence?(edition.slots.take(shorter.size), base.slots) }
           end
         end
       end
@@ -68,6 +68,7 @@ module CanonicalCatalog
       @additional_slots = []
       groups = []
       base_recordings = self.class.sequence(@base).to_set
+      configuration = ConfigurationEvidence.key(@base)
       @appearances = editions.filter_map do |edition|
         date = edition.data["date"]
         additions, uncertain = [], []
@@ -94,7 +95,10 @@ module CanonicalCatalog
           admitted = additions.select { |slot| Array(recording_mbid).include?(slot.dig(:recording, "id")) }
           @additional_slots.concat(admitted.map { |slot| slot.merge(edition_mbid: edition.data.fetch("id"), appearance_date: date) })
         end
-        edition.data.slice("id", "title", "date", "country", "status", "packaging", "disambiguation", "edition_relationships", "genres", "tags").merge(
+        edition.data.slice("id", "title", "date", "country", "status", "packaging", "barcode", "label-info", "release-events",
+          "disambiguation", "edition_relationships", "genres", "tags").merge(
+          "media" => Array(edition.data["media"]).map { |medium| medium.slice("position", "format", "track-count") },
+          "supports_base_configuration" => ConfigurationEvidence.key(edition) == configuration,
           "track_count" => edition.slots.size,
           "uncertain_tracks" => uncertain.map { |slot| slot_evidence(slot, date) },
           "additional_tracks" => entries

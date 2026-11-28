@@ -6,16 +6,17 @@
 end %>
 <% plan = CanonicalCatalog::ResolutionPlan.new(@assessment, mbid, @affected_count) %>
 <% catalog_recording = plan.recording || catalog_rows[1][1].first %>
-<% proposals = plan.proposals %>
+<% comparison = CanonicalCatalog::ReleaseComparison.new(plan.proposals) %>
+<% proposals = comparison.representatives %>
 <% has_membership = plan.recording&.verified_release_membership? %>
 <% provenance = RecordingResolution::ReleaseProvenance.new(@assessment.evidence, contexts:, releases: catalog_releases, recording_mbid: mbid) %>
 <% established = provenance.established.any? %>
 <% requested_edition = params[:edition].presence %>
-<% selected_edition = requested_edition if params[:review_edition].blank? && proposals.any? { |proposal| plan.edition_id(proposal) == requested_edition } %>
+<% requested_configuration = comparison.representative_for(requested_edition) if requested_edition %>
+<% selected_edition = plan.edition_id(requested_configuration) if requested_configuration && params[:review_edition].blank? %>
 <% invalid_edition = requested_edition.present? && selected_edition.nil? %>
 <% can_confirm = @may_manage_observation && @assessment_matches_claims %>
 <% choosing_release = can_confirm && (proposals.many? || (invalid_edition && proposals.one?)) %>
-<% comparison = CanonicalCatalog::ReleaseComparison.new(proposals) if choosing_release %>
 <%= tag.div data: ((choosing_release || invalid_edition) ? { controller: "release-proposal", action: "turbo:morph@document->release-proposal#restoreSelection" } : {}) do %>
 <% if invalid_edition %>
   <p role="alert" data-release-proposal-target="warning">The selected edition is no longer in this review. Choose a current edition before confirming.</p>
@@ -35,20 +36,21 @@ end %>
 <section class="resolution-context" aria-label="Original release">
   <h2 class="section-heading">Original release</h2>
   <% if groups.any? %>
-    <% shown_groups = choosing_release ? [proposals] : groups %>
+    <% shown_groups = proposals.any? ? [proposals] : groups.map { |choices| CanonicalCatalog::ReleaseComparison.new(choices).representatives } %>
     <% shown_groups.each do |choices| %>
       <% choices.each do |choice| %>
         <% base = choice.construction.base %>
         <% release = base.data %>
         <%= tag.div hidden: choosing_release && selected_edition != release["id"], data: (choosing_release ? { release_proposal_target: "proposal", edition: release["id"] } : {}) do %>
-          <h3 class="resolution-release-title"><%= release["title"] %></h3>
+          <h3 class="resolution-release-title"><%= resolution_configuration_label(base, standard: !choosing_release && choices.one?) %></h3>
           <p><%= resolution_release_date(release.fetch("date")) %><%= " · #{release['country']}" if choices.many? && release["country"].present? %></p>
           <% tracks = base.slots.map do |slot|
             { "title" => slot[:title], "recording_mbid" => slot.dig(:recording, "id"),
               "length" => slot[:duration_ms] || slot.dig(:recording, "length") }
           end %>
-          <% shared_count = comparison&.shared&.size.to_i %>
+          <% shared_count = choosing_release ? comparison.shared.size : 0 %>
           <%= render "ordered_tracks", tracks: tracks.drop(shared_count), mbid:, start: shared_count + 1 %>
+          <%= render "configuration_sources", proposal: choice unless choosing_release %>
         <% end %>
       <% end %>
     <% end %>

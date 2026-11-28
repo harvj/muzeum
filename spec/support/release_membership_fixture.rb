@@ -22,7 +22,8 @@ module ReleaseMembershipFixture
       digest: Digest::SHA256.hexdigest(historical.to_json), actor: "fixture", evidence: historical)
 
     studio = edition.fetch("media").first.fetch("tracks").find { |slot| slot["position"] == example[:position] }.fetch("recording")
-    editions = [ edition, *Array(historical["construction_editions"]) ].index_by { |row| row.fetch("id") }
+    verified = JSON.parse(fixture.join("#{example[:file]}-verified-editions.json").read)
+    editions = [ edition, *Array(historical["construction_editions"]), *verified ].index_by { |row| row.fetch("id") }
     refs = editions.values.map { |row| row.except("media") }
     provider = DiscoveryReplay::Session.new(
       { "releases" => editions, "collections" => { edition.dig("release-group", "id") => refs },

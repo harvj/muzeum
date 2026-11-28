@@ -221,6 +221,22 @@ RSpec.describe CanonicalCatalog::Construction do
     expect(evidence).to include("track_mbid" => track.fetch("id"), "recording_mbid" => track.dig("recording", "id"), "length" => 159_999)
   end
 
+  it "keys equivalent album sources by exact ordered slots and musical annotations" do
+    data = narrow_stairs_editions.find { |edition| edition["id"] == NarrowStairsFixture::ORIGINAL }
+    source = CanonicalCatalog::Edition.new(data, data.fetch("id"))
+    comparison = CanonicalCatalog::ConfigurationEvidence
+    regional = data.deep_dup.merge("id" => SecureRandom.uuid, "country" => "CA", "barcode" => "012345",
+      "disambiguation" => "indie exclusive")
+    key = ->(edition) { comparison.key(CanonicalCatalog::Edition.new(edition, edition.fetch("id"))) }
+    expect(key.call(regional)).to eq(comparison.key(source))
+
+    expect(key.call(regional.merge("disambiguation" => "Dolby Atmos mix"))).not_to eq(comparison.key(source))
+    regional.dig("media", 0)["position"] = 2
+    split = CanonicalCatalog::Edition.new(regional, regional.fetch("id"))
+    expect(comparison.key(split)).not_to eq(comparison.key(source))
+    expect(CanonicalCatalog::TrackComparison.equivalent_sequence?(source.slots, split.slots)).to be(false)
+  end
+
   it "presents material original tracklist conflicts without merging the unselected sequence" do
     data = narrow_stairs_editions.find { |edition| edition["id"] == NarrowStairsFixture::ORIGINAL }
     other = data.deep_dup.merge("id" => SecureRandom.uuid)
