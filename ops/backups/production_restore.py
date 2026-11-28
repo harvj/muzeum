@@ -116,7 +116,7 @@ Session.find_each { |s| raise 'Session recovery failed' if s.grant_token.blank? 
 puts 'MUZEUM_RECOVERY_PROOF:'+{users:User.count,sessions:Session.count,scrobbles:Scrobble.count,raw_pages:ImportPage.count,grant_decryption_verified:true}.to_json'''
     result=subprocess.run(['/usr/sbin/runuser','-u','muzeum','--',str(RUBY/'ruby'),str(RUBY/'bundle'),
                            'exec','rails','runner',script],
-                          cwd=release,env=env,capture_output=True,text=True,timeout=60)
+                          cwd=release,env=env,capture_output=True,text=True,timeout=60,pass_fds=production_capture.worker_lock_fds.get())
     if result.returncode:raise RuntimeError('Isolated application identity/session recovery failed')
     line=next((line for line in result.stdout.splitlines() if line.startswith('MUZEUM_RECOVERY_PROOF:')),None)
     if not line:raise RuntimeError('Missing isolated application recovery proof')
@@ -150,7 +150,7 @@ def restore(config,api):
                 created.append(name);targets[source]=name
                 with (restored/'databases'/(source+'.dump')).open('rb') as dump:
                     result=subprocess.run(['runuser','-u','postgres','--','pg_restore','--no-owner','--no-acl','--exit-on-error','--dbname',name],
-                                          stdin=dump,stdout=subprocess.DEVNULL,stderr=subprocess.PIPE,timeout=180)
+                                          stdin=dump,stdout=subprocess.DEVNULL,stderr=subprocess.PIPE,timeout=180,pass_fds=production_capture.worker_lock_fds.get())
                 if result.returncode:raise RuntimeError('Isolated production restore failed')
                 if production_capture.fingerprints(name,restored=True)!=metadata['databases'][source]:raise RuntimeError('Restored table fingerprints differ')
             proof=verify_application(restored,targets,metadata,api['invoke']) if metadata['release_sha'] else None

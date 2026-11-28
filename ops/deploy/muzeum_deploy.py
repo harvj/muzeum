@@ -48,9 +48,12 @@ def write_json(path, value):
 
 
 class Host:
+    worker_lock_fds = ()
+
     def command(self, argv, *, env=None, cwd=None, input=None, timeout=900):
         # Capture everything. Neither argv from a failure nor environment/stderr reaches logs.
-        result = subprocess.run(argv, env=env, cwd=cwd, input=input, capture_output=True, timeout=timeout)
+        result = subprocess.run(argv, env=env, cwd=cwd, input=input, capture_output=True, timeout=timeout,
+                                pass_fds=self.worker_lock_fds)
         if result.returncode:
             STATE.mkdir(mode=0o700, parents=True, exist_ok=True)
             diagnostic = STATE / 'command-last-error'
@@ -171,11 +174,24 @@ class Host:
         return api, config
 
     @contextlib.contextmanager
-    def backup_lock(self):
-        # Existing host lock also excludes scheduled capture/restore pauses during each phase.
-        with (BACKUPS.parent / 'backup.lock').open('a') as lock:
+    def recovery_resource(self, name):
+        sys.path.insert(0, '/usr/local/lib/harvj-backups')
+        from production_capture import inherit_lock
+        with (BACKUPS.parent / name).open('r') as lock:
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            yield
+            previous = self.worker_lock_fds
+            self.worker_lock_fds = (*previous, lock.fileno())
+            try:
+                with inherit_lock(lock):
+                    yield
+            finally:
+                self.worker_lock_fds = previous
+
+    def backup_lock(self):
+        return self.recovery_resource('muzeum-recovery.lock')
+
+    def scratch_lock(self):
+        return self.recovery_resource('backup.lock')
 
     def backup_restore(self, sha):
         api, config = self.backup_api()
@@ -216,7 +232,8 @@ class Host:
                 sql = 'COPY (SELECT row_to_json(t)::text FROM (SELECT ' + projection + ' FROM "' + table + '") t ORDER BY row_to_json(t)::text COLLATE "C") TO STDOUT'
                 argv = ['psql', '-XAt', '-v', 'ON_ERROR_STOP=1', '-h', '127.0.0.1', '-U', 'muzeum_backup', '-d', database, '-c', sql]
                 digest = hashlib.sha256()
-                with subprocess.Popen(argv, env=capture.environment(), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL) as process:
+                with subprocess.Popen(argv, env=capture.environment(), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                                      pass_fds=self.worker_lock_fds) as process:
                     for chunk in iter(lambda: process.stdout.read(65536), b''):
                         digest.update(chunk)
                     if process.wait(timeout=180):
@@ -333,7 +350,7 @@ class Deployment:
                     raise RuntimeError('Failed deployment requires operator recovery')
             try:
                 # Serialize against scheduled backups; never test health during an intentional pause.
-                with self.host.backup_lock():
+                with self.host.backup_lock(), contextlib.ExitStack() as resources:
                     if phase == 'begin':
                         record['baseline'] = self.host.preflight()
                         if baseline is not None and record['baseline']['revision'] != baseline:
@@ -352,6 +369,7 @@ class Deployment:
                             raise RuntimeError('Rollback artifact requires a migration')
                         record['migrations'] = before['pending']
                         if before['pending']:
+                            resources.enter_context(self.host.scratch_lock())
                             self.host.check_withdrawal(record['baseline']['revision'])
                             record['route_transition'] = 'withdrawing'
                             self.save(record)
@@ -381,10 +399,13 @@ class Deployment:
                         if record['phase'] != 'ready_to_publish' or not self.host.published(record['release'], sha):
                             raise RuntimeError('Publication did not select the exact candidate')
                         self.host.release(record['release'], sha)
+                        if record['migrating']:
+                            resources.enter_context(self.host.scratch_lock())
                         self.host.start()
                         self.host.health()
                         if record['migrating']:
                             record['post_backup'] = self.host.backup_restore(sha)
+                            resources.close()
                             self.host.health()
                             record['withdrawn'] = False
                             self.save(record)
