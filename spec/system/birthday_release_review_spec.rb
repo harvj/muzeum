@@ -4,7 +4,7 @@ require_relative "../support/birthday_production_fixture"
 RSpec.describe "Birthday configuration review", type: :system do
   include BirthdayProductionFixture
 
-  it "keeps recording confirmation independent of the reviewed programs at both widths" do
+  it "requires verified membership and keeps independent programs provisional at both widths" do
     skip "Run with BROWSER_TESTS=1 for Resolution browser verification" unless ENV["BROWSER_TESTS"] == "1"
 
     stub_request(:get, "#{OidcClient::ISSUER}/.well-known/oauth-authorization-server").to_return(status: 503)
@@ -37,8 +37,8 @@ RSpec.describe "Birthday configuration review", type: :system do
       expect(find_field("Birthday", type: "checkbox").find(:xpath, "ancestor::li")
         .style("background-color", "border-left-color")).to eq(highlight)
       expect(find_field("Birthday", type: "checkbox").style("background-color")).to eq("background-color" => "rgba(23, 24, 23, 1)")
-      expect(page).to have_button("Resolve all 8 observations")
-      expect(page).to have_text("Recording confirmation can proceed without a release choice.")
+      expect(page).to have_button("Resolve all 8 observations", disabled: true)
+      expect(page).to have_text("Select a verified release containing this recording")
       find("summary", text: "Release configurations and adjacent programs").click
       expect(page).to have_text("Disputed source · August 26, 1991")
       expect(page).to have_text("September 24, 1991")
@@ -47,15 +47,6 @@ RSpec.describe "Birthday configuration review", type: :system do
       expect(page).to have_text("Adjacent recording programs")
       expect(page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")).to be(true)
     end
-    click_button "Resolve all 8 observations"
-    expect(page).to have_text("Recording decision saved.")
-    expect(Release.count).to eq(0)
-    expect(RecordingResolution::Ledger.effective(user).where(id: plays.map(&:id)).map(&:effective_recording_id).uniq).to match([ kind_of(Integer) ])
-
-    visit "/resolution/293137"
-    check "Birthday"
-    expect(page).to have_button("Resolve all 8 observations")
-    find("summary", text: "Release configurations and adjacent programs").click
     find("summary", text: "September 24, 1991").click
     check "Select configuration"
     find("summary", text: "August 27, 1991").click

@@ -12,6 +12,12 @@ class Recording < ApplicationRecord
 
   has_many :scrobbles
 
+  def verified_release_membership?
+    # Base and explicitly admitted additional tracks have catalog slots.
+    # External appearances and retained configuration snapshots do not.
+    admitted_releases.where.not(catalog_verified_at: nil).exists?
+  end
+
   validates :title, presence: true
   validates :mbid, presence: true
 end

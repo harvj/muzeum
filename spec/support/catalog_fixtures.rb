@@ -15,6 +15,13 @@ module CatalogFixtures
     RecordingResolution::Assessment.find(RecordingResolution::Work.where(pilot_id: pilot.id).first.assessment_id)
   end
 
+  def seed_verified_membership(recording_data)
+    recording = Recording.find_or_create_by!(mbid: recording_data.fetch("id")) { |row| row.title = recording_data.fetch("title") }
+    release = Release.create!(title: "Verified test release", catalog_verified_at: Time.current)
+    release.catalog_track_slots.create!(recording:, medium: 1, position: 1, title: recording.title, track_mbid: SecureRandom.uuid)
+    recording
+  end
+
   class Session
     attr_reader :provenance, :paths
     attr_accessor :artist_data

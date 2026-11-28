@@ -17,6 +17,13 @@ module BirthdayProductionFixture
         version: snapshot.fetch("version"), created_at: snapshot.fetch("created_at"),
         digest: Digest::SHA256.hexdigest(data.to_json), actor: "fixture", evidence: data)
     end
+    if fixture.fetch("assessments").last.fetch("version") != RecordingResolution::Assessment::INTERPRETATION_VERSION
+      # Keep the historical snapshots while presenting the current interpretation
+      # in browser tests that exercise confirmation without a live provider.
+      RecordingResolution::Assessment.create!(id: fixture.fetch("assessments").last.fetch("id") + 1, group_id: group.id,
+        version: RecordingResolution::Assessment::INTERPRETATION_VERSION, digest: Digest::SHA256.hexdigest(evidence.to_json),
+        actor: "fixture", evidence:)
+    end
     [ plays, evidence ]
   end
 end

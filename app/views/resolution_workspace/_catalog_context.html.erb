@@ -11,6 +11,5 @@
       </div>
     <% end %>
   </dl>
-  <p class="compact-meta">Resolution <%= rows[1][1].any? ? "reuses the existing recording" : "creates a catalog entry for this recording" %> and applies it to this matching group.
-    The original Last.fm release text is preserved. The edition played stays unverified.
-    <% if rows[2][1].empty? %>Uncertain release memberships stay pending.<% end %></p>
+  <p class="compact-meta">Resolution applies a verified recording to the matching group. If it has no verified catalog release, confirm a supported release together with the recording.
+    The original Last.fm release text is preserved. The edition played stays unverified.</p>

@@ -78,7 +78,7 @@ test -s identity.json || exit 21
   export PUMA_BIND=tcp://127.0.0.1:55493
   sandbox-exec -p "$independent" bundle exec rails db:migrate:primary
   sandbox-exec -p "$independent" bundle exec rails runner '%w[cache queue cable].each do |name|; cfg=ActiveRecord::Base.configurations.configs_for(env_name:"production",name:name); ActiveRecord::Base.establish_connection(cfg); load Rails.root.join("db","#{name}_schema.rb"); end'
-  sandbox-exec -p "$independent" bundle exec rails runner "$repo/spec/browser_acceptance/seed_archive.rb"
+  MUZEUM_CATALOG_WORKER=1 sandbox-exec -p "$independent" bundle exec rails runner "$repo/spec/browser_acceptance/seed_archive.rb"
   exec sandbox-exec -p "$independent" bundle exec puma -C config/puma.rb
 ) > muzeum.log 2>&1 & pids="$pids $!"
 for i in {1..100}; do curl -fsS -H 'Host: muzeum.fm' http://127.0.0.1:55493/up >/dev/null 2>&1 && break; sleep .2; done

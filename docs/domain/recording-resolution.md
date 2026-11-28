@@ -57,6 +57,8 @@ Preserve the source MusicBrainz recording identity on each verified release trac
 
 ## Example
 
+Recording confirmation reuses verified canonical release membership or establishes it through explicit admission in the same transaction. The matching surface inherits the decision, subject to individual observation overrides. Unverified membership leaves confirmation pending.
+
 Last.fm may deliver the same studio performance under multiple title spellings, with or without album text. If evidence supports the same canonical recording, aggregate the plays under that recording. If a similarly named live performance appears, treat it as a distinct candidate until established otherwise. Verifying a new release membership preserves the recording identity and its observations.
 
 ## Open questions requiring evidence or user decision

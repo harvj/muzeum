@@ -57,20 +57,11 @@ module RecordingResolution
     end
 
     def catalog_recording(evidence)
-      return unless evidence["suggested_mbid"]
+      mbid = evidence["suggested_mbid"]
+      return unless mbid
 
-      verified = evidence.fetch("verified_recording")
-      recording = Recording.create_or_find_by!(mbid: verified.fetch("id")) do |row|
-        row.title = verified.fetch("title")
-        row.duration_ms = verified["length"]
-      end
-      recording.lock!
-      verified.fetch("artist-credit").each.with_index(1) do |credit, position|
-        source = credit.fetch("artist")
-        artist = Artist.create_or_find_by!(mbid: source.fetch("id")) { |row| row.name = source.fetch("name") }
-        RecordingArtist.create_or_find_by!(recording:, artist:) { |row| row.position = position }
-      end
-      recording
+      recording = RecordingSourceDecision.resolve(mbid)
+      recording if recording&.verified_release_membership?
     end
 
     def canonical_json(value)

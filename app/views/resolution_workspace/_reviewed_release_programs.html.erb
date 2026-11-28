@@ -26,7 +26,7 @@
         <label class="pending-release-choice">
           <%= check_box_tag "pending_release_review[configuration_ids][]", edition.data["id"], false,
             id: "configuration-#{edition.data['id']}", form: "recording-resolution-confirmation",
-            data: { review_edition: "configuration", review_existing_album: album.present?, review_new_recordings: (edition.slots.pluck(:source_recording_mbid).uniq - known_recordings.keys).join(","), review_label: "Retain configuration · #{label}" } %>
+            data: { review_edition: "configuration", review_existing_album: album.present?, review_recording_ids: edition.slots.pluck(:source_recording_mbid).join(","), review_new_recordings: (edition.slots.pluck(:source_recording_mbid).uniq - known_recordings.keys).join(","), review_label: "Retain configuration · #{label}" } %>
           Select configuration
         </label>
         <label class="pending-release-choice">
@@ -64,7 +64,7 @@
         <label class="pending-release-choice">
           <%= check_box_tag "pending_release_review[program_ids][]", edition.data["id"], false,
             id: "program-#{edition.data['id']}", form: "recording-resolution-confirmation",
-            data: { review_edition: "program", review_new_recordings: (edition.slots.pluck(:source_recording_mbid).uniq - known_recordings.keys).join(","), review_label: "Admit independent release · #{edition.data['title']}" } %>
+            data: { review_edition: "program", review_recording_ids: edition.slots.pluck(:source_recording_mbid).join(","), review_new_recordings: (edition.slots.pluck(:source_recording_mbid).uniq - known_recordings.keys).join(","), review_label: "Admit independent release · #{edition.data['title']}" } %>
           Select independent release
         </label>
       <% end %>

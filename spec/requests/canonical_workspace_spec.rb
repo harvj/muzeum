@@ -358,6 +358,11 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     assessment = RecordingResolution::Assessment.create!(group_id: group.id, version: "release-context", actor: "fixture",
       digest: SecureRandom.hex(32), evidence: { "candidates" => [ recording_data ], "review_tracklists" =>
         editions.transform_values { |edition| RecordingResolution::ReviewRelease.project(edition) } })
+    CatalogImport.transaction do
+      base = CanonicalCatalog::Edition.new(single_data, single_data.fetch("id"))
+      request = CatalogImport.create!(kind: "release_construction", entity_id: assessment.id, state: "imported", due_at: Time.current)
+      CanonicalCatalog::Store.new(request, Struct.new(:provenance).new([])).release(base.data, base.slots)
+    end
     get resolution_surface_path(plays.first, section: "evidence")
     expect(response.body).to include("Resolve 8 observations", "Release tracklist", "candidate recording")
     expect(response.body).not_to include("Verify selected release")
@@ -374,7 +379,7 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     end
     CanonicalCatalog::Processor.new(request, session_factory: ->(*) { session }).call
     expect(request.reload.state).to eq("imported")
-    expect(Release.count).to eq(0)
+    expect(Release.count).to eq(1)
     explicit = CatalogImport.request!("recording", request.entity_id)
     CanonicalCatalog::Processor.new(explicit, session_factory: ->(*) { session }).call
     album = Release.find_by!(title: "ESTRUS")
@@ -476,10 +481,11 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     expect(doc.css(".review-candidate").map { |card| card.css(".review-candidate-detail .review-tracks li").size }).to eq([ 18, 14, 4 ])
     expect(doc.css(".review-candidate-detail .review-track-match").size).to eq(3)
     expect(doc.css(".review-score strong").map(&:text)).to eq(%w[9 8 7])
-    expect(doc.text).to include("historical scoring", "3 plausible recordings found", "Resolve observation #{observation.id} only", "2:03")
+    expect(doc.text).to include("historical scoring", "3 plausible recordings found", "2:03")
 
     get resolution_surface_path(observation, assessment: assessment.id)
-    expect(response.body).to include("Resolve recording only", "Future exact matches")
+    expect(response.body).to include("Resolution requires a verified canonical release")
+    expect(response.body).not_to include("Resolve recording only")
     expect(RecordingResolution::Decision.count).to eq(0)
   end
 
@@ -529,12 +535,13 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     second = catalog_observation(user, time: 1.day.ago)
     assessment = catalog_assessment(example)
     mbid = CatalogFixtures::IDS[:studio]
+    seed_verified_membership(assessment.evidence.fetch("verified_recording"))
     choice = { mode: "resolved", scope: "surface", recording_mbid: mbid, assessment_id: assessment.id, reason: "Confirmed studio version" }
 
     get resolution_surfaces_path(filter: "suggested")
     expect(response.body).to include("Signals", "Night Lines", "Night Drive")
     get resolution_surface_path(example)
-    expect(response.body).to include("Resolve recording only")
+    expect(response.body).to include("Resolve all 2")
     expect(response.body).not_to include("A checked MusicBrainz edition contains this track slot")
     expect(response.body).not_to include("Release edition to verify")
     get resolution_surface_path(example, before: second.id)
@@ -548,7 +555,7 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     import = CatalogImport.where(kind: CatalogImport::RECORDING_METADATA).sole
     expect(import.context).not_to have_key("edition_mbid")
     get resolution_surface_path(example)
-    expect(response.body).to include("Uncertain release memberships stay pending.")
+    expect(response.body).to include("Verified test release")
     expect(response.body).not_to include("Verify selected release", 'name="edition_mbid"')
     expect { post decide_resolution_surface_path(example), params: choice }.not_to change(RecordingResolution::Decision, :count)
     expect(flash[:alert]).to include("changed")
@@ -604,6 +611,7 @@ RSpec.describe "Canonical library and resolution workspace", type: :request do
     expect(response.body).to include("Muzeum’s recommendation", "A checked MusicBrainz edition contains this track slot", "2 matching observations")
 
     assessment = RecordingResolution::Ledger.assessments(user).sole
+    seed_verified_membership(assessment.evidence.fetch("candidates").find { |row| row["id"] == CatalogFixtures::IDS[:studio] })
     post decide_resolution_surface_path(second), params: { mode: "resolved", scope: "surface",
       recording_mbid: CatalogFixtures::IDS[:studio], assessment_id: assessment.id,
       comment: "Checked the studio version" }

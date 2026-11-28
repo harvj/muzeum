@@ -86,7 +86,11 @@ end %>
       <% end %>
     <% end %>
     <div class="catalog-actions">
-      <%= form.button(proposals.any? ? "Resolve recording only" : (@affected_count.positive? ? "Resolve #{pluralize(@affected_count, 'observation')}" : "Resolve future exact matches"), name: "mode", value: "resolved") %>
+      <% if identity.recording&.verified_release_membership? %>
+        <%= form.button(@affected_count.positive? ? "Resolve #{pluralize(@affected_count, 'observation')}" : "Resolve future exact matches", name: "mode", value: "resolved") %>
+      <% elsif proposals.empty? %>
+        <p>Resolution requires a verified canonical release containing this recording.</p>
+      <% end %>
       <%= form.button "Defer", name: "feedback", value: "deferred", formaction: defer_resolution_surface_path(@observation) %>
       <%= form.button "Reject candidate", name: "feedback", value: "rejected", formaction: defer_resolution_surface_path(@observation) %>
     </div>
@@ -149,7 +153,7 @@ end %>
       </details>
     </div>
   </div>
-  <% if @may_manage_observation && @assessment_matches_claims %>
+  <% if @may_manage_observation && @assessment_matches_claims && identity.recording&.verified_release_membership? %>
   <details>
     <summary>Resolve only this observation</summary>
     <p>Applies only to observation <%= target.id %>.</p>

@@ -1,0 +1,1354 @@
+{
+  "source_claims": {
+    "album_mbid": "307ee795-593c-4b5a-9773-56d9740a0732",
+    "track_mbid": "8e5745ab-20da-4b4e-ab94-aaf9a286a9d5",
+    "artist_mbid": "e19fe814-f476-4490-9349-db1b290a69c6"
+  },
+  "candidates": [
+    {
+      "id": "4af85251-c58f-4a75-9590-b57e05cd95df",
+      "title": "Heartland",
+      "video": null,
+      "length": 215093,
+      "releases": [
+        {
+          "id": "efef64e2-1e34-4121-ac5c-ab7f8bc90532",
+          "title": "A New Dark Age",
+          "release-group": {
+            "id": "6e8d3b29-9526-3327-aa43-e58147252fe0",
+            "title": "A New Dark Age",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        }
+      ],
+      "artist-credit": [
+        {
+          "name": "The Sound",
+          "artist": {
+            "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+            "name": "The Sound"
+          }
+        }
+      ]
+    },
+    {
+      "id": "931fdcb0-3852-4777-a739-07df01b9f02b",
+      "title": "Heartland",
+      "video": null,
+      "length": 230000,
+      "releases": [
+        {
+          "id": "2cafd55a-2336-481c-9916-bb36975fc850",
+          "date": "2008-11-24",
+          "title": "Dutch Radio Recordings: 3. 14.01.83 Arnhem, Stokvishal",
+          "country": "GB",
+          "release-group": {
+            "id": "c6e5aff3-7a48-465e-8740-95043cb8454f",
+            "title": "Dutch Radio Recordings: 3. 14.01.83 Arnhem, Stokvishal",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Live"
+            ]
+          }
+        }
+      ],
+      "artist-credit": [
+        {
+          "name": "The Sound",
+          "artist": {
+            "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+            "name": "The Sound"
+          }
+        }
+      ],
+      "first-release-date": "2008-11-24"
+    },
+    {
+      "id": "c262be6f-5942-4d01-b7c8-76472b6b7b8f",
+      "title": "Heartland",
+      "video": null,
+      "length": 203000,
+      "releases": [
+        {
+          "id": "4722a097-0df6-4359-8294-ce2262e574f6",
+          "date": "2008-11-24",
+          "title": "Dutch Radio Recordings: 2. 09.04.82 Utrecht, No Nukes Festival",
+          "country": "GB",
+          "release-group": {
+            "id": "fb9426c5-8a49-4be3-ab42-3f063a66f059",
+            "title": "Dutch Radio Recordings: 2. 09.04.82 Utrecht, No Nukes Festival",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Live"
+            ]
+          }
+        }
+      ],
+      "artist-credit": [
+        {
+          "name": "The Sound",
+          "artist": {
+            "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+            "name": "The Sound"
+          }
+        }
+      ],
+      "first-release-date": "2008-11-24"
+    },
+    {
+      "id": "122af450-9e19-4e00-b309-8d129fa5b582",
+      "title": "Heartland",
+      "video": null,
+      "length": 205000,
+      "releases": [
+        {
+          "id": "d13df18b-43f7-4a52-8294-fcc4fb6b7ba7",
+          "date": "2006-07-03",
+          "title": "Dutch Radio Recordings: 1. 08.03.81 Amsterdam, Paradiso",
+          "country": "GB",
+          "release-group": {
+            "id": "1dbd262f-e6bf-3bad-b505-b7495cd61313",
+            "title": "Dutch Radio Recordings: 1. 08.03.81 Amsterdam, Paradiso",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Live"
+            ]
+          }
+        }
+      ],
+      "artist-credit": [
+        {
+          "name": "The Sound",
+          "artist": {
+            "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+            "name": "The Sound"
+          }
+        }
+      ],
+      "first-release-date": "2006-07-03"
+    },
+    {
+      "id": "40adc24e-e621-493d-8c61-05e5d7b61463",
+      "title": "Heartland",
+      "video": null,
+      "length": 246000,
+      "releases": [
+        {
+          "id": "58f90e3f-4bc4-4655-a522-7797daffdcd8",
+          "date": "1986",
+          "title": "Counting the Days",
+          "country": "GB",
+          "release-group": {
+            "id": "bb3bf815-377a-3642-8f00-36e0e49b5c34",
+            "title": "Counting the Days",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        }
+      ],
+      "artist-credit": [
+        {
+          "name": "The Sound",
+          "artist": {
+            "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+            "name": "The Sound"
+          }
+        }
+      ],
+      "first-release-date": "1986"
+    },
+    {
+      "id": "4a17b7c0-845f-496c-8ed3-96ca5c0890a7",
+      "title": "Heartland",
+      "video": null,
+      "length": 195240,
+      "releases": [
+        {
+          "id": "1ca2938b-a5a5-4d7a-baba-ea29acde0eca",
+          "date": "2014-04-28",
+          "title": "Jeopardy / From the Lion's Mouth / All Fall Down... Plus",
+          "country": "XE",
+          "release-group": {
+            "id": "c74f181f-7a50-4fc1-8a2d-a98d3bb0b233",
+            "title": "Jeopardy / From the Lion's Mouth / All Fall Down... Plus",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "ac8c510d-39bd-47d2-898c-efec4f552396",
+          "date": "2004",
+          "title": "The BBC Recordings",
+          "country": "GB",
+          "release-group": {
+            "id": "67dfa554-5cbe-38c3-8787-0c1cc8d22eda",
+            "title": "The BBC Recordings",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        }
+      ],
+      "artist-credit": [
+        {
+          "name": "The Sound",
+          "artist": {
+            "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+            "name": "The Sound"
+          }
+        }
+      ],
+      "disambiguation": "Mike Read Session",
+      "first-release-date": "2004"
+    },
+    {
+      "id": "16925930-8c65-4443-b611-4cbcddab6df0",
+      "title": "Heartland",
+      "video": null,
+      "length": 204186,
+      "releases": [
+        {
+          "id": "ac8c510d-39bd-47d2-898c-efec4f552396",
+          "date": "2004",
+          "title": "The BBC Recordings",
+          "country": "GB",
+          "release-group": {
+            "id": "67dfa554-5cbe-38c3-8787-0c1cc8d22eda",
+            "title": "The BBC Recordings",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        }
+      ],
+      "artist-credit": [
+        {
+          "name": "The Sound",
+          "artist": {
+            "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+            "name": "The Sound"
+          }
+        }
+      ],
+      "disambiguation": "BBC in Concert",
+      "first-release-date": "2004"
+    },
+    {
+      "id": "124e99e0-06d7-4e94-a94a-0140d14b5fde",
+      "title": "Heartland",
+      "video": null,
+      "length": 246893,
+      "releases": [
+        {
+          "id": "d78d9978-3314-4eea-8f2c-60100de495ff",
+          "date": "2025-08-29",
+          "title": "In the Hothouse",
+          "country": "XW",
+          "release-group": {
+            "id": "d39b5ab3-17ab-3c3b-b101-5f5b10aa926f",
+            "title": "In the Hothouse",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Live"
+            ]
+          }
+        },
+        {
+          "id": "f06e93ca-d5da-4773-ba83-27bd97ba9edc",
+          "date": "1985",
+          "title": "In the Hothouse",
+          "country": "GB",
+          "release-group": {
+            "id": "d39b5ab3-17ab-3c3b-b101-5f5b10aa926f",
+            "title": "In the Hothouse",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Live"
+            ]
+          }
+        },
+        {
+          "id": "e56e5045-4a25-49f0-9c40-101b9e237a98",
+          "date": "1996-07-31",
+          "title": "In the Hothouse",
+          "country": "GB",
+          "release-group": {
+            "id": "d39b5ab3-17ab-3c3b-b101-5f5b10aa926f",
+            "title": "In the Hothouse",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Live"
+            ]
+          }
+        }
+      ],
+      "artist-credit": [
+        {
+          "name": "The Sound",
+          "artist": {
+            "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+            "name": "The Sound"
+          }
+        }
+      ],
+      "first-release-date": "1985"
+    },
+    {
+      "id": "a79f2c69-4372-4ac3-a357-8b52764a3373",
+      "title": "Heartland",
+      "video": null,
+      "length": 215000,
+      "releases": [
+        {
+          "id": "99acc986-ba2d-4dd1-a199-19233e00cd91",
+          "date": "2012-04-21",
+          "title": "Jeopardy",
+          "country": "XW",
+          "release-group": {
+            "id": "ae0f7b78-3dce-3157-8dd5-a82251dcf8ef",
+            "title": "Jeopardy",
+            "primary-type": "Album"
+          }
+        },
+        {
+          "id": "c8d23037-0981-45ef-8f71-6027a473751b",
+          "date": "2024-10-29",
+          "title": "Jeopardy",
+          "country": "US",
+          "release-group": {
+            "id": "ae0f7b78-3dce-3157-8dd5-a82251dcf8ef",
+            "title": "Jeopardy",
+            "primary-type": "Album"
+          },
+          "disambiguation": "Remastered White vinyl"
+        },
+        {
+          "id": "44c14a40-5a9f-41ba-a193-7343ec654ac2",
+          "date": "",
+          "title": "Jeopardy",
+          "country": "DE",
+          "release-group": {
+            "id": "ae0f7b78-3dce-3157-8dd5-a82251dcf8ef",
+            "title": "Jeopardy",
+            "primary-type": "Album"
+          },
+          "disambiguation": "reissue"
+        },
+        {
+          "id": "488deedf-9994-4e63-833d-7c2d643b77f5",
+          "date": "2024",
+          "title": "Jeopardy",
+          "country": "XE",
+          "release-group": {
+            "id": "ae0f7b78-3dce-3157-8dd5-a82251dcf8ef",
+            "title": "Jeopardy",
+            "primary-type": "Album"
+          }
+        },
+        {
+          "id": "1ca2938b-a5a5-4d7a-baba-ea29acde0eca",
+          "date": "2014-04-28",
+          "title": "Jeopardy / From the Lion's Mouth / All Fall Down... Plus",
+          "country": "XE",
+          "release-group": {
+            "id": "c74f181f-7a50-4fc1-8a2d-a98d3bb0b233",
+            "title": "Jeopardy / From the Lion's Mouth / All Fall Down... Plus",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "8bae24ee-c083-416f-86d4-083cd21bd15d",
+          "date": "1980",
+          "title": "Jeopardy",
+          "country": "FR",
+          "release-group": {
+            "id": "ae0f7b78-3dce-3157-8dd5-a82251dcf8ef",
+            "title": "Jeopardy",
+            "primary-type": "Album"
+          }
+        },
+        {
+          "id": "d0f2193d-45cd-476d-8493-ee10684e55de",
+          "date": "2001",
+          "title": "Jeopardy",
+          "country": "GB",
+          "release-group": {
+            "id": "ae0f7b78-3dce-3157-8dd5-a82251dcf8ef",
+            "title": "Jeopardy",
+            "primary-type": "Album"
+          }
+        },
+        {
+          "id": "307ee795-593c-4b5a-9773-56d9740a0732",
+          "date": "2012-01-17",
+          "title": "Jeopardy",
+          "country": "US",
+          "release-group": {
+            "id": "ae0f7b78-3dce-3157-8dd5-a82251dcf8ef",
+            "title": "Jeopardy",
+            "primary-type": "Album"
+          }
+        },
+        {
+          "id": "c619e486-4dca-4d5e-b6b8-e802a57eec40",
+          "date": "1980-11",
+          "title": "Jeopardy",
+          "country": "GB",
+          "release-group": {
+            "id": "ae0f7b78-3dce-3157-8dd5-a82251dcf8ef",
+            "title": "Jeopardy",
+            "primary-type": "Album"
+          }
+        }
+      ],
+      "artist-credit": [
+        {
+          "name": "The Sound",
+          "artist": {
+            "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+            "name": "The Sound"
+          }
+        }
+      ],
+      "release_discovery": {
+        "id": "307ee795-593c-4b5a-9773-56d9740a0732",
+        "date": "2012-01-17",
+        "title": "Jeopardy",
+        "medium": 1,
+        "country": "US",
+        "position": 2,
+        "track_mbid": "07b59a32-d094-3fa3-9629-87e06bce1282",
+        "track_title": "Heartland",
+        "relationship": "matching_catalog_caption",
+        "track_length": 215000,
+        "release-group": {
+          "id": "ae0f7b78-3dce-3157-8dd5-a82251dcf8ef",
+          "title": "Jeopardy",
+          "primary-type": "Album",
+          "secondary-types": [],
+          "first-release-date": "1980-11"
+        },
+        "disambiguation": ""
+      },
+      "first-release-date": "1980-11"
+    },
+    {
+      "id": "06b2fc47-c2ac-4ad9-a213-f24fa6e1a49d",
+      "title": "Heartland",
+      "video": null,
+      "length": 243693,
+      "releases": [
+        {
+          "id": "03a790fb-d5ea-4f68-a902-ef717c8b6d5b",
+          "date": "2023-06-28",
+          "title": "The Statik Records Years",
+          "country": "GB",
+          "release-group": {
+            "id": "0af44665-11a5-4b22-9e4c-90db1913e936",
+            "title": "The Statik Records Years",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "c1135185-0b10-4185-9391-93c65b7ba5a0",
+          "date": "2015-02-16",
+          "title": "Shock of Daylight / Heads and Hearts / In the Hothouse / Thunder Up / Propaganda",
+          "country": "XE",
+          "release-group": {
+            "id": "f1b14f1d-3688-4268-ac34-f061a78bbbf4",
+            "title": "Shock of Daylight / Heads and Hearts / In the Hothouse / Thunder Up / Propaganda",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        }
+      ],
+      "artist-credit": [
+        {
+          "name": "The Sound",
+          "artist": {
+            "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+            "name": "The Sound"
+          }
+        }
+      ],
+      "first-release-date": "2015-02-16"
+    },
+    {
+      "id": "4a4d97b8-8b4a-43df-93be-7dd78f897cf2",
+      "title": "Heartland",
+      "video": null,
+      "length": 229000,
+      "releases": [
+        {
+          "id": "ff60a6f3-242d-4f50-9d89-98f4075571b8",
+          "date": "2008-11-24",
+          "title": "Dutch Radio Recordings: 4. 01.07.84 Den Haag, Parkpop Festival",
+          "country": "GB",
+          "release-group": {
+            "id": "5f8c47bd-a794-4060-afb4-e147ef471cd6",
+            "title": "Dutch Radio Recordings: 4. 01.07.84 Den Haag, Parkpop Festival",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Live"
+            ]
+          }
+        }
+      ],
+      "artist-credit": [
+        {
+          "name": "The Sound",
+          "artist": {
+            "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+            "name": "The Sound"
+          }
+        }
+      ],
+      "first-release-date": "2008-11-24"
+    },
+    {
+      "id": "38b8096d-252b-4599-98b5-2ae1c6d334b8",
+      "title": "Heartland",
+      "video": null,
+      "length": 196520,
+      "releases": [
+        {
+          "id": "1ca2938b-a5a5-4d7a-baba-ea29acde0eca",
+          "date": "2014-04-28",
+          "title": "Jeopardy / From the Lion's Mouth / All Fall Down... Plus",
+          "country": "XE",
+          "release-group": {
+            "id": "c74f181f-7a50-4fc1-8a2d-a98d3bb0b233",
+            "title": "Jeopardy / From the Lion's Mouth / All Fall Down... Plus",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        }
+      ],
+      "artist-credit": [
+        {
+          "name": "The Sound",
+          "artist": {
+            "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+            "name": "The Sound"
+          }
+        }
+      ],
+      "first-release-date": "2014-04-28"
+    },
+    {
+      "id": "84cc71b4-b552-4755-8ecd-4f7a381dcd69",
+      "title": "Heartland",
+      "video": null,
+      "releases": [
+        {
+          "id": "6d5bf7ed-5bb8-46b6-854e-f25dc95051c5",
+          "date": "1981",
+          "title": "Live Instinct",
+          "country": "NL",
+          "release-group": {
+            "id": "dc5d3c52-9f46-452e-a94b-521424985387",
+            "title": "Live Instinct",
+            "primary-type": "Single"
+          }
+        }
+      ],
+      "artist-credit": [
+        {
+          "name": "The Sound",
+          "artist": {
+            "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+            "name": "The Sound"
+          }
+        }
+      ],
+      "first-release-date": "1981"
+    },
+    {
+      "id": "8e5745ab-20da-4b4e-ab94-aaf9a286a9d5",
+      "title": "Heartland",
+      "video": null,
+      "length": 211000,
+      "releases": [
+        {
+          "id": "6e42c7dc-b1eb-4d75-9b87-067cb901b78e",
+          "date": "1996",
+          "title": "Cinematic Overview, 1977•1996",
+          "country": "US",
+          "release-group": {
+            "id": "292de8dd-5d80-48a7-81f4-99e9fa3387d5",
+            "title": "Cinematic Overview, 1977•1996",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        }
+      ],
+      "artist-credit": [
+        {
+          "name": "The Sound",
+          "artist": {
+            "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+            "name": "The Sound"
+          }
+        }
+      ],
+      "first-release-date": "1996"
+    },
+    {
+      "id": "516cdf62-e8af-4d44-9aa2-e6dc7575d546",
+      "title": "Heartland (live)",
+      "video": null,
+      "length": 200026,
+      "releases": [
+        {
+          "id": "1ca2938b-a5a5-4d7a-baba-ea29acde0eca",
+          "date": "2014-04-28",
+          "title": "Jeopardy / From the Lion's Mouth / All Fall Down... Plus",
+          "country": "XE",
+          "release-group": {
+            "id": "c74f181f-7a50-4fc1-8a2d-a98d3bb0b233",
+            "title": "Jeopardy / From the Lion's Mouth / All Fall Down... Plus",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        },
+        {
+          "id": "d0f2193d-45cd-476d-8493-ee10684e55de",
+          "date": "2001",
+          "title": "Jeopardy",
+          "country": "GB",
+          "release-group": {
+            "id": "ae0f7b78-3dce-3157-8dd5-a82251dcf8ef",
+            "title": "Jeopardy",
+            "primary-type": "Album"
+          }
+        }
+      ],
+      "artist-credit": [
+        {
+          "name": "The Sound",
+          "artist": {
+            "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+            "name": "The Sound"
+          }
+        }
+      ],
+      "first-release-date": "2001"
+    },
+    {
+      "id": "0834dac9-5e45-4627-b736-e16b005d4e30",
+      "title": "Heartland (Live)",
+      "video": null,
+      "length": 244000,
+      "releases": [
+        {
+          "id": "22346533-dad9-487a-a27a-5935bb3906f1",
+          "date": "2022-04-22",
+          "title": "Counting the Days",
+          "country": "XW",
+          "release-group": {
+            "id": "bb3bf815-377a-3642-8f00-36e0e49b5c34",
+            "title": "Counting the Days",
+            "primary-type": "Album",
+            "secondary-types": [
+              "Compilation"
+            ]
+          }
+        }
+      ],
+      "artist-credit": [
+        {
+          "name": "The Sound",
+          "artist": {
+            "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+            "name": "The Sound"
+          }
+        }
+      ],
+      "first-release-date": "2022-04-22"
+    }
+  ],
+  "reasons": [],
+  "reason_details": {},
+  "slots": [],
+  "recording_publications": {
+    "06b2fc47-c2ac-4ad9-a213-f24fa6e1a49d": {
+      "pending_groups": [],
+      "original_groups": [
+        "f1b14f1d-3688-4268-ac34-f061a78bbbf4"
+      ],
+      "checked_at": "2026-11-28T01:55:53Z"
+    },
+    "122af450-9e19-4e00-b309-8d129fa5b582": {
+      "pending_groups": [],
+      "original_groups": [],
+      "checked_at": "2026-11-28T01:55:53Z"
+    },
+    "124e99e0-06d7-4e94-a94a-0140d14b5fde": {
+      "pending_groups": [],
+      "original_groups": [],
+      "checked_at": "2026-11-28T01:55:53Z"
+    }
+  },
+  "construction_editions": [
+    {
+      "id": "307ee795-593c-4b5a-9773-56d9740a0732",
+      "date": "2012-01-17",
+      "tags": [],
+      "media": [
+        {
+          "format": "CD",
+          "tracks": [
+            {
+              "id": "6ce7d50b-82e7-3ceb-84c9-a44b017697ef",
+              "title": "I Can't Escape Myself",
+              "length": 235000,
+              "number": "1",
+              "position": 1,
+              "recording": {
+                "id": "557d171d-b787-43c0-91e2-0fa4086bb57c",
+                "tags": [
+                  {
+                    "name": "new wave",
+                    "count": 1
+                  }
+                ],
+                "isrcs": [],
+                "title": "I Can’t Escape Myself",
+                "video": false,
+                "genres": [
+                  {
+                    "id": "56407f9d-3398-4bf3-bbbd-ea372fa5adeb",
+                    "name": "new wave",
+                    "count": 1,
+                    "disambiguation": ""
+                  }
+                ],
+                "length": 235813,
+                "artist-credit": [
+                  {
+                    "name": "The Sound",
+                    "artist": {
+                      "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                      "name": "The Sound",
+                      "country": "GB"
+                    },
+                    "joinphrase": ""
+                  }
+                ],
+                "disambiguation": "",
+                "first-release-date": "1980-11",
+                "edit_recording_mbids": []
+              },
+              "artist-credit": [
+                {
+                  "name": "The Sound",
+                  "artist": {
+                    "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                    "name": "The Sound",
+                    "country": "GB"
+                  },
+                  "joinphrase": ""
+                }
+              ]
+            },
+            {
+              "id": "07b59a32-d094-3fa3-9629-87e06bce1282",
+              "title": "Heartland",
+              "length": 215000,
+              "number": "2",
+              "position": 2,
+              "recording": {
+                "id": "a79f2c69-4372-4ac3-a357-8b52764a3373",
+                "tags": [
+                  {
+                    "name": "new wave",
+                    "count": 1
+                  }
+                ],
+                "isrcs": [],
+                "title": "Heartland",
+                "video": false,
+                "genres": [
+                  {
+                    "id": "56407f9d-3398-4bf3-bbbd-ea372fa5adeb",
+                    "name": "new wave",
+                    "count": 1,
+                    "disambiguation": ""
+                  }
+                ],
+                "length": 215000,
+                "artist-credit": [
+                  {
+                    "name": "The Sound",
+                    "artist": {
+                      "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                      "name": "The Sound",
+                      "country": "GB"
+                    },
+                    "joinphrase": ""
+                  }
+                ],
+                "disambiguation": "",
+                "first-release-date": "1980-11",
+                "edit_recording_mbids": []
+              },
+              "artist-credit": [
+                {
+                  "name": "The Sound",
+                  "artist": {
+                    "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                    "name": "The Sound",
+                    "country": "GB"
+                  },
+                  "joinphrase": ""
+                }
+              ]
+            },
+            {
+              "id": "fdc0f791-cc33-3b52-8467-e2a88b2e9f5b",
+              "title": "Hour of Need",
+              "length": 183000,
+              "number": "3",
+              "position": 3,
+              "recording": {
+                "id": "f29bbe85-6ce7-4935-afcd-9f1f03550704",
+                "tags": [
+                  {
+                    "name": "new wave",
+                    "count": 1
+                  }
+                ],
+                "isrcs": [],
+                "title": "Hour of Need",
+                "video": false,
+                "genres": [
+                  {
+                    "id": "56407f9d-3398-4bf3-bbbd-ea372fa5adeb",
+                    "name": "new wave",
+                    "count": 1,
+                    "disambiguation": ""
+                  }
+                ],
+                "length": 183266,
+                "artist-credit": [
+                  {
+                    "name": "The Sound",
+                    "artist": {
+                      "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                      "name": "The Sound",
+                      "country": "GB"
+                    },
+                    "joinphrase": ""
+                  }
+                ],
+                "disambiguation": "",
+                "first-release-date": "1980-11",
+                "edit_recording_mbids": []
+              },
+              "artist-credit": [
+                {
+                  "name": "The Sound",
+                  "artist": {
+                    "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                    "name": "The Sound",
+                    "country": "GB"
+                  },
+                  "joinphrase": ""
+                }
+              ]
+            },
+            {
+              "id": "6c2f0dac-ba1a-341c-a0f0-f7cf1387b018",
+              "title": "Words Fail Me",
+              "length": 179000,
+              "number": "4",
+              "position": 4,
+              "recording": {
+                "id": "37670efc-d507-494e-8ea9-44f8b7c2db97",
+                "tags": [
+                  {
+                    "name": "new wave",
+                    "count": 1
+                  }
+                ],
+                "isrcs": [],
+                "title": "Words Fail Me",
+                "video": false,
+                "genres": [
+                  {
+                    "id": "56407f9d-3398-4bf3-bbbd-ea372fa5adeb",
+                    "name": "new wave",
+                    "count": 1,
+                    "disambiguation": ""
+                  }
+                ],
+                "length": 179026,
+                "artist-credit": [
+                  {
+                    "name": "The Sound",
+                    "artist": {
+                      "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                      "name": "The Sound",
+                      "country": "GB"
+                    },
+                    "joinphrase": ""
+                  }
+                ],
+                "disambiguation": "",
+                "first-release-date": "1980-11",
+                "edit_recording_mbids": []
+              },
+              "artist-credit": [
+                {
+                  "name": "The Sound",
+                  "artist": {
+                    "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                    "name": "The Sound",
+                    "country": "GB"
+                  },
+                  "joinphrase": ""
+                }
+              ]
+            },
+            {
+              "id": "5eef4a53-97f3-3fd4-92bb-286b162c099c",
+              "title": "Missiles",
+              "length": 328000,
+              "number": "5",
+              "position": 5,
+              "recording": {
+                "id": "790839bb-17ef-41a4-82c1-9ebcaa5b56cf",
+                "tags": [
+                  {
+                    "name": "new wave",
+                    "count": 1
+                  }
+                ],
+                "isrcs": [],
+                "title": "Missiles",
+                "video": false,
+                "genres": [
+                  {
+                    "id": "56407f9d-3398-4bf3-bbbd-ea372fa5adeb",
+                    "name": "new wave",
+                    "count": 1,
+                    "disambiguation": ""
+                  }
+                ],
+                "length": 328133,
+                "artist-credit": [
+                  {
+                    "name": "The Sound",
+                    "artist": {
+                      "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                      "name": "The Sound",
+                      "country": "GB"
+                    },
+                    "joinphrase": ""
+                  }
+                ],
+                "disambiguation": "",
+                "first-release-date": "1980-11",
+                "edit_recording_mbids": []
+              },
+              "artist-credit": [
+                {
+                  "name": "The Sound",
+                  "artist": {
+                    "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                    "name": "The Sound",
+                    "country": "GB"
+                  },
+                  "joinphrase": ""
+                }
+              ]
+            },
+            {
+              "id": "538732c5-70ee-3a79-888d-2adb18a705d2",
+              "title": "Heyday",
+              "length": 183000,
+              "number": "6",
+              "position": 6,
+              "recording": {
+                "id": "745508ee-3c0d-47ff-ac8c-de323bcbf111",
+                "tags": [
+                  {
+                    "name": "new wave",
+                    "count": 1
+                  }
+                ],
+                "isrcs": [],
+                "title": "Heyday",
+                "video": false,
+                "genres": [
+                  {
+                    "id": "56407f9d-3398-4bf3-bbbd-ea372fa5adeb",
+                    "name": "new wave",
+                    "count": 1,
+                    "disambiguation": ""
+                  }
+                ],
+                "length": 183173,
+                "artist-credit": [
+                  {
+                    "name": "The Sound",
+                    "artist": {
+                      "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                      "name": "The Sound",
+                      "country": "GB"
+                    },
+                    "joinphrase": ""
+                  }
+                ],
+                "disambiguation": "",
+                "first-release-date": "1980-11",
+                "edit_recording_mbids": []
+              },
+              "artist-credit": [
+                {
+                  "name": "The Sound",
+                  "artist": {
+                    "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                    "name": "The Sound",
+                    "country": "GB"
+                  },
+                  "joinphrase": ""
+                }
+              ]
+            },
+            {
+              "id": "4926e62f-3812-3ba1-a42a-e958b9432657",
+              "title": "Jeopardy",
+              "length": 219000,
+              "number": "7",
+              "position": 7,
+              "recording": {
+                "id": "4454cb86-04f7-4394-8e70-8e41ced433ce",
+                "tags": [
+                  {
+                    "name": "new wave",
+                    "count": 1
+                  }
+                ],
+                "isrcs": [],
+                "title": "Jeopardy",
+                "video": false,
+                "genres": [
+                  {
+                    "id": "56407f9d-3398-4bf3-bbbd-ea372fa5adeb",
+                    "name": "new wave",
+                    "count": 1,
+                    "disambiguation": ""
+                  }
+                ],
+                "length": 219000,
+                "artist-credit": [
+                  {
+                    "name": "The Sound",
+                    "artist": {
+                      "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                      "name": "The Sound",
+                      "country": "GB"
+                    },
+                    "joinphrase": ""
+                  }
+                ],
+                "disambiguation": "",
+                "first-release-date": "1980-11",
+                "edit_recording_mbids": []
+              },
+              "artist-credit": [
+                {
+                  "name": "The Sound",
+                  "artist": {
+                    "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                    "name": "The Sound",
+                    "country": "GB"
+                  },
+                  "joinphrase": ""
+                }
+              ]
+            },
+            {
+              "id": "1c311045-b77c-36ba-bf90-1967f996bc33",
+              "title": "Night Versus Day",
+              "length": 197000,
+              "number": "8",
+              "position": 8,
+              "recording": {
+                "id": "3bc863c4-57f0-4ede-9d46-fcb44c9061cc",
+                "tags": [
+                  {
+                    "name": "new wave",
+                    "count": 1
+                  }
+                ],
+                "isrcs": [],
+                "title": "Night Versus Day",
+                "video": false,
+                "genres": [
+                  {
+                    "id": "56407f9d-3398-4bf3-bbbd-ea372fa5adeb",
+                    "name": "new wave",
+                    "count": 1,
+                    "disambiguation": ""
+                  }
+                ],
+                "length": 197946,
+                "artist-credit": [
+                  {
+                    "name": "The Sound",
+                    "artist": {
+                      "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                      "name": "The Sound",
+                      "country": "GB"
+                    },
+                    "joinphrase": ""
+                  }
+                ],
+                "disambiguation": "",
+                "first-release-date": "1980-11",
+                "edit_recording_mbids": []
+              },
+              "artist-credit": [
+                {
+                  "name": "The Sound",
+                  "artist": {
+                    "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                    "name": "The Sound",
+                    "country": "GB"
+                  },
+                  "joinphrase": ""
+                }
+              ]
+            },
+            {
+              "id": "21e5f6bf-0cb1-3321-be33-0b589293f4d9",
+              "title": "Resistance",
+              "length": 169000,
+              "number": "9",
+              "position": 9,
+              "recording": {
+                "id": "472eb29b-4dd3-4e64-9053-6d349e58fcb3",
+                "tags": [
+                  {
+                    "name": "new wave",
+                    "count": 1
+                  }
+                ],
+                "isrcs": [],
+                "title": "Resistance",
+                "video": false,
+                "genres": [
+                  {
+                    "id": "56407f9d-3398-4bf3-bbbd-ea372fa5adeb",
+                    "name": "new wave",
+                    "count": 1,
+                    "disambiguation": ""
+                  }
+                ],
+                "length": 169000,
+                "artist-credit": [
+                  {
+                    "name": "The Sound",
+                    "artist": {
+                      "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                      "name": "The Sound",
+                      "country": "GB"
+                    },
+                    "joinphrase": ""
+                  }
+                ],
+                "disambiguation": "",
+                "first-release-date": "1980-11",
+                "edit_recording_mbids": []
+              },
+              "artist-credit": [
+                {
+                  "name": "The Sound",
+                  "artist": {
+                    "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                    "name": "The Sound",
+                    "country": "GB"
+                  },
+                  "joinphrase": ""
+                }
+              ]
+            },
+            {
+              "id": "77590332-8bee-3667-a173-1e833ece4233",
+              "title": "Unwritten Law",
+              "length": 221000,
+              "number": "10",
+              "position": 10,
+              "recording": {
+                "id": "14babf46-4901-439b-b3f9-d86a43fdffa4",
+                "tags": [
+                  {
+                    "name": "new wave",
+                    "count": 1
+                  }
+                ],
+                "isrcs": [],
+                "title": "Unwritten Law",
+                "video": false,
+                "genres": [
+                  {
+                    "id": "56407f9d-3398-4bf3-bbbd-ea372fa5adeb",
+                    "name": "new wave",
+                    "count": 1,
+                    "disambiguation": ""
+                  }
+                ],
+                "length": 221000,
+                "artist-credit": [
+                  {
+                    "name": "The Sound",
+                    "artist": {
+                      "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                      "name": "The Sound",
+                      "country": "GB"
+                    },
+                    "joinphrase": ""
+                  }
+                ],
+                "disambiguation": "",
+                "first-release-date": "1980-11",
+                "edit_recording_mbids": []
+              },
+              "artist-credit": [
+                {
+                  "name": "The Sound",
+                  "artist": {
+                    "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                    "name": "The Sound",
+                    "country": "GB"
+                  },
+                  "joinphrase": ""
+                }
+              ]
+            },
+            {
+              "id": "26cb26dc-e786-33fb-b8b2-e1984365eaf5",
+              "title": "Desire",
+              "length": 195000,
+              "number": "11",
+              "position": 11,
+              "recording": {
+                "id": "d07bd200-b593-424b-856b-db6334154ca8",
+                "tags": [
+                  {
+                    "name": "new wave",
+                    "count": 1
+                  }
+                ],
+                "isrcs": [],
+                "title": "Desire",
+                "video": false,
+                "genres": [
+                  {
+                    "id": "56407f9d-3398-4bf3-bbbd-ea372fa5adeb",
+                    "name": "new wave",
+                    "count": 1,
+                    "disambiguation": ""
+                  }
+                ],
+                "length": 195827,
+                "artist-credit": [
+                  {
+                    "name": "The Sound",
+                    "artist": {
+                      "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                      "name": "The Sound",
+                      "country": "GB"
+                    },
+                    "joinphrase": ""
+                  }
+                ],
+                "disambiguation": "",
+                "first-release-date": "1980-11",
+                "edit_recording_mbids": []
+              },
+              "artist-credit": [
+                {
+                  "name": "The Sound",
+                  "artist": {
+                    "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+                    "name": "The Sound",
+                    "country": "GB"
+                  },
+                  "joinphrase": ""
+                }
+              ]
+            }
+          ],
+          "position": 1,
+          "track-count": 11,
+          "extra-track-layout": false
+        }
+      ],
+      "title": "Jeopardy",
+      "genres": [],
+      "status": "Official",
+      "country": "US",
+      "packaging": "Jewel Case",
+      "relations": [
+        {
+          "url": {
+            "resource": "https://www.discogs.com/release/3396773"
+          }
+        }
+      ],
+      "artist-credit": [
+        {
+          "name": "The Sound",
+          "artist": {
+            "id": "b2c36d47-e5e3-4ac8-a967-10e0265d3fff",
+            "name": "The Sound",
+            "country": "GB"
+          },
+          "joinphrase": ""
+        }
+      ],
+      "release-group": {
+        "id": "ae0f7b78-3dce-3157-8dd5-a82251dcf8ef",
+        "title": "Jeopardy",
+        "primary-type": "Album",
+        "secondary-types": [],
+        "first-release-date": "1980-11"
+      },
+      "disambiguation": "",
+      "release-events": [
+        {
+          "country_codes": [
+            "US"
+          ]
+        }
+      ],
+      "edition_relationships": []
+    }
+  ]
+}
